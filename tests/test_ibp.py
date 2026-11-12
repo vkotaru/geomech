@@ -86,17 +86,36 @@ class TestIbpRecursion:
         assert isinstance(result.nodes[0], Dot)
         assert isinstance(result.nodes[1], Dot)
 
-    def test_mul_recurses(self, dot_vectors):
-        """Mul(s, Dot(target, w)) applies IBP inside Mul."""
-        dot_eta, _ = dot_vectors
+    def test_mul_recurses_constant_prefactor(self, dot_vectors):
+        """Mul(c, Dot(target, w)) with constant c: IBP acts inside the Mul only.
+
+        ∫ c ⟨η̇, w⟩ dt = −∫ c ⟨η, ẇ⟩ dt, so c stays as the untouched left factor.
+        """
+        dot_eta, eta = dot_vectors
+        w = Vector("w")
+        c = Scalar("c", attr=["Constant"])
+        expr = Mul(c, Dot(dot_eta, w))
+        result = _apply_ibp(expr, dot_eta)
+        assert isinstance(result, Mul)
+        assert str(result.left) == "c"
+        assert result.right == Dot(eta * (-1), TimeDerivative(w))
+
+    def test_mul_time_varying_prefactor(self, dot_vectors):
+        """Mul(s, Dot(target, w)) with time-varying s: the product rule applies.
+
+        ∫ s ⟨η̇, w⟩ dt = −∫ [ s ⟨η, ẇ⟩ + ⟨η, ṡ w⟩ ] dt. Treating s as constant
+        drops the ṡ term, which loses every Coriolis / rate-of-inertia term in
+        systems with a scalar configuration variable.
+        """
+        dot_eta, eta = dot_vectors
         w = Vector("w")
         s = Scalar("s")
         expr = Mul(s, Dot(dot_eta, w))
         result = _apply_ibp(expr, dot_eta)
-        assert isinstance(result, Mul)
-        # Left side (scalar) unchanged, right side (Dot) transformed
-        assert str(result.left) == "s"
-        assert isinstance(result.right, Dot)
+        assert isinstance(result, Add)
+        assert len(result.nodes) == 2
+        assert result.nodes[0] == Mul(s, Dot(eta * (-1), TimeDerivative(w)))
+        assert result.nodes[1] == Dot(eta * (-1), w * TimeDerivative(s))
 
     def test_add_mixed_terms(self, dot_vectors):
         """Add with some terms matching target and some not."""

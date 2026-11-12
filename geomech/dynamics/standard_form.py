@@ -8,12 +8,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from geomech.core.base.expressions import S2, SO3, Expr, ZeroVector
-from geomech.core.math.extract import _vector_from_vector
-from geomech.core.operations.addition import VAdd
+from geomech.core.base.expressions import S2, SO3, Expr, Zero, ZeroVector
+from geomech.core.base.types import ExprType
+from geomech.core.math.extract import _has_algebraic, extract_linear_coeff
+from geomech.core.operations.addition import Add, VAdd
 from geomech.core.transformations.expand import expand
 from geomech.core.transformations.simplify import full_simplify
 from geomech.dynamics.variables import SystemVariables
+from geomech.utils.errors import NonLinearError
 
 
 @dataclass
@@ -27,7 +29,7 @@ class StandardFormEquation:
     M : dict[str, Expr]
         Mass/inertia coefficient for each acceleration variable.
     f : Expr
-        Nonlinear terms (Coriolis, gravity, etc.) — a vector expression.
+        Nonlinear terms (Coriolis, gravity, etc.) — scalar or vector.
     G : dict[str, Expr]
         Input influence coefficient for each input variable.
     """
@@ -58,7 +60,6 @@ def to_standard_form(eom_dict, variables: SystemVariables, inputs=None):
     if inputs is None:
         inputs = []
 
-    # Derive acceleration variables from config variables
     accel_vars = _get_accel_vars(variables)
 
     result = {}
@@ -72,11 +73,14 @@ def to_standard_form(eom_dict, variables: SystemVariables, inputs=None):
 def _get_accel_vars(variables: SystemVariables):
     """Derive acceleration variables from config variables.
 
+    - Scalar x  →  d²x/dt²  =  TimeDerivative(TimeDerivative(x))
     - Vector x  →  d²x/dt²  =  TimeDerivative(TimeDerivative(x))
     - S2 q      →  dω/dt    =  TimeDerivative(ω_q)
     - SO3 R     →  dΩ/dt    =  TimeDerivative(Ω_R)
     """
     accels = []
+    for s in variables.scalars:
+        accels.append(s.t_diff().t_diff())
     for v in variables.vectors:
         if isinstance(v, S2):
             accels.append(v.get_tangent_vector().t_diff())
@@ -90,27 +94,46 @@ def _get_accel_vars(variables: SystemVariables):
     return accels
 
 
-def _flatten_vadd(expr):
-    """Return a flat list of addends from a vector expression."""
-    if isinstance(expr, VAdd):
+def _flatten_addends(expr):
+    """Return a flat list of addends from a scalar or vector expression."""
+    if isinstance(expr, (Add, VAdd)):
         return list(expr.nodes)
     return [expr]
 
 
-def _extract_single(eom_expr, accel_vars, inputs):
-    """Extract M, f, G from a single EOM vector expression."""
-    # Expand to flatten products over sums
-    eom_expr = expand(eom_expr)
-    terms = _flatten_vadd(eom_expr)
+def _zero_for(eom_expr):
+    """Return the appropriate zero element for the EOM's type."""
+    if getattr(eom_expr, "type", None) == ExprType.SCALAR:
+        return Zero
+    return ZeroVector
 
-    # Partition terms by what they contain
+
+def _combine(terms, eom_expr):
+    """Combine a list of terms into a single expression matching *eom_expr*'s type."""
+    if not terms:
+        return _zero_for(eom_expr)
+    if len(terms) == 1:
+        return terms[0]
+    if getattr(eom_expr, "type", None) == ExprType.SCALAR:
+        return Add(*terms)
+    return VAdd(*terms)
+
+
+def _extract_single(eom_expr, accel_vars, inputs):
+    """Extract M, f, G from a single EOM expression (scalar or vector)."""
+    eom_expr = expand(eom_expr)
+    terms = _flatten_addends(eom_expr)
+
     accel_terms = []
     input_terms = []
     residual_terms = []
 
+    # Partition with the same algebraic test extraction uses, so no term can be
+    # classified as acceleration/input and then extracted as zero; a variable
+    # hidden under a higher derivative (e.g. jerk) raises AlgebraicError here.
     for term in terms:
-        has_accel = any(term.has(a) for a in accel_vars)
-        has_input = any(term.has(u) for u in inputs)
+        has_accel = any(_has_algebraic(term, a) for a in accel_vars)
+        has_input = any(_has_algebraic(term, u) for u in inputs)
 
         if has_accel:
             accel_terms.append(term)
@@ -119,32 +142,36 @@ def _extract_single(eom_expr, accel_vars, inputs):
         else:
             residual_terms.append(term)
 
-    # Extract M: coefficient of each acceleration variable
     M = {}
     if accel_terms:
-        accel_expr = VAdd(*accel_terms) if len(accel_terms) > 1 else accel_terms[0]
+        accel_expr = _combine(accel_terms, eom_expr)
         for a in accel_vars:
-            if accel_expr.has(a):
-                coeff = _vector_from_vector(accel_expr, a)
+            if _has_algebraic(accel_expr, a):
+                coeff = extract_linear_coeff(accel_expr, a)
                 coeff = full_simplify(coeff)
+                # M must be free of accelerations: a term bilinear in two
+                # accelerations (c ẍ₁ ẍ₂) has no standard-form coefficient.
+                for b in accel_vars:
+                    if _has_algebraic(coeff, b):
+                        raise NonLinearError(
+                            f"to_standard_form: coefficient of '{a}' still contains the"
+                            f" acceleration '{b}' in '{coeff}'; the equation is not linear"
+                            " in the accelerations"
+                        )
                 M[str(a)] = coeff
 
-    # Extract G: coefficient of each input variable
     G = {}
     if input_terms:
-        input_expr = VAdd(*input_terms) if len(input_terms) > 1 else input_terms[0]
+        input_expr = _combine(input_terms, eom_expr)
         for u in inputs:
-            if input_expr.has(u):
-                coeff = _vector_from_vector(input_expr, u)
+            if _has_algebraic(input_expr, u):
+                coeff = extract_linear_coeff(input_expr, u)
                 coeff = full_simplify(coeff)
                 G[str(u)] = coeff
 
-    # Residual f: everything that's not acceleration or input
     if not residual_terms:
-        f = ZeroVector
-    elif len(residual_terms) == 1:
-        f = full_simplify(residual_terms[0])
+        f = _zero_for(eom_expr)
     else:
-        f = full_simplify(VAdd(*residual_terms))
+        f = full_simplify(_combine(residual_terms, eom_expr))
 
     return StandardFormEquation(M=M, f=f, G=G)
