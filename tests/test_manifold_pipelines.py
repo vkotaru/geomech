@@ -600,3 +600,245 @@ class TestMixedR3SO3Pipeline:
         M_str = str(eq.M[ddOm])
         assert "J" in M_str
         assert str(eq.G["M"]) == "I"
+
+
+# ---------------------------------------------------------------------------
+# Scalar systems
+# ---------------------------------------------------------------------------
+
+
+def _spring_mass():
+    """Spring-mass system: m*x_ddot + k*x = f.
+
+    Single scalar config variable x ∈ R.
+    L = ½mv² - ½kx², δW = δx*f.
+    """
+    m = Scalar("m", attr=["Constant"])
+    k = Scalar("k", attr=["Constant"])
+    half = Scalar("0.5", value=0.5, attr=["Constant"])
+    x = Scalar("x")
+    f = Scalar("f")
+    v = x.t_diff()
+    dx = x.delta()
+
+    KE = half * m * v * v
+    PE = half * k * x * x
+    L = KE - PE
+    dW = dx * f
+
+    variables = SystemVariables(scalars=[x])
+    eom = compute_eom(L, dW, variables)
+    return eom, variables, x, f
+
+
+def _spring_mass_damper():
+    """Spring-mass-damper: m*x_ddot + c*x_dot + k*x = f.
+
+    Damping enters through virtual work: δW = δx*(f - c*v).
+    """
+    m = Scalar("m", attr=["Constant"])
+    k = Scalar("k", attr=["Constant"])
+    c = Scalar("c", attr=["Constant"])
+    half = Scalar("0.5", value=0.5, attr=["Constant"])
+    x = Scalar("x")
+    f = Scalar("f")
+    v = x.t_diff()
+    dx = x.delta()
+
+    KE = half * m * v * v
+    PE = half * k * x * x
+    L = KE - PE
+    dW = dx * f - c * v * dx
+
+    variables = SystemVariables(scalars=[x])
+    eom = compute_eom(L, dW, variables)
+    return eom, variables, x, f
+
+
+class TestSpringMassPipeline:
+    """Spring-mass: m*ẍ + k*x = f."""
+
+    def setup_method(self):
+        self.eom, self.variables, self.x, self.f = _spring_mass()
+        self.dx = self.x.delta()
+        self.key = str(self.dx)
+        _, self.eqn = self.eom[self.key]
+
+    def test_produces_one_equation(self):
+        assert len(self.eom) == 1
+
+    def test_key_is_delta_x(self):
+        assert self.key in self.eom
+
+    def test_eom_str(self):
+        """EOM: -m*ẍ - k*x + f = 0."""
+        expected = "m\\frac{d}{dt}(\\frac{d}{dt}(x))(-1.0)+kx(-1.0)+f"
+        assert str(self.eqn) == f"({expected})"
+
+    def test_has_acceleration(self):
+        ddx = TimeDerivative(TimeDerivative(self.x))
+        assert self.eqn.has(ddx)
+
+    def test_has_stiffness(self):
+        assert self.eqn.has(self.x)
+
+    def test_has_input(self):
+        eqn_str = str(self.eqn)
+        assert "f" in eqn_str
+
+    def test_no_delta_in_eom(self):
+        """δx should be factored out — not in the EOM body."""
+        assert not self.eqn.has(self.dx)
+
+
+class TestSpringMassDamperPipeline:
+    """Spring-mass-damper: m*ẍ + c*ẋ + k*x = f."""
+
+    def setup_method(self):
+        self.eom, self.variables, self.x, self.f = _spring_mass_damper()
+        self.dx = self.x.delta()
+        self.key = str(self.dx)
+        _, self.eqn = self.eom[self.key]
+
+    def test_produces_one_equation(self):
+        assert len(self.eom) == 1
+
+    def test_eom_str(self):
+        """EOM: -m*ẍ - c*ẋ - k*x + f = 0."""
+        expected = "m\\frac{d}{dt}(\\frac{d}{dt}(x))(-1.0)+kx(-1.0)+f+c\\frac{d}{dt}(x)(-1)"
+        assert str(self.eqn) == f"({expected})"
+
+    def test_has_acceleration(self):
+        ddx = TimeDerivative(TimeDerivative(self.x))
+        assert self.eqn.has(ddx)
+
+    def test_has_velocity(self):
+        """Damping term should contain ẋ."""
+        vx = self.x.t_diff()
+        assert self.eqn.has(vx)
+
+    def test_has_stiffness(self):
+        assert self.eqn.has(self.x)
+
+    def test_no_delta_in_eom(self):
+        assert not self.eqn.has(self.dx)
+
+
+def _double_spring_mass():
+    """Double spring-mass: two coupled scalar DOFs.
+
+    m1*ẍ1 + (k1+k2)*x1 - k2*x2 = f1
+    m2*ẍ2 + k2*(x2-x1) = f2
+    """
+    m1 = Scalar("m1", attr=["Constant"])
+    m2 = Scalar("m2", attr=["Constant"])
+    k1 = Scalar("k1", attr=["Constant"])
+    k2 = Scalar("k2", attr=["Constant"])
+    half = Scalar("0.5", value=0.5, attr=["Constant"])
+    x1 = Scalar("x1")
+    x2 = Scalar("x2")
+    f1 = Scalar("f1")
+    f2 = Scalar("f2")
+
+    v1 = x1.t_diff()
+    v2 = x2.t_diff()
+    dx1 = x1.delta()
+    dx2 = x2.delta()
+
+    KE = half * m1 * v1 * v1 + half * m2 * v2 * v2
+    PE = half * k1 * x1 * x1 + half * k2 * (x2 - x1) * (x2 - x1)
+    L = KE - PE
+    dW = dx1 * f1 + dx2 * f2
+
+    variables = SystemVariables(scalars=[x1, x2])
+    eom = compute_eom(L, dW, variables)
+    return eom, variables, x1, x2
+
+
+class TestDoubleSpringMassPipeline:
+    """Double spring-mass: coupled scalar system."""
+
+    def setup_method(self):
+        self.eom, self.variables, self.x1, self.x2 = _double_spring_mass()
+
+    def test_produces_two_equations(self):
+        assert len(self.eom) == 2
+
+    def test_keys(self):
+        assert str(self.x1.delta()) in self.eom
+        assert str(self.x2.delta()) in self.eom
+
+    def test_x1_eom_str(self):
+        """x1 EOM: -m1*ẍ1 - k1*x1 + k2*x2 - k2*x1 + f1 = 0."""
+        _, eqn = self.eom[str(self.x1.delta())]
+        expected = "m1\\frac{d}{dt}(\\frac{d}{dt}(x1))(-1.0)+k1x1(-1.0)+k2x2+k2x1(-1.0)+f1"
+        assert str(eqn) == f"({expected})"
+
+    def test_x2_eom_str(self):
+        """x2 EOM: -m2*ẍ2 - k2*x2 + k2*x1 + f2 = 0."""
+        _, eqn = self.eom[str(self.x2.delta())]
+        expected = "m2\\frac{d}{dt}(\\frac{d}{dt}(x2))(-1.0)+k2x2(-1.0)+k2x1+f2"
+        assert str(eqn) == f"({expected})"
+
+    def test_x1_has_both_stiffness(self):
+        """x1 equation should have k1 and k2 (coupling)."""
+        _, eqn = self.eom[str(self.x1.delta())]
+        eqn_str = str(eqn)
+        assert "k1" in eqn_str
+        assert "k2" in eqn_str
+
+    def test_x2_has_coupling(self):
+        """x2 equation should have k2*x1 (coupling from x1)."""
+        _, eqn = self.eom[str(self.x2.delta())]
+        assert eqn.has(self.x1)
+
+    def test_no_deltas_in_eom(self):
+        """Neither δx1 nor δx2 should appear in the EOM body."""
+        dx1 = self.x1.delta()
+        dx2 = self.x2.delta()
+        for key, (_, eqn) in self.eom.items():
+            assert not eqn.has(dx1), f"δx1 in {key}"
+            assert not eqn.has(dx2), f"δx2 in {key}"
+
+
+class TestDoubleRigidPendulumMassMatrixExact:
+    """Exact mass-matrix blocks for the SO(3) × SO(3) double rigid pendulum.
+
+    Hand derivation (Lee et al. §6, two-body chain). With x₁ = R₁ρ₁ and
+    x₂ = R₁l₁ + R₂ρ₂, the velocities are ẋ₁ = R₁(Ω₁×ρ₁) = −R₁ρ̂₁Ω₁ and
+    ẋ₂ = −R₁l̂₁Ω₁ − R₂ρ̂₂Ω₂. The kinetic energy is quadratic in (Ω₁, Ω₂) with
+
+        J₁ − m₁ρ̂₁ρ̂₁ − m₂l̂₁l̂₁            m₂ l̂₁ R₁ᵀR₂ ρ̂₂
+        m₂ ρ̂₂ R₂ᵀR₁ l̂₁                   J₂ − m₂ρ̂₂ρ̂₂
+
+    (ρ̂ᵀρ̂ = −ρ̂ρ̂). The library's EOM is the coefficient of the variation set to
+    zero, so every block appears negated: M₁[Ω̇₁] = −J₁ + m₁ρ̂₁ρ̂₁ + m₂l̂₁l̂₁ and
+    M₁[Ω̇₂] = +m₂ l̂₁ R₁ᵀR₂ ρ̂₂, with M₂[Ω̇₁] its transpose. The off-diagonal
+    blocks were silently dropped before the `collect` fix for two different
+    rotations; all four blocks were verified numerically at random states in
+    the review of the scalar-configuration-variable feature.
+    """
+
+    def setup_method(self):
+        self.eom, self.variables, self.inputs, self.R1, self.R2 = _double_rigid_pendulum()
+        self.eta1 = self.R1.get_variation_vector()
+        self.eta2 = self.R2.get_variation_vector()
+        self.dOm1 = str(self.R1.get_tangent_vector().t_diff())
+        self.dOm2 = str(self.R2.get_tangent_vector().t_diff())
+        self.sf = to_standard_form(self.eom, self.variables, self.inputs)
+
+    def test_eta1_blocks_exact(self):
+        M = self.sf[str(self.eta1)].M
+        assert set(M) == {self.dOm1, self.dOm2}
+        assert str(M[self.dOm1]) == "(J1(-1.0)+Hat(\\rho_1)Hat(\\rho_1)m1+Hat(l_1)Hat(l_1)m2)"
+        assert str(M[self.dOm2]) == "Hat(l_1)(R1)'R2Hat(\\rho_2)m2"
+
+    def test_eta2_blocks_exact(self):
+        M = self.sf[str(self.eta2)].M
+        assert set(M) == {self.dOm1, self.dOm2}
+        assert str(M[self.dOm1]) == "Hat(\\rho_2)(R2)'R1Hat(l_1)m2"
+        assert str(M[self.dOm2]) == "(J2(-1.0)+Hat(\\rho_2)Hat(\\rho_2)m2)"
+
+    def test_input_blocks_exact(self):
+        assert {k: str(v) for k, v in self.sf[str(self.eta1)].G.items()} == {"M1": "I"}
+        assert {k: str(v) for k, v in self.sf[str(self.eta2)].G.items()} == {"M2": "I"}
