@@ -19,7 +19,7 @@ from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose
+from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
 from geomech.core.operations.multiplication import (
     MMMul,
     Mul,
@@ -35,6 +35,20 @@ from geomech.utils.errors import AlgebraicError, NonLinearError
 # ---------------------------------------------------------------------------
 
 
+def _same(expr, query) -> bool:
+    """Node identity: same type and, for leaves, same name; otherwise the same rendered tree.
+
+    The type guard is the one ``Expr.__eq__`` uses, so ``Mul(k, x)`` (rendered ``kx``)
+    never matches the leaf ``Scalar("kx")``.
+    """
+    if type(expr) is not type(query):
+        return False
+    e_name, q_name = getattr(expr, "name", None), getattr(query, "name", None)
+    if e_name is not None or q_name is not None:
+        return e_name == q_name
+    return str(expr) == str(query)
+
+
 def _has_algebraic(expr, query) -> bool:
     """Check if query appears algebraically in expr (not inside calculus ops).
 
@@ -42,10 +56,21 @@ def _has_algebraic(expr, query) -> bool:
     not algebraically contain η. The pipeline always expands
     d/dt(A+B) → d/dt(A) + d/dt(B) before extraction, so calculus ops
     only wrap leaf nodes by the time this is called.
+
+    Raises ``AlgebraicError`` if the query is found *only inside* a calculus
+    operator that is not itself the query (e.g. query ẍ inside d/dt(ẍ), or
+    δx inside d/dt(δx)): such a term has no linear coefficient and must
+    never be silently dropped.
     """
-    if str(expr) == str(query):
+    if _same(expr, query):
         return True
     if isinstance(expr, (TimeDerivative, TimeIntegral, Variation)):
+        if expr.has(query):
+            raise AlgebraicError(
+                f"extract_linear_coeff: '{query}' appears only inside the calculus"
+                f" operator '{expr}' (a higher order derivative, a variation or an"
+                " integral of the query); such a term has no linear coefficient"
+            )
         return False
     nodes = getattr(expr, "nodes", None)
     if nodes:
@@ -53,11 +78,35 @@ def _has_algebraic(expr, query) -> bool:
     return False
 
 
+def _zero_or_raise(func, expr, query, zero):
+    """Fallback for an unhandled node: *zero* if it is free of *query*, else a typed error.
+
+    Never returns zero for a term that contains the query.
+    """
+    if _has_algebraic(expr, query):
+        raise AlgebraicError(
+            f"{func}: unsupported node {type(expr).__name__} contains '{query}' in '{expr}'"
+        )
+    return zero
+
+
+def _scalar_from(expr, query):
+    """Dispatch a scalar query on *expr*'s type (scalar/vector/matrix expr)."""
+    match getattr(expr, "type", None):
+        case ExprType.SCALAR:
+            return _scalar_from_scalar(expr, query)
+        case ExprType.VECTOR:
+            return _scalar_from_vector(expr, query)
+        case ExprType.MATRIX:
+            return _scalar_from_matrix(expr, query)
+        case _:
+            raise NotImplementedError(f"_scalar_from: expr type | query='{query}', expr='{expr}'")
+
+
 def _nonlinear(func, node_type, expr, query):
     """Raise NonLinearError for nonlinear (query in both children)."""
     raise NonLinearError(
-        f"{func}: nonlinear — '{query}' appears in both sides"
-        f" of {node_type} in '{expr}'"
+        f"{func}: nonlinear — '{query}' appears in both sides of {node_type} in '{expr}'"
     )
 
 
@@ -113,7 +162,7 @@ def _scalar_from_scalar(expr, query):
 
     expr = coeff * query + ...  →  returns coeff (scalar).
     """
-    if str(expr) == str(query):
+    if _same(expr, query):
         from geomech.core.base.expressions import One
 
         return One
@@ -160,7 +209,7 @@ def _scalar_from_scalar(expr, query):
             return Zero
 
         case _:
-            return Zero
+            return _zero_or_raise("_scalar_from_scalar", expr, query, Zero)
 
 
 def _scalar_from_vector(expr, query):
@@ -190,13 +239,14 @@ def _scalar_from_vector(expr, query):
             return ZeroVector
 
         case MVMul():
+            # M v or (row) vᵀ M: both factors are linear, so coefficient = M c or cᵀ M
             mat, vec = expr.left, expr.right
             if _has_algebraic(mat, query) and _has_algebraic(vec, query):
                 _nonlinear("_scalar_from_vector", "MVMul", expr, query)
             if _has_algebraic(mat, query):
-                return MVMul(_scalar_from_matrix(mat, query), vec)
+                return MVMul(_scalar_from(mat, query), vec)
             if _has_algebraic(vec, query):
-                return MVMul(mat, _scalar_from_vector(vec, query))
+                return MVMul(mat, _scalar_from(vec, query))
             return ZeroVector
 
         case Cross():
@@ -209,8 +259,16 @@ def _scalar_from_vector(expr, query):
                 return MVMul(Hat(left), _scalar_from_vector(right, query))
             return ZeroVector
 
+        case Transpose():
+            # (c l)ᵀ = l cᵀ: coefficient of l is cᵀ
+            return Transpose(_scalar_from_vector(expr.expr, query))
+
+        case Vee():
+            # Vee(C l) = l Vee(C): coefficient of l is Vee(C)
+            return Vee(_scalar_from_matrix(expr.expr, query))
+
         case _:
-            return ZeroVector
+            return _zero_or_raise("_scalar_from_vector", expr, query, ZeroVector)
 
 
 def _scalar_from_matrix(expr, query):
@@ -249,8 +307,27 @@ def _scalar_from_matrix(expr, query):
                 return MMMul(left, _scalar_from_matrix(right, query))
             return ZeroMatrix
 
-        case _:
+        case Hat():
+            # Hat(c l) = l Hat(c): coefficient of l is Hat(c)
+            return Hat(_scalar_from_vector(expr.expr, query))
+
+        case Transpose():
+            # (C l)ᵀ = l Cᵀ: coefficient of l is Cᵀ
+            return Transpose(_scalar_from_matrix(expr.expr, query))
+
+        case VVMul():
+            # Outer product (a l) bᵀ = l (a bᵀ): coefficient of l is a bᵀ (or a cᵀ when l is in b)
+            left, right = expr.left, expr.right
+            if _has_algebraic(left, query) and _has_algebraic(right, query):
+                _nonlinear("_scalar_from_matrix", "VVMul", expr, query)
+            if _has_algebraic(left, query):
+                return VVMul(_scalar_from_vector(left, query), right)
+            if _has_algebraic(right, query):
+                return VVMul(left, Transpose(_scalar_from_vector(right.expr, query)))
             return ZeroMatrix
+
+        case _:
+            return _zero_or_raise("_scalar_from_matrix", expr, query, ZeroMatrix)
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +401,7 @@ def _vector_from_scalar(expr, query):
             return ZeroVector
 
         case _:
-            return ZeroVector
+            return _zero_or_raise("_vector_from_scalar", expr, query, ZeroVector)
 
 
 def _vector_from_vector(expr, query):
@@ -334,7 +411,7 @@ def _vector_from_vector(expr, query):
     """
     from geomech.core.base.expressions import IdentityMatrix
 
-    if str(expr) == str(query):
+    if _same(expr, query):
         return IdentityMatrix
 
     match expr:
@@ -383,7 +460,7 @@ def _vector_from_vector(expr, query):
             return ZeroMatrix
 
         case _:
-            return ZeroMatrix
+            return _zero_or_raise("_vector_from_vector", expr, query, ZeroMatrix)
 
 
 def _vector_from_mvmul_mat(mat, vec, query):
@@ -445,7 +522,7 @@ def _vector_from_mvmul_mat(mat, vec, query):
                         query,
                     )
                 case _:
-                    return ZeroMatrix
+                    return _zero_or_raise("_vector_from_mvmul_mat", mat, query, ZeroMatrix)
 
         case VVMul():
             # VVMul(v, Transpose(w)) is outer product (matrix).
@@ -454,7 +531,7 @@ def _vector_from_mvmul_mat(mat, vec, query):
             return _vector_from_vector(SVMul(outer_left, Dot(outer_right.expr, vec)), query)
 
         case _:
-            return ZeroMatrix
+            return _zero_or_raise("_vector_from_mvmul_mat", mat, query, ZeroMatrix)
 
 
 def _vector_from_vector_svmul_scalar(vec, scl, query):
@@ -583,7 +660,7 @@ def _matrix_from_matrix(expr, query):
     """Extract matrix query from matrix expr → matrix coefficient."""
     from geomech.core.base.expressions import IdentityMatrix
 
-    if str(expr) == str(query):
+    if _same(expr, query):
         return IdentityMatrix
 
     match expr:
@@ -616,4 +693,4 @@ def _matrix_from_matrix(expr, query):
             return ZeroMatrix
 
         case _:
-            return ZeroMatrix
+            return _zero_or_raise("_matrix_from_matrix", expr, query, ZeroMatrix)

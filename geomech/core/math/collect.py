@@ -86,11 +86,12 @@ def _collect_dot(expr, vec):
                 return Dot(l.right, MVMul(Transpose(l.left), r))
             if r.right == vec:
                 return Dot(r.right, MVMul(Transpose(r.left), l))
-            # Recurse: if vec is deeper, try flipping to put the MVMul
-            # containing vec on the left
+            # vec is deeper on one side only: peel that side's matrix off,
+            # Dot(M*f(vec), w) = Dot(f(vec), M^T*w), and let the Cross/MVMul
+            # rules expose vec (e.g. Dot(R1*(vec×a), R2*b) with R1 ≠ R2)
             if l.has(vec) and not r.has(vec):
-                pass  # l has vec, fall through to MVMul patterns below
-            elif r.has(vec) and not l.has(vec):
+                return collect(Dot(l.right, MVMul(Transpose(l.left), r)), vec)
+            if r.has(vec) and not l.has(vec):
                 return collect(Dot(r, l), vec)
             return expr
 
@@ -110,11 +111,16 @@ def _collect_dot(expr, vec):
                         return Dot(vec, Cross(inner.right, MVMul(Transpose(l.left), r)))
                     if inner.right == vec:
                         return Dot(vec, Cross(MVMul(Transpose(l.left), r), inner.left))
-            # vec not in MVMul — flip and let other patterns try
-            return collect(Dot(r, l), vec)
+                # vec is nested in a form these rules cannot expose (SVMul, VAdd,
+                # ...). Return unchanged rather than flipping, which would loop.
+                return expr
+            # vec not in MVMul — flip only if the other side holds it
+            if r.has(vec):
+                return collect(Dot(r, l), vec)
+            return expr
 
-        case (_, MVMul()):
-            # Flip so MVMul is on the left, recurse
+        case (_, MVMul()) if r.has(vec):
+            # vec is inside the MVMul: flip so MVMul is on the left, recurse
             return collect(Dot(r, l), vec)
 
         # Cross on one or both sides — scalar triple product
