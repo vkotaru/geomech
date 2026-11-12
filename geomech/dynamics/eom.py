@@ -9,12 +9,38 @@ separate_variations(expr, variation_vectors)
 
 from __future__ import annotations
 
+from geomech.core.base.types import ExprType
 from geomech.core.math.extract import extract_linear_coeff
 from geomech.core.math.ibp import integrate_by_parts
 from geomech.core.transformations.expand import expand
 from geomech.core.transformations.manifold_rules import apply_manifold_rules
 from geomech.core.transformations.simplify import full_simplify
 from geomech.dynamics.variables import SystemVariables
+
+
+def _check_variables(variables: SystemVariables):
+    """Every configuration variable must have a non-vanishing variation δq.
+
+    A Constant/numeric leaf has δq = 0 and would yield an empty equation keyed "0";
+    a variable of the wrong type (e.g. a Vector in ``scalars``) is rejected too.
+    """
+    groups = (
+        ("scalars", variables.scalars, ExprType.SCALAR),
+        ("vectors", variables.vectors, ExprType.VECTOR),
+        ("matrices", variables.matrices, ExprType.MATRIX),
+    )
+    for group_name, group, expected_type in groups:
+        for var in group:
+            if getattr(var, "type", None) != expected_type:
+                raise TypeError(
+                    f"SystemVariables.{group_name} entry '{var}' has type"
+                    f" {getattr(var, 'type', None)}, expected {expected_type}"
+                )
+            if var.is_constant or var.is_numeric or var.is_zero or var.delta().is_zero:
+                raise ValueError(
+                    f"SystemVariables.{group_name} entry '{var}' is constant: its variation"
+                    " vanishes, so it cannot be a configuration variable"
+                )
 
 
 def compute_eom(lagrangian, inf_work, variables: SystemVariables):
@@ -29,6 +55,8 @@ def compute_eom(lagrangian, inf_work, variables: SystemVariables):
     7. Expand
     8. Extract coefficients of each independent variation vector
     """
+    _check_variables(variables)
+
     # variation of the Lagrangian
     dL = lagrangian.delta()
 

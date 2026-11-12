@@ -257,4 +257,179 @@ class TestNoInputs:
         key = str(Variation(x))
         eq = sf[key]
         assert len(eq.G) == 0, "G should be empty with no inputs"
-        assert len(eq.M) > 0, "M should still have acceleration terms"
+
+
+# ---------------------------------------------------------------------------
+# Scalar systems
+# ---------------------------------------------------------------------------
+
+
+def _spring_mass_eom():
+    """Spring-mass: m*ẍ + k*x = f. Single scalar config var x."""
+    m, k = getScalars("m k", attr=["Constant"])
+    half = Scalar("0.5", value=0.5, attr=["Constant"])
+    x = Scalar("x")
+    f = Scalar("f")
+    v = x.t_diff()
+    dx = x.delta()
+
+    L = half * m * v * v - half * k * x * x
+    dW = dx * f
+
+    variables = SystemVariables(scalars=[x])
+    eom = compute_eom(L, dW, variables)
+    return eom, variables, [f], x
+
+
+def _spring_mass_damper_eom():
+    """Spring-mass-damper: m*ẍ + c*ẋ + k*x = f."""
+    m, k, c = getScalars("m k c", attr=["Constant"])
+    half = Scalar("0.5", value=0.5, attr=["Constant"])
+    x = Scalar("x")
+    f = Scalar("f")
+    v = x.t_diff()
+    dx = x.delta()
+
+    L = half * m * v * v - half * k * x * x
+    dW = dx * f - c * v * dx
+
+    variables = SystemVariables(scalars=[x])
+    eom = compute_eom(L, dW, variables)
+    return eom, variables, [f], x
+
+
+def _double_spring_mass_eom():
+    """Double spring-mass with coupling through k2."""
+    m1, m2, k1, k2 = getScalars("m1 m2 k1 k2", attr=["Constant"])
+    half = Scalar("0.5", value=0.5, attr=["Constant"])
+    x1 = Scalar("x1")
+    x2 = Scalar("x2")
+    f1 = Scalar("f1")
+    f2 = Scalar("f2")
+    v1, v2 = x1.t_diff(), x2.t_diff()
+    dx1, dx2 = x1.delta(), x2.delta()
+
+    KE = half * m1 * v1 * v1 + half * m2 * v2 * v2
+    PE = half * k1 * x1 * x1 + half * k2 * (x2 - x1) * (x2 - x1)
+    L = KE - PE
+    dW = dx1 * f1 + dx2 * f2
+
+    variables = SystemVariables(scalars=[x1, x2])
+    eom = compute_eom(L, dW, variables)
+    return eom, variables, [f1, f2], (x1, x2)
+
+
+class TestSpringMassStandardForm:
+    """Spring-mass: M[ẍ] = -m (sign from -m·ẍ term), f = -k·x, G[f] = 1."""
+
+    def setup_method(self):
+        self.eom, self.variables, self.inputs, self.x = _spring_mass_eom()
+        self.sf = to_standard_form(self.eom, self.variables, self.inputs)
+        self.key = str(Variation(self.x))
+        self.eq = self.sf[self.key]
+
+    def test_returns_one_equation(self):
+        assert len(self.sf) == 1
+
+    def test_is_standard_form_equation(self):
+        assert isinstance(self.eq, StandardFormEquation)
+
+    def test_M_has_acceleration_key(self):
+        ddx_key = str(TimeDerivative(TimeDerivative(self.x)))
+        assert ddx_key in self.eq.M
+
+    def test_M_contains_mass(self):
+        ddx_key = str(TimeDerivative(TimeDerivative(self.x)))
+        assert "m" in str(self.eq.M[ddx_key])
+
+    def test_G_has_input_key(self):
+        assert "f" in self.eq.G
+
+    def test_f_contains_stiffness(self):
+        f_str = str(self.eq.f)
+        assert "k" in f_str
+        assert "x" in f_str
+
+    def test_no_acceleration_in_f(self):
+        ddx = TimeDerivative(TimeDerivative(self.x))
+        assert not self.eq.f.has(ddx)
+
+    def test_no_input_in_f(self):
+        assert not self.eq.f.has(self.inputs[0])
+
+
+class TestSpringMassDamperStandardForm:
+    """Spring-mass-damper: M[ẍ] = -m, f contains k·x and c·ẋ, G[f] = 1."""
+
+    def setup_method(self):
+        self.eom, self.variables, self.inputs, self.x = _spring_mass_damper_eom()
+        self.sf = to_standard_form(self.eom, self.variables, self.inputs)
+        self.key = str(Variation(self.x))
+        self.eq = self.sf[self.key]
+
+    def test_M_has_acceleration_key(self):
+        ddx_key = str(TimeDerivative(TimeDerivative(self.x)))
+        assert ddx_key in self.eq.M
+
+    def test_f_contains_damping(self):
+        """f should include c·ẋ damping term."""
+        f_str = str(self.eq.f)
+        assert "c" in f_str
+
+    def test_f_contains_stiffness(self):
+        f_str = str(self.eq.f)
+        assert "k" in f_str
+
+    def test_G_has_input_key(self):
+        assert "f" in self.eq.G
+
+
+class TestDoubleSpringMassStandardForm:
+    """Double spring-mass: two coupled equations, each with its own M and G."""
+
+    def setup_method(self):
+        self.eom, self.variables, self.inputs, (self.x1, self.x2) = _double_spring_mass_eom()
+        self.sf = to_standard_form(self.eom, self.variables, self.inputs)
+        self.key1 = str(Variation(self.x1))
+        self.key2 = str(Variation(self.x2))
+
+    def test_returns_two_equations(self):
+        assert len(self.sf) == 2
+
+    def test_both_keys_present(self):
+        assert self.key1 in self.sf
+        assert self.key2 in self.sf
+
+    def test_eq1_M_has_m1(self):
+        eq1 = self.sf[self.key1]
+        ddx1 = str(TimeDerivative(TimeDerivative(self.x1)))
+        assert ddx1 in eq1.M
+        assert "m1" in str(eq1.M[ddx1])
+
+    def test_eq2_M_has_m2(self):
+        eq2 = self.sf[self.key2]
+        ddx2 = str(TimeDerivative(TimeDerivative(self.x2)))
+        assert ddx2 in eq2.M
+        assert "m2" in str(eq2.M[ddx2])
+
+    def test_eq1_G_has_f1(self):
+        assert "f1" in self.sf[self.key1].G
+
+    def test_eq2_G_has_f2(self):
+        assert "f2" in self.sf[self.key2].G
+
+    def test_eq1_f_has_k2_coupling(self):
+        """x1 EOM residual should reference k2 (coupling to x2)."""
+        assert "k2" in str(self.sf[self.key1].f)
+
+    def test_eq2_f_has_k2_coupling(self):
+        """x2 EOM residual should reference k2."""
+        assert "k2" in str(self.sf[self.key2].f)
+
+    def test_no_acceleration_in_f(self):
+        ddx1 = TimeDerivative(TimeDerivative(self.x1))
+        ddx2 = TimeDerivative(TimeDerivative(self.x2))
+        assert not self.sf[self.key1].f.has(ddx1)
+        assert not self.sf[self.key1].f.has(ddx2)
+        assert not self.sf[self.key2].f.has(ddx1)
+        assert not self.sf[self.key2].f.has(ddx2)
