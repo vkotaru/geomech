@@ -1,7 +1,9 @@
 import pytest
 
 from geomech.core.base.expressions import (
+    S2,
     SO3,
+    TS2,
     TSO3,
     I,
     IdentityMatrix,
@@ -182,3 +184,41 @@ class TestSO3Manifold:
         R = SO3("R")
         dR = R.t_diff()
         assert isinstance(dR, MMMul)
+
+
+class TestAttrListIsNotShared:
+    """A leaf copies the caller's ``attr`` list; appending its own flags must not leak into
+    another leaf built from the same list (review F6, fix plan 2.4)."""
+
+    @pytest.mark.parametrize(
+        "make",
+        [
+            lambda attr: SkewSymmMatrix("K", attr=attr),
+            lambda attr: SO3("R", attr=attr),
+            lambda attr: S2("q", attr=attr),
+            lambda attr: Matrix("M", attr=attr),
+            lambda attr: Vector("v", attr=attr),
+            lambda attr: Scalar("s", attr=attr),
+        ],
+        ids=["SkewSymmMatrix", "SO3", "S2", "Matrix", "Vector", "Scalar"],
+    )
+    def test_shared_attr_list_is_not_mutated(self, make):
+        shared = ["Constant"]
+        leaf = make(shared)
+        assert shared == ["Constant"]
+        assert leaf.is_constant
+        J = Matrix("J", attr=shared)
+        assert not J.is_skew_symmetric and not J.flags.is_orthogonal and not J.is_unit_norm
+        leaf.attr.append("SymmetricMatrix")  # mutating the leaf's own list does not leak
+        assert shared == ["Constant"]
+
+    def test_skew_and_rotation_from_one_list_keep_their_own_flags(self):
+        shared = ["Constant"]
+        K, R, q = SkewSymmMatrix("K", attr=shared), SO3("R", attr=shared), S2("q", attr=shared)
+        assert K.is_skew_symmetric and not K.flags.is_orthogonal
+        assert R.flags.is_orthogonal and not R.is_skew_symmetric
+        assert q.is_unit_norm and shared == ["Constant"]
+
+    def test_tangent_vectors_do_not_alias(self):
+        a, b = TS2("a"), TSO3("b")
+        assert a.attr is not b.attr and a.attr == ["TangentVector"]

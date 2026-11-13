@@ -110,6 +110,15 @@ class SMMul(_BinaryMixin, MatrixExpr):
         else:
             raise ExpressionMismatchError("SMMul", l.type, r.type)
 
+    @property
+    def is_symmetric(self):
+        return self.left.is_symmetric
+
+    @property
+    def is_skew_symmetric(self):
+        """A scalar multiple of a skew-symmetric matrix is skew-symmetric."""
+        return self.left.is_skew_symmetric
+
     def __str__(self):
         return str(self.left) + str(self.right)
 

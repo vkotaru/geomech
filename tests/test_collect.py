@@ -1,12 +1,14 @@
 """Tests for geomech.core.math.collect — rearrange Dot so target vec is on the left."""
 
+import numpy as np
 import pytest
 
 from geomech.core.base.expressions import Matrix, Scalar, Vector
 from geomech.core.math.collect import collect
 from geomech.core.operations.addition import Add
-from geomech.core.operations.geometry import Cross, Dot
+from geomech.core.operations.geometry import Cross, Dot, Transpose
 from geomech.core.operations.multiplication import Mul, MVMul
+from geomech.numeric import evaluate
 
 
 @pytest.fixture
@@ -202,16 +204,23 @@ class TestKineticEnergyPatterns:
         assert isinstance(result.right, Cross)
 
     def test_mvmul_cross_vec_in_mvmul(self, vectors, matrices):
-        """Dot(M*vec, Cross(b, c)) → Dot(vec, Cross(M*b, c))."""
+        """Dot(M*vec, Cross(b, c)) → Dot(vec, Mᵀ Cross(b, c)).
+
+        (M v)·(b × c) = v·(Mᵀ(b × c)); the earlier expectation v·((M b) × c) is a false
+        identity for every M ≠ I (engine audit F1).
+        """
         v, w, u = vectors
         M = matrices
         expr = Dot(MVMul(M, v), Cross(w, u))
         result = collect(expr, v)
-        assert str(result.left) == "v"
-        assert isinstance(result.right, Cross)
-        # Cross(MVMul(M, w), u)
-        assert isinstance(result.right.left, MVMul)
-        assert str(result.right.right) == "u"
+        assert result == Dot(v, MVMul(Transpose(M), Cross(w, u)))
+        assert str(result) == "Dot(v,(M)'Cross(w,u))"
+        rng = np.random.default_rng(0)
+        for _ in range(3):
+            env = {"M": rng.normal(size=(3, 3))}
+            for name in "vwu":
+                env[name] = rng.normal(size=(3, 1))
+            assert abs(evaluate(expr, env) - evaluate(result, env)) < 1e-12
 
 
 # ---------------------------------------------------------------------------
