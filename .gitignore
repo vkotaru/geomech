@@ -145,3 +145,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+specs/reviews/scripts/engine_fuzz_findings.json

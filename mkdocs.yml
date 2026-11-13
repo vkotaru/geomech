@@ -57,6 +57,7 @@ nav:
   - Getting Started: getting-started.md
   - Examples: examples.md
   - Variation-Based Linearization: vbl.md
+  - Verifying an Equation Numerically: numeric-verification.md
   - API Reference: reference/
 
 markdown_extensions:

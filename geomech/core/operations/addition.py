@@ -29,7 +29,13 @@ def _check_sizes(nodes, op_name: str):
 
 
 def _flatten_nodes(args, expected_type: type, expr_type: ExprType) -> list:
-    """Flatten nested same-type adds and validate types."""
+    """Flatten nested same-type adds and validate types.
+
+    An addition with no operands is refused (``TypeError``): the zero of each type is a
+    leaf (``Zero``, ``ZeroVector``, ``ZeroMatrix``), and an empty sum would make the
+    ``all(...)``-based predicates (``is_constant``, ``is_zero``, ``MAdd.is_symmetric``,
+    ``MAdd.is_skew_symmetric``) vacuously true.
+    """
     nodes = []
     for arg in args:
         if isinstance(arg, (list, tuple)):
@@ -43,6 +49,11 @@ def _flatten_nodes(args, expected_type: type, expr_type: ExprType) -> list:
             if arg.type != expr_type:
                 raise ExpressionMismatchError(expected_type.__name__, expr_type, arg.type)
             nodes.append(arg)
+    if not nodes:
+        raise TypeError(
+            f"{expected_type.__name__}() needs at least one operand; use the zero leaf of"
+            " the type for an empty sum"
+        )
     # Size validation for vector/matrix additions
     if expr_type in (ExprType.VECTOR, ExprType.MATRIX):
         _check_sizes(nodes, expected_type.__name__)
@@ -82,3 +93,12 @@ class MAdd(_NaryMixin, MatrixExpr):
 
     def __init__(self, *args):
         self.nodes = _flatten_nodes(args, MAdd, ExprType.MATRIX)
+
+    @property
+    def is_symmetric(self):
+        return all(n.is_symmetric for n in self.nodes)
+
+    @property
+    def is_skew_symmetric(self):
+        """A sum of skew-symmetric matrices is skew-symmetric."""
+        return all(n.is_skew_symmetric for n in self.nodes)

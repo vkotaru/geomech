@@ -141,7 +141,8 @@ def _eliminate(expr):
         case VVMul():
             l, r = _eliminate(expr.left), _eliminate(expr.right)
             if _is_zero(l) or _is_zero(r):
-                return Zero
+                # inner product vᵀw → scalar 0; outer product v wᵀ → 3×3 zero
+                return _zero_for(expr)
             return VVMul(l, r)
 
         # ---- binary geometry ops ----
@@ -162,7 +163,9 @@ def _eliminate(expr):
             inner = _eliminate(expr.expr)
             if _is_zero(inner):
                 return ZeroMatrix
-            if isinstance(inner, Vee):
+            # Hat(Vee(X)) = X only for skew-symmetric X (Vee reads three entries of X,
+            # so for a general matrix Hat(Vee(X)) is the skew part of X, e.g. Hat(Vee(I)) = 0).
+            if isinstance(inner, Vee) and _is_skew_symmetric(inner.expr):
                 return inner.expr
             return Hat(inner)
 
@@ -238,6 +241,11 @@ def _is_one(expr) -> bool:
 def _is_identity(expr) -> bool:
     flags = getattr(expr, "flags", None)
     return flags is not None and flags.is_identity
+
+
+def _is_skew_symmetric(expr) -> bool:
+    """True for Hat(·), a SkewSymmMatrix leaf, and SMMul/MAdd/Transpose of such."""
+    return isinstance(expr, Hat) or getattr(expr, "is_skew_symmetric", False)
 
 
 def _is_numeric_leaf(expr) -> bool:

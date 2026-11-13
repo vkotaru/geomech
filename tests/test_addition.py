@@ -496,3 +496,28 @@ class TestAdditionDiff:
         B = Matrix("B", attr=["Constant"])
         d = (A + B).t_diff()
         assert d == ZeroMatrix
+
+
+# ---------------------------------------------------------------------------
+# Empty sums are refused (review F7)
+# ---------------------------------------------------------------------------
+
+
+class TestEmptyAddition:
+    """An n-ary addition with no operands is a ``TypeError``: the zero of each type is a
+    leaf, and an empty ``MAdd`` would be vacuously symmetric and skew-symmetric."""
+
+    @pytest.mark.parametrize("cls", [Add, VAdd, MAdd])
+    def test_no_operands_raises(self, cls):
+        with pytest.raises(TypeError, match="at least one operand"):
+            cls()
+        with pytest.raises(TypeError, match="at least one operand"):
+            cls(*[])
+        with pytest.raises(TypeError, match="at least one operand"):
+            cls([])
+
+    def test_single_operand_is_allowed(self):
+        (a,) = getScalars("a")
+        assert Add(a).nodes == [a]
+        A = Matrix("A", attr=["SymmetricMatrix"])
+        assert MAdd(A).is_symmetric and not MAdd(A).is_skew_symmetric

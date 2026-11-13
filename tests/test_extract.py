@@ -1098,15 +1098,15 @@ class TestNotImplementedErrors:
             _vector_from_matrix(expr, v)
 
     def test_vector_from_matrix_mmmul_left(self, vectors, matrices):
-        """MMMul(Hat(v), M) extract v → MMMul(coeff, M)."""
+        """MMMul(Hat(v), M) extract v: linear in v but no left 3×3 coefficient exists, so
+        AlgebraicError (it used to return MMMul(0, M), a silent zero; fix plan 1.4)."""
         v, _, _ = vectors
         M, _ = matrices
         from geomech.core.math.extract import _vector_from_matrix
 
         expr = MMMul(Hat(v), M)
-        result = _vector_from_matrix(expr, v)
-        assert isinstance(result, MMMul)
-        assert str(result.right) == "M"
+        with pytest.raises(AlgebraicError, match="no left matrix coefficient"):
+            _vector_from_matrix(expr, v)
 
     def test_vector_from_matrix_mmmul_left_is_query(self, vectors, matrices):
         """MMMul(Hat(v), M) where Hat(v) is the query itself — unlikely but covers leaf."""
@@ -1119,15 +1119,15 @@ class TestNotImplementedErrors:
         assert str(result) == "M"
 
     def test_vector_from_matrix_mmmul_right_nonleaf(self, vectors, matrices):
-        """MMMul(M, MMMul(Hat(v), M)) extract v → MMMul(M, coeff)."""
+        """MMMul(M, MMMul(Hat(v), M)) extract v: recursion reaches Hat(v), which raises
+        AlgebraicError (it used to return MMMul(M, MMMul(0, M)); fix plan 1.4)."""
         v, w, _ = vectors
         M, _ = matrices
         from geomech.core.math.extract import _vector_from_matrix
 
         expr = MMMul(M, MMMul(Hat(v), M))
-        result = _vector_from_matrix(expr, v)
-        assert isinstance(result, MMMul)
-        assert str(result.left) == "M"
+        with pytest.raises(AlgebraicError, match="no left matrix coefficient"):
+            _vector_from_matrix(expr, v)
 
     def test_vector_from_matrix_vvmul(self, vectors):
         """VVMul outer product cannot be factored as C * q — AlgebraicError."""
@@ -1139,15 +1139,15 @@ class TestNotImplementedErrors:
             _vector_from_matrix(expr, v)
 
     def test_vector_from_matrix_smmul_mat_side(self, vectors, matrices):
-        """SMMul(Hat(v), s) extract v → SMMul(coeff, s)."""
+        """SMMul(Hat(v), s) extract v: the matrix side is Hat(v), which has no left
+        coefficient, so AlgebraicError (it used to return SMMul(0, s); fix plan 1.4)."""
         v, _, _ = vectors
         from geomech.core.math.extract import _vector_from_matrix
 
         s = Scalar("s")
         expr = SMMul(Hat(v), s)
-        result = _vector_from_matrix(expr, v)
-        assert isinstance(result, SMMul)
-        assert str(result.right) == "s"
+        with pytest.raises(AlgebraicError, match="no left matrix coefficient"):
+            _vector_from_matrix(expr, v)
 
     def test_vector_from_matrix_smmul_scalar_side(self, vectors, matrices):
         """SMMul(M, Dot(v,w)) — scalar depends on query, AlgebraicError."""

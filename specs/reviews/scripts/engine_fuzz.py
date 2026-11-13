@@ -321,7 +321,9 @@ class JetEvaluator:
         self.overrides = {} if overrides is None else overrides
         # gauge="tangential": Variation(omega) for an S2 tangent vector omega is evaluated as
         # the projection of d(omega)/d(eps) onto the tangent plane of q (drops the component
-        # along q).  This is the representative that manifold_rules substitutes.
+        # along q).  This was the representative that manifold_rules substituted before
+        # fix plan 1.1 (xi_dot - omega x xi); the exact rule is now xi_dot - 2 omega x xi,
+        # so the reference for the manifold_rules campaign is gauge="full".
         self.gauge = gauge
 
     # -- leaves -----------------------------------------------------------
@@ -1124,8 +1126,9 @@ def fuzz_manifold_rules(n_cases, seed):
                 if rng.random() < 0.5
                 else VAdd(Variation(L.wp), gen.vector(depth))
             )
+        # reference: the exact delta(omega) = xi_dot - 2 omega x xi (fix plan 1.1); the
+        # "tangential" gauge is the pre-fix formula and is no longer a valid reference.
         run_transform_case("manifold_rules[full delta]", tr, expr, rng, gauge="full")
-        run_transform_case("manifold_rules[tangential delta]", tr, expr, rng, gauge="tangential")
 
 
 def fuzz_collect(n_cases, seed):
@@ -1181,9 +1184,39 @@ def fuzz_collect(n_cases, seed):
                 ),
             ),
         ]
-        expr = builders[rng.integers(len(builders))]()
-        linear = _count_occurrences(expr, vec) == 1
-        label = "collect[target occurs once]" if linear else "collect[target occurs several times]"
+
+        # Target inside the *matrix* factor of an MVMul (phase-1 review F1): Hat(v),
+        # v cᵀ, M Hat(v), on either side, with and without a matrix on the other side.
+        # Transposition cannot expose it; collect must raise AlgebraicError (a documented
+        # error), never recurse.
+        def _col(v):  # VVMul(v, wᵀ) needs a column vector on the left
+            while isinstance(v, Transpose):
+                v = v.expr
+            return v
+
+        matrix_factor_builders = [
+            lambda: Dot(MVMul(Hat(vec), gen.vector(d)), gen.vector(d)),
+            lambda: Dot(gen.vector(d), MVMul(Hat(vec), gen.vector(d))),
+            lambda: Dot(MVMul(VVMul(vec, Transpose(gen.vector(d))), gen.vector(d)), gen.vector(d)),
+            lambda: Dot(
+                gen.vector(d), MVMul(VVMul(_col(gen.vector(d)), Transpose(vec)), gen.vector(d))
+            ),
+            lambda: Dot(MVMul(MMMul(gen.matrix(d), Hat(vec)), gen.vector(d)), gen.vector(d)),
+            lambda: Dot(MVMul(Hat(vec), gen.vector(d)), MVMul(gen.matrix(d), gen.vector(d))),
+            lambda: Dot(MVMul(gen.matrix(d), gen.vector(d)), MVMul(Hat(vec), gen.vector(d))),
+            lambda: Dot(MVMul(Hat(vec), gen.vector(d)), Cross(gen.vector(d), gen.vector(d))),
+            lambda: Dot(Cross(gen.vector(d), gen.vector(d)), MVMul(Hat(vec), gen.vector(d))),
+            lambda: Dot(MVMul(gen.matrix(d), MVMul(Hat(vec), gen.vector(d))), gen.vector(d)),
+        ]
+        if rng.random() < 0.25:
+            expr = matrix_factor_builders[rng.integers(len(matrix_factor_builders))]()
+            label = "collect[target inside matrix factor]"
+        else:
+            expr = builders[rng.integers(len(builders))]()
+            linear = _count_occurrences(expr, vec) == 1
+            label = (
+                "collect[target occurs once]" if linear else "collect[target occurs several times]"
+            )
         run_transform_case(label, lambda e, v=vec: collect(e, v), expr, rng)
 
 
