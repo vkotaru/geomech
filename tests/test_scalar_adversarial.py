@@ -363,7 +363,7 @@ class TestVaryingInertia:
 
 
 class TestElasticSphericalPendulum:
-    """Hand derivation (S² convention q̇ = ω × q, δq = ξ × q, δω = ξ̇ − ω × ξ).
+    """Hand derivation (S² convention q̇ = ω × q, δq = ξ × q, δω = ξ̇ − 2 ω × ξ).
 
     δKE = m l̇ δl̇ + m l (ω·ω) δl + m l² ω·ξ̇          (ω·(ω×ξ) = 0)
     δPE = m g (q·e₃) δl + m g l ξ·(q×e₃) + k (l−l₀) δl  ((ξ×q)·e₃ = ξ·(q×e₃))
@@ -660,8 +660,9 @@ class TestNonLinearAcceleration:
             extract_linear_coeff(SVMul(a, Mul(self.xdd, self.xdd)), self.xdd)
 
     def test_matrix_query_raises_typed(self):
-        """(SCALAR expr, MATRIX query) is outside the dispatch grid."""
-        with pytest.raises(NotImplementedError):
+        """(SCALAR expr, MATRIX query) is outside the dispatch grid: AlgebraicError
+        (was NotImplementedError before fix plan 1.4)."""
+        with pytest.raises(AlgebraicError, match="no left coefficient"):
             extract_linear_coeff(Mul(self.m, self.x), Matrix("A"))
 
     def test_jerk_term_is_not_silently_dropped(self):

@@ -79,6 +79,11 @@ class Hat(_UnaryMixin, MatrixExpr):
         else:
             raise ExpressionMismatchError("Hat", ExprType.VECTOR, expr.type)
 
+    @property
+    def is_skew_symmetric(self):
+        """Hat(v) is skew-symmetric for every v."""
+        return True
+
     def __str__(self):
         return "Hat(" + str(self.expr) + ")"
 
@@ -136,6 +141,15 @@ class Transpose(_BaseMixin, Expr):
     @property
     def is_zero(self):
         return self.expr.is_zero if self.expr else False
+
+    @property
+    def is_symmetric(self):
+        return self.expr.is_symmetric if self.expr else False
+
+    @property
+    def is_skew_symmetric(self):
+        """The transpose of a skew-symmetric matrix (−X) is skew-symmetric."""
+        return self.expr.is_skew_symmetric if self.expr else False
 
     @property
     def size(self):

@@ -1,17 +1,34 @@
 """Manifold kinematic substitutions applied during EOM derivation.
 
 For S2 (unit sphere) with manifold point q, tangent vector ω, variation vector ξ:
-  - Variation(ω) → ξ̇ - ω × ξ        (derived from δ/d/dt commutativity)
+  - Variation(ω) → ξ̇ - 2 ω × ξ        (Lee et al. eq. 5.13 on the constraint set ξ ⊥ q)
 
 For SO3 (rotation group) with tangent vector Ω, variation vector η:
-  - Variation(Ω) → η̇ + Ω × η        (body-frame angular velocity convention)
+  - Variation(Ω) → η̇ + Ω × η          (body-frame angular velocity convention)
 
-The expansion of δ(ω) follows from the commutativity of δ and d/dt on the
-action integral.  Starting from q̇ = ω × q and δq = ξ × q, setting
-δ(q̇) = d/dt(δq) and solving for δ(ω) gives  δ(ω) = ξ̇ - ω × ξ.
+Derivation for S2.  The kinematics are q̇ = ω × q with ω ⊥ q (so ω = q × q̇) and the
+variation is δq = ξ × q with ξ ⊥ q.  Lee et al. eq. (5.13) give the variation of the
+angular velocity as
 
-Similarly, for SO3 with Ṙ = R·Hat(Ω) and δR = R·Hat(η), commutativity
-of δ and d/dt gives  δ(Ω) = η̇ + Ω × η.
+    δω = -S(ω) ξ + (I - q qᵀ) ξ̇ = ξ̇ - ω × ξ - q (q · ξ̇).
+
+The last term is not zero.  Differentiating the constraint ξ · q = 0 along the curve,
+
+    q · ξ̇ = -ξ · q̇ = -ξ · (ω × q) = q · (ω × ξ),
+
+and because ω and ξ both lie in the tangent plane, ω × ξ is parallel to q, so
+q (q · ξ̇) = q (q · (ω × ξ)) = ω × ξ.  Hence, on the constraint set,
+
+    δω = ξ̇ - 2 ω × ξ.
+
+δω is *not* tangent to the sphere: its normal component is q · δω = -q · ξ̇ = -q · (ω × ξ),
+which is what keeps δ(ω · q) = 0.  The earlier rule ξ̇ - ω × ξ is only the tangential
+projection (I - q qᵀ) δω; it is correct whenever ∂L/∂ω ⊥ q (every Lagrangian that depends
+on ω only through q̇ = ω × q) and wrong otherwise: with ∂L/∂ω = m l² ω + c the gyroscopic
+term 2 ω × c came out as ω × c, i.e. at half strength.
+
+For SO3, with Ṙ = R·Hat(Ω) and δR = R·Hat(η), equating the mixed derivatives
+d/dt(δR) = δ(Ṙ) gives δΩ = η̇ + Ω × η exactly (Lee et al. eq. 6.9).
 """
 
 from __future__ import annotations
@@ -23,7 +40,7 @@ from geomech.core.operations.geometry import Cross
 from geomech.core.operations.multiplication import SVMul
 from geomech.dynamics.variables import SystemVariables
 
-_NEG1 = Scalar("(-1)", value=-1, attr=["Constant"])
+_NEG2 = Scalar("(-2)", value=-2, attr=["Constant"])
 
 
 def apply_manifold_rules(expr, variables: SystemVariables):
@@ -63,10 +80,10 @@ def _substitute(expr, tangent_map):
         if isinstance(inner, (TS2, TSO3)) and str(inner) in tangent_map:
             kind, parent, omega, var_vec = tangent_map[str(inner)]
             if kind == "S2":
-                # δ(ω) = ξ̇ - ω × ξ
+                # δ(ω) = ξ̇ - 2 ω × ξ   (see the module docstring)
                 return VAdd(
                     TimeDerivative(var_vec),
-                    SVMul(Cross(omega, var_vec), _NEG1),
+                    SVMul(Cross(omega, var_vec), _NEG2),
                 )
             elif kind == "SO3":
                 # δ(Ω) = η̇ + Ω × η

@@ -5,12 +5,17 @@ Dispatch grid (query_type × expr_type → result_type):
     query \\ expr  |  Scalar  |  Vector  |  Matrix
     --------------|---------|---------|--------
     Scalar        | Scalar  | Vector  | Matrix
-    Vector        | Vector  | Matrix  | Matrix
-    Matrix        | (n/a)   | (n/a)   | (n/a)
+    Vector        | Vector  | Matrix  | (raises)
+    Matrix        | (raises)| (raises)| Matrix (partial)
 
-extract_linear_coeff(query, expr) dispatches to the appropriate function.
+extract_linear_coeff(expr, query) dispatches to the appropriate function.
 
-Assumes *query* appears linearly (degree 1) in each term.
+The coefficient is always a *left* factor: ``c·s``, ``cᵀ·v``, ``C·v`` or ``C·N``. A term
+that is linear in the query but has no such factor (a vector query inside a matrix
+expression, ``M·Hat(v)`` or ``v wᵀ``, whose coefficient would be a 3-tensor; a scalar
+factor ``⟨a, M b⟩`` of a matrix query) raises ``AlgebraicError``; a term where the query
+occurs in both children of a product raises ``NonLinearError``. Nothing that contains the
+query is ever returned as a zero coefficient.
 """
 
 from __future__ import annotations
@@ -145,9 +150,9 @@ def extract_linear_coeff(expr, query):
         case (ExprType.MATRIX, ExprType.MATRIX):
             return _matrix_from_matrix(expr, query)
         case _:
-            raise NotImplementedError(
-                f"extract_linear_coeff: query type {q_type}"
-                f" from expr type {e_type}"
+            raise AlgebraicError(
+                f"extract_linear_coeff: a {q_type.name if q_type else q_type} query has no"
+                f" left coefficient in a {e_type.name if e_type else e_type} expression"
                 f" | query='{query}', expr='{expr}'"
             )
 
@@ -426,13 +431,14 @@ def _vector_from_vector(expr, query):
         case Cross():
             left, right = expr.left, expr.right
             if left == right:
-                return ZeroMatrix
+                return ZeroMatrix  # x × x = 0 identically
+            if _has_algebraic(left, query) and _has_algebraic(right, query):
+                # before the shortcuts: Cross(q, Cross(a, q)) is quadratic in q
+                _nonlinear("_vector_from_vector", "Cross", expr, query)
             if right == query:
                 return Hat(left)
             if left == query:
                 return SMMul(Hat(right), -1)
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
-                _nonlinear("_vector_from_vector", "Cross", expr, query)
             if _has_algebraic(left, query):
                 return MMMul(SMMul(Hat(right), -1), _vector_from_vector(left, query))
             if _has_algebraic(right, query):
@@ -441,6 +447,9 @@ def _vector_from_vector(expr, query):
 
         case MVMul():
             mat, vec = expr.left, expr.right
+            if _has_algebraic(mat, query) and _has_algebraic(vec, query):
+                # MVMul(Hat(q), q), MVMul(q aᵀ, q), ... are quadratic in q
+                _nonlinear("_vector_from_vector", "MVMul", expr, query)
             if _has_algebraic(vec, query):
                 if vec == query:
                     return mat
@@ -595,14 +604,23 @@ def _vector_from_vector_svmul_scalar(vec, scl, query):
             return ZeroMatrix
 
         case _:
-            raise NotImplementedError(
-                f"_vector_from_vector: SVMul scalar {type(scl).__name__}"
-                f" | query='{query}', expr='{full_expr}'"
-            )
+            return _zero_or_raise("_vector_from_vector", full_expr, query, ZeroMatrix)
+
+
+def _no_left_coefficient(func, expr, query):
+    raise AlgebraicError(
+        f"{func}: '{expr}' is linear in '{query}' but has no left matrix coefficient"
+        " (the map is a 3-tensor, not C * query)"
+    )
 
 
 def _vector_from_matrix(expr, query):
-    """Extract vector query from matrix expr → matrix coefficient."""
+    """Extract vector query from matrix expr → matrix coefficient.
+
+    A matrix that depends linearly on a vector (``Hat(v)``, ``v wᵀ``, products and sums
+    of these) has no 3×3 left coefficient ``C`` with ``C v = expr``; every such term raises
+    ``AlgebraicError``. Only terms free of the query reduce, to ``ZeroMatrix``.
+    """
     match expr:
         case MAdd(nodes=nodes):
             extracted = [_vector_from_matrix(n, query) for n in nodes if _has_algebraic(n, query)]
@@ -627,11 +645,13 @@ def _vector_from_matrix(expr, query):
             return ZeroMatrix
 
         case VVMul():
-            raise AlgebraicError(
-                f"Cannot extract vector query '{query}' from outer"
-                f" product '{expr}': rank-1 matrix does not"
-                " factor as C * q"
-            )
+            if _has_algebraic(expr, query):
+                raise AlgebraicError(
+                    f"Cannot extract vector query '{query}' from outer"
+                    f" product '{expr}': rank-1 matrix does not"
+                    " factor as C * q"
+                )
+            return ZeroMatrix
 
         case SMMul():
             mat, scl = expr.left, expr.right
@@ -647,8 +667,13 @@ def _vector_from_matrix(expr, query):
                 )
             return ZeroMatrix
 
-        case _:
+        case Hat() | Transpose():
+            if _has_algebraic(expr, query):
+                _no_left_coefficient("_vector_from_matrix", expr, query)
             return ZeroMatrix
+
+        case _:
+            return _zero_or_raise("_vector_from_matrix", expr, query, ZeroMatrix)
 
 
 # ---------------------------------------------------------------------------
@@ -688,8 +713,13 @@ def _matrix_from_matrix(expr, query):
 
         case SMMul():
             mat, scl = expr.left, expr.right
+            if _has_algebraic(mat, query) and _has_algebraic(scl, query):
+                _nonlinear("_matrix_from_matrix", "SMMul", expr, query)
             if _has_algebraic(mat, query):
                 return SMMul(_matrix_from_matrix(mat, query), scl)
+            if _has_algebraic(scl, query):
+                # Z * <a, M b> is linear in M but its coefficient is a 4-tensor
+                _no_left_coefficient("_matrix_from_matrix", expr, query)
             return ZeroMatrix
 
         case _:

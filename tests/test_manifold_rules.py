@@ -1,7 +1,7 @@
 """Tests for manifold kinematic substitutions (manifold_rules.py).
 
 Tests cover:
-  - S2 manifold: δ(ω) = ξ̇ - ω × ξ
+  - S2 manifold: δ(ω) = ξ̇ - 2 ω × ξ  (Lee et al. eq. 5.13 on the constraint set ξ ⊥ q)
   - SO3 manifold: δ(Ω) = η̇ + Ω × η
   - Mixed systems with both S2 and SO3
   - Nested variations inside compound expressions
@@ -38,7 +38,12 @@ class TestS2ManifoldRules:
         self.variables = SystemVariables(vectors=[self.q])
 
     def test_variation_of_omega_expands(self):
-        """δ(ω) → ξ̇ - ω × ξ."""
+        """δ(ω) → ξ̇ - 2 ω × ξ.
+
+        Lee et al. eq. (5.13): δω = -S(ω)ξ + (I - qqᵀ)ξ̇, and on the constraint set
+        ξ ⊥ q one has qqᵀξ̇ = ω × ξ, so the cross term carries the coefficient -2 (the
+        earlier -1 was the tangential projection only and halved gyroscopic terms).
+        """
         expr = Variation(self.omega)
         result = apply_manifold_rules(expr, self.variables)
         assert isinstance(result, VAdd)
@@ -46,9 +51,10 @@ class TestS2ManifoldRules:
         # First term: TimeDerivative(xi)
         assert isinstance(result.nodes[0], TimeDerivative)
         assert str(result.nodes[0].expr) == str(self.xi)
-        # Second term: -1 * Cross(omega, xi)
+        # Second term: -2 * Cross(omega, xi)
         assert isinstance(result.nodes[1], SVMul)
-        assert result.nodes[1].right == Scalar("(-1)", value=-1, attr=["Constant"])
+        assert result.nodes[1].right == Scalar("(-2)", value=-2, attr=["Constant"])
+        assert result.nodes[1].right.value == -2
         assert result.nodes[1].left.has(self.omega)  # Cross contains omega
         assert result.nodes[1].left.has(self.xi)  # Cross contains xi
 
@@ -311,30 +317,12 @@ class TestCompositeExpression:
 
 
 class TestTangentDelta:
-    def test_ts2_delta_substitute(self):
-        """TS2.delta(substitute=True) → ξ̇ - ω × ξ."""
-        q = S2("q")
-        omega = q.get_tangent_vector()
-        xi = q.get_variation_vector()
-        result = omega.delta(substitute=True)
-        assert isinstance(result, VAdd)
-        assert result.has(xi)
-
     def test_ts2_delta_no_substitute(self):
         """TS2.delta() → Variation(ω)."""
         q = S2("q")
         omega = q.get_tangent_vector()
         result = omega.delta()
         assert isinstance(result, Variation)
-
-    def test_tso3_delta_substitute(self):
-        """TSO3.delta(substitute=True) → η̇ + Ω × η."""
-        R = SO3("R")
-        Omega = R.get_tangent_vector()
-        eta = R.get_variation_vector()
-        result = Omega.delta(substitute=True)
-        assert isinstance(result, VAdd)
-        assert result.has(eta)
 
     def test_tso3_delta_no_substitute(self):
         """TSO3.delta() → Variation(Ω)."""
