@@ -56,6 +56,7 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - Examples: examples.md
+  - Variation-Based Linearization: vbl.md
   - API Reference: reference/
 
 markdown_extensions:

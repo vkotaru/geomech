@@ -1,6 +1,6 @@
 # geomech
 
-A Python library for symbolic derivation of equations of motion, variation based linearization on smooth manifolds, $$R,R^3,SO(3),S^2,SE(3)$$.
+A Python library for the symbolic derivation of equations of motion and their variation-based linearization on smooth manifolds: $R$, $R^3$, $S^2$, $SO(3)$ and their products (e.g. $SE(3)$ as $R^3 \times SO(3)$).
 
 This work builds on the methods and math described in 
 1. [Global Formulations of Lagrangian and Hamiltonian Dynamics on Manifolds](https://link.springer.com/book/10.1007/978-3-319-56953-6) 
@@ -20,6 +20,9 @@ The pipeline:
 3. Call `compute_eom()` -- the library takes variations, applies the
    product rule, expands, integrates by parts, simplifies, and
    extracts the equations
+4. Optionally call `to_standard_form()` for `M(q) a + f + G u = 0`, or
+   `linearize()` for the variation-based linearization `M δẋ = A δx + B δu`
+   along a trajectory
 
 ## How it works
 

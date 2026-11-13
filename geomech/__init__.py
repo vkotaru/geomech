@@ -79,9 +79,11 @@ from geomech.core.transformations import (
 
 # --- Layer 5: dynamics pipeline ---
 from geomech.dynamics import (
+    LinearizedSystem,
     StandardFormEquation,
     SystemVariables,
     compute_eom,
+    linearize,
     separate_variations,
     to_standard_form,
 )
