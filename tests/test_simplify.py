@@ -1,8 +1,12 @@
 """Tests for simplify() and full_simplify()."""
 
+import numpy as np
+
 from geomech.core.base.expressions import (
+    IdentityMatrix,
     Matrix,
     Scalar,
+    SkewSymmMatrix,
     Vector,
     Zero,
     ZeroMatrix,
@@ -10,6 +14,7 @@ from geomech.core.base.expressions import (
     getScalars,
     getVectors,
 )
+from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
 from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
@@ -19,8 +24,10 @@ from geomech.core.operations.multiplication import (
     MVMul,
     SMMul,
     SVMul,
+    VVMul,
 )
 from geomech.core.transformations.simplify import full_simplify, simplify
+from geomech.numeric import evaluate
 
 # ===================================================================
 # Scalar Add
@@ -374,10 +381,50 @@ class TestSimplifyUnary:
         assert isinstance(result, Vee)
 
     def test_hat_vee_cancel(self):
-        """Hat(Vee(M)) → M."""
+        """Hat(Vee(X)) → X for a skew-symmetric X (not for a general Matrix)."""
+        X = SkewSymmMatrix("X")
+        result = simplify(Hat(Vee(X)))
+        assert result == X
+
+    def test_hat_vee_identity_not_cancelled(self):
+        """Hat(Vee(I)) is numerically zero, not I: the rule must not fire (engine audit F2)."""
+        result = full_simplify(Hat(Vee(IdentityMatrix)))
+        assert result != IdentityMatrix
+        assert np.allclose(evaluate(result), np.zeros((3, 3)))
+
+    def test_hat_vee_symmetric_not_cancelled(self):
+        """Hat(Vee(J)) with J symmetric is a skew matrix, never J: left unchanged."""
+        J = Matrix("J", attr=["SymmetricMatrix"])
+        result = full_simplify(Hat(Vee(J)))
+        assert result == Hat(Vee(J))
+        Jv = np.array([[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]])
+        value = evaluate(result, {"J": Jv})
+        assert np.allclose(value, -value.T)
+        assert not np.allclose(value, Jv)
+
+    def test_hat_vee_plain_matrix_not_cancelled(self):
+        """Hat(Vee(M)) for a plain Matrix is the skew part of M; left unchanged."""
         M = Matrix("M")
-        result = simplify(Hat(Vee(M)))
-        assert result == M
+        assert simplify(Hat(Vee(M))) == Hat(Vee(M))
+
+    def test_hat_vee_hat_cancels(self):
+        """Hat(Vee(Hat(v))) → Hat(v)."""
+        v = Vector("v")
+        assert simplify(Hat(Vee(Hat(v)))) == Hat(v)
+
+    def test_hat_vee_propagated_skew_cancels(self):
+        """Skew-symmetry propagates through SMMul, MAdd and Transpose of skew operands."""
+        a, b = Vector("a"), Vector("b")
+        s = Scalar("s")
+        X = SkewSymmMatrix("X")
+        assert Hat(a).is_skew_symmetric
+        assert SMMul(Hat(a), s).is_skew_symmetric
+        assert MAdd(Hat(a), Hat(b), X).is_skew_symmetric
+        assert Transpose(X).is_skew_symmetric
+        assert not MAdd(Hat(a), Matrix("M")).is_skew_symmetric
+        assert not Transpose(Matrix("M")).is_skew_symmetric
+        inner = MAdd(SMMul(Hat(a), s), Hat(b))
+        assert simplify(Hat(Vee(inner))) == inner
 
     def test_vee_hat_cancel(self):
         """Vee(Hat(x)) → x."""
@@ -711,3 +758,28 @@ def _collect_factors(expr, factors):
         _collect_factors(expr.right, factors)
     else:
         factors.append(expr)
+
+
+# ===================================================================
+# Zero outer product keeps its matrix type (fix plan 1.5)
+# ===================================================================
+
+
+class TestZeroOuterProductType:
+    def test_zero_outer_product_is_zero_matrix(self):
+        """VVMul(0v, aᵀ) is a 3×3 zero, not the scalar Zero (fuzz finding 4)."""
+        a = Vector("a")
+        result = simplify(VVMul(ZeroVector, Transpose(a)))
+        assert result is ZeroMatrix
+        assert result.type == ExprType.MATRIX
+
+    def test_zero_inner_product_is_scalar_zero(self):
+        a = Vector("a")
+        result = simplify(VVMul(Transpose(ZeroVector), a))
+        assert result is Zero
+        assert result.type == ExprType.SCALAR
+
+    def test_madd_with_zero_outer_product_no_longer_raises(self):
+        a, M = Vector("a"), Matrix("M")
+        result = full_simplify(MAdd(VVMul(ZeroVector, Transpose(a)), M))
+        assert result == M

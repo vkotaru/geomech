@@ -56,6 +56,16 @@ def to_standard_form(eom_dict, variables: SystemVariables, inputs=None):
     -------
     dict[str, StandardFormEquation]
         Keyed by the same variation vector names as *eom_dict*.
+
+    Notes
+    -----
+    On S² the equation ``E = 0`` of a variable ``q`` is only meaningful on the tangent
+    plane, ``(I − qqᵀ) E = 0``: ``E`` is the coefficient of ``ξ ⊥ q`` and in general has
+    a component along ``q`` (from the forcing, from ``ω × c``, from ``A ω̇``, …). The
+    blocks returned here are the terms of ``E`` as derived, not projected. To solve for
+    ``ω̇`` solve ``(I − qqᵀ)(M ω̇ + f + Σ G u) = 0`` with ``ω̇ ⊥ q``; the unprojected
+    3×3 solve gives ``q · ω̇ ≠ 0`` and a trajectory that leaves the sphere. The same
+    holds for the rows of ``linearize``.
     """
     if inputs is None:
         inputs = []

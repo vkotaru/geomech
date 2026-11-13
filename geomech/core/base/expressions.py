@@ -192,7 +192,7 @@ class Scalar(ScalarExpr):
         # 's' is the legacy positional arg; 'name' is the dataclass field
         self.name = s if s is not None else name
         self.value = value
-        self.attr = attr
+        self.attr = list(attr) if attr is not None else None  # never alias the caller's list
         self.__post_init__()
 
 
@@ -305,7 +305,7 @@ class Vector(VectorExpr):
         self.name = s if s is not None else name
         self.size = size
         self.value = value
-        self.attr = attr
+        self.attr = list(attr) if attr is not None else None  # never alias the caller's list
         self.__post_init__()
 
 
@@ -319,16 +319,6 @@ class TSO3(Vector):
             self.attr = []
         self.attr.append("TangentVector")
 
-    def delta(self, substitute=False):
-        from geomech.core.operations import Cross, Variation
-
-        if substitute:
-            eta = self.SO3.get_variation_vector()
-            # δ(Ω) = η̇ + Ω × η
-            return eta.t_diff() + Cross(self, eta)
-        else:
-            return Variation(self)
-
 
 class TS2(Vector):
     """Tangent space of S2 manifold."""
@@ -340,23 +330,12 @@ class TS2(Vector):
             self.attr = []
         self.attr.append("TangentVector")
 
-    def delta(self, substitute=False):
-        from geomech.core.operations import Cross, Variation
-
-        if substitute:
-            xi = self.S2.get_variation_vector()
-            # δ(ω) = ξ̇ - ω × ξ
-            return xi.t_diff() - Cross(self, xi)
-        else:
-            return Variation(self)
-
 
 class S2(Vector):
     """S2 manifold (unit sphere in R3, ||q|| = 1)."""
 
     def __init__(self, s=None, *, size=(3,), value=None, attr=None):
-        if attr is None:
-            attr = []
+        attr = [] if attr is None else list(attr)  # copy: the caller's list is not mutated
         attr.append("Manifold")
         attr.append("UnitNorm")
         super().__init__(s, size=size, value=value, attr=attr)
@@ -473,24 +452,26 @@ class Matrix(MatrixExpr):
         self.name = s if s is not None else name
         self.size = size
         self.value = value
-        self.attr = attr if attr is not None else []
-        if "SymmetricMatrix" in self.attr:
-            pass  # handled by ExprFlags
+        self.attr = list(attr) if attr is not None else []  # never alias the caller's list
         self.__post_init__()
 
 
 class SkewSymmMatrix(Matrix):
+    """Skew-symmetric matrix leaf (Xᵀ = −X); carries the ``SkewSymmetricMatrix`` flag."""
+
     def __init__(self, s=None, *, size=(3, 3), value=None, attr=None):
+        # copy (the caller's list is not mutated) and append before super().__init__ so
+        # that __post_init__ sees the flag when it builds ExprFlags
+        attr = [] if attr is None else list(attr)
+        attr.append("SkewSymmetricMatrix")
         super().__init__(s, size=size, value=value, attr=attr)
-        self.attr.append("SkewSymmetricMatrix")
 
 
 class SO3(Matrix):
     """SO(3) rotation matrix manifold (R^T R = I, det(R) = 1)."""
 
     def __init__(self, s=None, *, size=(3, 3), value=None, attr=None):
-        if attr is None:
-            attr = []
+        attr = [] if attr is None else list(attr)  # copy: the caller's list is not mutated
         attr.append("Manifold")
         attr.append("OrthogonalMatrix")
         super().__init__(s, size=size, value=value, attr=attr)

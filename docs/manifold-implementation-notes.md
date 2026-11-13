@@ -1,102 +1,103 @@
 # Manifold Implementation Notes
 
-## Status: S2 `delta(omega)` formula needs verification
+## S² variation rule: δω = ξ̇ − 2 ω × ξ
 
-The current Python `TS2.delta(substitute=True)` uses:
+`manifold_rules.py` substitutes `Variation(ω)` for an S² tangent vector ω by
+
 ```
-delta(omega) = xi_dot - omega x xi
+δω = ξ̇ − 2 ω × ξ
 ```
-This formula is **not confirmed correct** and does not appear in the Scala reference.
-User will provide the correct math.
+
+### Derivation
+
+The kinematics are `q̇ = ω × q` with `ω ⊥ q` (equivalently `ω = q × q̇`) and the
+variation is `δq = ξ × q` with `ξ ⊥ q`. Lee et al. eq. (5.13) give
+
+```
+δω = −S(ω) ξ + (I − q qᵀ) ξ̇ = ξ̇ − ω × ξ − q (q · ξ̇).
+```
+
+The last term does not vanish. Differentiating the constraint `ξ · q = 0` along the curve,
+
+```
+q · ξ̇ = −ξ · q̇ = −ξ · (ω × q) = q · (ω × ξ),
+```
+
+and since ω and ξ both lie in the tangent plane, `ω × ξ` is parallel to q, so
+`q (q · ξ̇) = q (q · (ω × ξ)) = ω × ξ`. On the constraint set therefore
+
+```
+δω = ξ̇ − 2 ω × ξ.
+```
+
+δω is **not** tangent to the sphere: `q · δω = −q · ξ̇ = −q · (ω × ξ)`, which is what keeps
+`δ(ω · q) = 0`.
+
+### History and symptom
+
+Until the 2026-11 audits the rule was `δω = ξ̇ − ω × ξ`, which is only the tangential
+projection `(I − q qᵀ) δω`. The two agree whenever `∂L/∂ω ⊥ q`, which is the case for every
+Lagrangian that depends on ω only through `q̇ = ω × q` (all the pendulum examples), so the
+pinned pendulum equations never changed. The projection is wrong as soon as `∂L/∂ω` has a
+component along q: with `L = ½ m l² ω·ω + c·ω − m g l q·e₃` the true equation is
+`−m l² ω̇ + 2 ω × c − m g l q × e₃ + f` and the old rule printed `ω × c`, i.e. **gyroscopic
+terms came out at half strength** (likewise for `½ ω·Aω`, a rotating frame
+`|ω + W₀|²`, R³×S² couplings `ẋ·ω` and S²×SO(3) couplings `ω·Ω`, `ω·(Rᵀe₃)`). The
+regression tests are in `tests/test_s2_variation_fix.py`; each pinned equation is also
+checked against the finite-difference Euler–Lagrange oracle in `geomech.numeric`.
+
+### SO(3) variation rule
+
+For `Ṙ = R·Hat(Ω)` and `δR = R·Hat(η)`, equating the mixed derivatives `d/dt(δR) = δ(Ṙ)`
+gives `δΩ = η̇ + Ω × η` exactly (Lee et al. eq. 6.9); it has no hidden normal component.
 
 ---
 
-## What was done
+## How the S² substitution is organised
 
-### 1. SO3 parity with S2
-- `SO3.get_variation_vector()` now returns `TSO3` (was plain `Vector`)
-- `TSO3.delta(substitute=True)` uses `eta_dot + Omega x eta` (from Scala `delta_Omega()`)
-- `manifold_rules.py` extended to handle both S2 and SO3
+- `S2.t_diff()` eagerly returns `Cross(ω, q)` — the tree never holds `TimeDerivative(q)`.
+- `S2.delta()` eagerly returns `Cross(ξ, q)` — the tree never holds `Variation(q)`.
+- `manifold_rules` substitutes `Variation(ω)` → `ξ̇ − 2 ω × ξ` and `Variation(Ω)` →
+  `η̇ + Ω × η`. This is the only place these formulas live; `TS2`/`TSO3` carry no
+  substitution of their own.
 
-### 2. S2 simplification rules (vector_rules.py)
-- BAC-CAB identity: `cross(q, cross(a, q)) = a` when `||q||=1` and `a` is tangent
-- Variants: `cross(q, cross(q, a)) = -a`, `cross(cross(q,a), q) = a`, etc.
-- `cross(a, cross(a, q)) = -q * dot(a,a)` when `a` is tangent
+An equivalent formulation works at the level of q (substituting `δ(q̇)`, `q̇` and `δq`
+directly and never forming δω). The two are related by the Jacobi identity; the ω-level
+formulation needs the extra simplification rules below (BAC-CAB, skew-symmetry) because it
+produces more intermediate cross products.
+
+### S² simplification rules (`vector_rules.py`)
+- BAC-CAB identity: `cross(q, cross(a, q)) = a` when `‖q‖ = 1` and `a` is tangent
+- Variants: `cross(q, cross(q, a)) = −a`, `cross(cross(q, a), q) = a`, etc.
+- `cross(a, cross(a, q)) = −q · dot(a, a)` when `a` is tangent
 - Recursion into Cross children, VAdd, SVMul
 
-### 3. Simplification rules (simplify.py)
-- `Hat(v) * w -> Cross(v, w)` in MVMul
-- `MMMul(A, B) * v -> A * (B * v)` matrix associativity in MVMul
-- `Transpose(Hat(v)) -> -Hat(v)` (skew-symmetry)
-- `Transpose(SMMul(M, s)) -> SMMul(Transpose(M), s)`
-- `Transpose(MMMul(A, B)) -> MMMul(Transpose(B), Transpose(A))`
+Tangency is only assumed for `TS2` leaves (ω, ξ) and for `Cross(·, q)`; it is never
+assumed for `d/dt(ω)`, `d/dt(ξ)` or the substituted δω, which is correct because δω is
+not tangent.
 
-### 4. Expand rules (expand.py)
-- `Hat(a + b) -> Hat(a) + Hat(b)` (linearity)
-- `Vee(a + b) -> Vee(a) + Vee(b)` (linearity)
+### Simplification rules (`simplify.py`)
+- `Hat(v) * w → Cross(v, w)` in MVMul
+- `MMMul(A, B) * v → A * (B * v)` matrix associativity in MVMul
+- `Transpose(Hat(v)) → −Hat(v)` (skew-symmetry)
+- `Transpose(SMMul(M, s)) → SMMul(Transpose(M), s)`
+- `Transpose(MMMul(A, B)) → MMMul(Transpose(B), Transpose(A))`
+- `Hat(Vee(X)) → X` only when X is skew-symmetric (a `Hat`, a `SkewSymmMatrix`, or a
+  scalar multiple / sum / transpose of such); `Vee(Hat(v)) → v` always
 
-### 5. Collect rules (collect.py)
-- `Dot(R*a, R*b) -> Dot(a, b)` for SO3 rotation stripping
-- `Dot(Cross(vec, a), b)` — flip and use scalar triple product
-- `Dot(M*Cross(vec, b), w)` — deep extraction through MVMul/Cross
-- Nested vec inside Cross on right side of Dot
+### Expand rules (`expand.py`)
+- `Hat(a + b) → Hat(a) + Hat(b)` (linearity)
+- `Vee(a + b) → Vee(a) + Vee(b)` (linearity)
 
-### 6. Tests
-- `test_manifold_rules.py` — 17 tests for S2/SO3 manifold substitutions
-- `test_manifold_pipelines.py` — 28 tests for end-to-end pipelines
-- Previously skipped S2 standard form tests now pass
-- SO3 standard form test updated (M now has inertia terms)
-- 920 total tests passing
-
----
-
-## Key finding: Scala vs Python S2 approach
-
-### Scala approach (works at q level)
-Three sequential substitutions in `applyManifoldRules`:
-```scala
-expr.subs(Delta(Dif(q)), dot_delta_q())   // delta(q_dot) -> xi_dot x q + xi x (omega x q)
-expr.subs(Dif(q),        dot_q())         // q_dot        -> omega x q
-expr.subs(Delta(q),      delta_q())       // delta(q)     -> xi x q
-```
-Scala **never computes `delta(omega)` explicitly**.
-
-### Python approach (works at omega level)
-- `S2.t_diff()` eagerly returns `Cross(omega, q)` — tree never has `TimeDerivative(q)`
-- `S2.delta()` eagerly returns `Cross(xi, q)` — tree never has `Variation(q)`
-- `manifold_rules` substitutes `Variation(omega)` -> `xi_dot - omega x xi`
-
-The two approaches are mathematically equivalent via the Jacobi identity,
-but the Python approach produces more intermediate terms requiring extra
-simplification rules (BAC-CAB, skew-symmetry, etc.).
-
-### Open question
-The `delta(omega) = xi_dot - omega x xi` formula needs to be verified.
-The Scala code avoids this formula entirely. S2 and SO3 are different
-manifolds — there is no reason to assume the variation formula follows
-the same pattern as SO3's `delta(Omega) = eta_dot + Omega x eta`.
+### Collect rules (`collect.py`)
+- `Dot(R*a, R*b) → Dot(a, b)` for SO3 rotation stripping
+- `Dot(Cross(vec, a), b)` — flip and use the scalar triple product
+- `Dot(M*f(vec), w) → Dot(f(vec), Mᵀ*w)` — the matrix is peeled off the side holding the
+  target, one layer per step, until the target is a direct operand
 
 ---
 
-## SO3 reference (confirmed from Scala)
-
-From `Matrices.scala:80`:
-```scala
-def delta_Omega() = MVMul(Hat(Omega), eta) + eta.diff()
-// = Hat(Omega)*eta + eta_dot = Omega x eta + eta_dot
-```
-
-From `SmoothManifold.scala:21-29` (four substitutions):
-```scala
-expr.subs(Delta(Dif(R)),        d/dt(delta_R))
-expr.subs(Dif(R),               R * Hat(Omega))
-expr.subs(Delta(R),             R * Hat(eta))
-expr.subs(Delta(Omega),         eta_dot + Omega x eta)
-```
-
----
-
-## Files changed
+## Files
 
 ### Source
 - `geomech/core/base/expressions.py` — SO3/TS2/TSO3 types
@@ -104,13 +105,12 @@ expr.subs(Delta(Omega),         eta_dot + Omega x eta)
 - `geomech/core/transformations/vector_rules.py` — S2 cross product identities
 - `geomech/core/transformations/simplify.py` — Hat/Transpose/associativity
 - `geomech/core/transformations/expand.py` — Hat/Vee linearity
-- `geomech/core/math/collect.py` — SO3 rotation stripping, deeper patterns
+- `geomech/core/math/collect.py` — SO3 rotation stripping, matrix peeling
 
 ### Tests
-- `tests/test_manifold_rules.py` — new (17 tests)
-- `tests/test_manifold_pipelines.py` — new (28 tests)
-- `tests/test_manifolds.py` — updated SO3 variation vector type
-- `tests/test_standard_form.py` — unskipped S2, updated SO3
-- `tests/test_expand.py` — updated Hat linearity
-- `tests/test_expansion.py` — updated Hat linearity
-- `tests/test_collect.py` — updated MVMul Transpose pattern
+- `tests/test_manifold_rules.py` — S2/SO3 manifold substitutions
+- `tests/test_manifold_pipelines.py` — end-to-end pipelines against Lee et al.
+- `tests/test_s2_variation_fix.py` — systems with `∂L/∂ω` not orthogonal to q
+- `tests/test_collect_fix.py` — velocities nested under matrices inside a `Dot`
+- `tests/test_eom_oracle.py` — every pinned system against the numeric Euler–Lagrange
+  oracle

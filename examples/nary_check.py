@@ -1,6 +1,5 @@
 from geomech import *
 
-add = Add()
 a, b, c, d, e = getScalars("a b c d e")
 f, g = getScalars("f g", attr=["Constant"])
 a0 = Scalar("0", value=0)
