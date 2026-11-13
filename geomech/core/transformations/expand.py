@@ -11,13 +11,21 @@ Distribution rules implemented:
   MVMul over MAdd/VAdd → VAdd (vector)
   SMMul over MAdd/Add → MAdd (matrix, left=matrix right=scalar)
   MMMul over MAdd → MAdd    (matrix)
+  VVMul over VAdd → MAdd    (outer product  v wᵀ; a VAdd in v or inside Transpose(w))
+  VVMul over VAdd → Add     (inner product  vᵀ w; a VAdd inside Transpose(v) or in w)
   Hat/Vee — recurse into child
+
+``Transpose`` is not expanded on its own (Transpose(MAdd) and Transpose(VVMul)
+are left intact); the VVMul rule is the only place that looks through a
+``Transpose(VAdd)`` factor, because a bare ``VAdd`` of transposed vectors is not
+a valid ``VVMul`` operand.
 """
 
+from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-from geomech.core.operations.geometry import Cross, Dot, Hat, Vee
-from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul
+from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
+from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
 
 
 def _distribute(l, r, op_cls, sum_cls, l_sum_cls, r_sum_cls):
@@ -43,6 +51,48 @@ def _distribute(l, r, op_cls, sum_cls, l_sum_cls, r_sum_cls):
     if r_is_sum:
         return sum_cls(*[op_cls(l, nr) for nr in r.nodes])
     return op_cls(l, r)
+
+
+def _transposed_addends(node):
+    """Addends of a ``Transpose(VAdd)`` factor as transposed vectors, else ``None``.
+
+    The inner expression is expanded first so that ``Transpose(Cross(a, b + c))``
+    is also split; a ``Transpose`` whose inner does not expand to a ``VAdd`` is
+    returned untouched by the caller (the original node, not the expanded one,
+    so that no other rule's input changes).
+    """
+    if not isinstance(node, Transpose):
+        return None
+    inner = expand(node.expr)
+    if isinstance(inner, VAdd):
+        return [Transpose(n) for n in inner.nodes]
+    return None
+
+
+def _expand_vvmul(expr):
+    """Distribute an outer product ``v wᵀ`` (→ MAdd) or an inner product ``vᵀ w``
+    (→ Add) over a ``VAdd`` in either factor.
+
+    Each addend of a ``Transpose(VAdd)`` factor becomes ``Transpose(addend)`` so
+    every produced ``VVMul`` has the same (plain, Transpose) shape as the input.
+    The plain factor is expanded as usual; the ``Transpose`` factor is only split
+    (never replaced by its expanded inner) so that a non-sum inner is untouched.
+    """
+    if expr.type == ExprType.MATRIX:
+        # outer product: left is a plain vector, right is Transpose(w)
+        l = expand(expr.left)
+        ls = list(l.nodes) if isinstance(l, VAdd) else [l]
+        rs = _transposed_addends(expr.right) or [expr.right]
+        if len(ls) == 1 and len(rs) == 1:
+            return VVMul(l, expr.right)
+        return MAdd(*[VVMul(nl, nr) for nl in ls for nr in rs])
+    # inner product: left is Transpose(v), right is a plain vector
+    r = expand(expr.right)
+    ls = _transposed_addends(expr.left) or [expr.left]
+    rs = list(r.nodes) if isinstance(r, VAdd) else [r]
+    if len(ls) == 1 and len(rs) == 1:
+        return VVMul(expr.left, r)
+    return Add(*[VVMul(nl, nr) for nl in ls for nr in rs])
 
 
 def expand(expr):
@@ -91,6 +141,10 @@ def expand(expr):
         case MMMul():
             l, r = expand(expr.left), expand(expr.right)
             return _distribute(l, r, MMMul, MAdd, MAdd, MAdd)
+
+        # --- Vector * Vector (outer product → matrix, inner product → scalar) ---
+        case VVMul():
+            return _expand_vvmul(expr)
 
         # --- Unary ops: recurse into child ---
         # Hat and Vee are linear: Hat(a + b) = Hat(a) + Hat(b)
