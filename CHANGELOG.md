@@ -7,6 +7,19 @@ All notable changes to `geomech` are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- Variation-based linearization: `linearize(eom, variables, inputs)` turns the output of
+  `compute_eom` into the symbolic blocks of `M δẋ = A δx + B δu` along an arbitrary
+  trajectory, with manifold-respecting perturbation variables (δs, δx, ξ, η and the
+  variations of the velocities) and kinematic rows for R, R³, S² and SO(3)
+  (`LinearizedSystem`, `docs/vbl.md`). Verified against hand derivations for the point mass,
+  spring-mass, free rigid body, rigid pendulum, spherical pendulum and quadrotor, and by
+  finite differences for those and the double rigid pendulum, the elastic spherical pendulum
+  and the quadrotor with a cable-suspended load. Every additive term of δE must carry
+  exactly one perturbation symbol; a term with none, with two, or with one hidden inside a
+  calculus node raises `AlgebraicError` (no silent zeros). Inputs must be distinct,
+  non-constant `Scalar`/`Vector` leaves that are neither configuration variables nor
+  tangent vectors (`Ω`, `ω`), and each equation must have the type of its variation vector;
+  violations raise `ValueError`/`TypeError`.
 - Scalar configuration variables (`SystemVariables(scalars=[...])`) participate in
   `compute_eom` and `to_standard_form`. Spring-mass, spring-mass-damper, coupled spring-mass
   and the elastic spherical pendulum (R × S²) derive end to end.
@@ -19,6 +32,13 @@ All notable changes to `geomech` are recorded here. The format follows
   notebooks for the rigid pendulum, spherical pendulum, quadrotor and quadrotor with payload.
 
 ### Changed
+- `expand` distributes `VVMul` over `VAdd`: outer products `(a + b) cᵀ`, `a (b + c)ᵀ` and
+  inner products `(a + b)ᵀ c`, `aᵀ (b + c)` are split into sums of products, as every other
+  product already was. `Transpose` itself is still not expanded. The printed output of
+  `compute_eom` and `to_standard_form` changes only for Lagrangians that contain an outer or
+  inner product with a sum as a factor (for example `ẋ·(p pᵀ) ẋ` with `p = x − l q`); the
+  result is the distributed, mathematically identical expression. None of the pinned
+  systems is affected.
 - `Expr.__eq__` now returns `False` across different node types before comparing strings.
 - `extract_linear_coeff` raises `AlgebraicError` instead of returning zero when the query
   occurs only inside a calculus operator (e.g. a jerk term, or `δẍ` from a Lagrangian in `ẍ`)
