@@ -32,7 +32,7 @@ from geomech import (
     getScalars,
     to_standard_form,
 )
-from geomech.core.math.collect import collect
+from geomech.core.math.collecting import collect
 
 rng = np.random.default_rng(7)
 

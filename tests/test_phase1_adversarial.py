@@ -52,7 +52,7 @@ from geomech import (
     linearize,
     to_standard_form,
 )
-from geomech.core.math.collect import collect
+from geomech.core.math.collecting import collect
 from geomech.core.operations import MAdd
 from geomech.numeric import (
     Evaluator,

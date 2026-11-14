@@ -7,9 +7,12 @@ render_eom(eqns)    — compile EOM to PDF via pdflatex
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 import tempfile
+
+logger = logging.getLogger("geomech")
 
 # ---------------------------------------------------------------------------
 # EOM printer
@@ -863,6 +866,10 @@ def render_eom(eqns, output="eom.pdf", open_pdf=True):
         Output PDF path (default: ``eom.pdf`` in current directory).
     open_pdf : bool
         If True, open the PDF after compilation (macOS ``open``).
+
+    Returns the PDF path, or ``None`` when ``pdflatex`` fails; the failure (with the end
+    of the ``pdflatex`` log) is a ``WARNING`` on the ``geomech`` logger, the success an
+    ``INFO`` line.
     """
     tex_src = eom_to_latex(eqns)
     output = os.path.abspath(output)
@@ -880,15 +887,17 @@ def render_eom(eqns, output="eom.pdf", open_pdf=True):
         )
         pdf_tmp = os.path.join(tmpdir, pdf_name + ".pdf")
         if result.returncode != 0 or not os.path.exists(pdf_tmp):
-            print("pdflatex failed:")
-            print(result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout)
+            logger.warning(
+                "render_eom: pdflatex failed:\n%s",
+                result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout,
+            )
             return None
 
         import shutil
 
         shutil.copy2(pdf_tmp, output)
 
-    print(f"PDF written to {output}")
+    logger.info("render_eom: PDF written to %s", output)
     if open_pdf:
         subprocess.run(["open", output])
     return output

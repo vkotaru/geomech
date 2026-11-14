@@ -50,8 +50,12 @@ import traceback
 
 import numpy as np
 
-import geomech as _geomech
-from geomech import (
+# Fuzz the geomech of the repository this script lives in, not whatever is installed in
+# the venv (a worktree or copy sharing the venv would otherwise test the wrong tree).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import geomech as _geomech  # noqa: E402
+from geomech import (  # noqa: E402
     S2,
     SO3,
     TS2,
@@ -1812,6 +1816,7 @@ def main():
     signal.signal(signal.SIGALRM, _alarm)
     sys.setrecursionlimit(4000)
 
+    print(f"fuzzing geomech from {os.path.dirname(os.path.abspath(_geomech.__file__))}")
     t0 = time.time()
     n_self = selftest(args.seed)
     print(

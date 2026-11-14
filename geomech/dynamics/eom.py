@@ -1,7 +1,10 @@
 """Equations of motion via the principle of least action.
 
-compute_eom(lagrangian, inf_work, variables)
-    variation → simplify → IBP → expand → extract coefficients
+compute_eom(lagrangian, inf_work, variables, params=(), *, trace=None)
+    δL + δW → apply_manifold_rules → full_simplify → integrate_by_parts (expand,
+    full_simplify, then per target: collect → IBP → full_simplify) → expand →
+    extract_linear_coeff per variation vector → full_simplify.
+    ``docs/pipeline.md`` describes each stage; ``trace=EOMTrace()`` keeps them all.
 
 separate_variations(expr, variation_vectors)
     extract coefficient of each variation vector from the action integral
@@ -14,12 +17,16 @@ from typing import Sequence
 from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Expr, Matrix, Scalar, Vector, Zero
 from geomech.core.base.types import ExprType
 from geomech.core.math.extract import extract_linear_coeff
-from geomech.core.math.ibp import integrate_by_parts
+from geomech.core.math.ibp import _integrate_by_parts
 from geomech.core.operations.calculus import TimeDerivative, Variation
-from geomech.core.transformations.expand import expand
+from geomech.core.operations.geometry import Dot
+from geomech.core.operations.multiplication import Mul, VVMul
+from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.manifold_rules import apply_manifold_rules
-from geomech.core.transformations.simplify import full_simplify
+from geomech.core.transformations.simplification import full_simplify
 from geomech.dynamics.variables import SystemVariables, check_group_is_sequence
+from geomech.utils.errors import AlgebraicError, NonLinearError
+from geomech.utils.trace import debug_enabled, stage_recorder
 
 
 def _tangent_names(variables: SystemVariables):
@@ -77,6 +84,12 @@ def _check_variables(variables: SystemVariables, caller: str = "compute_eom"):
                 raise TypeError(
                     f"{where} '{var}' is a {type(var).__name__} node, not a configuration"
                     f" variable; list the underlying variable '{var.expr}' instead"
+                )
+            if getattr(var, "nodes", None):
+                raise TypeError(
+                    f"{where} '{var}' is a {type(var).__name__} expression, not a single"
+                    " symbol; a configuration variable is one Scalar, Vector, S2 or SO3 leaf"
+                    " (list the symbols it is built from instead)"
                 )
             if var.is_constant or var.is_numeric or var.is_zero or var.delta().is_zero:
                 raise ValueError(
@@ -323,23 +336,47 @@ def compute_eom(
     inf_work,
     variables: SystemVariables,
     params: Sequence[Expr] = (),
+    *,
+    trace=None,
 ):
     """Compute equations of motion using the principle of least action.
 
-    1. Take the variation of the Lagrangian: δL
-    2. Form the infinitesimal action integral: δS = δL + δW
-    3. Apply manifold kinematic substitutions (e.g. δ(ω) for S2)
-    4. Simplify
-    5. Gather variation vectors and their time derivatives
-    6. Integration by parts to move time derivatives off variation vectors
-    7. Expand
-    8. Extract coefficients of each independent variation vector
+    Stages, in the order the code runs them (``docs/pipeline.md`` has one paragraph per
+    stage; the bracketed names are the ``EOMTrace`` stage names):
+
+    1. ``[dL]`` the variation of the Lagrangian, ``[dW]`` the virtual work, and
+       ``[dS]`` the infinitesimal action integral δS = δL + δW
+    2. ``[manifold_rules]`` ``apply_manifold_rules``: δω and δΩ replaced by their
+       kinematic expansions (S², SO(3))
+    3. ``[simplify]`` ``full_simplify`` (expand once, then simplify to a fixed point)
+    4. integration by parts against the time derivative of each variation vector:
+       ``[ibp.prepare]`` expand + full_simplify, then per target ``[ibp.collect[t]]``
+       (rotate each term so the target is the left operand of a ``Dot``),
+       ``[ibp.integrate[t]]`` (one IBP pass) and ``[ibp.simplify[t]]``; ``[ibp]`` is
+       the result
+    5. ``[expand]``
+    6. per variation vector: ``extract_linear_coeff`` ``[raw[ξ]]``, then
+       ``full_simplify`` ``[equation[ξ]]``
+
+    ``trace`` (keyword only) is an ``EOMTrace``: it is filled with every stage as the
+    pipeline runs, so after an exception it holds the stages before the failure and
+    ``trace.failed_at`` names the stage that raised (``trace.summary()``,
+    ``trace.show("simplify")``). The trace is cleared first, so a reused trace holds
+    this run only. Without a trace, and with the
+    ``geomech`` logger not at ``DEBUG``, nothing is recorded. With ``GEOMECH_DEBUG=1``
+    each stage is logged and ``check_tree`` runs on the inputs and the equations.
+
+    An extraction failure is re-raised with the same exception type and the pipeline
+    context: the variation vector, and when a time derivative of a variation vector
+    survived integration by parts, the term it survived in.
 
     ``inf_work`` may be ``None`` or ``0`` for a conservative system. It must be linear in
     the variation vectors themselves: a time derivative of a listed variation vector in
     ``inf_work`` (``Dot(x.t_diff().delta(), f)``, ``Dot(ξ.t_diff(), f)``) raises
     ``ValueError``. ``variables`` must list at least one configuration variable
-    (``ValueError`` otherwise); ``params`` must be a sequence of leaves (``TypeError``).
+    (``ValueError`` "no configuration variables" otherwise; this check runs last, so a
+    Lagrangian that holds a symbol first fails the stray-variation check below);
+    ``params`` must be a sequence of leaves (``TypeError``).
 
     Every symbol in ``lagrangian`` and ``inf_work`` is one of three things: a
     configuration variable (listed in ``variables``, varied by Hamilton's principle), a
@@ -354,100 +391,351 @@ def compute_eom(
     itself in ``M``); ``linearize`` does not support prescribed parameters yet and raises
     ``AlgebraicError`` on the ``δl`` term.
     """
-    _check_variables(variables)
-    param_names = _check_params(params, variables)
-    if isinstance(inf_work, bool):
-        raise TypeError(
-            f"compute_eom: inf_work must be a scalar expression, None or 0, got bool {inf_work}"
-        )
-    if inf_work is None or (isinstance(inf_work, (int, float)) and inf_work == 0):
-        inf_work = Zero
-    _check_scalar_input("lagrangian", lagrangian)
-    _check_scalar_input("inf_work", inf_work)
-
-    # gather variation vectors and their time derivatives
-    variation_vectors = []
-    variation_vector_dots = []
-
-    for s in variables.scalars:
-        ds = s.delta()  # Variation(scalar) — scalar type
-        variation_vectors.append(ds)
-        variation_vector_dots.append(ds.t_diff())
-
-    for vec in variables.vectors:
-        x = vec.get_variation_vector()
-        variation_vectors.append(x)
-        variation_vector_dots.append(x.t_diff())
-
-    for mat in variables.matrices:
-        x = mat.get_variation_vector()
-        variation_vectors.append(x)
-        variation_vector_dots.append(x.t_diff())
-
-    allowed = {str(v) for v in variation_vectors}
-    _check_virtual_work(inf_work, variables, allowed)
-
-    # variation of the Lagrangian
-    dL = lagrangian.delta()
-
-    # infinitesimal action integral
-    dS = dL + inf_work
-
-    # apply manifold kinematic substitutions
-    dS = apply_manifold_rules(dS, variables)
-
-    dS = full_simplify(dS)
-
-    # integration by parts
-    dS = integrate_by_parts(dS, variation_vector_dots)
-
-    # expand
-    dS = expand(dS)
-
-    # extract equations of motion
-    eom = separate_variations(dS, variation_vectors)
-
-    # a variation symbol that survives extraction belongs to no listed variable or param
-    wrapped = {}  # δ(d/dt(x)) built by hand → x
-    stray = _stray_variation_symbols(dS, allowed, param_names, wrapped)
-    for _, eq in eom.values():
-        stray.update(_stray_variation_symbols(eq, allowed, param_names, wrapped))
-    if stray:
-        symbols = ", ".join(f"'{s}'" for s in sorted(stray))
-        names = ", ".join(f"'{n}'" for n in sorted(set(stray.values())))
-        message = (
-            f"compute_eom: δS still contains the variation symbols {symbols} of the symbols"
-            f" {names}, which are neither entries of SystemVariables nor declared in params"
-        )
-        if any(sym not in wrapped for sym in stray):
-            message += (
-                "; for each symbol, list it in SystemVariables, declare it in params=..., or"
-                " mark it 'Constant'"
+    if trace is not None:
+        trace._reset()
+    stage = "validation"
+    try:
+        _check_variables(variables)
+        param_names = _check_params(params, variables)
+        if isinstance(inf_work, bool):
+            raise TypeError(
+                "compute_eom: inf_work must be a scalar expression, None or 0, got bool"
+                f" {inf_work}"
             )
-        for sym, leaf in sorted(wrapped.items()):
-            message += (
-                f"; '{sym}' is the variation of a time derivative, which the engine never"
-                f" builds: write the variation of the configuration variable itself,"
-                f" {leaf}.delta() (the variation of the velocity is {leaf}.t_diff().delta(),"
-                " built as d/dt of the variation, and is not allowed in inf_work)"
+        if inf_work is None or (isinstance(inf_work, (int, float)) and inf_work == 0):
+            inf_work = Zero
+        _check_scalar_input("lagrangian", lagrangian)
+        _check_scalar_input("inf_work", inf_work)
+
+        # gather variation vectors and their time derivatives
+        variation_vectors = []
+        variation_vector_dots = []
+
+        for s in variables.scalars:
+            ds = s.delta()  # Variation(scalar) — scalar type
+            variation_vectors.append(ds)
+            variation_vector_dots.append(ds.t_diff())
+
+        for vec in variables.vectors:
+            x = vec.get_variation_vector()
+            variation_vectors.append(x)
+            variation_vector_dots.append(x.t_diff())
+
+        for mat in variables.matrices:
+            x = mat.get_variation_vector()
+            variation_vectors.append(x)
+            variation_vector_dots.append(x.t_diff())
+
+        allowed = {str(v) for v in variation_vectors}
+        _check_virtual_work(inf_work, variables, allowed)
+
+        debug = debug_enabled()
+        if debug:
+            from geomech.utils.invariants import check_tree
+
+            check_tree(lagrangian)
+            check_tree(inf_work)
+        record = stage_recorder(trace, "compute_eom")
+        if trace is not None:
+            trace.variation_vectors = list(variation_vectors)
+            trace.ibp_targets = list(variation_vector_dots)
+
+        # variation of the Lagrangian
+        stage = "dL"
+        dL = lagrangian.delta()
+
+        # infinitesimal action integral
+        dS = dL + inf_work
+        if record is not None:
+            record("dL", dL)
+            record("dW", inf_work)
+            record("dS", dS)
+
+        # apply manifold kinematic substitutions
+        stage = "manifold_rules"
+        dS = apply_manifold_rules(dS, variables)
+        if record is not None:
+            record("manifold_rules", dS)
+
+        stage = "simplify"
+        dS = full_simplify(dS)
+        if record is not None:
+            record("simplify", dS)
+
+        # integration by parts
+        stage = "ibp"
+        try:
+            dS = _integrate_by_parts(dS, variation_vector_dots, record)
+        except (AlgebraicError, NonLinearError) as err:
+            raise type(err)(
+                f"compute_eom: while integrating by parts (stage ibp, targets"
+                f" {', '.join(f'{t}' for t in variation_vector_dots)}): {err}"
+            ) from err
+        if record is not None:
+            record("ibp", dS)
+
+        # expand
+        stage = "expand"
+        dS = expand(dS)
+        if record is not None:
+            record("expand", dS)
+
+        # extract equations of motion
+        stage = "extract"
+        try:
+            eom = _separate_variations(dS, variation_vectors, record)
+        except (AlgebraicError, NonLinearError) as err:
+            context = getattr(err, "_extraction_context", None)
+            if context is None or not _accelerations_in(lagrangian, variables):
+                raise
+            engine, vec = context  # retold with L: it depends on accelerations
+            raise _extraction_error(
+                engine, dS, vec, variation_vectors, lagrangian, variables
+            ) from engine
+        if debug:
+            for _, eq in eom.values():
+                check_tree(eq)
+
+        stage = "stray_check"
+        # a variation symbol that survives extraction belongs to no listed variable or param
+        wrapped = {}  # δ(d/dt(x)) built by hand → x
+        stray = _stray_variation_symbols(dS, allowed, param_names, wrapped)
+        for _, eq in eom.values():
+            stray.update(_stray_variation_symbols(eq, allowed, param_names, wrapped))
+        if stray:
+            symbols = ", ".join(f"'{s}'" for s in sorted(stray))
+            names = ", ".join(f"'{n}'" for n in sorted(set(stray.values())))
+            message = (
+                f"compute_eom: δS still contains the variation symbols {symbols} of the symbols"
+                f" {names}, which are neither entries of SystemVariables nor declared in params"
             )
-        raise ValueError(message)
-    if not variation_vectors:
-        raise ValueError(
-            "compute_eom: no configuration variables listed in SystemVariables; a system"
-            " with no degree of freedom has no equation of motion"
-        )
-    return eom
+            if any(sym not in wrapped for sym in stray):
+                message += (
+                    "; for each symbol, list it in SystemVariables, declare it in params=..., or"
+                    " mark it 'Constant'"
+                )
+            for sym, leaf in sorted(wrapped.items()):
+                message += (
+                    f"; '{sym}' is the variation of a time derivative, which the engine never"
+                    f" builds: write the variation of the configuration variable itself,"
+                    f" {leaf}.delta() (the variation of the velocity is {leaf}.t_diff().delta(),"
+                    " built as d/dt of the variation, and is not allowed in inf_work)"
+                )
+            raise ValueError(message)
+        if not variation_vectors:
+            raise ValueError(
+                "compute_eom: no configuration variables listed in SystemVariables; a system"
+                " with no degree of freedom has no equation of motion"
+            )
+        return eom
+    except Exception as err:
+        if trace is not None:
+            trace._fail(_failed_stage(trace, stage, err), err)
+        raise
 
 
 def separate_variations(inf_action_integral, variation_vectors):
     """Extract the equation of motion for each variation vector.
 
-    Returns a dict mapping str(variation_vector) → (variation_vector, equation).
+    Returns a dict mapping str(variation_vector) → (variation_vector, equation). An
+    ``AlgebraicError``/``NonLinearError`` from the extraction is re-raised (same type)
+    naming the variation vector and, if a time derivative of a variation vector is left
+    in δS, the term that holds it.
     """
+    return _separate_variations(inf_action_integral, variation_vectors)
+
+
+def _separate_variations(dS, variation_vectors, record=None):
     eom = {}
     for vec in variation_vectors:
-        dyn_eqn = extract_linear_coeff(inf_action_integral, vec)
-        dyn_eqn = full_simplify(dyn_eqn)
+        try:
+            raw = extract_linear_coeff(dS, vec)
+        except (AlgebraicError, NonLinearError) as err:
+            error = _extraction_error(err, dS, vec, variation_vectors)
+            error._extraction_context = (err, vec)  # compute_eom may retell it with L
+            raise error from err
+        if record is not None:
+            record(f"raw[{vec}]", raw)
+        dyn_eqn = full_simplify(raw)
+        if record is not None:
+            record(f"equation[{vec}]", dyn_eqn)
         eom[str(vec)] = (vec, dyn_eqn)
     return eom
+
+
+def _failed_stage(trace, stage, err):
+    """The stage name a failed ``compute_eom`` run reports in ``trace.failed_at``.
+
+    *stage* is the coarse step that was running; for integration by parts and the
+    extraction it is refined from the stages already recorded to the one that raised
+    (``ibp.collect[t]``, ``raw[ξ]`` ...), which is the first one missing.
+    """
+    names = set(trace.stage_names())
+    if stage == "ibp":
+        if "ibp.prepare" not in names:
+            return "ibp.prepare"
+        for target in trace.ibp_targets or ():
+            for step in ("collect", "integrate", "simplify"):
+                if f"ibp.{step}[{target}]" not in names:
+                    return f"ibp.{step}[{target}]"
+    if stage == "extract":
+        for vec in trace.variation_vectors or ():
+            for step in ("raw", "equation"):
+                if f"{step}[{vec}]" not in names:
+                    return f"{step}[{vec}]"
+    return stage
+
+
+def _terms(expr):
+    from geomech.core.operations.addition import Add
+
+    return list(expr.nodes) if isinstance(expr, Add) else [expr]
+
+
+def _nodes(expr):
+    stack = [expr]
+    while stack:
+        node = stack.pop()
+        yield node
+        stack.extend(getattr(node, "nodes", None) or ())
+
+
+def _derivative_order(derivative, var):
+    """Most ``d/dt`` nodes on a path from *derivative* down to the variation *var*."""
+    best = 0
+    stack = [(derivative, 0)]
+    while stack:
+        node, depth = stack.pop()
+        if isinstance(node, TimeDerivative):
+            depth += 1
+        if str(node) == var and isinstance(node, (Variation, TS2, TSO3)):
+            best = max(best, depth)
+            continue
+        stack.extend((child, depth) for child in getattr(node, "nodes", None) or ())
+    return best
+
+
+def _mul_factors(expr):
+    if isinstance(expr, Mul):
+        return _mul_factors(expr.left) + _mul_factors(expr.right)
+    return [expr]
+
+
+def _is_exposed(term, derivative, scalar):
+    """True if *derivative* already has the shape IBP integrates in *term*: the left
+    operand of a ``Dot`` (vector target) or a direct factor of a product (scalar)."""
+    if scalar:
+        return any(str(f) == derivative for f in _mul_factors(term))
+    return any(isinstance(n, Dot) and str(n.left) == derivative for n in _nodes(term))
+
+
+def _accelerations_in(lagrangian, variables):
+    """Printed accelerations of configuration variables that occur in *lagrangian*:
+    ``ẍ`` of a scalar or vector variable, ``ω̇``/``Ω̇`` of an S² or SO(3) point."""
+    if lagrangian is None or variables is None:
+        return []
+    wanted = set()
+    for var in (*variables.scalars, *variables.vectors, *variables.matrices):
+        if isinstance(var, (S2, SO3)):
+            wanted.add(str(var.get_tangent_vector().t_diff()))
+        else:
+            wanted.add(str(var.t_diff().t_diff()))
+    return sorted({str(n) for n in _nodes(lagrangian) if str(n) in wanted})
+
+
+def _extraction_error(err, dS, vec, variation_vectors, lagrangian=None, variables=None):
+    """*err* (from ``extract_linear_coeff(dS, vec)``) rebuilt with the pipeline context.
+
+    When a time derivative of a variation vector is left in δS, the message first tells
+    the cause apart:
+
+    - the derivative is of order 2 or more (``d/dt(d/dt(δx))``), or the Lagrangian holds
+      an acceleration of a configuration variable: the Lagrangian depends on
+      accelerations, which is not supported (integration by parts runs once per variation
+      vector, against its first time derivative);
+    - a first derivative that is not yet the left operand of its ``Dot`` (for a scalar
+      variation, not a direct factor of its product): ``collect`` could not expose it,
+      and the message points to the ``ibp.collect[t]`` stage;
+    - a first derivative already in that shape: the IBP pass left it, and the message
+      points to ``ibp.integrate[t]``.
+
+    Any other failure keeps the engine message after the context.
+    """
+    allowed = {str(v) for v in variation_vectors}
+    by_name = {str(v): v for v in variation_vectors}
+    found = []  # (term, derivative, variation vector), terms holding vec's derivative first
+    for term in _terms(dS):
+        for derivative, var in sorted(_derivatives_of_variations(term, allowed).items()):
+            found.append((var != str(vec), term, derivative, var))
+    accelerations = _accelerations_in(lagrangian, variables)
+    for _, term, derivative, var in sorted(found, key=lambda item: item[0]):
+        node = next(
+            n for n in _nodes(term) if isinstance(n, TimeDerivative) and str(n) == derivative
+        )
+        order = _derivative_order(node, var)
+        target = str(by_name[var].t_diff())  # the key of the ibp.* trace stages
+        if order >= 2 or accelerations:
+            if accelerations:
+                why = "L contains " + ", ".join(f"'{a}'" for a in accelerations)
+            else:
+                why = f"'{derivative}' is a time derivative of order {order} of '{var}'"
+            return type(err)(
+                f"compute_eom: while extracting the equation for '{vec}': the Lagrangian"
+                f" depends on accelerations ({why}); higher-order Lagrangians are not"
+                " supported. Integration by parts runs once per variation vector, against"
+                f" its first time derivative '{target}', so the term '{_cut(term)}' of δS"
+                f" keeps '{derivative}' and has no coefficient. Write L in the"
+                " configuration variables and their velocities only; run"
+                " compute_eom(..., trace=EOMTrace()) and look at the stage 'dL' to see"
+                f" where the acceleration enters. (engine: {err})"
+            )
+        scalar = by_name[var].type == ExprType.SCALAR
+        if _is_exposed(term, derivative, scalar):
+            shape = f"{derivative} g" if scalar else f"Dot({derivative}, f)"
+            return type(err)(
+                f"compute_eom: while extracting the equation for '{vec}': the time"
+                f" derivative '{derivative}' of the variation vector '{var}' survived"
+                f" integration by parts in the term '{_cut(term)}' of δS, although it is"
+                f" already in the shape {shape} that the integration-by-parts pass"
+                " integrates. Run compute_eom(..., trace=EOMTrace()) and compare the stages"
+                f" 'ibp.collect[{target}]' and 'ibp.integrate[{target}]'. (engine: {err})"
+            )
+        hint = ""
+        if _has_inner_product_row(term):
+            hint = (
+                " The term holds a row-vector product (v.T() * A * w); collect turns an inner"
+                " product that holds the derivative into a Dot, but this one could not be"
+                " exposed: write it as Dot(v, A * w)."
+            )
+        if scalar:
+            where = f"a direct factor of a product ({derivative} g)"
+        else:
+            where = f"the left operand of a Dot (Dot({derivative}, f))"
+        return type(err)(
+            f"compute_eom: while extracting the equation for '{vec}': the time derivative"
+            f" '{derivative}' of the variation vector '{var}' survived integration by parts"
+            f" in the term '{_cut(term)}' of δS; collect could not expose it as {where},"
+            f" so the term was not integrated by parts and has no coefficient.{hint}"
+            " Inspect the term with print_tree(term, style='indent'), or run"
+            " compute_eom(..., trace=EOMTrace()) and look at the stage"
+            f" 'ibp.collect[{target}]'. (engine: {err})"
+        )
+    return type(err)(
+        f"compute_eom: while extracting the equation for '{vec}' from δS (extraction, after"
+        f" the stage 'expand'): {err}"
+    )
+
+
+def _has_inner_product_row(term):
+    stack = [term]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, VVMul) and node.type == ExprType.SCALAR:
+            return True
+        stack.extend(getattr(node, "nodes", None) or ())
+    return False
+
+
+def _cut(expr, limit=300):
+    text = str(expr)
+    return text if len(text) <= limit else text[: limit - 3] + "..."

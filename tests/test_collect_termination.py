@@ -22,7 +22,7 @@ from geomech import (
     getVectors,
     to_standard_form,
 )
-from geomech.core.math.collect import collect
+from geomech.core.math.collecting import collect
 from geomech.utils.errors import NonLinearError
 
 

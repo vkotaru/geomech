@@ -7,7 +7,7 @@ from geomech.core.base.expressions import (
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.geometry import Cross, Dot, Hat, Vee
 from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul
-from geomech.core.transformations.expand import expand
+from geomech.core.transformations.expansion import expand
 
 # ---------------------------------------------------------------------------
 # Leaf passthrough
