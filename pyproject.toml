@@ -42,6 +42,9 @@ docs = [
 [tool.setuptools.packages.find]
 include = ["geomech*"]
 
+[tool.setuptools.package-data]
+"geomech.viz" = ["template.html"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

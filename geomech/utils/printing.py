@@ -13,6 +13,8 @@ import re
 import shutil
 import subprocess
 import tempfile
+from contextvars import ContextVar
+from typing import Mapping
 
 import numpy as np
 
@@ -638,7 +640,12 @@ def _operand(e, needs_parens, inside=False):
     return _signed_factor(s, inside)
 
 
-def to_latex(expr) -> str:
+#: The leaf-name map of the ``to_latex`` call in progress (``names=``); the recursive
+#: calls of the handlers inherit it.
+_LATEX_NAMES: ContextVar[Mapping[str, str] | None] = ContextVar("_LATEX_NAMES", default=None)
+
+
+def to_latex(expr, names: Mapping[str, str] | None = None) -> str:
     r"""Convert an expression tree to a LaTeX string.
 
     Returns a string suitable for use with IPython.display.Math() or inside a LaTeX
@@ -651,7 +658,22 @@ def to_latex(expr) -> str:
 
     One function per node class (``_latex_sum``, ``_latex_scaled``, ...), picked from
     ``_latex_handlers()`` by the class of *expr*; a leaf is ``_latex_leaf``.
+
+    *names* maps the printed name of a leaf to the LaTeX to use for it (``{"J1": "J_1"}``,
+    ``geomech.viz.latex_names`` builds one); it is applied to leaf names only, never to
+    the assembled formula, and a leaf missing from it prints its own name. The default
+    (``None``) prints every leaf by its name.
     """
+    if names is not None:
+        token = _LATEX_NAMES.set(dict(names))
+        try:
+            return _to_latex(expr)
+        finally:
+            _LATEX_NAMES.reset(token)
+    return _to_latex(expr)
+
+
+def _to_latex(expr) -> str:
     nodes = getattr(expr, "nodes", None)
     if nodes is None or len(nodes) == 0:
         return _latex_leaf(expr)
@@ -718,7 +740,8 @@ def _latex_leaf(expr):
     if val is not None:
         body = _format_number(abs(val))
         return "-" + body if val < 0 else body
-    return name
+    names = _LATEX_NAMES.get()
+    return names.get(name, name) if names else name
 
 
 def _latex_sum(expr):
