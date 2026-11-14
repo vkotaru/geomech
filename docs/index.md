@@ -24,6 +24,7 @@ no Euler angles or quaternions required.
 
 - [Installation and first system](getting-started.md) -- installation and first example
 - [Examples](examples.md) -- point mass, spherical pendulum, rigid body
+- [Systems library](systems.md) -- verified, ready-made systems (`geomech.systems.get`)
 - [Deriving equations](pipeline.md) -- what `compute_eom` does, and how to see it
 - [Conventions](conventions.md) and [Troubleshooting](troubleshooting.md)
 - [API reference](api/index.rst) -- generated from the docstrings
@@ -59,6 +60,7 @@ vbl
 codegen
 simulation
 visualization
+systems
 numeric-verification
 troubleshooting
 ```
@@ -85,5 +87,6 @@ api/numeric
 api/codegen
 api/simulation
 api/viz
+api/systems
 api/utils
 ```

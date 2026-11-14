@@ -95,3 +95,15 @@ def check_pipeline_trees():
                 patch.setattr(module, name, wrapped[name])
     yield CHECKED_CALLS
     patch.undo()
+
+
+def pytest_terminal_summary(terminalreporter):
+    """The derivation time of every system of ``geomech.systems`` derived in this run
+    (``tests/test_systems_pipeline.py``, spec ``specs/systems-library.md`` item 4)."""
+    mod = sys.modules.get("tests.test_systems_pipeline")
+    timings = getattr(mod, "TIMINGS", None)
+    if not timings:
+        return
+    terminalreporter.section("geomech.systems derivation time")
+    for case, (dof, seconds) in timings.items():
+        terminalreporter.write_line(f"{case:36s} dof {dof:3d}  {seconds:7.3f} s")

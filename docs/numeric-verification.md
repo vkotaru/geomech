@@ -79,7 +79,7 @@ assert err < 1e-5
 over all configuration variables; `assert_eom(..., rtol=1e-5)` raises an `AssertionError`
 naming the variation vector whose equation is wrong. For a system whose parameters are of
 order one a correct equation scores at finite-difference noise, about `1e-7` (worst
-`2.3e-7` over the 36 pinned systems and 10 seeds), and a wrong sign or a dropped term
+`2.3e-7` measured over 36 pinned systems and 10 seeds), and a wrong sign or a dropped term
 scores `0.02` or more (worst over every term of the same systems). The gap is four orders
 of magnitude for such systems; it is **not** unconditional, see "Resolution" below.
 
