@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, cast
 
@@ -61,6 +62,15 @@ def _set_fields(node, **values):
     """Set attributes of a node under construction (the node classes are frozen)."""
     for key, value in values.items():
         object.__setattr__(node, key, value)
+
+
+def _leaf_size(size):
+    """``size`` of a leaf as a tuple of ints: ``3`` and ``[3]`` are ``(3,)``, ``[3, 3]`` is
+    ``(3, 3)``. Symbol identity compares sizes (``check_symbol_clash``), so one size has one
+    spelling."""
+    if isinstance(size, (int, np.integer)) and not isinstance(size, (bool, np.bool_)):
+        return (int(size),)
+    return tuple(int(n) for n in size)
 
 
 def _set_nodes(node, nodes):
@@ -524,9 +534,10 @@ class Vector(VectorExpr):
         _check_leaf_name(name)
         attr = _attr_list(attr, name)  # never alias the caller's list
         if value is None:
+            size = _leaf_size(size)
             value = np.empty(size, dtype="object")
         else:
-            size = value.shape
+            size = _leaf_size(value.shape)
         flags = ExprFlags.from_attr_list(attr, name)
         _set_fields(self, name=name, size=size, value=value, attr=attr, flags=flags)
 
@@ -641,6 +652,7 @@ class Matrix(MatrixExpr):
         name = s if s is not None else name
         _check_leaf_name(name)
         attr = _attr_list(attr, name) or []  # never alias the caller's list
+        size = _leaf_size(size)
         if value is None:
             value = np.empty(size, dtype="object")
         flags = ExprFlags.from_attr_list(attr, name)
@@ -766,9 +778,10 @@ def is_number_literal(expr) -> bool:
         except ValueError:
             pass  # e.g. "2.0" for the value 2
     try:
-        return float(text) == float(value)
+        a, b = float(text), float(value)
     except (TypeError, ValueError, OverflowError):
         return False
+    return a == b or (math.isnan(a) and math.isnan(b))  # Number(nan) prints "(nan)"
 
 
 def getScalars(x, attr=None):
