@@ -23,6 +23,13 @@ dev = [
     "ruff",
     "mypy==2.4.1",
     "jupyterlab",
+    "scipy",
+]
+casadi = [
+    "casadi>=3.6,<4",
+]
+sim = [
+    "scipy",
 ]
 docs = [
     "mkdocs-material",

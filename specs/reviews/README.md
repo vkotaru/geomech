@@ -17,3 +17,16 @@ to an intermediate state of that phase.
 | Phase 4 | `47cce2d` | `24a75b6` |
 | Phase 5a | `fc0d386` | `8d6faca` |
 | Phase 5b and closure | `054a8ed` | `ca4375c` |
+
+## Input validation, code generation and simulation
+
+The reports for these features (`inputs-review.md`, `codegen-*.md`, `simulation-*.md`,
+`codegen-simulation-final.md`) cite development hashes too. That history was squashed to
+four commits:
+
+| Development range | Published commit |
+|---|---|
+| `5a48f91..735cfba` (input validation, codegen spec) | `f86c728` |
+| `..cc1f58f` (code generation, simulation spec) | `1a509d2` |
+| `..8be087f` (simulation) | `bd0faa7` |
+| `..1d7a47e` (reviews, fixes, final review) | `2fc92bf` |
