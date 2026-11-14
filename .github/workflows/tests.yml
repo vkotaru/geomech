@@ -21,13 +21,18 @@ jobs:
         run: pip install ruff "mypy==2.4.1" numpy
 
       - name: Ruff format check
-        run: ruff format --check geomech/ tests/
+        run: ruff format --check geomech/ tests/ scripts/ examples/generated/
 
       - name: Ruff lint
-        run: ruff check geomech/ tests/
+        run: ruff check geomech/ tests/ scripts/ examples/generated/
 
       - name: Mypy
         run: mypy geomech --ignore-missing-imports
+
+      - name: Generated code is up to date
+        run: |
+          python scripts/regenerate_generated.py
+          git diff --exit-code examples/generated/
 
   test:
     runs-on: ubuntu-latest
@@ -48,6 +53,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+
+      - name: Install the optional CasADi target (one job)
+        if: matrix.python-version == '3.12'
+        run: pip install -e ".[casadi]"
 
       - name: Run tests
         run: pytest tests/ -v

@@ -40,6 +40,32 @@ surface. In short:
 Open follow-ups are listed in `specs/follow-ups.md`.
 
 ### Added
+- Code generation, `geomech.codegen` (roadmap feature 5, `specs/codegen.md`,
+  `docs/codegen.md`):
+  - `StateLayout(variables, inputs, params)`: the flat `state` (configuration slots, then
+    velocity slots; R row-major, S² `q` and `ω`), `a` (accelerations), `u` (inputs) and
+    `p` (a dict keyed by `str(symbol)`), with `slices`, `to_dict()` and conversions to and
+    from `Evaluator` envs; `collect_params` lists the parameters of a set of expressions.
+  - `to_source(expr, layout, target)` and `lambdify(...)` (`f(state, u, p, a=None)`), and
+    `generate_module(system, layout, path, target)` for the dict of `compute_eom`
+    (`residual`), of `to_standard_form` (`mass`, `bias`, `input_matrix`) and a
+    `LinearizedSystem` (`M_lin`, `A_lin`, `B_lin`), each with `kinematics`, `LAYOUT` and
+    the `_hat`/`_vee` helpers. Generated modules are ruff-clean and need only `numpy`.
+    Leaves are checked: a stray symbol, a `TimeDerivative` of a non-leaf, a missing or an
+    extra parameter raise naming the symbol.
+  - Targets `"numpy"` (default) and `"casadi"` (optional extra `geomech[casadi]`, pinned
+    to `casadi==3.8.2`; functions accept CasADi symbols, so `ca.jacobian` applies).
+  - `energy_function(L, layout)` (and `energy_expr`, `momenta`): the total energy
+    `Σ (∂L/∂v)·v − L`, with `∂L/∂v` extracted from the first variation of `L`;
+    `generate_module(..., lagrangian=L)` adds `energy(state, p)`.
+  - `examples/generated/`: the standard-form and linearized modules of the nine systems of
+    `tests/vbl_systems.py`, rewritten by `scripts/regenerate_generated.py`; CI regenerates
+    them and fails on a diff. Optional extra `geomech[sim]` (scipy) for integrating them.
+  - Tests `tests/test_codegen*.py`: every block of every oracle, phase-1 and VBL system
+    against `evaluate` at 20 admissible states (1e-12), CasADi against NumPy, each node
+    class of the translation table, the layout and its errors, `∂L/∂v` and `E` against
+    finite differences, `dE/dt = 0` along the unforced dynamics, and a 10 s free rigid
+    body run with `solve_ivp` conserving the generated energy to 1e-8.
 - Structure and typing (phase 5b of `specs/fix-plan.md`, items 5.5–5.7, decisions D2 (a)
   and D3 (a)):
   - `geomech.core.base.constants`: the literals `NEG_ONE`, `NEG_TWO`, `HALF` (printed
