@@ -173,13 +173,13 @@ class TestSpringMassExact:
 
     def test_eom_exact(self):
         _, eqn = self.eom[self.key]
-        assert str(eqn) == f"(m{DDX}(-1.0)+kx(-1.0)+f)"
+        assert str(eqn) == f"(m{DDX}(-1)+kx(-1)+f)"
 
     def test_M_exact(self):
-        assert _strs(self.sf[self.key].M) == {DDX: "m(-1.0)"}
+        assert _strs(self.sf[self.key].M) == {DDX: "m(-1)"}
 
     def test_f_exact(self):
-        assert str(self.sf[self.key].f) == "kx(-1.0)"
+        assert str(self.sf[self.key].f) == "kx(-1)"
 
     def test_G_exact(self):
         assert _strs(self.sf[self.key].G) == {"f": "1"}
@@ -187,7 +187,7 @@ class TestSpringMassExact:
     def test_sign_convention_matches_s2_pendulum(self):
         """Both equations are −(inertia·accel) + … + input, so M is negative
         for the scalar system exactly as it is for the S² pendulum
-        (``I(-1)mll`` in test_manifold_pipelines)."""
+        (``Imll(-1)`` in test_manifold_pipelines)."""
         m, g, l = getScalars("m g l", attr=["Constant"])
         e3 = Vector("e3", attr=["Constant"])
         q, f = S2("q"), Vector("f")
@@ -195,8 +195,8 @@ class TestSpringMassExact:
         L = HALF * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
         variables = SystemVariables(vectors=[q])
         s2 = to_standard_form(compute_eom(L, Dot(xi, f), variables), variables, [f])
-        assert str(s2[str(xi)].M[DW]) == "I(-1)mll"
-        assert str(self.sf[self.key].M[DDX]) == "m(-1.0)"
+        assert str(s2[str(xi)].M[DW]) == "Imll(-1)"
+        assert str(self.sf[self.key].M[DDX]) == "m(-1)"
         assert str(s2[str(xi)].G["f"]) == "I"
         assert str(self.sf[self.key].G["f"]) == "1"
 
@@ -214,13 +214,13 @@ class TestSpringMassDamperExact:
 
     def test_eom_exact(self):
         _, eqn = self.eom[self.key]
-        assert str(eqn) == f"(m{DDX}(-1.0)+kx(-1.0)+f+c\\frac{{d}}{{dt}}(x)(-1))"
+        assert str(eqn) == f"(m{DDX}(-1)+kx(-1)+f+c\\frac{{d}}{{dt}}(x)(-1))"
 
     def test_M_exact(self):
-        assert _strs(self.sf[self.key].M) == {DDX: "m(-1.0)"}
+        assert _strs(self.sf[self.key].M) == {DDX: "m(-1)"}
 
     def test_f_exact(self):
-        assert str(self.sf[self.key].f) == "(kx(-1.0)+c\\frac{d}{dt}(x)(-1))"
+        assert str(self.sf[self.key].f) == "(kx(-1)+c\\frac{d}{dt}(x)(-1))"
 
     def test_G_exact(self):
         assert _strs(self.sf[self.key].G) == {"f": "1"}
@@ -231,14 +231,11 @@ class TestSpringMassDamperExact:
         assert not eq.f.has(TimeDerivative(TimeDerivative(self.x)))
         assert eq.f.has(TimeDerivative(self.x))
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="BUG: numeric coefficients mix int and float ((-1) and (-1.0)) in one equation",
-    )
     def test_numeric_coefficients_have_one_type(self):
         """All numeric constants in one equation come from the same
         arithmetic (−1 × …); they should not print as both ``(-1)`` and
-        ``(-1.0)``. The S² pipeline strings use ``(-1)`` throughout."""
+        ``(-1.0)``. The S² pipeline strings use ``(-1)`` throughout.
+        Fixed in phase 5a (a float with an integer value folds to an int)."""
         _, eqn = self.eom[self.key]
         types = {type(v) for v in _numeric_values(eqn)}
         assert len(types) == 1, str(eqn)
@@ -259,23 +256,23 @@ class TestDoubleSpringMassExact:
     def test_x1_eom_exact(self):
         _, eqn = self.eom[self.k1]
         ddx1 = "\\frac{d}{dt}(\\frac{d}{dt}(x1))"
-        assert str(eqn) == f"(m1{ddx1}(-1.0)+k1x1(-1.0)+k2x2+k2x1(-1.0)+f1)"
+        assert str(eqn) == f"(m1{ddx1}(-1)+k1x1(-1)+k2x2+k2x1(-1)+f1)"
 
     def test_x2_eom_exact(self):
         _, eqn = self.eom[self.k2]
         ddx2 = "\\frac{d}{dt}(\\frac{d}{dt}(x2))"
-        assert str(eqn) == f"(m2{ddx2}(-1.0)+k2x2(-1.0)+k2x1+f2)"
+        assert str(eqn) == f"(m2{ddx2}(-1)+k2x2(-1)+k2x1+f2)"
 
     def test_x1_standard_form_exact(self):
         eq = self.sf[self.k1]
-        assert _strs(eq.M) == {"\\frac{d}{dt}(\\frac{d}{dt}(x1))": "m1(-1.0)"}
-        assert str(eq.f) == "(k1x1(-1.0)+k2x2+k2x1(-1.0))"
+        assert _strs(eq.M) == {"\\frac{d}{dt}(\\frac{d}{dt}(x1))": "m1(-1)"}
+        assert str(eq.f) == "(k1x1(-1)+k2x2+k2x1(-1))"
         assert _strs(eq.G) == {"f1": "1"}
 
     def test_x2_standard_form_exact(self):
         eq = self.sf[self.k2]
-        assert _strs(eq.M) == {"\\frac{d}{dt}(\\frac{d}{dt}(x2))": "m2(-1.0)"}
-        assert str(eq.f) == "(k2x2(-1.0)+k2x1)"
+        assert _strs(eq.M) == {"\\frac{d}{dt}(\\frac{d}{dt}(x2))": "m2(-1)"}
+        assert str(eq.f) == "(k2x2(-1)+k2x1)"
         assert _strs(eq.G) == {"f2": "1"}
 
     def test_no_cross_contamination(self):
@@ -299,9 +296,9 @@ class TestCoupledScalarAccelerations:
         ddx2 = "\\frac{d}{dt}(\\frac{d}{dt}(x2))"
         eq1 = sf[str(Variation(x1))]
         eq2 = sf[str(Variation(x2))]
-        assert str(eom[str(Variation(x1))][1]) == f"(m{ddx1}(-1.0)+m{ddx2}(-1.0)+f1)"
-        assert _strs(eq1.M) == {ddx1: "m(-1.0)", ddx2: "m(-1.0)"}
-        assert _strs(eq2.M) == {ddx1: "m(-1.0)", ddx2: "m(-1.0)"}
+        assert str(eom[str(Variation(x1))][1]) == f"(m{ddx1}(-1)+m{ddx2}(-1)+f1)"
+        assert _strs(eq1.M) == {ddx1: "m(-1)", ddx2: "m(-1)"}
+        assert _strs(eq2.M) == {ddx1: "m(-1)", ddx2: "m(-1)"}
         assert str(eq1.f) == "0" and str(eq2.f) == "0"
         assert _strs(eq1.G) == {"f1": "1"} and _strs(eq2.G) == {"f2": "1"}
 
@@ -325,21 +322,18 @@ class TestVaryingInertia:
         self.eq = self.sf[str(Variation(self.x))]
 
     def test_mass_matrix_exact(self):
-        assert _strs(self.eq.M) == {DDX: "(m0(-1.0)+m1x(-1.0))"}
+        assert _strs(self.eq.M) == {DDX: "(m0(-1)+m1x(-1))"}
         assert _strs(self.eq.G) == {"f": "1"}
 
     def test_f_is_mathematically_correct_but_uncombined(self):
-        """The two ẋ² terms are present with coefficients +0.5 and −1.0."""
-        assert str(self.eq.f) == (
-            "(0.5m1\\frac{d}{dt}(x)\\frac{d}{dt}(x)+m1\\frac{d}{dt}(x)\\frac{d}{dt}(x)(-1.0))"
-        )
+        """The two ẋ² terms are present with coefficients +0.5 and −1.0.
+        The new printed form is the same expression simplified further (phase 5a merges
+        the two terms into −0.5 m₁ ẋ²)."""
+        assert str(self.eq.f) == ("m1\\frac{d}{dt}(x)\\frac{d}{dt}(x)(-0.5)")
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="BUG: like terms with a numeric factor buried inside the Mul chain do not combine",
-    )
     def test_f_combines_like_terms(self):
-        """½ m₁ ẋ² − m₁ ẋ² must collapse to a single term −½ m₁ ẋ²."""
+        """½ m₁ ẋ² − m₁ ẋ² must collapse to a single term −½ m₁ ẋ².
+        Fixed in phase 5a (like terms are compared on flattened Mul chains)."""
         assert not isinstance(self.eq.f, Add), str(self.eq.f)
 
     def test_x_squared_inertia_exact(self):
@@ -352,9 +346,9 @@ class TestVaryingInertia:
         eom = compute_eom(HALF * m * x * x * v * v, x.delta() * f, variables)
         _, eqn = eom[str(Variation(x))]
         dx = "\\frac{d}{dt}(x)"
-        assert str(eqn) == f"(m{dx}x{dx}(-1.0)+mxx{DDX}(-1.0)+f)"
+        assert str(eqn) == f"(mx{dx}{dx}(-1)+mxx{DDX}(-1)+f)"
         eq = to_standard_form(eom, variables, [f])[str(Variation(x))]
-        assert _strs(eq.M) == {DDX: "mxx(-1.0)"}
+        assert _strs(eq.M) == {DDX: "mxx(-1)"}
 
 
 # ---------------------------------------------------------------------------
@@ -389,18 +383,18 @@ class TestElasticSphericalPendulum:
     def test_l_eom_exact(self):
         _, eqn = self.eom[self.kl]
         assert str(eqn) == (
-            f"(m{DDL}(-1)+mlDot(\\omega_{{q}},\\omega_{{q}})+mgDot(q,e3)(-1)+kl(-1.0)+kl0+f_l)"
+            f"(m{DDL}(-1)+mlDot(\\omega_{{q}},\\omega_{{q}})+mgDot(q,e3)(-1)+kl(-1)+kl0+f_l)"
         )
 
     def test_l_standard_form_exact(self):
         eq = self.sf[self.kl]
         assert _strs(eq.M) == {DDL: "m(-1)"}
-        assert str(eq.f) == "(mlDot(\\omega_{q},\\omega_{q})+mgDot(q,e3)(-1)+kl(-1.0)+kl0)"
+        assert str(eq.f) == "(mlDot(\\omega_{q},\\omega_{q})+mgDot(q,e3)(-1)+kl(-1)+kl0)"
         assert _strs(eq.G) == {"f_l": "1"}
 
     def test_xi_mass_and_input_exact(self):
         eq = self.sf[self.kx]
-        assert _strs(eq.M) == {DW: "I(-1)mll"}
+        assert _strs(eq.M) == {DW: "Imll(-1)"}
         assert _strs(eq.G) == {"f_q": "I"}
 
     def test_no_cross_contamination(self):
@@ -412,7 +406,7 @@ class TestElasticSphericalPendulum:
 
     def test_xi_eom_has_coriolis_term(self):
         """The ξ equation must contain l̇ (from d/dt(m l² ω) = 2 m l l̇ ω + m l² ω̇).
-        Expected: (d/dt(ω)(-1)mll + ω l̇ l m (-2) + Cross(q,e3)mgl(-1) + f_q), in
+        Expected: (d/dt(ω)mll(-1) + ω l̇ l m (-2) + Cross(q,e3)mgl(-1) + f_q), in
         some term order. The code returns the l̇-free spherical-pendulum equation."""
         _, eqn = self.eom[self.kx]
         assert eqn.has(TimeDerivative(self.l)), str(eqn)
@@ -449,21 +443,16 @@ class TestElasticSphericalPendulumQdotForm:
         _, eqn = self.eom[str(Variation(self.l))]
         assert str(eqn) == (
             "(mlDot(Cross(\\omega_{q},q),Cross(\\omega_{q},q))"
-            f"+m{DDL}(-1)+mgDot(q,e3)(-1)+kl(-1.0)+kl0+f_l)"
+            f"+m{DDL}(-1)+mgDot(q,e3)(-1)+kl(-1)+kl0+f_l)"
         )
 
     def test_xi_mass_matrix_exact(self):
         """M[ω̇] = m l² q̂ q̂ = −m l² (I − q qᵀ): the tangent projection of −m l² I."""
         assert _strs(self.sf[str(self.xi)].M) == {DW: "Hat(q)Hat(q)mll"}
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="F6 (deferred): the non-IBP pair +m l l̇ ω − m l l̇ ω is not combined, so f"
-        " has three addends instead of two. The IBP Coriolis term −2 m l l̇ ω is present"
-        " since F1.",
-    )
     def test_xi_f_exact_structure(self):
-        """f must be −2 m l l̇ ω − m g l q×e₃ (two addends)."""
+        """f must be −2 m l l̇ ω − m g l q×e₃ (two addends).
+        Fixed in phase 5a (the pair +m l l̇ ω − m l l̇ ω now cancels)."""
         f = self.sf[str(self.xi)].f
         assert isinstance(f, VAdd) and len(f.nodes) == 2, str(f)
 
@@ -520,7 +509,7 @@ class TestIntegrateByPartsScalarFactors:
         q, w = Vector("q"), Vector("w")
         out = integrate_by_parts(Dot(SVMul(q, dld), w), [dld])
         assert str(out) == (
-            "(\\delta{l}(-1)Dot(\\frac{d}{dt}(q),w)+\\delta{l}(-1)Dot(q,\\frac{d}{dt}(w)))"
+            "(\\delta{l}Dot(\\frac{d}{dt}(q),w)(-1)+\\delta{l}Dot(q,\\frac{d}{dt}(w))(-1))"
         )
 
     def test_scalar_target_with_nonconstant_prefactor(self):
@@ -531,9 +520,8 @@ class TestIntegrateByPartsScalarFactors:
         out = integrate_by_parts(Mul(a, Dot(SVMul(q, dld), w)), [dld])
         assert out.has(TimeDerivative(a))
         assert str(out) == (
-            "(\\delta{l}(-1)\\frac{d}{dt}(a)Dot(q,w)"
-            "+\\delta{l}(-1)aDot(\\frac{d}{dt}(q),w)"
-            "+\\delta{l}(-1)aDot(q,\\frac{d}{dt}(w)))"
+            "(\\delta{l}\\frac{d}{dt}(a)Dot(q,w)(-1)+\\delta{l}aDot(\\frac{d}{dt}(q),w)(-1)"
+            "+\\delta{l}aDot(q,\\frac{d}{dt}(w))(-1))"
         )
 
     def test_vector_target_with_nonconstant_prefactor(self):
@@ -726,10 +714,10 @@ class TestNameCollisions:
         eom = compute_eom(L, x.delta() * f + x1.delta() * f1, variables)
         sf = to_standard_form(eom, variables, [f, f1])
         ddx1 = "\\frac{d}{dt}(\\frac{d}{dt}(x1))"
-        assert str(eom[str(Variation(x))][1]) == f"(m{DDX}(-1.0)+kx1(-1)+f)"
-        assert str(eom[str(Variation(x1))][1]) == f"(m{ddx1}(-1.0)+kx(-1)+f1)"
-        assert _strs(sf[str(Variation(x))].M) == {DDX: "m(-1.0)"}
-        assert _strs(sf[str(Variation(x1))].M) == {ddx1: "m(-1.0)"}
+        assert str(eom[str(Variation(x))][1]) == f"(m{DDX}(-1)+kx1(-1)+f)"
+        assert str(eom[str(Variation(x1))][1]) == f"(m{ddx1}(-1)+kx(-1)+f1)"
+        assert _strs(sf[str(Variation(x))].M) == {DDX: "m(-1)"}
+        assert _strs(sf[str(Variation(x1))].M) == {ddx1: "m(-1)"}
         assert _strs(sf[str(Variation(x))].G) == {"f": "1"}
         assert _strs(sf[str(Variation(x1))].G) == {"f1": "1"}
 
@@ -791,7 +779,7 @@ class TestStandardFormHygiene:
         self.eta = eta
 
     def test_l_equation_mass_and_input(self):
-        assert str(self.eq_l.M[DDL]) == "mDot(Rrho,Rrho)(-1.0)"
+        assert str(self.eq_l.M[DDL]) == "mDot(Rrho,Rrho)(-1)"
         assert _strs(self.eq_l.G) == {"f_l": "1"}
 
     @pytest.mark.xfail(
@@ -832,7 +820,7 @@ class TestFixF1PipelineExact:
         eom, sf, l, q = _elastic_pendulum()
         xi = q.get_variation_vector()
         _, eqn = eom[str(xi)]
-        assert str(eqn) == (f"({DW}(-1)mll+\\omega_{{q}}ml{DL}(-2)+Cross(q,e3)mgl(-1)+f_q)")
+        assert str(eqn) == (f"({DW}mll(-1)+\\omega_{{q}}ml{DL}(-2)+Cross(q,e3)mgl(-1)+f_q)")
         f = sf[str(xi)].f
         assert str(f) == f"(\\omega_{{q}}ml{DL}(-2)+Cross(q,e3)mgl(-1))"
 
@@ -846,7 +834,7 @@ class TestFixF1PipelineExact:
         L = HALF * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
         eom = compute_eom(L, Dot(xi, f), SystemVariables(vectors=[q]), params=[l])
         _, eqn = eom[str(xi)]
-        assert str(eqn) == f"({DW}(-1)mll+\\omega_{{q}}ml{DL}(-2)+Cross(q,e3)mgl(-1)+f)"
+        assert str(eqn) == f"({DW}mll(-1)+\\omega_{{q}}ml{DL}(-2)+Cross(q,e3)mgl(-1)+f)"
 
     def test_r3_x_r_cross_inertia_exact(self):
         """δx:  −m ẍ − m l̈ e₁ + F = 0, so M_x[l̈] = −m e₁ = M_l[ẍ] (same column vector,
@@ -854,8 +842,8 @@ class TestFixF1PipelineExact:
         eom, sf, x, l = _r3_x_r_coupled()
         kx, kl = str(Variation(x)), str(Variation(l))
         _, eqn = eom[kx]
-        assert str(eqn) == f"({DDX}(-1)m+e1m{DDL}(-1)+F)"
-        assert _strs(sf[kx].M) == {DDL: "e1m(-1)", DDX: "I(-1)m"}
+        assert str(eqn) == f"({DDX}m(-1)+e1m{DDL}(-1)+F)"
+        assert _strs(sf[kx].M) == {DDL: "e1m(-1)", DDX: "Im(-1)"}
         assert str(sf[kx].M[DDL]) == str(sf[kl].M[DDX])
 
 

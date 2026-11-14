@@ -109,23 +109,42 @@ def rule(name, before, after):
     the node as it entered the pass (for bottom-up passes its children may already have
     been rewritten by rules that log their own lines first); the ``simplify.*_fold``
     rules pass the node rebuilt from the rewritten children instead, so a fold is logged
-    only for its own work. A call whose *after* prints like *before* is not logged. With
-    tracing off this is one global read.
+    only for its own work. A call whose *after* prints like *before* (same ``repr`` and
+    same ``str``) is not logged; when only the ``str`` differs (the ``repr`` hides
+    grouping, ``(a·b)·c`` and ``a·(b·c)``), the line shows the two ``str`` forms, and a
+    side longer than ``RULE_REPR_CHARS`` is cut around the first difference, so the two
+    sides of a logged line never print the same. With tracing off this is one global
+    read.
     """
     if _TRACE_RULES:
         before_s, after_s = repr(before), repr(after)
-        if before_s != after_s or str(before) != str(after):
-            rules_logger.debug(
-                "%s: %s ==> %s",
-                name,
-                _cut(before_s, RULE_REPR_CHARS),
-                _cut(after_s, RULE_REPR_CHARS),
-            )
+        if before_s == after_s:
+            before_s, after_s = str(before), str(after)
+        if before_s != after_s:
+            rules_logger.debug("%s: %s ==> %s", name, *_cut_pair(before_s, after_s))
     return after
 
 
 def _cut(s, limit):
     return s if len(s) <= limit else s[: limit - 3] + "..."
+
+
+def _cut_pair(a, b, limit=RULE_REPR_CHARS):
+    """*a* and *b* cut to *limit* characters so that the cut strings still differ.
+
+    When the two agree on more than the first ``limit - 60`` characters, both are shown
+    from shortly before their first difference (``...`` marks the dropped start).
+    """
+    a_cut, b_cut = _cut(a, limit), _cut(b, limit)
+    if a_cut != b_cut:
+        return a_cut, b_cut
+    common = 0
+    for ca, cb in zip(a, b):
+        if ca != cb:
+            break
+        common += 1
+    start = max(0, common - 60)
+    return "..." + _cut(a[start:], limit - 3), "..." + _cut(b[start:], limit - 3)
 
 
 def node_count(expr):

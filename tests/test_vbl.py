@@ -97,7 +97,7 @@ class TestPointMassR3:
         self.dF = self.s.symbols["F"].delta()
 
     def test_pinned_eom(self):
-        assert str(self.eom[str(self.dx)][1]) == "(\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)m+F)"
+        assert str(self.eom[str(self.dx)][1]) == "(\\frac{d}{dt}(\\frac{d}{dt}(x))m(-1)+F)"
 
     def test_structure(self):
         assert self.lin.rows == ["kin:x", str(self.dx)]
@@ -151,7 +151,7 @@ class TestSpringMassR:
         self.df = self.s.symbols["f"].delta()
 
     def test_pinned_eom(self):
-        expected = "(m\\frac{d}{dt}(\\frac{d}{dt}(x))(-1.0)+kx(-1.0)+f)"
+        expected = "(m\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)+kx(-1)+f)"
         assert str(self.eom[str(self.dx)][1]) == expected
 
     def test_kinematic_row_exact(self):
@@ -165,7 +165,7 @@ class TestSpringMassR:
     def test_dynamic_row_exact(self):
         row = str(self.dx)
         assert str(self.lin.M[row][str(self.da)]) == "m"
-        assert str(self.lin.A[row][str(self.dx)]) == "k(-1.0)"
+        assert str(self.lin.A[row][str(self.dx)]) == "k(-1)"
         assert str(self.lin.B[row][str(self.df)]) == "1"
         _zero_blocks_except(self.lin.M[row], {str(self.da)})
         _zero_blocks_except(self.lin.A[row], {str(self.dx)})
@@ -203,7 +203,7 @@ class TestFreeRigidBody:
         self.dM = self.s.symbols["M"].delta()
 
     def test_pinned_eom(self):
-        expected = "(J\\frac{d}{dt}(\\Omega_{R})(-1.0)+Cross(\\Omega_{R},J\\Omega_{R})(-1)+M)"
+        expected = "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)+M)"
         assert str(self.eom[str(self.eta)][1]) == expected
 
     def test_structure(self):
@@ -265,16 +265,14 @@ class TestRigidPendulumPivot:
 
     def test_pinned_eom(self):
         expected = (
-            "(J\\frac{d}{dt}(\\Omega_{R})(-1.0)"
-            "+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-            "+Cross(\\rho,(R)'e3)mg(-1)"
-            "+M)"
+            "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
+            "+Cross(\\rho,(R)'e3)mg(-1)+M)"
         )
         assert str(self.eom[str(self.eta)][1]) == expected
 
     def test_gravity_block_exact(self):
         row = str(self.eta)
-        assert str(self.lin.A[row][str(self.eta)]) == "Hat(\\rho)Hat((R)'e3)(-1)mg"
+        assert str(self.lin.A[row][str(self.eta)]) == "Hat(\\rho)Hat((R)'e3)mg(-1)"
         assert str(self.lin.M[row][str(self.ddOm)]) == "J"
         assert str(self.lin.A[row][str(self.dOm)]) == ("(Hat(J\\Omega_{R})+Hat(\\Omega_{R})J(-1))")
 
@@ -324,7 +322,7 @@ class TestSphericalPendulumS2:
         self.df = self.s.symbols["f"].delta()
 
     def test_pinned_eom(self):
-        expected = "(\\frac{d}{dt}(\\omega_{q})(-1)mll+Cross(q,e3)mgl(-1)+f)"
+        expected = "(\\frac{d}{dt}(\\omega_{q})mll(-1)+Cross(q,e3)mgl(-1)+f)"
         assert str(self.eom[str(self.xi)][1]) == expected
 
     def test_kinematic_row_exact(self):
@@ -403,7 +401,7 @@ class TestQuadrotor:
 
     def test_pinned_eom(self):
         assert str(self.eom[str(self.dx)][1]) == (
-            "(\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)m+e3mg(-1)+Re3f)"
+            "(\\frac{d}{dt}(\\frac{d}{dt}(x))m(-1)+e3mg(-1)+Re3f)"
         )
 
     def test_structure(self):
@@ -419,7 +417,7 @@ class TestQuadrotor:
     def test_translational_row_exact(self):
         row = str(self.dx)
         assert str(self.lin.M[row][str(self.dx.t_diff().t_diff())]) == "Im"
-        assert str(self.lin.A[row][str(self.eta)]) == "RHat(e3)(-1)f"
+        assert str(self.lin.A[row][str(self.eta)]) == "RHat(e3)f(-1)"
         assert str(self.lin.B[row][str(self.df)]) == "Re3"
         _zero_blocks_except(self.lin.M[row], {str(self.dx.t_diff().t_diff())})
         _zero_blocks_except(self.lin.A[row], {str(self.eta)})

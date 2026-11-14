@@ -528,13 +528,14 @@ class TestSimplifyRecursive:
         assert _is_zero(result)
 
     def test_chain_mul_numerics(self):
-        """Mul(Mul(2, 3), a) → Mul(6, a)  (bottom-up combines inner first)."""
+        """Mul(Mul(2, 3), a) → Mul(6, a)  (bottom-up combines inner first).
+        Since phase 5a the folded number is placed last: Mul(a, 6)."""
         two = Scalar("(2)", value=2, attr=["Constant"])
         three = Scalar("(3)", value=3, attr=["Constant"])
         a = Scalar("a")
         result = simplify(Mul(Mul(two, three), a))
         assert isinstance(result, Mul)
-        assert result.left.value == 6
+        assert result.right.value == 6
 
     def test_add_with_nested_mul_zero(self):
         """Add(a, Mul(b, 0)) → a  (inner Mul becomes Zero, then filtered)."""

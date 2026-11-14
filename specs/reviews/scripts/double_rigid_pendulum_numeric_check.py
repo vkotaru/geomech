@@ -1,11 +1,15 @@
 """A2: numeric verification of the SO(3)xSO(3) double rigid pendulum against a hand derivation,
 plus collect() edge cases for the new (MVMul, MVMul) peel branch."""
 
+import os
 import sys
 
-import numpy as np
+# Check the geomech of the repository this script lives in, not the installed one.
+sys.path.insert(0, os.path.abspath(os.path.join(__file__, *[os.pardir] * 4)))
 
-from geomech import (
+import numpy as np  # noqa: E402
+
+from geomech import (  # noqa: E402
     S2,
     SO3,
     Add,

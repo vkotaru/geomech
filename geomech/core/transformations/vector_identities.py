@@ -1,10 +1,10 @@
 """Algebraic identities for vector/matrix geometry operations (``vector_rules``).
 
-One top-down pass. It recurses through ``Add``, ``Mul``, ``VAdd``, ``SVMul`` and
-``Cross`` only: below a ``Dot`` operand, an ``MVMul``, ``Hat``, ``MMMul``, ``MAdd``,
-``Transpose`` or a calculus node the rules do not fire (the pipeline's ``expand`` lifts
-``Cross`` to the top of each term first; see ``docs/pipeline.md``). Equality of two
-operands is ``==`` (type + printed name), so two ``S2("q")`` objects are the same point.
+One bottom-up pass over every node class (``map_children`` in ``transformations.utils``):
+the operands of a node are rewritten first, then the rules below are tried at the node, so
+an identity fires wherever its node sits, under a ``Dot``, ``Hat``, ``MVMul``, ``Transpose``
+or a calculus operator included. Equality of two operands is ``==`` (type + printed name),
+so two ``S2("q")`` objects are the same point.
 
 Rules (name, identity, hypothesis the code checks):
 
@@ -36,14 +36,17 @@ Rules (name, identity, hypothesis the code checks):
   vector.hat_zero                  Hat(0) = 0 (matrix)
                                    the operand is flagged zero
 
+Before 5.1 the pass stopped at ``Dot`` operands, ``Hat``, ``MVMul`` and the calculus
+nodes, so ``Dot(v, q×(ω×q))``, ``Hat(a×a)`` or ``J(a×a)`` survived ``full_simplify``.
+
 The tangency test does not look inside ``TimeDerivative``/``Variation``: ``ω̇ ⊥ q`` holds
 on S² but needs a constraint system to prove, so ``Cross(q, Cross(ω̇, q))`` is kept.
 """
 
 from geomech.core.base.expressions import S2, TS2, Scalar, ZeroMatrix, ZeroVector
-from geomech.core.operations.addition import Add, VAdd
 from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose
 from geomech.core.operations.multiplication import Mul, SVMul
+from geomech.core.transformations.utils import map_children
 from geomech.utils.trace import rule
 
 
@@ -147,21 +150,14 @@ _ONE = lambda: Scalar("1", value=1, attr=["Constant", "Ones"])
 
 
 def vector_rules(expr):
-    """Apply the geometric identities listed in the module docstring, top down, once."""
+    """Apply the geometric identities listed in the module docstring, bottom up, once."""
+    expr = map_children(expr, vector_rules, "vector_rules")
+    return _at_node(expr)
+
+
+def _at_node(expr):
+    """The identities of the module docstring at the root of *expr* (operands done)."""
     match expr:
-        # --- Linearity through scalar and vector ops ---
-        case Add(nodes=nodes):
-            return Add(*[vector_rules(n) for n in nodes])
-
-        case Mul():
-            return Mul(vector_rules(expr.left), vector_rules(expr.right))
-
-        case VAdd(nodes=nodes):
-            return VAdd(*[vector_rules(n) for n in nodes])
-
-        case SVMul():
-            return SVMul(vector_rules(expr.left), vector_rules(expr.right))
-
         # --- Dot product rules ---
         case Dot():
             # zero absorption: dot(0, x) or dot(x, 0)
@@ -170,16 +166,12 @@ def vector_rules(expr):
 
             match (expr.left, expr.right):
                 # dot(x, cross(a, b)) — cross on right
-                case (_, Cross()):
-                    if _is_orthogonal_dot_cross(expr.left, expr.right):
-                        return rule("vector.dot_cross_orthogonal", expr, _ZERO())
-                    return expr
+                case (_, Cross()) if _is_orthogonal_dot_cross(expr.left, expr.right):
+                    return rule("vector.dot_cross_orthogonal", expr, _ZERO())
 
                 # dot(cross(a, b), x) — cross on left
-                case (Cross(), _):
-                    if _is_orthogonal_dot_cross(expr.right, expr.left):
-                        return rule("vector.dot_cross_orthogonal", expr, _ZERO())
-                    return expr
+                case (Cross(), _) if _is_orthogonal_dot_cross(expr.right, expr.left):
+                    return rule("vector.dot_cross_orthogonal", expr, _ZERO())
 
                 # dot(q, q) = 1 when unit norm
                 case _ if (
@@ -208,14 +200,10 @@ def vector_rules(expr):
         case Cross() if isinstance(expr.left, SVMul) and expr.left.left == expr.right:
             return rule("vector.cross_scaled_self", expr, ZeroVector)
 
-        # S2 BAC-CAB identity with tangent orthogonality.
-        # First recurse into children so inner reductions fire before outer.
+        # S2 BAC-CAB identity with tangent orthogonality
         case Cross():
-            expr = Cross(vector_rules(expr.left), vector_rules(expr.right))
             reduced = _try_s2_cross_reduction(expr)
-            if reduced is not None:
-                return reduced
-            return expr
+            return expr if reduced is None else reduced
 
         # --- Transpose rules ---
         case Transpose() if isinstance(expr.expr, Transpose):

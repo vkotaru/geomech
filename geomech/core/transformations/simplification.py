@@ -16,20 +16,35 @@ symbol's variation...), "one" a numeric leaf with value 1, "identity" a leaf fla
                                    magnitude are cancelled to 0 (``_CANCEL_RTOL``)
   simplify.vadd_fold               VAdd: zeros dropped, like terms merged
   simplify.madd_fold               MAdd: zeros dropped, like terms merged
+
+Like terms (all three folds): an addend is split into a number (the product of every
+numeric literal in its flattened ``Mul`` chain and, for vectors and matrices, in the
+scalars of its ``SVMul``/``SMMul``), its other scalar factors and its vector/matrix base;
+two addends merge when their bases are equal and their factors are equal as multisets
+(``x(2)y + xy(3) → xy(5)``, ``v a + v a(-1) → 0``, ``(vᵀw)s + s(vᵀw) → (vᵀw)s(2)``).
+Numeric literals are anonymous numbers only: a named ``Scalar("m", value=2)`` is a symbol
+and is never folded (decision D1); its value is used by ``geomech.numeric`` only.
   simplify.mul_fold                Mul: a zero factor gives 0, a factor one is dropped,
-                                   numeric factors of a Mul chain are multiplied together
+                                   numeric factors of a Mul chain are multiplied into one
+                                   number placed last; a float with an integer value
+                                   becomes an int (``(-1.0) → (-1)``)
   simplify.svmul_zero              v·0 = 0·s = 0 (vector)
   simplify.svmul_one               v·1 = v
   simplify.smmul_zero              M·0 = 0·s = 0 (matrix)
   simplify.smmul_one               M·1 = M
   simplify.mvmul_zero              0·v = M·0 = 0
   simplify.mvmul_identity          I·v = v                    left factor flagged identity
+                                                              (or its transpose)
   simplify.mvmul_hat_to_cross      Hat(a)·v = Cross(a, v)
   simplify.mvmul_reassociate       (A·B)·v = A·(B·v)
   simplify.mvmul_combine           A·(B·v) = (A·B)·v          only when A·B simplifies to a
                                                               non-product (e.g. RᵀR = I)
   simplify.mmmul_zero              0·B = A·0 = 0
-  simplify.mmmul_identity          I·B = B, A·I = A           factor flagged identity
+  simplify.mmmul_identity          I·B = B, A·I = A           factor flagged identity (or
+                                                              its transpose)
+  simplify.mmmul_reassociate       (A·B)·C = A·(B·C)
+  simplify.mmmul_combine           A·(B·C) = (A·B)·C          only when A·B simplifies to a
+                                                              non-product (e.g. RᵀR = I)
   simplify.orthogonal_transpose    RᵀR = I and RRᵀ = I        R flagged orthogonal (SO3),
                                                               both factors equal by name
   simplify.vvmul_zero              0ᵀw = vᵀ0 = 0 (scalar), v0ᵀ = 0 (matrix)
@@ -43,8 +58,13 @@ symbol's variation...), "one" a numeric leaf with value 1, "identity" a leaf fla
   simplify.vee_zero                Vee(0) = 0
   simplify.vee_hat                 Vee(Hat(v)) = v
   simplify.transpose_transpose     (Xᵀ)ᵀ = X
-  simplify.transpose_symmetric     Jᵀ = J                     J flagged symmetric
+  simplify.transpose_symmetric     Jᵀ = J                     J flagged symmetric (the
+                                                              identity ``I`` is)
   simplify.transpose_hat_skew      Hat(v)ᵀ = -Hat(v)
+  simplify.transpose_skew          Sᵀ = -S                    S skew-symmetric (a leaf flagged
+                                                              SkewSymmetricMatrix, a sum or
+                                                              transpose of such), not a Hat
+                                                              or a scaled matrix
   simplify.transpose_scaled        (M s)ᵀ = Mᵀ s
   simplify.transpose_scaled_row    (aᵀ s)ᵀ = a s
   simplify.transpose_product       (A·B)ᵀ = Bᵀ·Aᵀ
@@ -68,6 +88,7 @@ from geomech.core.base.expressions import (
     Zero,
     ZeroMatrix,
     ZeroVector,
+    is_number_literal,
 )
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
@@ -81,6 +102,7 @@ from geomech.core.operations.multiplication import (
     SVMul,
     VVMul,
 )
+from geomech.core.transformations.utils import calculus_node
 from geomech.utils import trace as _trace
 from geomech.utils.trace import rule
 
@@ -193,7 +215,7 @@ def _eliminate(expr):
                 return rule("simplify.svmul_zero", expr, ZeroVector)
             if _is_one(scl):
                 return rule("simplify.svmul_one", expr, vec)
-            return SVMul(vec, scl)
+            return SVMul(vec, _exact_literal(scl))
 
         # ---- scalar * matrix ----
         case SMMul():
@@ -202,7 +224,7 @@ def _eliminate(expr):
                 return rule("simplify.smmul_zero", expr, ZeroMatrix)
             if _is_one(scl):
                 return rule("simplify.smmul_one", expr, mat)
-            return SMMul(mat, scl)
+            return SMMul(mat, _exact_literal(scl))
 
         # ---- matrix * vector ----
         case MVMul():
@@ -246,6 +268,20 @@ def _eliminate(expr):
             # R * R^T = I  when R is orthogonal (SO3)
             if isinstance(r, Transpose) and r.expr.is_orthogonal and r.expr == l:
                 return rule("simplify.orthogonal_transpose", expr, IdentityMatrix)
+            # (A * B) * C → A * (B * C)  (matrix associativity, as for MVMul)
+            if isinstance(l, MMMul):
+                return rule(
+                    "simplify.mmmul_reassociate",
+                    expr,
+                    _eliminate(MMMul(l.left, MMMul(l.right, r))),
+                )
+            # A * (B * C) → (A*B) * C  when A*B simplifies (e.g. R'*R = I)
+            if isinstance(r, MMMul):
+                combined = _eliminate(MMMul(l, r.left))
+                if not isinstance(combined, MMMul):
+                    return rule(
+                        "simplify.mmmul_combine", expr, _eliminate(MMMul(combined, r.right))
+                    )
             return MMMul(l, r)
 
         # ---- vector * vector ----
@@ -302,6 +338,13 @@ def _eliminate(expr):
                     expr,
                     SMMul(inner, Scalar("(-1)", value=-1, attr=["Constant"])),
                 )
+            # any other skew-symmetric matrix: S^T = -S
+            if _is_skew_symmetric(inner) and not isinstance(inner, SMMul):
+                return rule(
+                    "simplify.transpose_skew",
+                    expr,
+                    SMMul(inner, Scalar("(-1)", value=-1, attr=["Constant"])),
+                )
             # (s*M)^T = s*M^T
             if isinstance(inner, SMMul):
                 return rule(
@@ -328,7 +371,7 @@ def _eliminate(expr):
             inner = _eliminate(expr.expr)
             if _is_zero(inner):
                 return rule("simplify.variation_zero", expr, _zero_for(inner))
-            return Variation(inner)
+            return calculus_node(Variation, inner)
 
         case TimeDerivative():
             inner = _eliminate(expr.expr)
@@ -337,7 +380,7 @@ def _eliminate(expr):
             # d/dt(∫x dt) = x
             if isinstance(inner, TimeIntegral):
                 return rule("simplify.time_derivative_integral", expr, inner.expr)
-            return TimeDerivative(inner)
+            return calculus_node(TimeDerivative, inner)
 
         case TimeIntegral():
             inner = _eliminate(expr.expr)
@@ -363,10 +406,14 @@ def _is_zero(expr) -> bool:
 
 
 def _is_one(expr) -> bool:
-    return getattr(expr, "value", None) == 1
+    """A numeric literal equal to 1 (a named ``Scalar("m", value=1)`` is a symbol, D1)."""
+    return is_number_literal(expr) and expr.value == 1
 
 
 def _is_identity(expr) -> bool:
+    """A leaf flagged ``Identity``, or the transpose of one (``Iᵀ = I``)."""
+    if isinstance(expr, Transpose):
+        return _is_identity(expr.expr)
     flags = getattr(expr, "flags", None)
     return flags is not None and flags.is_identity
 
@@ -377,8 +424,37 @@ def _is_skew_symmetric(expr) -> bool:
 
 
 def _is_numeric_leaf(expr) -> bool:
-    """True for leaf Scalars with a numeric value (not operation nodes)."""
-    return isinstance(expr, Scalar) and not hasattr(expr, "nodes") and expr.value is not None
+    """True for an anonymous numeric literal (``Number``, ``Zero``, ``2 * x``'s ``(2)``).
+
+    A named scalar with a value (``Scalar("m", value=2)``) is not one: it stays a symbol
+    in every simplification (fix plan decision D1).
+    """
+    return is_number_literal(expr)
+
+
+def _exact(value):
+    """*value* as an ``int`` when it is a float with an exact integer value (``-1.0 → -1``).
+
+    ``0.5 * 2 * -1`` folds to ``-1.0``; printing ``(-1)`` instead of ``(-1.0)`` makes the
+    term equal to the ``(-1)`` terms it should merge with. Non-integral floats are kept.
+    """
+    if isinstance(value, float) and value.is_integer() and abs(value) < 2.0**53:
+        return int(value)
+    return value
+
+
+def _exact_literal(expr):
+    """*expr* with ``_exact`` applied when it is a numeric literal (``(2.0)`` → ``(2)``).
+
+    The scalar factor of an ``SVMul``/``SMMul`` is not folded by ``_simplify_mul``, so it
+    is normalised here: ``v·(2.0)`` and ``v·(2)`` then print, and compare, the same as
+    ``x·(2.0)`` and ``x·(2)`` do.
+    """
+    if is_number_literal(expr) and isinstance(expr.value, float):
+        value = _exact(expr.value)
+        if isinstance(value, int):
+            return Number(value)
+    return expr
 
 
 def _zero_for(expr):
@@ -422,7 +498,7 @@ def _simplify_add(nodes):
             scale = max(scale, abs(n.value))
         else:
             kept.append(n)
-    numeric_total = _cancelled(numeric_total, scale)
+    numeric_total = _exact(_cancelled(numeric_total, scale))
     if numeric_total != 0:
         kept.append(Number(numeric_total))
     kept = _collect_like_terms(kept, ExprType.SCALAR)
@@ -460,27 +536,37 @@ def _simplify_madd(nodes):
 # ---------------------------------------------------------------------------
 
 
-def _split_coeff(expr):
-    """Split expr into (numeric_coefficient, term).
+def _split_term(expr, expr_type):
+    """Split an addend into ``(coefficient, base, factors)``.
 
-    For Mul(term, Number) or Mul(Number, term), returns (number, term).
-    For SVMul(vec, Number) or SMMul(mat, Number), returns (number, vec/mat).
-    Otherwise returns (1, expr).
+    *coefficient* is the product of every numeric literal of the term, *factors* the
+    other scalar factors (a flattened ``Mul`` chain, in order) and *base* the vector or
+    matrix the scalars multiply (``None`` for a scalar term). ``x(2)y`` gives
+    ``(2, None, [x, y])``, ``v(s(-1))`` gives ``(-1, v, [s])``. Two addends are like terms
+    when their bases are equal and their factors are equal as multisets.
     """
-    if isinstance(expr, Mul):
-        if _is_numeric_leaf(expr.left):
-            return expr.left.value, expr.right
-        if _is_numeric_leaf(expr.right):
-            return expr.right.value, expr.left
-    if isinstance(expr, SVMul):
-        if _is_numeric_leaf(expr.right):
-            return expr.right.value, expr.left
-    if isinstance(expr, SMMul):
-        if _is_numeric_leaf(expr.right):
-            return expr.right.value, expr.left
-    if _is_numeric_leaf(expr):
-        return expr.value, None
-    return 1, expr
+    scalars = []
+    base = None
+    if expr_type == ExprType.SCALAR:
+        scalars.append(expr)
+    else:
+        node = expr
+        cls = SVMul if expr_type == ExprType.VECTOR else SMMul
+        while isinstance(node, cls):
+            scalars.append(node.right)
+            node = node.left
+        base = node
+    factors = []
+    for sc in scalars:
+        _flatten_mul(sc, factors)
+    coeff = 1
+    rest = []
+    for f in factors:
+        if _is_numeric_leaf(f):
+            coeff *= f.value
+        else:
+            rest.append(f)
+    return _exact(coeff), base, rest
 
 
 def _commutative_equal(a, b):
@@ -496,9 +582,10 @@ def _commutative_equal(a, b):
             _commutative_equal(a.left, b.right) and _commutative_equal(a.right, b.left)
         )
     if isinstance(a, Mul):
-        return (_commutative_equal(a.left, b.left) and _commutative_equal(a.right, b.right)) or (
-            _commutative_equal(a.left, b.right) and _commutative_equal(a.right, b.left)
-        )
+        fa, fb = [], []
+        _flatten_mul(a, fa)
+        _flatten_mul(b, fb)
+        return _same_factors(fa, fb)
 
     # Non-commutative binary ops: order matters
     if isinstance(a, (SVMul, SMMul, MVMul, MMMul, VVMul, Cross)):
@@ -522,102 +609,128 @@ def _commutative_equal(a, b):
     return str(a) == str(b)
 
 
-def _make_term(coeff, term, expr_type):
-    """Reconstruct coeff * term for the given type."""
-    if term is None:
-        # Pure numeric
-        return Number(coeff)
+def _same_factors(fa, fb):
+    """The two factor lists are equal as multisets (``_commutative_equal`` per factor)."""
+    if len(fa) != len(fb):
+        return False
+    left = list(fb)
+    for f in fa:
+        for k, g in enumerate(left):
+            if _commutative_equal(f, g):
+                del left[k]
+                break
+        else:
+            return False
+    return True
+
+
+def _chain(factors):
+    """Left-associated ``Mul`` chain of *factors* (at least one)."""
+    out = factors[0]
+    for f in factors[1:]:
+        out = Mul(out, f)
+    return out
+
+
+def _make_term(coeff, base, factors, expr_type):
+    """Rebuild ``coeff · factors · base`` (the inverse of ``_split_term``); ``None`` for 0."""
     if coeff == 0:
         return None
-    if coeff == 1:
-        return term
-    scalar = Number(coeff)
-    if expr_type == ExprType.VECTOR:
-        return SVMul(term, scalar)
-    if expr_type == ExprType.MATRIX:
-        return SMMul(term, scalar)
-    return Mul(term, scalar)
+    scalars = list(factors)
+    if coeff != 1:
+        scalars.append(Number(coeff))
+    if expr_type == ExprType.SCALAR:
+        return _chain(scalars) if scalars else Number(1)
+    if not scalars:
+        return base
+    cls = SVMul if expr_type == ExprType.VECTOR else SMMul
+    return cls(base, _chain(scalars))
 
 
 def _collect_like_terms(nodes, expr_type):
-    """Group terms by commutative equality and sum their coefficients."""
+    """Merge like terms (same base, same symbolic factors) by summing their coefficients.
+
+    A term that merges with nothing is kept as it is; a merged group is rebuilt from its
+    first term with the summed coefficient (dropped when the sum is 0).
+    """
     if len(nodes) <= 1:
         return nodes
 
-    # Split each node into (coeff, term)
-    pairs = [_split_coeff(n) for n in nodes]
-
-    # Group by commutative equality
-    merged_coeffs = list(range(len(pairs)))  # index of canonical representative
-    coeffs = [c for c, _ in pairs]
+    split = [_split_term(n, expr_type) for n in nodes]
+    group = list(range(len(nodes)))  # index of the group's first term
+    coeffs = [c for c, _, _ in split]
     scales = [abs(c) for c in coeffs]
-    terms = [t for _, t in pairs]
+    merged = [False] * len(nodes)
 
-    for i in range(len(pairs)):
-        if merged_coeffs[i] != i:
-            continue  # already merged into an earlier group
-        for j in range(i + 1, len(pairs)):
-            if merged_coeffs[j] != j:
-                continue  # already merged
-            ti = terms[i]
-            tj = terms[j]
-            # Both pure numeric (term is None) — already combined in _simplify_add
-            if ti is None and tj is None:
-                continue
-            if ti is not None and tj is not None and _commutative_equal(ti, tj):
-                coeffs[i] += coeffs[j]
-                scales[i] = max(scales[i], abs(coeffs[j]))
-                coeffs[j] = 0
-                merged_coeffs[j] = i
-
-    # Reconstruct
-    result = []
-    for i in range(len(pairs)):
-        if merged_coeffs[i] != i:
+    for i in range(len(nodes)):
+        if group[i] != i:
             continue
-        made = _make_term(_cancelled(coeffs[i], scales[i]), terms[i], expr_type)
+        _, bi, fi = split[i]
+        for j in range(i + 1, len(nodes)):
+            if group[j] != j:
+                continue
+            _, bj, fj = split[j]
+            if (bi is None) != (bj is None):
+                continue
+            if bi is not None and not _commutative_equal(bi, bj):
+                continue
+            if not _same_factors(fi, fj):
+                continue
+            coeffs[i] += coeffs[j]
+            scales[i] = max(scales[i], abs(coeffs[j]))
+            group[j] = i
+            merged[i] = True
+
+    result = []
+    for i in range(len(nodes)):
+        if group[i] != i:
+            continue
+        if not merged[i]:
+            result.append(nodes[i])
+            continue
+        _, base, factors = split[i]
+        made = _make_term(_exact(_cancelled(coeffs[i], scales[i])), base, factors, expr_type)
         if made is not None:
             result.append(made)
     return result
 
 
 def _simplify_mul(l, r):
-    """Scalar multiplication: zeros, identity, numeric combining."""
+    """Scalar multiplication: zeros, identity, numeric combining.
+
+    The chain ``l·r`` is flattened; its numeric literals are multiplied into one number
+    placed last (``(-0.5)·(m·2) → m(-1)``), the other factors keep their order.
+    """
     if _is_zero(l) or _is_zero(r):
         return Zero
     if _is_one(l):
         return r
     if _is_one(r):
         return l
-    # both numeric leaves → combine (a zero product is the Zero leaf, not an unflagged "(0)")
-    if _is_numeric_leaf(l) and _is_numeric_leaf(r):
-        combined = l.value * r.value
-        if combined == 0:
-            return Zero
-        return Number(combined)
-    # Fold numeric constants through nested Muls:
-    # e.g. Mul(-0.5, Mul(m, 2)) → Mul(m, -1.0)
-    result = Mul(l, r)
     factors = []
-    _flatten_mul(result, factors)
+    _flatten_mul(Mul(l, r), factors)
     numerics = [f for f in factors if _is_numeric_leaf(f)]
-    if len(numerics) >= 2:
-        others = [f for f in factors if not _is_numeric_leaf(f)]
-        combined = 1
-        for n in numerics:
-            combined *= n.value
-        if combined == 0:
-            return Zero
-        if combined != 1:
-            others.append(Number(combined))
-        if len(others) == 0:
-            return Number(combined)
-        # Rebuild left-associative chain
-        out = others[0]
-        for o in others[1:]:
-            out = Mul(out, o)
-        return out
-    return result
+    if not numerics:
+        return Mul(l, r)
+    others = [f for f in factors if not _is_numeric_leaf(f)]
+    combined = 1
+    for n in numerics:
+        combined *= n.value
+    combined = _exact(combined)
+    if combined == 0:
+        return Zero
+    if not others:
+        return Number(combined)
+    if combined == 1:
+        return _chain(others)
+    if (
+        len(numerics) == 1
+        and factors[-1] is numerics[0]
+        and type(numerics[0].value) is type(combined)
+        and numerics[0].value == combined
+    ):
+        return Mul(l, r)  # already in normal form: keep the tree as built
+    return Mul(_chain(others), Number(combined))
 
 
 def _flatten_mul(expr, factors):

@@ -52,7 +52,8 @@ import numpy as np
 
 # Fuzz the geomech of the repository this script lives in, not whatever is installed in
 # the venv (a worktree or copy sharing the venv would otherwise test the wrong tree).
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# The repository root is four levels up: scripts/ -> reviews/ -> specs/ -> root.
+sys.path.insert(0, os.path.abspath(os.path.join(__file__, *[os.pardir] * 4)))
 
 import geomech as _geomech  # noqa: E402
 from geomech import (  # noqa: E402
