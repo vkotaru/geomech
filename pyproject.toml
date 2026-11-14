@@ -1,12 +1,41 @@
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "geomech"
 version = "0.2.0.dev0"
 description = "Symbolic computation of dynamics on smooth manifolds"
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
+authors = [
+    { name = "Prasanth Kotaru" }
+]
+keywords = [
+    "geometric-mechanics",
+    "equations-of-motion",
+    "symbolic-computation",
+    "lagrangian-mechanics",
+    "robotics",
+    "SO3",
+    "S2",
+    "linearization",
+    "code-generation",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Typing :: Typed",
+]
 dependencies = [
     "numpy",
 ]
