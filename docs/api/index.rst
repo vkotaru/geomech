@@ -19,5 +19,6 @@ Page                                                Contents
 :doc:`codegen`                                      ``StateLayout``, ``lambdify``, ``generate_module``
 :doc:`simulation`                                   ``simulate``, ``accelerations``, ``lqr``
 :doc:`viz`                                          ``Scene``, ``Report``
+:doc:`systems`                                      the verified systems library (``get``, ``list_systems``)
 :doc:`utils`                                        printing, tracing, invariants, error types
 ==================================================  ===========================================

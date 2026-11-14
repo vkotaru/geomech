@@ -29,6 +29,7 @@ from geomech import (
     VVMul,
     compute_eom,
     getScalars,
+    systems,
 )
 from geomech.numeric import assert_eom
 from tests.vbl_systems import HALF, System
@@ -90,14 +91,9 @@ def s2_rotating_sphere_omega():
     L̃ = ½ m L² { |ω|² + 2 qᵀ S(Ωe₃) S(q) ω + Ω² qᵀ C q },  C = diag(1, 1, 0) (a constant
     symmetric matrix here).
     """
-    m, L_, Om, e3, C, q, f = _rotating_sphere_symbols()
-    om, xi = q.get_tangent_vector(), q.get_variation_vector()
-    S_a = Hat(e3 * Om)  # S(Ω e₃)
-    coupling = Dot(q, MVMul(S_a, MVMul(Hat(q), om))) * 2
-    L = HALF * m * L_ * L_ * (Dot(om, om) + coupling + Om * Om * Dot(q, C * q))
-    return System(
-        L, Dot(xi, f), SystemVariables(vectors=[q]), [f], dict(q=q, C=C, Om=Om, e3=e3, f=f)
-    )
+    s = systems.particle_on_rotating_sphere()  # the same Lagrangian and symbols
+    symbols = {k: s.symbols[k] for k in ("q", "C", "Om", "e3", "f")}
+    return System(s.L, s.dW, s.variables, list(s.inputs), symbols)
 
 
 def s2_rotating_sphere_qdot():

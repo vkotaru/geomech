@@ -38,6 +38,28 @@ This release changed derived equations and the public surface. In short:
 
 
 ### Added
+- Verified systems library, `geomech.systems` (`specs/systems-library.md`,
+  `docs/systems.md`): `get(name, **kwargs)`, `list_systems()` and one builder per system
+  (`point_mass`, `spring_mass`, `spherical_pendulum`, `particle_on_rotating_sphere`,
+  `double_spherical_pendulum`, `n_link_spherical_chain(n_links=…)`,
+  `elastic_spherical_pendulum`, `cart_spherical_pendulum`, `free_rigid_body`,
+  `heavy_top`, `rigid_pendulum`, `double_rigid_pendulum`,
+  `two_rigid_bodies_spherical_joint`, `rigid_body`, `quadrotor`, `quadrotor_offset_com`,
+  `quadrotor_suspended_load`, `quadrotor_elastic_load`,
+  `quadrotor_flexible_cable(n_links=…)`, `multi_quadrotor_point_mass(n_quads=…)`,
+  `multi_quadrotor_rigid_load(n_quads=…)`). A `System` (frozen dataclass) holds `L`,
+  `dW`, `variables`, `inputs`, default `params`, a consistent `x0`, a `Reference`
+  (citation key of `docs/references.bib`, section, and the closed-form equation the
+  tests compare with) and `scene(layout)`; quadrotors are drawn as a box with arms and
+  rotor cylinders. A `System` is immutable (read-only mappings of read-only arrays); sizes
+  run from 1 to `MAX_SIZE = 20`. Every system passes `check_eom` at three seeds,
+  generates, simulates with energy conserved to 1e-8 and renders through `Report`; its
+  Lagrangian and virtual work agree with an independent NumPy model of its bodies; the
+  systems with a closed form in Lee et al. (eqs. 5.38, 5.43, 5.71, 6.16, 6.20,
+  7.39–7.40) are compared with it numerically. `tests/golden/` stores every equation and
+  standard-form block as a string and as values at fixed states, with the default
+  parameters and `x0`, regenerated and checked by `scripts/regenerate_golden.py
+  [--check]`.
 - `geomech.__version__` (the installed package version). Contributor files:
   `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SUPPORT.md`,
   `CITATION.cff`, and issue templates for bugs, feature requests and questions.

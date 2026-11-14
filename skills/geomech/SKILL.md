@@ -12,6 +12,20 @@ Do not derive by hand and do not use Euler angles: geomech derives coordinate-fr
 equations (Lee et al., *Global Formulations of Lagrangian and Hamiltonian Dynamics on
 Manifolds*).
 
+## Known systems: start from the library
+
+If the system is one of `geomech.systems.list_systems()` (point mass, spring, spherical,
+double spherical and n-link spherical pendulums, particle on a rotating sphere, elastic
+pendulum, 3-D cart-pole, free rigid body, heavy top, rigid and double rigid pendulums,
+two bodies with a spherical joint, 6-DOF rigid body, quadrotor, quadrotor with an offset
+centre of mass, with a suspended, elastic or flexible-cable load, several quadrotors
+carrying a point mass or a rigid body), start from `sys = geomech.systems.get(name)`
+(`get("multi_quadrotor_point_mass", n_quads=4)` for a size) instead of retyping the
+Lagrangian: `sys.L`, `sys.dW`, `sys.variables`, `sys.inputs` go into the steps below,
+`sys.params` and `sys.x0` into `simulate`, `sys.layout()` is the `StateLayout`, and
+`sys.scene(layout)` the `Scene`. Still run step 4 (`check_eom`) and report it, and cite
+`sys.reference`. Write the model by hand only for a system that is not in the list.
+
 ## Procedure
 
 Follow the steps in order. Each call is exact; `reference.md` lists the API and the
