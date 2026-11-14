@@ -2,7 +2,8 @@
 
 Three layers, each built on the previous one:
 
-1. ``hat``, ``vee``, ``rand_rot``, ``expm_so3``: the SO(3) primitives on numpy arrays.
+1. ``hat``, ``vee``, ``rand_rot``, ``expm_so3``, ``log_so3``: the SO(3) primitives on
+   numpy arrays.
 2. ``Evaluator`` / ``evaluate``: evaluate any expression tree given values for its leaves.
    Leaves are keyed by their printed name, ``str(leaf)``; velocities and accelerations by
    ``str(TimeDerivative(leaf))`` and so on. Unlisted leaves are drawn at random.
@@ -52,6 +53,7 @@ __all__ = [
     "vee",
     "rand_rot",
     "expm_so3",
+    "log_so3",
     "Evaluator",
     "evaluate",
     "sample_state",
@@ -98,6 +100,34 @@ def expm_so3(v):
     if theta < 1e-12:
         return np.eye(3) + K + 0.5 * K @ K
     return np.eye(3) + np.sin(theta) / theta * K + (1 - np.cos(theta)) / theta**2 * (K @ K)
+
+
+def log_so3(R) -> np.ndarray:
+    """Principal logarithm of a rotation: the ``(3,)`` vector ``v`` with ``|v| ≤ π`` and
+    ``expm_so3(v) == R``.
+
+    The angle is ``atan2(|vee(R − Rᵀ)|/2, (tr R − 1)/2)``, accurate over the whole range.
+    Near the identity the axis comes from the skew part with the series of ``θ/sin θ``;
+    near ``θ = π`` (where the skew part vanishes) it comes from the symmetric part
+    ``(R + Rᵀ)/2 = cos θ I + (1 − cos θ) n nᵀ``, with the sign of ``n`` taken from the skew
+    part. At exactly ``θ = π`` both ``±π n`` are logarithms; ``+π n`` with the largest
+    component of ``n`` positive is returned. ``R`` must be a rotation (not checked).
+    """
+    R = np.asarray(R, dtype=float).reshape(3, 3)
+    w = 0.5 * np.array([R[2, 1] - R[1, 2], R[0, 2] - R[2, 0], R[1, 0] - R[0, 1]])
+    s = np.linalg.norm(w)  # sin θ
+    c = 0.5 * (np.trace(R) - 1.0)  # cos θ
+    theta = np.arctan2(s, c)
+    if theta < 1e-4:
+        return w * (1.0 + theta**2 / 6.0 + 7.0 * theta**4 / 360.0)
+    if c > -0.9:
+        return w * (theta / s)
+    S = 0.5 * (R + R.T) - c * np.eye(3)  # (1 − cos θ) n nᵀ
+    k = int(np.argmax(np.diag(S)))
+    n = S[:, k] / np.sqrt(S[k, k] * (1.0 - c))
+    if n @ w < 0:
+        n = -n
+    return theta * n
 
 
 def _cross(a, b):

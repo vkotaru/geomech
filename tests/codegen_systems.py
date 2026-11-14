@@ -107,21 +107,3 @@ def assert_close(got, ref, what, rtol=RTOL):
     scale = max(1.0, float(np.max(np.abs(ref)))) if ref.size else 1.0
     err = float(np.max(np.abs(got - ref))) if ref.size else 0.0
     assert err <= rtol * scale, f"{what}: generated {got} vs evaluate {ref} (err {err:.2e})"
-
-
-def tangent_accelerations(mod, layout: StateLayout, state, u, p) -> np.ndarray:
-    """Accelerations from the standard form, each S² row block replaced by
-    ``P_q · row`` plus ``q qᵀ`` on its own ``ω̇`` column (``docs/conventions.md``)."""
-    A = mod.mass(state, p)
-    b = -(mod.bias(state, p) + mod.input_matrix(state, p) @ u)
-    row = 0
-    for cfg, acc in zip(layout.configuration, layout.acceleration):
-        n = acc.size
-        if cfg.manifold == "S2":
-            q = state[cfg.slice]
-            P = np.eye(3) - np.outer(q, q)
-            A[row : row + 3] = P @ A[row : row + 3]
-            A[row : row + 3, acc.slice] += np.outer(q, q)
-            b[row : row + 3] = P @ b[row : row + 3]
-        row += n
-    return np.linalg.solve(A, b)

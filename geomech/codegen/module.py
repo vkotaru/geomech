@@ -327,9 +327,10 @@ def generate_module(
     The module needs only ``numpy`` (and ``casadi`` for that target), not ``geomech``.
     See the module docstring of ``geomech.codegen.module`` for the functions it defines;
     signs and shapes follow ``docs/conventions.md`` (``M`` = −physical inertia, a scalar
-    equation with a vector acceleration contributes a 1×3 block). The S² mass block is
-    singular (rank 2) by construction; solving for the accelerations with the tangency
-    constraint ``q·ω̇ = 0`` is left to the caller.
+    equation with a vector acceleration contributes a 1×3 block). An S² equation holds
+    only on the tangent plane, and its mass block may be singular (``Hat(q) Hat(q) m l²``)
+    or already full rank (``−m l² I``); the module does not solve for the accelerations:
+    ``geomech.simulation.accelerations`` does, with the tangency constraint ``q·ω̇ = 0``.
     """
     src = module_source(system, layout, target, lagrangian=lagrangian, description=description)
     if path is not None:
