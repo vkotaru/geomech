@@ -169,6 +169,53 @@ def sliding_mass_on_rotating_body():
     return System(L, dW, SystemVariables(scalars=[l], matrices=[R]), [f_l, M], {})
 
 
+# ---------------------------------------------------------------------------
+# Row vectors built with the operators (phase 3 review, F2): a row times a matrix
+# ---------------------------------------------------------------------------
+
+
+def _row_symbols():
+    (m,) = getScalars("m", attr=["Constant"])
+    K = Matrix("K", attr=["Constant", "SymmetricMatrix"])
+    A = Matrix("A", attr=["Constant"])
+    e3 = Vector("e3", attr=["Constant"])
+    x, f = Vector("x"), Vector("f")
+    return m, K, A, e3, x, f
+
+
+def row_spring():
+    """L = ½ m ẋ·ẋ − ½ xᵀK x (K symmetric): m ẍ + K x = f."""
+    m, K, A, e3, x, f = _row_symbols()
+    v = x.t_diff()
+    L = m * Dot(v, v) / 2 - x.T() * K * x / 2
+    return System(L, Dot(x.delta(), f), SystemVariables(vectors=[x]), [f], dict(m=m, K=K, x=x))
+
+
+def row_quadratic_form():
+    """L = ½ m ẋ·ẋ − xᵀA x (A not symmetric): m ẍ + (A + Aᵀ) x = f."""
+    m, K, A, e3, x, f = _row_symbols()
+    v = x.t_diff()
+    L = m * Dot(v, v) / 2 - x.T() * A * x
+    return System(L, Dot(x.delta(), f), SystemVariables(vectors=[x]), [f], dict(m=m, A=A, x=x))
+
+
+def row_shifted_spring():
+    """L = ½ m ẋ·ẋ − (x − e₃)ᵀK(x − e₃) (K symmetric): m ẍ + 2K(x − e₃) = f."""
+    m, K, A, e3, x, f = _row_symbols()
+    v = x.t_diff()
+    L = m * Dot(v, v) / 2 - (x - e3).T() * K * (x - e3)
+    return System(L, Dot(x.delta(), f), SystemVariables(vectors=[x]), [f], dict(m=m, K=K, x=x))
+
+
+def row_damping_work():
+    """L = ½ m ẋ·ẋ, δW = −δxᵀA ẋ + δx·f: m ẍ + A ẋ = f."""
+    m, K, A, e3, x, f = _row_symbols()
+    v = x.t_diff()
+    L = m * Dot(v, v) / 2
+    dW = -(x.delta().T() * A * v) + Dot(x.delta(), f)
+    return System(L, dW, SystemVariables(vectors=[x]), [f], dict(m=m, A=A, x=x))
+
+
 SYSTEMS = [
     vbl_systems.point_mass_r3,
     vbl_systems.spring_mass_r,
@@ -193,6 +240,10 @@ SYSTEMS = [
     sliding_mass_on_rotating_body,
     *phase1_systems.S2_VARIATION_SYSTEMS,
     *phase1_systems.COLLECT_SYSTEMS,
+    row_spring,
+    row_quadratic_form,
+    row_shifted_spring,
+    row_damping_work,
 ]
 
 

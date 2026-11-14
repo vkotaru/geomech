@@ -2,12 +2,27 @@
 
 Bottom-up traversal: recurse into children first, then handle the
 current node.  O(n) single pass — no has_nested_scalars predicate needed.
+
+An inner product ``(aᵀ s) b`` (a scaled row ``SVMul(aᵀ, s)``, which ``a.T() - b.T()``
+builds for its second addend) becomes ``aᵀb s``, so it merges with ``s (aᵀ b)``.
 """
 
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-from geomech.core.operations.geometry import Cross, Dot
-from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul
+from geomech.core.operations.geometry import Cross, Dot, is_row_vector
+from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
+
+
+def _pull_vvmul(expr):
+    """``(rᵀ s) b`` → ``(rᵀ b) s``: hoist the scalar of a scaled row out of an inner product.
+
+    Only the row form ``SVMul(row, s)`` on the left is rewritten; every other ``VVMul`` is
+    returned unchanged (in particular ``(c s)ᵀ b``, which the pinned pipelines build).
+    """
+    left = pull(expr.left)
+    if isinstance(left, SVMul) and is_row_vector(left.left):
+        return Mul(VVMul(left.left, expr.right), left.right)
+    return expr
 
 
 def pull(expr):
@@ -93,6 +108,10 @@ def pull(expr):
                     return SMMul(MMMul(l, r.left), r.right)
                 case _:
                     return MMMul(l, r)
+
+        # --- Vector * Vector (inner or outer product) ---
+        case VVMul():
+            return _pull_vvmul(expr)
 
         # --- Calculus unary: recurse into child ---
         case Variation():
