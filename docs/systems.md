@@ -59,8 +59,11 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 | `heavy_top` | SO(3) | 3 | Lee et al. §6.6.2 | Lee et al. eq. 6.20 |
 | `rigid_pendulum` | SO(3) | 3 | Lee et al. §6.6.2; general form eq. 6.8 | Lee et al. eq. 6.20 |
 | `double_rigid_pendulum` | SO(3) × SO(3) | 6 | — | — |
+| `n_link_rigid_chain(n_links=…)` | (SO(3))ⁿ | 9 | — | — |
 | `two_rigid_bodies_spherical_joint` | R³ × SO(3) × SO(3) | 9 | — | — |
 | `rigid_body` | R³ × SO(3) | 6 | Lee et al. §7.6.1 | Lee et al. eqs. 7.39–7.40 |
+| `spacecraft_reaction_wheels` | SO(3) × R³ | 6 | Lee et al. §9.10 | Lee et al. eqs. 9.61–9.62 |
+| `biped_3d` | SO(3) × SO(3) | 6 | — | — |
 | `quadrotor` | R³ × SO(3) | 6 | Lee, Leok, McClamroch (2010) | — |
 | `quadrotor_offset_com` | R³ × SO(3) | 6 | — | — |
 | `quadrotor_suspended_load` | R³ × SO(3) × S² | 8 | Sreenath, Lee, Kumar (2013) | — |
@@ -89,6 +92,28 @@ A "—" in the last column means no closed form is compared: the equations are v
 the numeric oracle ([Numeric verification](numeric-verification.md)) and the Lagrangian by
 the independent model below.
 
+**Two multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles θᵢ as
+scalars in R (the book uses S¹, which the engine does not support; the angle is cyclic, so
+the equations are the same); a test also checks that the inertial angular momentum is
+conserved without input. `biped_3d` is only the continuous single-support (swing) phase
+of a compass-gait walker: impacts, the switch of the stance foot and the ground contact
+are not modelled, so it is not a walking model.
+
+What the scenes can and cannot show: a scene draws expressions of the configuration
+variables and parameters, and a shape's size and a cylinder's axis are numbers. The
+wheels sit at `0.3 bᵢ` (they follow the parameters) with their discs along the body axes
+e₁, e₂, e₃, the default `bᵢ`; they do not turn with θᵢ, since there is no sine or cosine
+to build `R expm(θᵢ b̂ᵢ)`, and an axisymmetric wheel looks the same when it spins anyway.
+The biped's legs and the rigid chain's links are placed from the parameters but drawn with
+their default lengths. The biped's ground plane is drawn only.
+
+**Rigid chain.** `n_link_rigid_chain(n_links=2)` has the Lagrangian of
+`double_rigid_pendulum` term for term (same symbols); its inputs are joint torques
+instead of per-link moments, and a test checks that both give the same equations when the
+moments are the joint torques' net moments. Lee et al. §10.2 treat a chain of point
+masses on massless links (here `n_link_spherical_chain`), not a chain of rigid bodies;
+the rigid chain is checked by `check_eom` and the independent model.
+
 ## How the systems are verified
 
 The tests `tests/test_systems*.py` check, for every system at its defaults and every
@@ -100,7 +125,7 @@ parametric system also at sizes 1 and 2:
 - `simulate` runs 1 s from `x0` without input and conserves the energy to 1e-8;
 - the scene renders through `Report`;
 - the equations of the systems with a closed form in Lee et al. (eqs. 5.38, 5.43, 5.71,
-  6.16, 6.20, 7.39–7.40) agree with it at random admissible states;
+  6.16, 6.20, 7.39–7.40, 9.61–9.62) agree with it at random admissible states;
 - the Lagrangian and the virtual work agree (to 1e-8) with an independent model of the
   system's bodies, written in NumPy from its physical description (positions of the point
   masses and centres of mass, inertias about the centres of mass, heights, springs and
@@ -123,7 +148,8 @@ python scripts/regenerate_golden.py           # rewrite tests/golden/
 ```
 
 Every parametric system derives in under 2 s at its default size (a test; the suite prints
-the derivation time of every system in its summary).
+the derivation time of every system in its summary). Larger sizes take longer: about
+0.3 s for `n_link_rigid_chain(n_links=5)` and 4 s for `n_links=10` on a laptop.
 
 `System` is immutable: `params`, `symbols` and `options` are read-only mappings and every
 array in them is a read-only copy owned by the system. To change a parameter, copy the
@@ -132,7 +158,8 @@ mapping: `p = dict(sys.params); p["m"] = 2.0`. The sizes `n_links` and `n_quads`
 
 ## Not supported
 
-Systems that need a configuration variable on S¹ (planar pendulums written with an angle,
-the Furuta pendulum), nonholonomic constraints (rolling), closed kinematic chains,
-contact, or flexible bodies other than chains of rigid links are not in the library:
-the engine derives systems on R, R³, S², SO(3) and their products only.
+Systems that need a configuration variable on S¹ whose sine or cosine enters the
+Lagrangian (planar pendulums written with an angle, the Furuta pendulum), nonholonomic
+constraints (rolling), closed kinematic chains, contact, or flexible bodies other than
+chains of rigid links are not in the library: the engine derives systems on R, R³, S²,
+SO(3) and their products only.

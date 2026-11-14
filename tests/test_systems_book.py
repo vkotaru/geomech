@@ -228,6 +228,37 @@ def test_rigid_body_eqs_7_39_7_40():
         assert_same("rigid_body", val(lib_equation(eom, x)), ref_x)
 
 
+def test_spacecraft_reaction_wheels_eqs_9_61_9_62():
+    """Lee et al. eqs. 9.61–9.62 (symmetric wheels, spin axes through their centres of
+    mass, no translation): ``J' Ω̇ + Σ αᵢ sᵢ ω̇ᵢ + Ω × (J'Ω + Σ αᵢ sᵢ ωᵢ) = M`` and
+    ``αᵢ sᵢ·Ω̇ + αᵢ ω̇ᵢ = τᵢ``, with ``J'`` the inertia of the whole spacecraft (wheels
+    locked), αᵢ the axial wheel inertia and ωᵢ the spin rate relative to the bus.
+
+    Here ``sᵢ = bᵢ``, ``αᵢ = Iᵢ``, ``ωᵢ = θ̇ᵢ`` and ``J' = J_b + Σ Iᵢ bᵢbᵢᵀ`` (``J_b`` holds
+    everything but the wheels' axial inertias); the bus gets no external moment (``M = 0``:
+    the motor torques are internal and appear only in the wheel equations). So
+    ``E_R = −(J' Ω̇ + Σ Iᵢ bᵢ θ̈ᵢ + Ω × (J'Ω + Σ Iᵢ bᵢ θ̇ᵢ))`` and
+    ``E_θᵢ = −(Iᵢ bᵢ·Ω̇ + Iᵢ θ̈ᵢ) + τᵢ``."""
+    name = "spacecraft_reaction_wheels"
+    for eom, val in states(name):
+        s = derived(name)[0]
+        R = s.symbols["R"]
+        Om = R.get_tangent_vector()
+        Omv, Omd = val(Om), val(Om.t_diff())
+        bs = [val(b) for b in s.symbols["b"]]
+        Is = [val(f"I_{i}") for i in (1, 2, 3)]
+        ths = s.symbols["theta"]
+        wd = [float(val(th.t_diff())) for th in ths]
+        wdd = [float(val(th.t_diff().t_diff())) for th in ths]
+        Jp = val("J_b") + sum(I * np.outer(b, b) for I, b in zip(Is, bs))
+        h = Jp @ Omv + sum(I * w * b for I, w, b in zip(Is, wd, bs))
+        ref_R = -(Jp @ Omd + sum(I * a * b for I, a, b in zip(Is, wdd, bs)) + np.cross(Omv, h))
+        assert_same(name, val(lib_equation(eom, R)), ref_R)
+        for th, tau, I, b, a in zip(ths, s.symbols["tau"], Is, bs, wdd):
+            ref = -(I * b @ Omd + I * a) + float(val(tau))
+            assert_same(name, np.atleast_1d(val(lib_equation(eom, th))), np.atleast_1d(ref))
+
+
 #: (system, builder kwargs) → the equation its test above compares with; every system
 #: whose ``reference.equation`` is not empty must be listed here with that equation.
 COVERED = {
@@ -239,6 +270,7 @@ COVERED = {
     ("rigid_pendulum", ()): "eq. 6.20",
     ("heavy_top", ()): "eq. 6.20",
     ("rigid_body", ()): "eqs. 7.39–7.40",
+    ("spacecraft_reaction_wheels", ()): "eqs. 9.61–9.62",
 }
 
 
