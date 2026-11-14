@@ -39,11 +39,9 @@ from geomech.core.base import (
 )
 
 # --- Layer 4: symbolic math ---
-from geomech.core.math import (
-    collect,
-    extract_linear_coeff,
-    integrate_by_parts,
-)
+from geomech.core.math.collecting import collect
+from geomech.core.math.extract import extract_linear_coeff
+from geomech.core.math.ibp import integrate_by_parts
 
 # --- Layer 2: expression tree nodes ---
 from geomech.core.operations import (
@@ -67,15 +65,12 @@ from geomech.core.operations import (
 )
 
 # --- Layer 3: algorithms ---
-from geomech.core.transformations import (
-    expand,
-    full_simplify,
-    has_nested_add,
-    is_leaf,
-    pull,
-    simplify,
-    vector_rules,
-)
+from geomech.core.transformations.expansion import expand
+from geomech.core.transformations.manifold_rules import apply_manifold_rules
+from geomech.core.transformations.pulling import pull
+from geomech.core.transformations.simplification import full_simplify, simplify
+from geomech.core.transformations.utils import has_nested_add, is_leaf
+from geomech.core.transformations.vector_identities import vector_rules
 
 # --- Layer 5: dynamics pipeline ---
 from geomech.dynamics import (
@@ -112,6 +107,14 @@ from geomech.utils import (
 from geomech.utils.errors import (
     AlgebraicError,
     ExpressionMismatchError,
+    InvariantError,
     NonLinearError,
     SizeMismatchError,
 )
+from geomech.utils.invariants import check_tree
+from geomech.utils.trace import EOMTrace, LinearizationTrace, set_trace
+from geomech.utils.trace import configure_from_env as _configure_from_env
+
+# GEOMECH_DEBUG=1: the "geomech" logger at DEBUG and check_tree at pipeline entry/exit;
+# GEOMECH_TRACE=1: log every named rewrite rule (see geomech/utils/trace.py)
+_configure_from_env()

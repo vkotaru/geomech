@@ -8,7 +8,7 @@ from geomech.core.base.expressions import (
 from geomech.core.operations.addition import Add
 from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose
 from geomech.core.operations.multiplication import Mul
-from geomech.core.transformations.vector_rules import vector_rules
+from geomech.core.transformations.vector_identities import vector_rules
 
 # ---------------------------------------------------------------------------
 # Self-cross: cross(x, x) = 0

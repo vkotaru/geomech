@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 
 from geomech import Cross, Dot, Hat, Matrix, MMMul, MVMul, Transpose, Vector, VVMul, compute_eom
-from geomech.core.math.collect import collect
+from geomech.core.math.collecting import collect
 from geomech.numeric import evaluate
 from geomech.utils.errors import AlgebraicError, NonLinearError
 from tests import phase1_systems as ps

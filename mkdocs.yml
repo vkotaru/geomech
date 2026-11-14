@@ -56,8 +56,12 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - Examples: examples.md
+  - The Pipeline, Stage by Stage: pipeline.md
+  - Conventions: conventions.md
+  - Troubleshooting: troubleshooting.md
   - Variation-Based Linearization: vbl.md
   - Verifying an Equation Numerically: numeric-verification.md
+  - "Manifold Rules: Derivation": manifold-implementation-notes.md
   - API Reference: reference/
 
 markdown_extensions:
