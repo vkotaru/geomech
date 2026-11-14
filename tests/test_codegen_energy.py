@@ -19,6 +19,7 @@ import pytest
 
 from geomech import Dot, Mul
 from geomech.codegen import energy_expr, energy_function, lambdify, momenta
+from geomech.simulation import accelerations
 from tests import vbl_systems
 from tests.codegen_systems import (
     ALL_SYSTEMS,
@@ -26,7 +27,6 @@ from tests.codegen_systems import (
     derived,
     modules,
     sample_points,
-    tangent_accelerations,
 )
 
 _ids = dict(ids=lambda f: f.__name__)
@@ -122,7 +122,7 @@ def test_energy_conserved_along_unforced_dynamics(build):
     sf_mod = modules(build)[0]
     for pt in sample_points(d, n=5):
         p, u = _physical(d, pt), np.zeros(d.layout.n_inputs)
-        a = tangent_accelerations(sf_mod, d.layout, pt.state, u, p)
+        a = accelerations(sf_mod, pt.state, u, p)
         rate = np.concatenate([sf_mod.kinematics(pt.state), a])
         E = sf_mod.energy
         dE = (E(pt.state + H * rate, p) - E(pt.state - H * rate, p)) / (2 * H)

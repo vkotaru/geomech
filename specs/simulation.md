@@ -17,8 +17,11 @@ The generated module gives `mass(state, p)`, `bias(state, p)`, `input_matrix(sta
 with `mass @ a + bias + input_matrix @ u = 0` (signs as in `docs/conventions.md`).
 
 - R, R³, SO(3) rows: the blocks are square and invertible for a physical system.
-- S² rows: the equation is meaningful only on the tangent plane (`docs/conventions.md`),
-  and the mass block is rank 2 (e.g. `Hat(q)Hat(q) m l² = −m l² (I − qqᵀ)`). The
+- S² rows: the equation is meaningful only on the tangent plane (`docs/conventions.md`).
+  The derived mass block is not always rank 2: it is `Hat(q)Hat(q) m l² = −m l² (I − qqᵀ)`
+  (rank 2) for the quadrotor with a suspended load, but `−m l² I` (full rank) for the
+  spherical pendulum, where the engine already used q·ω̇ = 0. Either way the unprojected
+  3×3 solve is not the equation of motion. The
   acceleration ω̇ also satisfies the tangency constraint q·ω̇ = 0, from
   d/dt(q·ω) = (ω×q)·ω + q·ω̇ = 0. So each S² row block is replaced by
 
