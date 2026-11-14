@@ -80,7 +80,8 @@ xi = q.get_variation_vector()
 om = q.get_tangent_vector()
 dxi = xi.t_diff()
 dom = om.t_diff()
-delxi = xi.delta()
+# xi.delta() is rejected by design (the variation of a variation vector is not a thing);
+# the variation of the tangent vector is the node manifold_rules expands.
 delom = om.delta()
 
 # ---------------
@@ -89,7 +90,7 @@ eta = R.get_variation_vector()
 Om = R.get_tangent_vector()
 deta = eta.t_diff()
 dOm = Om.t_diff()
-deleta = eta.delta()
+# eta.delta() is rejected by design, as for xi above.
 delOm = Om.delta()
 
 # print(R1R2)

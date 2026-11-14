@@ -109,3 +109,9 @@ from geomech.utils import (
     to_latex,
     tree_str,
 )
+from geomech.utils.errors import (
+    AlgebraicError,
+    ExpressionMismatchError,
+    NonLinearError,
+    SizeMismatchError,
+)

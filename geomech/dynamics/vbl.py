@@ -213,7 +213,7 @@ def linearize(eom, variables: SystemVariables, inputs=None) -> LinearizedSystem:
         incompletely distributed term), or one only inside a non-canonical calculus
         node, or a coefficient could not be factored.
     """
-    _check_variables(variables)
+    _check_variables(variables, caller="linearize")
     cfg_vars, cfg_perts, vel_perts = _perturbation_variables(variables)
     _check_eom(eom, variables)
     states = cfg_perts + vel_perts
@@ -357,14 +357,15 @@ def _check_eom(eom, variables):
         raise TypeError(
             f"linearize: eom must be the dict returned by compute_eom, got {type(eom)}"
         )
-    expected = set()
+    expected = []
     for s in variables.scalars:
-        expected.add(str(s.delta()))
+        expected.append(str(s.delta()))
     for v in variables.vectors:
-        expected.add(str(v.get_variation_vector()))
+        expected.append(str(v.get_variation_vector()))
     for m in variables.matrices:
-        expected.add(str(m.get_variation_vector()))
-    if set(eom) != expected:
+        expected.append(str(m.get_variation_vector()))
+    # compare the list length too: a repeated variable would collapse into one key
+    if len(eom) != len(expected) or set(eom) != set(expected):
         raise ValueError(
             f"linearize: eom keys {sorted(eom)} do not match the variation vectors"
             f" {sorted(expected)} of the given SystemVariables"

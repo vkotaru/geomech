@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from geomech.core.base.expressions import (
     Expr,
     MatrixExpr,
-    Scalar,
+    Number,
     ScalarExpr,
     VectorExpr,
 )
@@ -21,7 +21,7 @@ from geomech.utils.errors import ExpressionMismatchError, SizeMismatchError
 def _wrap_numeric(val):
     """Wrap int/float to Scalar constant."""
     if isinstance(val, (int, float)):
-        return Scalar("(" + str(val) + ")", value=val, attr=["Constant"])
+        return Number(val)
     return val
 
 
