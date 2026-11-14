@@ -553,7 +553,7 @@ class TestIntegrateByPartsScalarFactors:
         q, f = S2("q"), Vector("f")
         omega, xi = q.get_tangent_vector(), q.get_variation_vector()
         L = HALF * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
-        eom = compute_eom(L, Dot(xi, f), SystemVariables(vectors=[q]))
+        eom = compute_eom(L, Dot(xi, f), SystemVariables(vectors=[q]), params=[l])
         _, eqn = eom[str(xi)]
         assert eqn.has(TimeDerivative(l)), str(eqn)
 
@@ -844,7 +844,7 @@ class TestFixF1PipelineExact:
         q, f = S2("q"), Vector("f")
         omega, xi = q.get_tangent_vector(), q.get_variation_vector()
         L = HALF * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
-        eom = compute_eom(L, Dot(xi, f), SystemVariables(vectors=[q]))
+        eom = compute_eom(L, Dot(xi, f), SystemVariables(vectors=[q]), params=[l])
         _, eqn = eom[str(xi)]
         assert str(eqn) == f"({DW}(-1)mll+\\omega_{{q}}ml{DL}(-2)+Cross(q,e3)mgl(-1)+f)"
 

@@ -36,11 +36,13 @@ def _is_tangent_orthogonal(a, b):
     """Check if dot(a, b) = 0 due to manifold tangent-point orthogonality.
 
     On S2: tangent vectors (ω, ξ) are orthogonal to the manifold point q.
-    Returns True when one is a TS2 and the other is its parent S2.
+    Returns True when one is a TS2 and the other is its parent S2. The parent is
+    compared by name (``==`` on leaves is type + printed name), as everywhere else in
+    the engine, so two ``S2("q")`` objects are the same point.
     """
-    if isinstance(a, TS2) and isinstance(b, S2) and a.S2 is b:
+    if isinstance(a, TS2) and isinstance(b, S2) and a.S2 == b:
         return True
-    if isinstance(b, TS2) and isinstance(a, S2) and b.S2 is a:
+    if isinstance(b, TS2) and isinstance(a, S2) and b.S2 == a:
         return True
     return False
 
@@ -97,7 +99,7 @@ def _try_s2_cross_reduction(expr):
 def _is_tangent_to_s2(expr, s2):
     """Check if expr is a tangent vector to the given S2 manifold.
 
-    Returns True for TS2 vectors whose parent is the given S2,
+    Returns True for TS2 vectors whose parent is the given S2 (compared by name),
     or for Cross(anything, q) which is perpendicular to q by definition.
 
     Does NOT recurse into TimeDerivative or Variation — while ω̇ ⊥ q
@@ -106,7 +108,7 @@ def _is_tangent_to_s2(expr, s2):
     apply BAC-CAB to vectors we can structurally confirm as tangent.
     """
     # Direct TS2
-    if isinstance(expr, TS2) and expr.S2 is s2:
+    if isinstance(expr, TS2) and expr.S2 == s2:
         return True
     # Cross(a, q) is tangent to q (perpendicular to q by definition)
     if isinstance(expr, Cross):

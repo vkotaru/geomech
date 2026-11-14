@@ -29,7 +29,7 @@ def rigid_pendulum():
 def double_rigid_pendulum():
     """double rigid pendulum"""
     J1 = Matrix("J1", attr=["Constant", "SymmetricMatrix"])
-    J2 = Matrix("J1", attr=["Constant", "SymmetricMatrix"])
+    J2 = Matrix("J2", attr=["Constant", "SymmetricMatrix"])
     rho1 = Vector("\\rho1", attr=["Constant"])
     rho2 = Vector("\\rho2", attr=["Constant"])
     l1 = Vector("l1", attr=["Constant"])

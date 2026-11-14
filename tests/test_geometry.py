@@ -502,17 +502,18 @@ class TestTransposeType:
         a = Scalar("a")
         assert Transpose(a).type == ExprType.SCALAR
 
-    def test_none(self):
-        assert Transpose().type is None
-
 
 class TestTransposeConstruction:
     def test_expr(self):
         x = Vector("x")
         assert Transpose(x).expr == x
 
-    def test_expr_none(self):
-        assert Transpose().expr is None
+    def test_no_operand_raises(self):
+        """``Transpose()`` used to build a node with ``type None``, ``expr None`` and every
+        flag False that leaked into the engine (debuggability audit F8); phase 2 rejects it
+        at construction, so ``type``/``expr``/flags of a Transpose are always defined."""
+        with pytest.raises(TypeError, match=r"Transpose\(\) needs an operand"):
+            Transpose()
 
     def test_arity(self):
         x = Vector("x")
@@ -542,9 +543,6 @@ class TestTransposeProperties:
         x = Vector("x")
         assert Transpose(x).is_constant is False
 
-    def test_is_constant_none(self):
-        assert Transpose().is_constant is False
-
     def test_is_zero_true(self):
         z = Vector("0", attr=["Constant", "Zero"])
         assert Transpose(z).is_zero is True
@@ -553,9 +551,6 @@ class TestTransposeProperties:
         x = Vector("x")
         assert Transpose(x).is_zero is False
 
-    def test_is_zero_none(self):
-        assert Transpose().is_zero is False
-
     def test_size_vector(self):
         x = Vector("x", size=(3,))
         assert Transpose(x).size == (3,)
@@ -563,9 +558,6 @@ class TestTransposeProperties:
     def test_size_matrix(self):
         M = Matrix("M", size=(3, 4))
         assert Transpose(M).size == (3, 4)
-
-    def test_size_none(self):
-        assert Transpose().size is None
 
 
 class TestTransposeHas:

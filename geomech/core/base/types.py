@@ -10,6 +10,24 @@ class ExprType(Enum):
     MATRIX = 3
 
 
+#: Attribute strings accepted by ``attr=[...]`` on every leaf. ``"TangentVector"`` is
+#: appended by ``TS2``/``TSO3`` themselves and sets no flag.
+VALID_ATTRS = frozenset(
+    {
+        "Constant",
+        "Zero",
+        "Ones",
+        "Identity",
+        "UnitNorm",
+        "SymmetricMatrix",
+        "SkewSymmetricMatrix",
+        "OrthogonalMatrix",
+        "Manifold",
+        "TangentVector",
+    }
+)
+
+
 @dataclass
 class ExprFlags:
     is_constant: bool = False
@@ -24,7 +42,18 @@ class ExprFlags:
     is_manifold: bool = False
 
     @classmethod
-    def from_attr_list(cls, attrs: list[str] | None) -> ExprFlags:
+    def from_attr_list(cls, attrs: list[str] | None, name: str | None = None) -> ExprFlags:
+        """Build the flags for a leaf from its ``attr`` strings.
+
+        An attribute outside ``VALID_ATTRS`` raises ``ValueError`` naming the symbol
+        (*name*) and the attribute instead of being ignored; a bare string instead of a
+        list raises ``TypeError``. Attribute names are case-sensitive.
+        """
+        if isinstance(attrs, str):
+            where = f" for symbol '{name}'" if name is not None else ""
+            raise TypeError(
+                f"attr must be a list of strings, got str {attrs!r}{where}; write attr=[{attrs!r}]"
+            )
         if not attrs:
             return cls()
         flags = cls()
@@ -51,6 +80,14 @@ class ExprFlags:
                     flags.is_orthogonal = True
                 case "Manifold":
                     flags.is_manifold = True
+                case "TangentVector":
+                    pass  # marker only; no rule reads it
+                case _:
+                    where = f" for symbol '{name}'" if name is not None else ""
+                    raise ValueError(
+                        f"attr: unknown attribute {a!r}{where}; valid attributes are"
+                        f" {sorted(VALID_ATTRS)}"
+                    )
         return flags
 
 

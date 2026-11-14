@@ -626,6 +626,12 @@ class Gen:
 
     def wrap_calc(self, e):
         """Wrap a subtree in TimeDerivative or Variation when legal."""
+        if isinstance(e, (S2, SO3)):
+            # a calculus node over a manifold leaf is rejected at construction (phase 2);
+            # the eager kinematic trees are what .delta()/.t_diff() give a user
+            if self.variation and self.chance(0.5):
+                return e.delta()
+            return e.t_diff()
         if self.variation and not contains_variation(e) and self.chance(0.5):
             return Variation(e)
         return TimeDerivative(e)
@@ -1094,8 +1100,8 @@ def fuzz_delta_tdiff2(n_cases, seed):
     for i in range(n_cases):
         depth = int(rng.integers(1, 5))
         expr = gen.any(depth)
-        if contains_variation(expr):
-            continue
+        if contains_variation(expr) or isinstance(expr, (S2, SO3)):
+            continue  # Variation(q)/TimeDerivative(q) of a manifold leaf is rejected (phase 2)
         run_transform_case("delta-rule", _delta_of_node, Variation(expr), rng)
         run_transform_case("t_diff-rule", _tdiff_of_node, TimeDerivative(expr), rng)
 

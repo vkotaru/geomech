@@ -6,8 +6,11 @@ full_simplify(expr) — expand once, then loop simplify until convergence.
 
 from __future__ import annotations
 
+import warnings
+
 from geomech.core.base.expressions import (
     IdentityMatrix,
+    Number,
     Scalar,
     Zero,
     ZeroMatrix,
@@ -48,7 +51,11 @@ def full_simplify(expr, max_iter=10):
     Parameters
     ----------
     max_iter : int
-        Safety cap on the number of passes (default 10).
+        Safety cap on the number of passes (default 10). Hitting it emits a
+        ``RuntimeWarning`` naming the expression: the result may be unsimplified. A pass
+        that changes nothing ends the loop, so the warning fires only when the last
+        allowed pass still changed the expression; that last result may already be the
+        fixed point, which only one more pass could confirm.
     """
     from geomech.core.transformations.expand import expand
 
@@ -58,6 +65,13 @@ def full_simplify(expr, max_iter=10):
         expr = simplify(expr)
         if str(expr) == str(prev):
             break
+    else:
+        warnings.warn(
+            f"full_simplify: no fixed point after {max_iter} passes; result may be"
+            f" unsimplified: {expr!r}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     return expr
 
 
@@ -281,7 +295,7 @@ def _simplify_add(nodes):
         else:
             kept.append(n)
     if numeric_total != 0:
-        kept.append(Scalar("(" + str(numeric_total) + ")", value=numeric_total, attr=["Constant"]))
+        kept.append(Number(numeric_total))
     kept = _collect_like_terms(kept, ExprType.SCALAR)
     if len(kept) == 0:
         return Zero
@@ -383,12 +397,12 @@ def _make_term(coeff, term, expr_type):
     """Reconstruct coeff * term for the given type."""
     if term is None:
         # Pure numeric
-        return Scalar("(" + str(coeff) + ")", value=coeff, attr=["Constant"])
+        return Number(coeff)
     if coeff == 0:
         return None
     if coeff == 1:
         return term
-    scalar = Scalar("(" + str(coeff) + ")", value=coeff, attr=["Constant"])
+    scalar = Number(coeff)
     if expr_type == ExprType.VECTOR:
         return SVMul(term, scalar)
     if expr_type == ExprType.MATRIX:
@@ -444,10 +458,12 @@ def _simplify_mul(l, r):
         return r
     if _is_one(r):
         return l
-    # both numeric leaves → combine
+    # both numeric leaves → combine (a zero product is the Zero leaf, not an unflagged "(0)")
     if _is_numeric_leaf(l) and _is_numeric_leaf(r):
         combined = l.value * r.value
-        return Scalar("(" + str(combined) + ")", value=combined, attr=["Constant"])
+        if combined == 0:
+            return Zero
+        return Number(combined)
     # Fold numeric constants through nested Muls:
     # e.g. Mul(-0.5, Mul(m, 2)) → Mul(m, -1.0)
     result = Mul(l, r)
@@ -462,9 +478,9 @@ def _simplify_mul(l, r):
         if combined == 0:
             return Zero
         if combined != 1:
-            others.append(Scalar("(" + str(combined) + ")", value=combined, attr=["Constant"]))
+            others.append(Number(combined))
         if len(others) == 0:
-            return Scalar("(" + str(combined) + ")", value=combined, attr=["Constant"])
+            return Number(combined)
         # Rebuild left-associative chain
         out = others[0]
         for o in others[1:]:

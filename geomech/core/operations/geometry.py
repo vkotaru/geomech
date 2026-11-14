@@ -121,10 +121,10 @@ class Transpose(_BaseMixin, Expr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, expr=None):
-        if expr is not None:
-            self.nodes = [expr]
-        else:
-            self.nodes = []
+        if expr is None:
+            # a childless Transpose had type None and leaked into the engine
+            raise TypeError("Transpose: Transpose() needs an operand; write Transpose(expr)")
+        self.nodes = [expr]
 
     @property
     def expr(self):
