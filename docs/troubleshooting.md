@@ -78,6 +78,7 @@ or an old result can be recognised; for a wrong equation with the current versio
 | `x * True` behaved like `x * 1` | `bool` was taken as a number | `TypeError` |
 | Two leaves built from one `attr` list shared flags | the list was aliased | copied |
 | A parameter named like `\omega_{q}` merged with ω | reserved printed names were accepted | `ValueError` "has the printed name of the tangent vector" |
+| `to_standard_form` gave `G[g] = −m e₃` and `linearize` a zero `B[δg]` column for an input `Scalar("g")` while `L` held the constant `g` | inputs were matched to leaves by printed name only, so a constant parameter counted as an input in one function and not in the other | `ValueError` "has the name of the constant 'g' in the equations" |
 | `Transpose(v) * s` printed as `s v^T^T` and was treated as a row | it built the double transpose `Transpose(SVMul(Transpose(v), s))`, a column | the row `Transpose(SVMul(v, s))` |
 | `ExpressionMismatchError` from `expand`/`simplify` on a legal tree with rows (`(a + (bᵀK)ᵀ) cᵀ`), or a row turned into a column | `Transpose(Transpose(x))` was kept, and orientation was read from "is a `Transpose` node", so the row encoding was lost under `expand` | `Transpose(Transpose(x))` is `x` at construction; orientation is `is_row_vector` |
 | A correct equation printed as a wrong one: `a × b × c` (which product first?), `(b·c) a` printed as `b·c a`, a coefficient after its symbols | `to_latex` ignored precedence; `print_eom`/`render_eom` used `str` | `to_latex` parenthesises `Cross`/`VAdd`/`MVMul` operands and prints `(b·c)\,a`; the printers use `to_latex` |
@@ -210,6 +211,7 @@ ones of the example). Every message starts with the function or node that raised
 | `params=l` | `TypeError: compute_eom: params must be a sequence of leaves, got Scalar 'l'; write params=[l]` |
 | a `Constant` param | `ValueError: compute_eom: params entry 'm' is constant; a prescribed parameter varies in time (drop it from params or remove the 'Constant' attribute)` |
 | a param that is a variable | `ValueError: compute_eom: params entry 'x' is also a configuration variable (SystemVariables.vectors); a symbol is either prescribed or a degree of freedom` |
+| a param named like a constant of `L` (`params=[Scalar("l")]`, `l` `Constant` in `L`) | `ValueError: compute_eom: params entry 'l' has the name of the constant 'l' in the Lagrangian or the virtual work; a symbol is either a constant parameter or a prescribed parameter (rename one, or drop attr=['Constant'] if 'l' is a prescribed parameter)` |
 | a velocity inside a matrix factor, `a·((Ω cᵀ) b)` | `AlgebraicError: compute_eom: while integrating by parts (stage ibp, targets \frac{d}{dt}(\eta_{R})): collect: the target '\frac{d}{dt}(\eta_{R})' occurs inside the matrix factor '\frac{d}{dt}(\eta_{R})*(c2)'' of the term 'Dot(\frac{d}{dt}(\eta_{R})*(c2)'*c3,c1)'; transposition exposes a target only in the vector operand ((M f(v))·w = f(v)·(Mᵀ w)), so this term cannot be integrated by parts` — write it as `(a·Ω)(c·b)` |
 | an acceleration in `L` (`½ ẍ·ẍ`) | see [the AlgebraicErrors about a calculus operator](#the-algebraicerrors-about-a-calculus-operator) |
 | a `d/dt(η)` survived IBP | see [the AlgebraicErrors about a calculus operator](#the-algebraicerrors-about-a-calculus-operator) |
@@ -217,10 +219,17 @@ ones of the example). Every message starts with the function or node that raised
 
 ### `to_standard_form`
 
+`to_standard_form` and `linearize` validate `inputs` with the same function
+(`geomech.dynamics.eom.check_inputs`): every input row of either table is raised by both,
+with the caller's name in front.
+
 | Mistake | Message |
 |---|---|
 | a jerk | see [the AlgebraicErrors about a calculus operator](#the-algebraicerrors-about-a-calculus-operator) |
 | a term bilinear in two accelerations | `NonLinearError: to_standard_form: in equation '\delta{x1}', the coefficient of '\frac{d}{dt}(\frac{d}{dt}(x1))' still contains the acceleration '\frac{d}{dt}(\frac{d}{dt}(x2))' in '\frac{d}{dt}(\frac{d}{dt}(x2))*m'; the equation is not linear in the accelerations` |
+| an input named like a constant of `L` (`inputs=[Scalar("g")]`, `g` `Constant` in `L`) | `ValueError: to_standard_form: input 'g' has the name of the constant 'g' in the equations; a symbol is either a constant parameter or an input (rename one, or drop attr=['Constant'] if 'g' is an input)` |
+| a `Constant` input (`inputs=[g]`, `g` `Constant` in `L`) | `ValueError: to_standard_form: input 'g' is constant: its variation vanishes, so it cannot be an input` |
+| an input listed twice (`inputs=[f, f]`) | `ValueError: to_standard_form: input 'f' is listed more than once` |
 
 ### `linearize`
 
@@ -230,7 +239,13 @@ ones of the example). Every message starts with the function or node that raised
 | equations with a prescribed param, `linearize(..., params=[l])` | `AlgebraicError: linearize: in row '\xi_{q}', the term '\frac{d}{dt}(\omega_{q})*m*\delta{l}*l*(-2)' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries the variation of the prescribed parameter(s) 'l' declared in params: linearize does not support prescribed parameters yet (the variation of a prescribed parameter vanishes along the reference, but its rate does not in general).` |
 | other `SystemVariables` than for `compute_eom` | `ValueError: linearize: eom keys ['\\delta{x}'] do not match the variation vectors ['\\xi_{q}'] of the given SystemVariables` |
 | an input that is a variable | `ValueError: linearize: input 'x' is also a configuration variable` |
+| an input named like a constant, `linearize(eom, V, [f, Scalar("g")])`, `g` `Constant` in `L` | `ValueError: linearize: input 'g' has the name of the constant 'g' in the equations; a symbol is either a constant parameter or an input (rename one, or drop attr=['Constant'] if 'g' is an input)` |
+| an input of another class than its leaf (`Scalar("F")`, the equations hold the constant `Vector("F")`) | `ValueError: linearize: input 'F' (Scalar) has the name of the constant Vector 'F' in the equations, a different symbol; leaves are matched by printed name, so the two would be confused (rename one, or build the input with the class and attr it has in the equations)` |
 | `ω` as an input | `ValueError: linearize: input '\omega_{q}' is a tangent or variation vector of a configuration variable; its variation is part of the perturbation state, not an input` |
+| `ξ`, `Ω` or `η` as an input | `ValueError: linearize: input '\eta_{R}' is a tangent or variation vector of a configuration variable; its variation is part of the perturbation state, not an input` |
+| a plain `Vector` printed like `Ω` as an input | `ValueError: linearize: the variation '\delta{\Omega_{R}}' of input '\Omega_{R}' is already a perturbation state (is '\Omega_{R}' a tangent vector of a configuration variable?)` |
+| an input that is not a plain leaf (`ẋ`, `F + u`, a `Matrix`, an `S2`/`SO3` point) | `TypeError: linearize: input '\frac{d}{dt}(x)' must be a Scalar or Vector leaf, got TimeDerivative` |
+| one input instead of a list, `linearize(eom, V, f)` | `TypeError: linearize: inputs must be a sequence of Scalar/Vector leaves, got Vector 'f'; write inputs=[f]` |
 | not the `compute_eom` dict | `TypeError: linearize: eom must be the dict returned by compute_eom, got <class 'list'>` |
 
 ### Engine functions called directly
