@@ -1,22 +1,37 @@
 """Integration by parts for scalar expressions.
 
-    integrate_by_parts(expr, targets) — full pipeline: expand → simplify → collect → IBP per target
+    integrate_by_parts(expr, targets) — expand → full_simplify, then for each target in
+    order: collect → one IBP pass → full_simplify
 
 IBP identity (boundary terms dropped):
     ∫ Dot(ẋ, f) dt  =  -∫ Dot(x, ḟ) dt
 
 So:  Dot(target, rhs)  →  Dot(-target.t_integrate(), rhs.t_diff())
+
+Only a ``Dot`` whose *left* operand is the target, or a scalar ``Mul`` chain with the target
+as a direct factor, is integrated; ``collect`` is what brings each term into that shape.
+A target left anywhere else survives, and extraction then fails on it (``compute_eom``
+names the term).
+
+Rules (name, identity, hypothesis):
+
+  ibp.dot             a Dot(ẋ, f) → a Dot(-x, ḟ)       target is the left operand; a is
+                                                       constant (or absent)
+  ibp.dot_prefactor   a Dot(ẋ, f) → a Dot(-x, ḟ) - Dot(x, ȧ f)
+                                                       a is a non-constant scalar factor
+  ibp.scalar_factor   ẋ g → -x ġ                       target is a factor of a Mul chain
 """
 
 from __future__ import annotations
 
 from geomech.core.base.expressions import One, Zero
-from geomech.core.math.collect import collect
+from geomech.core.math.collecting import collect
 from geomech.core.operations.addition import Add
 from geomech.core.operations.geometry import Dot
 from geomech.core.operations.multiplication import Mul, SVMul
-from geomech.core.transformations.expand import expand
-from geomech.core.transformations.simplify import full_simplify
+from geomech.core.transformations.expansion import expand
+from geomech.core.transformations.simplification import full_simplify
+from geomech.utils.trace import rule, stage_recorder
 
 # ---------------------------------------------------------------------------
 # Single IBP pass
@@ -131,14 +146,20 @@ def _apply_ibp(expr, target):
 
         case Dot():
             if expr.left == target:
-                return Dot(expr.left.t_integrate() * (-1), expr.right.t_diff())
+                return rule(
+                    "ibp.dot", expr, Dot(expr.left.t_integrate() * (-1), expr.right.t_diff())
+                )
             return expr
 
         case Mul():
             # Scalar IBP: find target as a direct factor in the Mul chain
             remainder = _remove_factor(expr, target)
             if remainder is not None:
-                return Mul(target.t_integrate() * (-1), remainder.t_diff())
+                return rule(
+                    "ibp.scalar_factor",
+                    expr,
+                    Mul(target.t_integrate() * (-1), remainder.t_diff()),
+                )
             found = _split_dot_factor(expr, target)
             if found is None:
                 # No Dot(ẋ, ·) factor in this chain: recurse to reach deeper nodes
@@ -150,7 +171,9 @@ def _apply_ibp(expr, target):
                 return out
             # Non-constant prefactor a: the product rule also needs -Dot(x, ȧ f)
             a_dot_f = SVMul(dot.right, _t_diff_product(prefactor))
-            return Add(out, Dot(target.t_integrate() * (-1), a_dot_f))
+            return rule(
+                "ibp.dot_prefactor", expr, Add(out, Dot(target.t_integrate() * (-1), a_dot_f))
+            )
 
         case _:
             return expr
@@ -166,11 +189,33 @@ def integrate_by_parts(expr, targets):
 
     *targets* is a list of variation vector time-derivatives (e.g. dot_eta)
     that should be integrated by parts to remove the time derivative.
+
+    With the ``geomech`` logger at ``DEBUG`` each stage (``ibp.prepare``, then per target
+    ``ibp.collect[t]``, ``ibp.integrate[t]``, ``ibp.simplify[t]``) is logged as
+    ``integrate_by_parts: <stage> [<n> nodes] <repr>``; otherwise nothing is recorded.
+    """
+    return _integrate_by_parts(expr, targets, stage_recorder(None, "integrate_by_parts"))
+
+
+def _integrate_by_parts(expr, targets, record=None):
+    """``integrate_by_parts`` with an optional ``record(stage, expr)`` hook.
+
+    The stages are ``ibp.prepare`` (after expand + full_simplify) and, per target,
+    ``ibp.collect[t]``, ``ibp.integrate[t]`` and ``ibp.simplify[t]``. ``compute_eom``
+    passes its stage recorder (trace object and/or the ``geomech`` debug logger).
     """
     expr = expand(expr)
     expr = full_simplify(expr)
+    if record is not None:
+        record("ibp.prepare", expr)
     for target in targets:
         expr = collect(expr, target)
+        if record is not None:
+            record(f"ibp.collect[{target}]", expr)
         expr = _apply_ibp(expr, target)
+        if record is not None:
+            record(f"ibp.integrate[{target}]", expr)
         expr = full_simplify(expr)
+        if record is not None:
+            record(f"ibp.simplify[{target}]", expr)
     return expr

@@ -26,7 +26,7 @@ from geomech.core.operations.multiplication import (
     SVMul,
     VVMul,
 )
-from geomech.core.transformations.simplify import full_simplify, simplify
+from geomech.core.transformations.simplification import full_simplify, simplify
 from geomech.numeric import evaluate
 
 # ===================================================================
@@ -674,31 +674,31 @@ class TestLikeTermCollection:
 
 class TestCommutativeEqual:
     def test_dot_commutes(self):
-        from geomech.core.transformations.simplify import _commutative_equal
+        from geomech.core.transformations.simplification import _commutative_equal
 
         x, y = getVectors(["x", "y"])
         assert _commutative_equal(Dot(x, y), Dot(y, x))
 
     def test_dot_different(self):
-        from geomech.core.transformations.simplify import _commutative_equal
+        from geomech.core.transformations.simplification import _commutative_equal
 
         x, y, z = getVectors(["x", "y", "z"])
         assert not _commutative_equal(Dot(x, y), Dot(x, z))
 
     def test_mul_commutes(self):
-        from geomech.core.transformations.simplify import _commutative_equal
+        from geomech.core.transformations.simplification import _commutative_equal
 
         a, b = getScalars("a b")
         assert _commutative_equal(Mul(a, b), Mul(b, a))
 
     def test_cross_does_not_commute(self):
-        from geomech.core.transformations.simplify import _commutative_equal
+        from geomech.core.transformations.simplification import _commutative_equal
 
         x, y = getVectors(["x", "y"])
         assert not _commutative_equal(Cross(x, y), Cross(y, x))
 
     def test_nested_commutative(self):
-        from geomech.core.transformations.simplify import _commutative_equal
+        from geomech.core.transformations.simplification import _commutative_equal
 
         x, y, z = getVectors(["x", "y", "z"])
         # Dot(x, Cross(y,z)) vs Dot(Cross(y,z), x) — Dot commutes

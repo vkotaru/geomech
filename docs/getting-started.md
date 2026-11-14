@@ -48,13 +48,28 @@ missing `Constant`) raises `ValueError` naming it; the terms are never dropped s
 
 ## How it works
 
-The `compute_eom` pipeline:
+The `compute_eom` pipeline, in the order the code runs it:
 
-1. **Variation** -- takes \(\delta L\) by applying the product rule and manifold-specific variation formulas (\(\delta R = R\hat{\eta}\) for \(SO(3)\), \(\delta q = \xi \times q\) for \(S^2\))
-2. **Expand** -- distributes products over sums
-3. **Integrate by parts** -- moves time derivatives off variation vectors
-4. **Simplify** -- pulls scalars, applies vector identities (orthogonality, unit norm), eliminates zeros
-5. **Extract** -- collects coefficients of each variation vector to produce the final equations
+δS = δL + δW → manifold rules (δω, δΩ) → `full_simplify` → integration by parts
+(`expand`, `full_simplify`, then per variation vector: `collect` → IBP → `full_simplify`) →
+`expand` → extract the coefficient of each variation vector → `full_simplify`.
+
+1. **Variation** -- \(\delta L\) by the product rule; manifold points are eager
+   (\(\delta R = R\hat{\eta}\) for \(SO(3)\), \(\delta q = \xi \times q\) for \(S^2\)),
+   and \(\delta S = \delta L + \delta W\)
+2. **Manifold rules** -- \(\delta\omega = \dot\xi - 2\,\omega \times \xi\) on \(S^2\),
+   \(\delta\Omega = \dot\eta + \Omega \times \eta\) on \(SO(3)\)
+3. **Simplify** -- expand once, then pull scalars, apply vector identities (orthogonality,
+   unit norm, tangency) and eliminate zeros until nothing changes
+4. **Integrate by parts** -- for each variation vector, `collect` rotates every term so its
+   time derivative is the left operand of a `Dot`, then moves the derivative off it
+5. **Expand** -- distributes products over sums
+6. **Extract** -- the coefficient of each variation vector, simplified, is its equation
+
+[The Pipeline, Stage by Stage](pipeline.md) describes each stage and how to see it
+(`compute_eom(..., trace=EOMTrace())`); [Troubleshooting](troubleshooting.md) lists the
+error messages and the debugging switches; [Conventions](conventions.md) the sign and
+printing conventions.
 
 ## Expression types
 
@@ -88,7 +103,7 @@ Transpose(x)   # transpose (x.T() is the same; Transpose(Transpose(x)) is x)
 R.T() * x      # a transposed matrix multiplies like a matrix: R^T x
 x.T() * y      # row times column: the inner product x^T y; x * y.T() is the outer product
 x.T() * K * x  # a row times a matrix is a row: the quadratic form x^T K x
-# (in a potential or in dW; in a kinetic energy write Dot(v, K * v): integration by parts handles Dot only)
+# (also in a kinetic energy, v.T() * K * v: collect turns it into Dot(v, K * v) for integration by parts)
 2 * x, a + 1, 1 - a, -x, x / 2   # numbers on either side (a number adds only to a scalar); / divides by a number only
 ```
 

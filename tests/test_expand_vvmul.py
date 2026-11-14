@@ -11,7 +11,7 @@ from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.geometry import Cross, Hat, Transpose
 from geomech.core.operations.multiplication import MMMul, MVMul, VVMul
-from geomech.core.transformations.expand import expand
+from geomech.core.transformations.expansion import expand
 
 a, b, c, d = getVectors("a b c d")
 

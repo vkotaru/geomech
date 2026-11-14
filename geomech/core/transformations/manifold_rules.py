@@ -29,16 +29,29 @@ term 2 ω × c came out as ω × c, i.e. at half strength.
 
 For SO3, with Ṙ = R·Hat(Ω) and δR = R·Hat(η), equating the mixed derivatives
 d/dt(δR) = δ(Ṙ) gives δΩ = η̇ + Ω × η exactly (Lee et al. eq. 6.9).
+
+Rules (name, identity, hypothesis):
+
+  manifold.s2_variation_omega    δ(ω) → ξ̇ - 2 ω × ξ     ω is the tangent vector of an S2
+                                                         point listed in SystemVariables
+                                                         (matched by printed name)
+  manifold.so3_variation_Omega   δ(Ω) → η̇ + Ω × η       Ω is the tangent vector of an SO3
+                                                         point listed in SystemVariables
 """
 
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Scalar
 from geomech.core.operations.addition import VAdd
 from geomech.core.operations.calculus import TimeDerivative, Variation
 from geomech.core.operations.geometry import Cross
 from geomech.core.operations.multiplication import SVMul
-from geomech.dynamics.variables import SystemVariables
+from geomech.utils.trace import rule
+
+if TYPE_CHECKING:  # the dynamics layer imports this module; avoid the cycle
+    from geomech.dynamics.variables import SystemVariables
 
 _NEG2 = Scalar("(-2)", value=-2, attr=["Constant"])
 
@@ -81,15 +94,17 @@ def _substitute(expr, tangent_map):
             kind, parent, omega, var_vec = tangent_map[str(inner)]
             if kind == "S2":
                 # δ(ω) = ξ̇ - 2 ω × ξ   (see the module docstring)
-                return VAdd(
-                    TimeDerivative(var_vec),
-                    SVMul(Cross(omega, var_vec), _NEG2),
+                return rule(
+                    "manifold.s2_variation_omega",
+                    expr,
+                    VAdd(TimeDerivative(var_vec), SVMul(Cross(omega, var_vec), _NEG2)),
                 )
             elif kind == "SO3":
                 # δ(Ω) = η̇ + Ω × η
-                return VAdd(
-                    TimeDerivative(var_vec),
-                    Cross(omega, var_vec),
+                return rule(
+                    "manifold.so3_variation_Omega",
+                    expr,
+                    VAdd(TimeDerivative(var_vec), Cross(omega, var_vec)),
                 )
             else:
                 raise ValueError(f"Unknown manifold kind: {kind}")

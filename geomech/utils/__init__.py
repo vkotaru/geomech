@@ -1,6 +1,7 @@
 from geomech.utils.errors import (
     AlgebraicError,
     ExpressionMismatchError,
+    InvariantError,
     NonLinearError,
     SizeMismatchError,
 )

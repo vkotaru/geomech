@@ -3,18 +3,27 @@
 Bottom-up traversal: expand children first, then distribute at the
 current node.  Single pass — no has_nested_add predicate needed.
 
-Distribution rules implemented:
-  Mul  over Add   → Add     (scalar)
-  Dot  over VAdd  → Add     (scalar from vectors)
-  Cross over VAdd → VAdd    (vector)
-  SVMul over VAdd/Add → VAdd (vector, left=vector right=scalar)
-  MVMul over MAdd/VAdd → VAdd (vector; also a row times a matrix, rᵀ M, over a sum of
-                        rows on the left or an MAdd on the right)
-  SMMul over MAdd/Add → MAdd (matrix, left=matrix right=scalar)
-  MMMul over MAdd → MAdd    (matrix)
-  VVMul over VAdd → MAdd    (outer product  v wᵀ; a VAdd in v or inside Transpose(w))
-  VVMul over VAdd → Add     (inner product  vᵀ w; a VAdd inside Transpose(v) or in w)
-  Hat/Vee — recurse into child
+Distribution rules (name, identity; none needs a hypothesis: they are bilinearity of
+each product and linearity of Hat). A rule fires only when an operand is a sum.
+
+  expand.mul_over_add          Mul over Add → Add (scalar)
+  expand.dot_over_vadd         Dot over VAdd → Add (scalar from vectors)
+  expand.cross_over_vadd       Cross over VAdd → VAdd (vector)
+  expand.svmul_over_sum        SVMul over VAdd/Add → VAdd (vector, left=vector right=scalar)
+  expand.row_svmul_over_sum    a scaled row rᵀ s over a sum of rows or an Add scalar
+  expand.mvmul_over_sum        MVMul over MAdd/VAdd → VAdd (vector)
+  expand.row_mvmul_over_sum    a row times a matrix, rᵀ M, over a sum of rows on the left
+                               or an MAdd on the right
+  expand.smmul_over_sum        SMMul over MAdd/Add → MAdd (matrix, left=matrix right=scalar)
+  expand.mmmul_over_madd       MMMul over MAdd → MAdd (matrix)
+  expand.vvmul_outer_over_vadd VVMul over VAdd → MAdd (outer product v wᵀ; a VAdd in v or
+                               inside Transpose(w))
+  expand.vvmul_inner_over_vadd VVMul over VAdd → Add (inner product vᵀ w; a VAdd inside
+                               Transpose(v) or in w)
+  expand.hat_over_vadd         Hat(a + b) = Hat(a) + Hat(b)
+
+``Vee`` is not distributed: its operand is a matrix, and Vee over an ``MAdd`` is not
+implemented yet (the operand is expanded, the ``Vee`` is kept).
 
 ``Transpose`` is not expanded on its own (Transpose(MAdd) and Transpose(VVMul)
 are left intact); the VVMul rule is the only place that looks through a
@@ -32,9 +41,10 @@ from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
 from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee, is_row_vector
 from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
+from geomech.utils.trace import rule
 
 
-def _distribute(l, r, op_cls, sum_cls, l_sum_cls, r_sum_cls):
+def _distribute(l, r, op_cls, sum_cls, l_sum_cls, r_sum_cls, name=None, expr=None):
     """Distribute *op_cls* over addition on either or both sides.
 
     l, r        — already-expanded left and right children
@@ -42,6 +52,7 @@ def _distribute(l, r, op_cls, sum_cls, l_sum_cls, r_sum_cls):
     sum_cls     — constructor for the result addition (Add, VAdd, MAdd)
     l_sum_cls   — addition type to check on the left  (VAdd, MAdd, Add)
     r_sum_cls   — addition type to check on the right (VAdd, MAdd, Add)
+    name, expr  — the rule name and the original node, for ``rule`` (tracing only)
 
     If both sides are sums  → cartesian product of terms.
     If one side is a sum    → distribute over that side.
@@ -51,11 +62,11 @@ def _distribute(l, r, op_cls, sum_cls, l_sum_cls, r_sum_cls):
     r_is_sum = isinstance(r, r_sum_cls)
 
     if l_is_sum and r_is_sum:
-        return sum_cls(*[op_cls(nl, nr) for nl in l.nodes for nr in r.nodes])
+        return rule(name, expr, sum_cls(*[op_cls(nl, nr) for nl in l.nodes for nr in r.nodes]))
     if l_is_sum:
-        return sum_cls(*[op_cls(nl, r) for nl in l.nodes])
+        return rule(name, expr, sum_cls(*[op_cls(nl, r) for nl in l.nodes]))
     if r_is_sum:
-        return sum_cls(*[op_cls(l, nr) for nr in r.nodes])
+        return rule(name, expr, sum_cls(*[op_cls(l, nr) for nr in r.nodes]))
     return op_cls(l, r)
 
 
@@ -94,7 +105,9 @@ def _expand_row_mvmul(expr):
     rs = list(r.nodes) if isinstance(r, MAdd) else [r]
     if len(ls) == 1 and len(rs) == 1:
         return MVMul(ls[0], rs[0])
-    return VAdd(*[MVMul(nl, nr) for nl in ls for nr in rs])
+    return rule(
+        "expand.row_mvmul_over_sum", expr, VAdd(*[MVMul(nl, nr) for nl in ls for nr in rs])
+    )
 
 
 def _expand_row_svmul(expr):
@@ -104,7 +117,9 @@ def _expand_row_svmul(expr):
     rs = list(r.nodes) if isinstance(r, Add) else [r]
     if len(ls) == 1 and len(rs) == 1:
         return SVMul(ls[0], rs[0])
-    return VAdd(*[SVMul(nl, nr) for nl in ls for nr in rs])
+    return rule(
+        "expand.row_svmul_over_sum", expr, VAdd(*[SVMul(nl, nr) for nl in ls for nr in rs])
+    )
 
 
 def _expand_vvmul(expr):
@@ -123,17 +138,22 @@ def _expand_vvmul(expr):
         rs = _row_addends(expr.right)
         if len(ls) == 1 and len(rs) == 1:
             return VVMul(l, rs[0])
-        return MAdd(*[VVMul(nl, nr) for nl in ls for nr in rs])
+        return rule(
+            "expand.vvmul_outer_over_vadd", expr, MAdd(*[VVMul(nl, nr) for nl in ls for nr in rs])
+        )
     # inner product: left is Transpose(v), right is a plain vector
     r = expand(expr.right)
     ls = _row_addends(expr.left)
     rs = list(r.nodes) if isinstance(r, VAdd) else [r]
     if len(ls) == 1 and len(rs) == 1:
         return VVMul(ls[0], r)
-    return Add(*[VVMul(nl, nr) for nl in ls for nr in rs])
+    return rule(
+        "expand.vvmul_inner_over_vadd", expr, Add(*[VVMul(nl, nr) for nl in ls for nr in rs])
+    )
 
 
 def expand(expr):
+    """Distribute every product over sums, bottom up (rules in the module docstring)."""
     match expr:
         # --- N-ary additions: expand each term ---
         case Add(nodes=nodes):
@@ -148,17 +168,17 @@ def expand(expr):
         # --- Scalar * Scalar ---
         case Mul():
             l, r = expand(expr.left), expand(expr.right)
-            return _distribute(l, r, Mul, Add, Add, Add)
+            return _distribute(l, r, Mul, Add, Add, Add, "expand.mul_over_add", expr)
 
         # --- Dot product (vector x vector → scalar) ---
         case Dot():
             l, r = expand(expr.left), expand(expr.right)
-            return _distribute(l, r, Dot, Add, VAdd, VAdd)
+            return _distribute(l, r, Dot, Add, VAdd, VAdd, "expand.dot_over_vadd", expr)
 
         # --- Cross product (vector x vector → vector) ---
         case Cross():
             l, r = expand(expr.left), expand(expr.right)
-            return _distribute(l, r, Cross, VAdd, VAdd, VAdd)
+            return _distribute(l, r, Cross, VAdd, VAdd, VAdd, "expand.cross_over_vadd", expr)
 
         # --- Scalar * Vector  (left=vector, right=scalar) ---
         case SVMul() if is_row_vector(expr.left):
@@ -166,7 +186,7 @@ def expand(expr):
 
         case SVMul():
             l, r = expand(expr.left), expand(expr.right)
-            return _distribute(l, r, SVMul, VAdd, VAdd, Add)
+            return _distribute(l, r, SVMul, VAdd, VAdd, Add, "expand.svmul_over_sum", expr)
 
         # --- Matrix * Vector ---
         case MVMul() if expr.left.type == ExprType.VECTOR:
@@ -174,35 +194,32 @@ def expand(expr):
 
         case MVMul():
             l, r = expand(expr.left), expand(expr.right)
-            return _distribute(l, r, MVMul, VAdd, MAdd, VAdd)
+            return _distribute(l, r, MVMul, VAdd, MAdd, VAdd, "expand.mvmul_over_sum", expr)
 
         # --- Scalar * Matrix  (left=matrix, right=scalar) ---
         case SMMul():
             l, r = expand(expr.left), expand(expr.right)
-            return _distribute(l, r, SMMul, MAdd, MAdd, Add)
+            return _distribute(l, r, SMMul, MAdd, MAdd, Add, "expand.smmul_over_sum", expr)
 
         # --- Matrix * Matrix ---
         case MMMul():
             l, r = expand(expr.left), expand(expr.right)
-            return _distribute(l, r, MMMul, MAdd, MAdd, MAdd)
+            return _distribute(l, r, MMMul, MAdd, MAdd, MAdd, "expand.mmmul_over_madd", expr)
 
         # --- Vector * Vector (outer product → matrix, inner product → scalar) ---
         case VVMul():
             return _expand_vvmul(expr)
 
         # --- Unary ops: recurse into child ---
-        # Hat and Vee are linear: Hat(a + b) = Hat(a) + Hat(b)
+        # Hat is linear: Hat(a + b) = Hat(a) + Hat(b)
         case Hat():
             inner = expand(expr.expr)
             if isinstance(inner, VAdd):
-                return MAdd(*[Hat(n) for n in inner.nodes])
+                return rule("expand.hat_over_vadd", expr, MAdd(*[Hat(n) for n in inner.nodes]))
             return Hat(inner)
 
         case Vee():
-            inner = expand(expr.expr)
-            if isinstance(inner, VAdd):
-                return VAdd(*[Vee(n) for n in inner.nodes])
-            return Vee(inner)
+            return Vee(expand(expr.expr))
 
         case Variation():
             return Variation(expand(expr.expr))

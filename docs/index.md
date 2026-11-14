@@ -16,14 +16,16 @@ no Euler angles or quaternions required.
 
 1. Define symbolic scalars, vectors, and matrices
 2. Build kinetic/potential energy and virtual work expressions
-3. Call `compute_eom()` -- the library takes variations, applies the
-   product rule, expands, integrates by parts, simplifies, and
-   extracts the equations
+3. Call `compute_eom()` -- the library takes the variation of the action, applies the
+   manifold kinematics, simplifies, integrates by parts and extracts the equations
+   ([The Pipeline, Stage by Stage](pipeline.md))
 
 ## Quick links
 
 - [Getting Started](getting-started.md) -- installation and first example
 - [Examples](examples.md) -- point mass, spherical pendulum, rigid body
+- [The Pipeline, Stage by Stage](pipeline.md) -- what `compute_eom` does, and how to see it
+- [Conventions](conventions.md) and [Troubleshooting](troubleshooting.md)
 - [API Reference](reference/) -- auto-generated from source
 
 ## Citation

@@ -1,7 +1,60 @@
-"""
-simplify(expr)      — pull scalars, apply vector identities, eliminate
-                       zeros, combine numeric constants.
-full_simplify(expr) — expand once, then loop simplify until convergence.
+"""Simplification passes.
+
+simplify(expr)      — one pass: ``pull`` (hoist scalars), ``vector_rules`` (geometric
+                      identities), then ``_eliminate`` (bottom-up zeros, identities and
+                      numeric folding, the rules below).
+full_simplify(expr) — ``expand`` once, then ``simplify`` until the printed tree stops
+                      changing (at most ``max_iter`` passes; hitting the cap warns).
+
+Rules of ``_eliminate`` (name, identity, hypothesis the code checks). "Zero" means the
+operand is flagged zero (``Zero``, ``ZeroVector``, ``ZeroMatrix``, a ``Constant``
+symbol's variation...), "one" a numeric leaf with value 1, "identity" a leaf flagged
+``Identity``.
+
+  simplify.add_fold                Add: zeros dropped, numeric leaves summed, like terms
+                                   merged; float sums within 1e-12 of the largest
+                                   magnitude are cancelled to 0 (``_CANCEL_RTOL``)
+  simplify.vadd_fold               VAdd: zeros dropped, like terms merged
+  simplify.madd_fold               MAdd: zeros dropped, like terms merged
+  simplify.mul_fold                Mul: a zero factor gives 0, a factor one is dropped,
+                                   numeric factors of a Mul chain are multiplied together
+  simplify.svmul_zero              v·0 = 0·s = 0 (vector)
+  simplify.svmul_one               v·1 = v
+  simplify.smmul_zero              M·0 = 0·s = 0 (matrix)
+  simplify.smmul_one               M·1 = M
+  simplify.mvmul_zero              0·v = M·0 = 0
+  simplify.mvmul_identity          I·v = v                    left factor flagged identity
+  simplify.mvmul_hat_to_cross      Hat(a)·v = Cross(a, v)
+  simplify.mvmul_reassociate       (A·B)·v = A·(B·v)
+  simplify.mvmul_combine           A·(B·v) = (A·B)·v          only when A·B simplifies to a
+                                                              non-product (e.g. RᵀR = I)
+  simplify.mmmul_zero              0·B = A·0 = 0
+  simplify.mmmul_identity          I·B = B, A·I = A           factor flagged identity
+  simplify.orthogonal_transpose    RᵀR = I and RRᵀ = I        R flagged orthogonal (SO3),
+                                                              both factors equal by name
+  simplify.vvmul_zero              0ᵀw = vᵀ0 = 0 (scalar), v0ᵀ = 0 (matrix)
+  simplify.dot_zero                Dot(0, w) = Dot(v, 0) = 0
+  simplify.cross_zero              Cross(0, w) = Cross(v, 0) = 0
+  simplify.hat_zero                Hat(0) = 0
+  simplify.hat_vee_skew            Hat(Vee(X)) = X            X skew-symmetric: a Hat, a
+                                                              leaf flagged
+                                                              SkewSymmetricMatrix, or a
+                                                              sum/scaling/transpose of such
+  simplify.vee_zero                Vee(0) = 0
+  simplify.vee_hat                 Vee(Hat(v)) = v
+  simplify.transpose_transpose     (Xᵀ)ᵀ = X
+  simplify.transpose_symmetric     Jᵀ = J                     J flagged symmetric
+  simplify.transpose_hat_skew      Hat(v)ᵀ = -Hat(v)
+  simplify.transpose_scaled        (M s)ᵀ = Mᵀ s
+  simplify.transpose_scaled_row    (aᵀ s)ᵀ = a s
+  simplify.transpose_product       (A·B)ᵀ = Bᵀ·Aᵀ
+  simplify.variation_zero          δ(0) = 0
+  simplify.time_derivative_zero    d/dt(0) = 0
+  simplify.time_derivative_integral   d/dt(∫x dt) = x
+  simplify.time_integral_zero      ∫0 dt = 0
+  simplify.time_integral_derivative   ∫d/dt(x) dt = x
+
+The rules of the other two stages of a pass are listed in ``pull`` and ``vector_rules``.
 """
 
 from __future__ import annotations
@@ -28,6 +81,8 @@ from geomech.core.operations.multiplication import (
     SVMul,
     VVMul,
 )
+from geomech.utils import trace as _trace
+from geomech.utils.trace import rule
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -37,8 +92,8 @@ from geomech.core.operations.multiplication import (
 def simplify(expr):
     """Pull scalars, apply vector identities, then eliminate zeros and
     combine numeric constants — single call does everything."""
-    from geomech.core.transformations.pull import pull
-    from geomech.core.transformations.vector_rules import vector_rules
+    from geomech.core.transformations.pulling import pull
+    from geomech.core.transformations.vector_identities import vector_rules
 
     expr = pull(expr)
     expr = vector_rules(expr)
@@ -52,12 +107,13 @@ def full_simplify(expr, max_iter=10):
     ----------
     max_iter : int
         Safety cap on the number of passes (default 10). Hitting it emits a
-        ``RuntimeWarning`` naming the expression: the result may be unsimplified. A pass
-        that changes nothing ends the loop, so the warning fires only when the last
-        allowed pass still changed the expression; that last result may already be the
-        fixed point, which only one more pass could confirm.
+        ``RuntimeWarning`` ("no confirmed fixed point after N passes") naming the
+        expression: the result may be unsimplified. A pass that changes nothing ends the
+        loop, so the warning fires only when the last allowed pass still changed the
+        expression; that last result may already be the fixed point, which only one more
+        pass could confirm (hence "confirmed").
     """
-    from geomech.core.transformations.expand import expand
+    from geomech.core.transformations.expansion import expand
 
     expr = expand(expr)
     for _ in range(max_iter):
@@ -66,9 +122,15 @@ def full_simplify(expr, max_iter=10):
         if str(expr) == str(prev):
             break
     else:
+        why = (
+            "max_iter=0: no simplify pass ran"
+            if max_iter <= 0
+            else f"the last pass still changed the expression, so no fixed point after"
+            f" {max_iter} passes was confirmed by an unchanged pass"
+        )
         warnings.warn(
-            f"full_simplify: no fixed point after {max_iter} passes; result may be"
-            f" unsimplified: {expr!r}",
+            f"full_simplify: no confirmed fixed point after {max_iter} passes ({why});"
+            f" result may be unsimplified: {expr!r}",
             RuntimeWarning,
             stacklevel=2,
         )
@@ -80,75 +142,110 @@ def full_simplify(expr, max_iter=10):
 # ---------------------------------------------------------------------------
 
 
+def _folded_from(cls, children, expr):
+    """The node a fold rule starts from: *expr* rebuilt from its eliminated *children*.
+
+    The ``*_fold`` rules log ``before ==> after`` against this node, so a fold is logged
+    only when the fold itself changed something, not when a child rule did (the child
+    logs its own line). Called only while rule tracing is on.
+    """
+    try:
+        return cls(*children)
+    except Exception:  # noqa: BLE001 - a debugging aid must not change the result
+        return expr
+
+
 def _eliminate(expr):
     """Bottom-up pass: zeros, identities, numeric constant combining."""
     match expr:
         # ---- n-ary addition ----
         case Add(nodes=nodes):
-            return _simplify_add([_eliminate(n) for n in nodes])
+            children = [_eliminate(n) for n in nodes]
+            out = _simplify_add(children)
+            if _trace._TRACE_RULES:
+                rule("simplify.add_fold", _folded_from(Add, children, expr), out)
+            return out
         case VAdd(nodes=nodes):
-            return _simplify_vadd([_eliminate(n) for n in nodes])
+            children = [_eliminate(n) for n in nodes]
+            out = _simplify_vadd(children)
+            if _trace._TRACE_RULES:
+                rule("simplify.vadd_fold", _folded_from(VAdd, children, expr), out)
+            return out
         case MAdd(nodes=nodes):
-            return _simplify_madd([_eliminate(n) for n in nodes])
+            children = [_eliminate(n) for n in nodes]
+            out = _simplify_madd(children)
+            if _trace._TRACE_RULES:
+                rule("simplify.madd_fold", _folded_from(MAdd, children, expr), out)
+            return out
 
         # ---- scalar * scalar ----
         case Mul():
-            return _simplify_mul(_eliminate(expr.left), _eliminate(expr.right))
+            children = [_eliminate(expr.left), _eliminate(expr.right)]
+            out = _simplify_mul(*children)
+            if _trace._TRACE_RULES:
+                rule("simplify.mul_fold", _folded_from(Mul, children, expr), out)
+            return out
 
         # ---- scalar * vector ----
         case SVMul():
             vec, scl = _eliminate(expr.left), _eliminate(expr.right)
             if _is_zero(scl) or _is_zero(vec):
-                return ZeroVector
+                return rule("simplify.svmul_zero", expr, ZeroVector)
             if _is_one(scl):
-                return vec
+                return rule("simplify.svmul_one", expr, vec)
             return SVMul(vec, scl)
 
         # ---- scalar * matrix ----
         case SMMul():
             mat, scl = _eliminate(expr.left), _eliminate(expr.right)
             if _is_zero(scl) or _is_zero(mat):
-                return ZeroMatrix
+                return rule("simplify.smmul_zero", expr, ZeroMatrix)
             if _is_one(scl):
-                return mat
+                return rule("simplify.smmul_one", expr, mat)
             return SMMul(mat, scl)
 
         # ---- matrix * vector ----
         case MVMul():
             mat, vec = _eliminate(expr.left), _eliminate(expr.right)
             if _is_zero(mat) or _is_zero(vec):
-                return ZeroVector
+                return rule("simplify.mvmul_zero", expr, ZeroVector)
             if _is_identity(mat):
-                return vec
+                return rule("simplify.mvmul_identity", expr, vec)
             # Hat(v) * w = Cross(v, w)
             if isinstance(mat, Hat):
-                return Cross(mat.expr, vec)
+                return rule("simplify.mvmul_hat_to_cross", expr, Cross(mat.expr, vec))
             # (A * B) * v → A * (B * v)  (matrix associativity)
             if isinstance(mat, MMMul):
-                return _eliminate(MVMul(mat.left, MVMul(mat.right, vec)))
+                return rule(
+                    "simplify.mvmul_reassociate",
+                    expr,
+                    _eliminate(MVMul(mat.left, MVMul(mat.right, vec))),
+                )
             # A * (B * v) → (A*B) * v  when A*B simplifies (e.g. R'*R = I)
             if isinstance(vec, MVMul):
                 combined = _eliminate(MMMul(mat, vec.left))
                 if not isinstance(combined, MMMul):
                     # A*B simplified (e.g. to I), so use the result
-                    return _eliminate(MVMul(combined, vec.right))
+                    return rule(
+                        "simplify.mvmul_combine", expr, _eliminate(MVMul(combined, vec.right))
+                    )
             return MVMul(mat, vec)
 
         # ---- matrix * matrix ----
         case MMMul():
             l, r = _eliminate(expr.left), _eliminate(expr.right)
             if _is_zero(l) or _is_zero(r):
-                return ZeroMatrix
+                return rule("simplify.mmmul_zero", expr, ZeroMatrix)
             if _is_identity(l):
-                return r
+                return rule("simplify.mmmul_identity", expr, r)
             if _is_identity(r):
-                return l
+                return rule("simplify.mmmul_identity", expr, l)
             # R^T * R = I  when R is orthogonal (SO3)
             if isinstance(l, Transpose) and l.expr.is_orthogonal and l.expr == r:
-                return IdentityMatrix
+                return rule("simplify.orthogonal_transpose", expr, IdentityMatrix)
             # R * R^T = I  when R is orthogonal (SO3)
             if isinstance(r, Transpose) and r.expr.is_orthogonal and r.expr == l:
-                return IdentityMatrix
+                return rule("simplify.orthogonal_transpose", expr, IdentityMatrix)
             return MMMul(l, r)
 
         # ---- vector * vector ----
@@ -156,85 +253,99 @@ def _eliminate(expr):
             l, r = _eliminate(expr.left), _eliminate(expr.right)
             if _is_zero(l) or _is_zero(r):
                 # inner product vᵀw → scalar 0; outer product v wᵀ → 3×3 zero
-                return _zero_for(expr)
+                return rule("simplify.vvmul_zero", expr, _zero_for(expr))
             return VVMul(l, r)
 
         # ---- binary geometry ops ----
         case Dot():
             l, r = _eliminate(expr.left), _eliminate(expr.right)
             if _is_zero(l) or _is_zero(r):
-                return Zero
+                return rule("simplify.dot_zero", expr, Zero)
             return Dot(l, r)
 
         case Cross():
             l, r = _eliminate(expr.left), _eliminate(expr.right)
             if _is_zero(l) or _is_zero(r):
-                return ZeroVector
+                return rule("simplify.cross_zero", expr, ZeroVector)
             return Cross(l, r)
 
         # ---- unary geometry ops ----
         case Hat():
             inner = _eliminate(expr.expr)
             if _is_zero(inner):
-                return ZeroMatrix
+                return rule("simplify.hat_zero", expr, ZeroMatrix)
             # Hat(Vee(X)) = X only for skew-symmetric X (Vee reads three entries of X,
             # so for a general matrix Hat(Vee(X)) is the skew part of X, e.g. Hat(Vee(I)) = 0).
             if isinstance(inner, Vee) and _is_skew_symmetric(inner.expr):
-                return inner.expr
+                return rule("simplify.hat_vee_skew", expr, inner.expr)
             return Hat(inner)
 
         case Vee():
             inner = _eliminate(expr.expr)
             if _is_zero(inner):
-                return ZeroVector
+                return rule("simplify.vee_zero", expr, ZeroVector)
             if isinstance(inner, Hat):
-                return inner.expr
+                return rule("simplify.vee_hat", expr, inner.expr)
             return Vee(inner)
 
         case Transpose():
             inner = _eliminate(expr.expr)
             if isinstance(inner, Transpose):
-                return inner.expr
+                return rule("simplify.transpose_transpose", expr, inner.expr)
             # Symmetric matrix: J^T = J
             if inner.is_symmetric:
-                return inner
+                return rule("simplify.transpose_symmetric", expr, inner)
             # Hat is skew-symmetric: Hat(v)^T = -Hat(v)
             if isinstance(inner, Hat):
-                return SMMul(inner, Scalar("(-1)", value=-1, attr=["Constant"]))
+                return rule(
+                    "simplify.transpose_hat_skew",
+                    expr,
+                    SMMul(inner, Scalar("(-1)", value=-1, attr=["Constant"])),
+                )
             # (s*M)^T = s*M^T
             if isinstance(inner, SMMul):
-                return SMMul(_eliminate(Transpose(inner.left)), inner.right)
+                return rule(
+                    "simplify.transpose_scaled",
+                    expr,
+                    SMMul(_eliminate(Transpose(inner.left)), inner.right),
+                )
             # a transposed scaled row is the scaled column: (aᵀ s)ᵀ = a s
             if isinstance(inner, SVMul) and isinstance(inner.left, Transpose):
-                return SVMul(inner.left.expr, inner.right)
+                return rule(
+                    "simplify.transpose_scaled_row", expr, SVMul(inner.left.expr, inner.right)
+                )
             # (A*B)^T = B^T * A^T
             if isinstance(inner, MMMul):
-                return _eliminate(MMMul(Transpose(inner.right), Transpose(inner.left)))
+                return rule(
+                    "simplify.transpose_product",
+                    expr,
+                    _eliminate(MMMul(Transpose(inner.right), Transpose(inner.left))),
+                )
             return Transpose(inner)
 
         # ---- calculus ops ----
         case Variation():
             inner = _eliminate(expr.expr)
             if _is_zero(inner):
-                return _zero_for(inner)
+                return rule("simplify.variation_zero", expr, _zero_for(inner))
             return Variation(inner)
 
         case TimeDerivative():
             inner = _eliminate(expr.expr)
             if _is_zero(inner):
-                return _zero_for(inner)
+                return rule("simplify.time_derivative_zero", expr, _zero_for(inner))
             # d/dt(∫x dt) = x
             if isinstance(inner, TimeIntegral):
-                return inner.expr
+                return rule("simplify.time_derivative_integral", expr, inner.expr)
             return TimeDerivative(inner)
 
         case TimeIntegral():
             inner = _eliminate(expr.expr)
             if _is_zero(inner):
-                return _zero_for(inner)
+                return rule("simplify.time_integral_zero", expr, _zero_for(inner))
             # ∫(d/dt(x)) dt = x
             if isinstance(inner, TimeDerivative):
-                return inner.expr
+                return rule("simplify.time_integral_derivative", expr, inner.expr)
             return TimeIntegral(inner)
 
         # ---- leaves ----

@@ -12,10 +12,12 @@ from geomech.core.base.expressions import S2, SO3, Expr, Zero, ZeroVector
 from geomech.core.base.types import ExprType
 from geomech.core.math.extract import _has_algebraic, extract_linear_coeff
 from geomech.core.operations.addition import Add, VAdd
-from geomech.core.transformations.expand import expand
-from geomech.core.transformations.simplify import full_simplify
+from geomech.core.operations.calculus import TimeDerivative
+from geomech.core.transformations.expansion import expand
+from geomech.core.transformations.simplification import full_simplify
 from geomech.dynamics.variables import SystemVariables
-from geomech.utils.errors import NonLinearError
+from geomech.utils.errors import AlgebraicError, NonLinearError
+from geomech.utils.trace import debug_enabled, stage_recorder
 
 
 @dataclass
@@ -66,15 +68,36 @@ def to_standard_form(eom_dict, variables: SystemVariables, inputs=None):
     ``ω̇`` solve ``(I − qqᵀ)(M ω̇ + f + Σ G u) = 0`` with ``ω̇ ⊥ q``; the unprojected
     3×3 solve gives ``q · ω̇ ≠ 0`` and a trajectory that leaves the sphere. The same
     holds for the rows of ``linearize``.
+
+    Errors name the equation and the term: a term that holds an acceleration only under
+    a further time derivative (a jerk ``d/dt(ẍ)``) raises ``AlgebraicError`` saying the
+    equation is not second order; a term bilinear in two accelerations raises
+    ``NonLinearError``. With ``GEOMECH_DEBUG=1`` the blocks of each equation are logged
+    on the ``geomech`` logger and ``check_tree`` runs on every equation and block.
     """
     if inputs is None:
         inputs = []
 
     accel_vars = _get_accel_vars(variables)
+    debug = debug_enabled()
+    if debug:
+        from geomech.utils.invariants import check_tree
+    record = stage_recorder(None, "to_standard_form")
 
     result = {}
     for key, (var_vec, eom_expr) in eom_dict.items():
-        sf = _extract_single(eom_expr, accel_vars, inputs)
+        if debug:
+            check_tree(eom_expr)
+        sf = _extract_single(eom_expr, accel_vars, inputs, key)
+        if record is not None:
+            for name, block in sf.M.items():
+                record(f"M[{key}][{name}]", block)
+            record(f"f[{key}]", sf.f)
+            for name, block in sf.G.items():
+                record(f"G[{key}][{name}]", block)
+        if debug:
+            for block in (*sf.M.values(), sf.f, *sf.G.values()):
+                check_tree(block)
         result[key] = sf
 
     return result
@@ -129,7 +152,52 @@ def _combine(terms, eom_expr):
     return VAdd(*terms)
 
 
-def _extract_single(eom_expr, accel_vars, inputs):
+def _calculus_holding(term, query):
+    """The outermost calculus node of *term* that contains *query* (for error messages)."""
+    stack = [term]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, TimeDerivative) and node.has(query):
+            return node
+        stack.extend(getattr(node, "nodes", None) or ())
+    return None
+
+
+def _has_in_term(term, query, key, kind):
+    """``_has_algebraic(term, query)`` with the equation and term named on failure."""
+    try:
+        return _has_algebraic(term, query)
+    except AlgebraicError as err:
+        node = _calculus_holding(term, query)
+        where = f" inside '{node}'" if node is not None else ""
+        if kind == "acceleration":
+            what = (
+                f"the acceleration '{query}' occurs only{where}, a third or higher time"
+                " derivative of the configuration (a jerk): the equation is not second"
+                " order, so it has no standard form M a + f + G u = 0"
+            )
+        else:
+            what = (
+                f"the input '{query}' occurs only{where}, a time derivative of the input:"
+                " an input enters the standard form linearly and undifferentiated"
+            )
+        raise AlgebraicError(
+            f"to_standard_form: in equation '{key}', term '{term}': {what} (engine: {err})"
+        ) from err
+
+
+def _extract(expr, query, key):
+    """``extract_linear_coeff`` with the equation named in a re-raised engine error."""
+    try:
+        return extract_linear_coeff(expr, query)
+    except (AlgebraicError, NonLinearError) as err:
+        raise type(err)(
+            f"to_standard_form: in equation '{key}', extracting the coefficient of"
+            f" '{query}': {err}"
+        ) from err
+
+
+def _extract_single(eom_expr, accel_vars, inputs, key="?"):
     """Extract M, f, G from a single EOM expression (scalar or vector)."""
     eom_expr = expand(eom_expr)
     terms = _flatten_addends(eom_expr)
@@ -142,8 +210,8 @@ def _extract_single(eom_expr, accel_vars, inputs):
     # classified as acceleration/input and then extracted as zero; a variable
     # hidden under a higher derivative (e.g. jerk) raises AlgebraicError here.
     for term in terms:
-        has_accel = any(_has_algebraic(term, a) for a in accel_vars)
-        has_input = any(_has_algebraic(term, u) for u in inputs)
+        has_accel = any(_has_in_term(term, a, key, "acceleration") for a in accel_vars)
+        has_input = any(_has_in_term(term, u, key, "input") for u in inputs)
 
         if has_accel:
             accel_terms.append(term)
@@ -157,14 +225,15 @@ def _extract_single(eom_expr, accel_vars, inputs):
         accel_expr = _combine(accel_terms, eom_expr)
         for a in accel_vars:
             if _has_algebraic(accel_expr, a):
-                coeff = extract_linear_coeff(accel_expr, a)
+                coeff = _extract(accel_expr, a, key)
                 coeff = full_simplify(coeff)
                 # M must be free of accelerations: a term bilinear in two
                 # accelerations (c ẍ₁ ẍ₂) has no standard-form coefficient.
                 for b in accel_vars:
                     if _has_algebraic(coeff, b):
                         raise NonLinearError(
-                            f"to_standard_form: coefficient of '{a}' still contains the"
+                            f"to_standard_form: in equation '{key}', the coefficient of"
+                            f" '{a}' still contains the"
                             f" acceleration '{b}' in '{coeff}'; the equation is not linear"
                             " in the accelerations"
                         )
@@ -175,7 +244,7 @@ def _extract_single(eom_expr, accel_vars, inputs):
         input_expr = _combine(input_terms, eom_expr)
         for u in inputs:
             if _has_algebraic(input_expr, u):
-                coeff = extract_linear_coeff(input_expr, u)
+                coeff = _extract(input_expr, u, key)
                 coeff = full_simplify(coeff)
                 G[str(u)] = coeff
 
