@@ -26,6 +26,10 @@ The pipeline:
 5. Optionally generate NumPy (or CasADi) code for the result with `geomech.codegen`
    (`generate_module`, `lambdify`, `energy_function`; [code generation](docs/codegen.md));
    `examples/generated/` holds the modules of nine systems
+6. Optionally simulate a generated model on its manifold with `geomech.simulation`
+   (`simulate` with a Lie-group RK4 integrator or `solve_ivp`, energy checks, and `lqr`
+   from the linearization; [simulation](docs/simulation.md),
+   `examples/inverted_rigid_pendulum_lqr.py`)
 
 ## How it works
 
@@ -119,7 +123,7 @@ Requires Python >= 3.10.
 ```bash
 pip install -e .
 pip install -e ".[casadi]"   # optional: the CasADi code generation target
-pip install -e ".[sim]"      # optional: scipy, for integrating generated models
+pip install -e ".[sim]"      # optional: scipy, for solve_ivp and lqr in geomech.simulation
 ```
 
 ## Quick start
@@ -268,6 +272,7 @@ geomech/
         math/           # extract_linear_coeff, collect, integrate_by_parts
     dynamics/           # compute_eom, to_standard_form, linearize, SystemVariables
     codegen/            # StateLayout, to_source, lambdify, generate_module, energy_function
+    simulation/         # accelerations, simulate (RKMK4, solve_ivp), Trajectory, lqr
     numeric.py          # evaluate, check_eom, finite_difference_check
     utils/              # print_eom, print_tree, render_eom
 ```

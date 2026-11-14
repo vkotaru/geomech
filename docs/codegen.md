@@ -204,7 +204,8 @@ or full rank (`−m l² I` for the spherical pendulum, where the engine already 
 generated module does **not** solve for the accelerations. Replace each S² block row by
 `P_q · row` (with `P_q = I − qqᵀ`) plus `q qᵀ` on its own `ω̇` column and its right-hand
 side by `−P_q (bias + G u)`; the system is then square and full rank and its solution
-satisfies `q · ω̇ = 0`. This belongs to the simulation feature.
+satisfies `q · ω̇ = 0`. `geomech.simulation.accelerations` does exactly this
+([Simulation](simulation.md#accelerations-and-the-s2-solve)).
 
 ## Total energy
 

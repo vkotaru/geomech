@@ -95,7 +95,9 @@ accelerations. For a `LinearizedSystem`: `M_lin(state, a, u, p)`, `A_lin(...)`,
 
 Sign and shape conventions are those of `docs/conventions.md` (`M` = −physical inertia;
 a scalar row with a vector acceleration contributes a 1×3 block). The S² mass block is
-singular (rank 2) by construction; the module does **not** solve for accelerations.
+singular (rank 2) by construction (correction: only for some systems, e.g. the quadrotor
+with a load; the spherical pendulum's is `−m l² I`, full rank); the module does **not**
+solve for accelerations.
 Solving with the tangency constraint q·ω̇ = 0 belongs to the simulation feature.
 
 ## Verification (definition of done)

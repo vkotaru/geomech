@@ -40,6 +40,35 @@ surface. In short:
 Open follow-ups are listed in `specs/follow-ups.md`.
 
 ### Added
+- Simulation, `geomech.simulation` (roadmap feature 6, `specs/simulation.md`,
+  `docs/simulation.md`); it consumes only `geomech.codegen` modules and imports scipy
+  (extra `geomech[sim]`) only for `solve_ivp` and `lqr`:
+  - `accelerations(module, state, u, p)`: solves `mass @ a + bias + G u = 0` with each S²
+    row block replaced by `P_q · row + q qᵀ` on its own `ω̇` column (right-hand side
+    `−P_q (bias + G u)`), so `q · ω̇ = 0` and the tangent-plane equation holds whether the
+    derived S² mass block is singular (`Hat(q) Hat(q) m l²`) or full rank (`−m l² I`).
+    A singular system (condition number > 1e12) raises `LinAlgError` with the condition
+    number and the state.
+  - `simulate(module, x0, t_span, p, u=None, method="rkmk4", dt=1e-3)` → `Trajectory`
+    (`t`, `state`, `constraint_drift`, `energy()`, slot access `traj["q"]`). `"rkmk4"`:
+    fixed-step Runge–Kutta–Munthe-Kaas of order 4 (S² rotated from the left, SO(3) from
+    the right, `dexp⁻¹` to the `ad²` term, classical RK4 on vector slots); constraint
+    drift at round-off. `"solve_ivp"`: DOP853 on the embedded state, outputs projected
+    (`q/|q|`, polar factor of `R`), drift before projection reported. `x0` is checked
+    (unit `q`, `ω ⊥ q`, `R ∈ SO(3)`) with `ValueError` naming the slot; `u` is `None`, a
+    constant or a callable `u(t, state)`.
+  - `lqr(lin_module, x_eq, u_eq, p, Q, R)` → `LQRController` (gain, Riccati solution,
+    reduced `A`, `B`, `error(state)`, callable as `u(t, state)`), with SO(3) error
+    `vee(log(R_eqᵀ R))` and S² perturbations reduced to a 2-D tangent basis
+    (`tangent_basis`). `geomech.numeric.log_so3` (principal logarithm, accurate near 0
+    and π).
+  - `examples/inverted_rigid_pendulum_lqr.py`: Lagrangian → equations → generated code →
+    LQR → closed-loop simulation of an inverted rigid pendulum on SO(3).
+  - Tests `tests/test_simulation*.py`: energy conservation over 10 s for six systems and
+    the momentum `R J Ω` of the free rigid body with both integrators, the spherical
+    pendulum (Lee et al. Eq. 5.14) and Euler's equations integrated in NumPy (1e-8 over
+    2 s), the order of RKMK4, constraint drift, the S² solve on every S² system of the
+    oracle gate, the LQR demos, `x0` checks and a 1 s run of every VBL system.
 - Code generation, `geomech.codegen` (roadmap feature 5, `specs/codegen.md`,
   `docs/codegen.md`):
   - `StateLayout(variables, inputs, params)`: the flat `state` (configuration slots, then
