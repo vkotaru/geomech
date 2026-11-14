@@ -1,0 +1,19 @@
+/* Version line pinned below the sidebar navigation (shown instead of in the title). */
+.sidebar-version {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  padding: 0.6rem var(--sidebar-item-spacing-horizontal, 1rem);
+  border-top: 1px solid var(--color-sidebar-background-border);
+  font-size: var(--sidebar-item-font-size, 0.875rem);
+  color: var(--color-foreground-secondary);
+}
+.sidebar-version__label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+.sidebar-version__value {
+  font-family: var(--font-stack--monospace);
+  color: var(--color-foreground-primary);
+}
