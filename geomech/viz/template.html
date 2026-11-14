@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__GM_TITLE__</title>
+<script>
+// Errors are counted on the root element (data-gm-errors) so that a headless smoke test
+// can read them from the DOM.
+(function () {
+  var errs = (window.__gmErrors = []);
+  function mark() { document.documentElement.setAttribute("data-gm-errors", String(errs.length)); }
+  window.addEventListener("error", function (e) { errs.push(String(e.message || e)); mark(); });
+  window.addEventListener("unhandledrejection", function (e) { errs.push(String(e.reason)); mark(); });
+  var origError = console.error;
+  console.error = function () { errs.push(Array.prototype.join.call(arguments, " ")); mark(); origError.apply(console, arguments); };
+  mark();
+})();
+window.MathJax = {
+  tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]] },
+  svg: { fontCache: "global" },
+  options: { enableMenu: false },
+  startup: {
+    pageReady: function () {
+      return MathJax.startup.defaultPageReady().then(function () {
+        document.documentElement.setAttribute("data-gm-mathjax", "done");
+      });
+    }
+  }
+};
+</script>
+<script async src="__GM_MATHJAX_URL__"></script>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1c1f24;
+  --muted: #5b626e;
+  --border: #dde0e5;
+  --accent: #3355c4;
+  --ok: #1b7a43;
+  --ok-bg: #e5f4ea;
+  --bad: #b3261e;
+  --bad-bg: #fbe9e7;
+  --code-bg: #f1f3f6;
+  --canvas-bg: #e9edf2;
+  --grid-major: #9aa2ad;
+  --grid-minor: #c7ccd4;
+  --shadow: 0.22;
+  --edge: #1c1f24;
+  --axis-x: #d33a3a;
+  --axis-y: #23964a;
+  --axis-z: #2f60d6;
+  --viz-link1: #3d6bd0;
+  --viz-link2: #e07b33;
+  --viz-link3: #2c9a6a;
+  --viz-link4: #9353b8;
+  --viz-load: #c43a2f;
+  --viz-cable: #4a4f57;
+  --viz-rotor: #30343b;
+  --viz-trace: #7b5cf0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #14161a;
+    --surface: #1c1f25;
+    --text: #e6e8ec;
+    --muted: #a0a7b3;
+    --border: #2f343c;
+    --accent: #8ea8ff;
+    --ok: #6fd39a;
+    --ok-bg: #173323;
+    --bad: #ff8a80;
+    --bad-bg: #3a1c1a;
+    --code-bg: #23262d;
+    --canvas-bg: #1a1d23;
+    --grid-major: #4a515c;
+    --grid-minor: #2a2f37;
+    --shadow: 0.45;
+    --edge: #0c0d10;
+    --axis-x: #ff6b6b;
+    --axis-y: #5bd68a;
+    --axis-z: #6f9bff;
+    --viz-link1: #6b93f0;
+    --viz-link2: #f29a55;
+    --viz-link3: #4fc292;
+    --viz-link4: #b884de;
+    --viz-load: #ef6a5e;
+    --viz-cable: #b8bec8;
+    --viz-rotor: #c9ced6;
+    --viz-trace: #a58cff;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #14161a;
+  --surface: #1c1f25;
+  --text: #e6e8ec;
+  --muted: #a0a7b3;
+  --border: #2f343c;
+  --accent: #8ea8ff;
+  --ok: #6fd39a;
+  --ok-bg: #173323;
+  --bad: #ff8a80;
+  --bad-bg: #3a1c1a;
+  --code-bg: #23262d;
+  --canvas-bg: #1a1d23;
+  --grid-major: #4a515c;
+  --grid-minor: #2a2f37;
+  --shadow: 0.45;
+  --edge: #0c0d10;
+  --axis-x: #ff6b6b;
+  --axis-y: #5bd68a;
+  --axis-z: #6f9bff;
+  --viz-link1: #6b93f0;
+  --viz-link2: #f29a55;
+  --viz-link3: #4fc292;
+  --viz-link4: #b884de;
+  --viz-load: #ef6a5e;
+  --viz-cable: #b8bec8;
+  --viz-rotor: #c9ced6;
+  --viz-trace: #a58cff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 980px; margin: 0 auto; padding: 20px 16px 48px; }
+header h1 { font-size: 1.6rem; margin: 0 0 4px; }
+header p { margin: 0 0 16px; color: var(--muted); }
+h2 { font-size: 1.2rem; margin: 28px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 0.98rem; margin: 18px 0 6px; color: var(--muted); font-weight: 600; }
+section { min-width: 0; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-value { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat-note { font-size: 0.78rem; color: var(--muted); }
+.stat.ok { border-color: var(--ok); background: var(--ok-bg); }
+.stat.ok .stat-value { color: var(--ok); }
+.stat.bad { border-color: var(--bad); background: var(--bad-bg); }
+.stat.bad .stat-value { color: var(--bad); }
+.viewer-wrap { max-width: 720px; margin: 0 auto; }
+.viewer {
+  position: relative; width: 100%; aspect-ratio: 1 / 1;
+  background: var(--canvas-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.viewer canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; }
+.viewer-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); padding: 16px; text-align: center; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 10px; }
+.controls input[type=range] { flex: 1 1 160px; min-width: 120px; accent-color: var(--accent); }
+.controls button, .controls select {
+  font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; cursor: pointer;
+}
+.controls button:hover { border-color: var(--accent); }
+.controls label { display: inline-flex; align-items: center; gap: 6px; color: var(--text); }
+.time { font-variant-numeric: tabular-nums; min-width: 7.5em; color: var(--muted); }
+.legend { font-size: 0.85rem; color: var(--muted); }
+.sw { display: inline-block; width: 0.9em; height: 0.9em; border-radius: 2px; vertical-align: -0.1em; }
+.sw.x { background: var(--axis-x); } .sw.y { background: var(--axis-y); } .sw.z { background: var(--axis-z); }
+.eq {
+  overflow-x: auto; overflow-y: hidden; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 2px 12px; margin: 6px 0;
+}
+.eq mjx-container[display="true"] { text-align: left !important; margin: 0.6em 0 !important; }
+.note { color: var(--muted); font-size: 0.9rem; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; background: var(--surface); }
+th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; vertical-align: middle; }
+th { font-size: 0.85rem; color: var(--muted); }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; font-size: 0.85rem; }
+code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+footer { margin-top: 32px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>__GM_TITLE__</h1>
+<p>__GM_SUBTITLE__</p>
+</header>
+__GM_BODY__
+<footer>Generated by geomech.viz. Equations derived with geomech; trajectory from geomech.simulation.</footer>
+</main>
+<script type="application/json" id="gm-data">__GM_DATA__</script>
+<script src="__GM_THREE_URL__"></script>
+<script src="__GM_ORBIT_URL__"></script>
+<script>
+(function () {
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("gm-data").textContent);
+  var S = DATA.scene;
+  var host = document.getElementById("gm-viewer");
+  if (!S || !host) return;
+  var msg = document.getElementById("gm-viewer-msg");
+  function fail(text) { msg.textContent = text; msg.style.display = "flex"; }
+  if (!window.THREE || !THREE.OrbitControls) {
+    fail("three.js could not be loaded (it is fetched from cdn.jsdelivr.net). The equations below do not need it.");
+    return;
+  }
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  } catch (e) {
+    fail("WebGL is not available in this browser, so the 3-D view cannot be drawn.");
+    return;
+  }
+  msg.style.display = "none";
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  host.appendChild(renderer.domElement);
+
+  // ---------------------------------------------------------------- theme tokens
+  function token(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function colorOf(name) {
+    if (name && name.charAt(0) === "#") return new THREE.Color(name);
+    var v = token("--viz-" + name);
+    return new THREE.Color(v || "#888888");
+  }
+  var themed = []; // [material, function () -> THREE.Color]
+
+  // ---------------------------------------------------------------- world
+  // Inertial frame: e3 up. three.js is y-up, so every inertial object lives in `world`,
+  // rotated by -90° about x: inertial (x, y, z) is drawn at three.js (x, z, -y).
+  var scene = new THREE.Scene();
+  var world = new THREE.Group();
+  world.rotation.x = -Math.PI / 2;
+  scene.add(world);
+  function toThree(v) { return new THREE.Vector3(v[0], v[2], -v[1]); }
+
+  var R = S.radius, C = S.center, ground = S.ground;
+  var N = S.t.length;
+
+  // lights fixed in the world
+  var hemi = new THREE.HemisphereLight(0xffffff, 0x666670, 0.65);
+  scene.add(hemi);
+  var sun = new THREE.DirectionalLight(0xffffff, 0.85);
+  sun.position.set(C[0] + 2.0 * R, C[1] - 1.5 * R, C[2] + 4.0 * R);
+  sun.target.position.set(C[0], C[1], ground);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  var sc = sun.shadow.camera;
+  sc.left = -3 * R; sc.right = 3 * R; sc.top = 3 * R; sc.bottom = -3 * R;
+  sc.near = 0.01 * R; sc.far = 12 * R;
+  sun.shadow.bias = -0.0005;
+  world.add(sun); world.add(sun.target);
+
+  // ground: grid in the inertial xy plane at z = ground, and a shadow catcher
+  var gridGroup = new THREE.Group();
+  world.add(gridGroup);
+  function niceStep(x) {
+    var p = Math.pow(10, Math.floor(Math.log10(x))), m = x / p;
+    return (m < 2 ? 1 : m < 5 ? 2 : 5) * p;
+  }
+  var step = niceStep(R / 4), half = Math.ceil((2.5 * R) / step) * step;
+  function buildGrid() {
+    while (gridGroup.children.length) {
+      var c = gridGroup.children.pop();
+      c.geometry.dispose(); c.material.dispose();
+    }
+    var div = Math.round((2 * half) / step);
+    var grid = new THREE.GridHelper(2 * half, div, new THREE.Color(token("--grid-major")), new THREE.Color(token("--grid-minor")));
+    grid.rotation.x = Math.PI / 2; // GridHelper lies in its local xz plane
+    grid.position.set(Math.round(C[0] / step) * step, Math.round(C[1] / step) * step, ground);
+    gridGroup.add(grid);
+  }
+  var shadowMat = new THREE.ShadowMaterial({ opacity: 0.22 });
+  var catcher = new THREE.Mesh(new THREE.PlaneGeometry(4 * half, 4 * half), shadowMat);
+  catcher.position.set(C[0], C[1], ground - 1e-4 * R);
+  catcher.receiveShadow = true;
+  world.add(catcher);
+
+  // ---------------------------------------------------------------- helpers
+  function standard(colorFn, opts) {
+    var m = new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.55, metalness: 0.05 }, opts || {}));
+    themed.push([m, colorFn]);
+    return m;
+  }
+  function arrow(dir, length, radius, colorFn) {
+    // a shaft and a cone from the origin along dir (0: x, 1: y, 2: z), in the parent's frame
+    var g = new THREE.Group();
+    var mat = standard(colorFn, { roughness: 0.4 });
+    var headLen = Math.min(6 * radius, 0.35 * length);
+    var shaft = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length - headLen, 12), mat);
+    shaft.position.y = (length - headLen) / 2;
+    var head = new THREE.Mesh(new THREE.ConeGeometry(2.4 * radius, headLen, 16), mat);
+    head.position.y = length - headLen / 2;
+    shaft.castShadow = head.castShadow = true;
+    g.add(shaft); g.add(head);
+    if (dir === 0) g.rotation.z = -Math.PI / 2;
+    if (dir === 2) g.rotation.x = Math.PI / 2;
+    return g;
+  }
+  var axisTokens = ["--axis-x", "--axis-y", "--axis-z"];
+  function axisColor(i) { return function () { return new THREE.Color(token(axisTokens[i])); }; }
+  function label(text, i, size) {
+    var cv = document.createElement("canvas");
+    cv.width = cv.height = 64;
+    var ctx = cv.getContext("2d");
+    var tex = new THREE.CanvasTexture(cv);
+    function draw() {
+      ctx.clearRect(0, 0, 64, 64);
+      ctx.fillStyle = token(axisTokens[i]);
+      ctx.font = "italic bold 44px serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(text, 32, 34);
+      tex.needsUpdate = true;
+    }
+    draw();
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: true }));
+    sp.scale.set(size, size, size);
+    sp.userData.redraw = draw;
+    return sp;
+  }
+
+  // inertial axes at the origin
+  var inertial = new THREE.Group();
+  var inertialLen = 0.35 * R, sprites = [];
+  for (var i = 0; i < 3; i++) {
+    inertial.add(arrow(i, inertialLen, 0.006 * R, axisColor(i)));
+    var sp = label(["x", "y", "z"][i], i, 0.09 * R);
+    var p = [0, 0, 0]; p[i] = inertialLen + 0.06 * R;
+    sp.position.set(p[0], p[1], p[2]);
+    inertial.add(sp); sprites.push(sp);
+  }
+  world.add(inertial);
+
+  // ---------------------------------------------------------------- bodies
+  function tinted(colorFn, tokenName, amount) {
+    return function () { return colorFn().clone().lerp(new THREE.Color(token(tokenName)), amount); };
+  }
+  var bodies = S.bodies.map(function (b) {
+    var g = new THREE.Group();
+    g.matrixAutoUpdate = false;
+    var base = function () { return colorOf(b.color); };
+    var mesh, sh = b.shape, geo;
+    if (sh.kind === "box") {
+      geo = new THREE.BoxGeometry(sh.size[0], sh.size[1], sh.size[2]);
+      // faces: +x, -x, +y, -y, +z, -z. The +e1 face is tinted towards the e1 colour so
+      // that a turn about the long axis shows even with the axes hidden.
+      var mats = [standard(tinted(base, "--axis-x", 0.55)), standard(base), standard(tinted(base, "--axis-y", 0.25)), standard(base), standard(base), standard(base)];
+      mesh = new THREE.Mesh(geo, mats);
+    } else if (sh.kind === "cylinder") {
+      geo = new THREE.CylinderGeometry(sh.radius, sh.radius, sh.length, 40);
+      if (sh.axis === "z") geo.rotateX(Math.PI / 2);
+      if (sh.axis === "x") geo.rotateZ(-Math.PI / 2);
+      mesh = new THREE.Mesh(geo, standard(base));
+    } else {
+      geo = new THREE.SphereGeometry(sh.radius, 40, 20);
+      mesh = new THREE.Mesh(geo, standard(base));
+    }
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    g.add(mesh);
+    var edgeMat = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.55 });
+    themed.push([edgeMat, function () { return new THREE.Color(token("--edge")); }]);
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat));
+    var axes = null;
+    if (b.axes) {
+      axes = new THREE.Group();
+      var r = Math.max(0.004, Math.min(0.03, 0.02 * Math.max.apply(null, b.axisLengths)));
+      for (var k = 0; k < 3; k++) axes.add(arrow(k, b.axisLengths[k], r, axisColor(k)));
+      g.add(axes);
+    }
+    world.add(g);
+    return { group: g, axes: axes, rot: S.rotations[b.rot], pos: b.pos };
+  });
+
+  var points = S.points.map(function (pm) {
+    var m = new THREE.Mesh(new THREE.SphereGeometry(pm.radius, 32, 16), standard(function () { return colorOf(pm.color); }, { roughness: 0.35 }));
+    m.castShadow = true;
+    world.add(m);
+    return { mesh: m, pos: pm.pos };
+  });
+
+  var yAxis = new THREE.Vector3(0, 1, 0);
+  var rods = S.rods.map(function (rd) {
+    var geo = new THREE.CylinderGeometry(rd.radius, rd.radius, 1, 12);
+    geo.translate(0, 0.5, 0); // from its base along +y
+    var m = new THREE.Mesh(geo, standard(function () { return colorOf(rd.color); }, { roughness: 0.7 }));
+    m.castShadow = true;
+    world.add(m);
+    return { mesh: m, ends: rd.ends };
+  });
+
+  var traceGroup = new THREE.Group();
+  world.add(traceGroup);
+  var traces = S.traces.map(function (tr) {
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(tr.pos, 3));
+    var mat = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.9 });
+    themed.push([mat, function () { return colorOf(tr.color); }]);
+    var line = new THREE.Line(geo, mat);
+    line.frustumCulled = false;
+    traceGroup.add(line);
+    return line;
+  });
+
+  // ---------------------------------------------------------------- camera
+  var camera = new THREE.PerspectiveCamera(40, 1, 0.01 * R, 100 * R);
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  function resetCamera() {
+    var c = [C[0], C[1], C[2]];
+    camera.position.copy(toThree([c[0] + 1.6 * R, c[1] - 2.2 * R, c[2] + 0.9 * R]));
+    controls.target.copy(toThree(c));
+    camera.updateProjectionMatrix();
+    controls.update();
+  }
+  resetCamera();
+
+  function applyTheme() {
+    scene.background = new THREE.Color(token("--canvas-bg"));
+    themed.forEach(function (t) { t[0].color.copy(t[1]()); });
+    shadowMat.opacity = parseFloat(token("--shadow")) || 0.22;
+    sprites.forEach(function (s) { s.userData.redraw(); });
+    buildGrid();
+    requestRender();
+  }
+
+  // ---------------------------------------------------------------- frames
+  var frame = 0;
+  function setFrame(k) {
+    frame = k;
+    bodies.forEach(function (b) {
+      var r = b.rot, o = 9 * k, q = 3 * k;
+      b.group.matrix.set(r[o], r[o + 1], r[o + 2], b.pos[q],
+                         r[o + 3], r[o + 4], r[o + 5], b.pos[q + 1],
+                         r[o + 6], r[o + 7], r[o + 8], b.pos[q + 2],
+                         0, 0, 0, 1);
+      b.group.matrixWorldNeedsUpdate = true;
+    });
+    points.forEach(function (pm) { pm.mesh.position.set(pm.pos[3 * k], pm.pos[3 * k + 1], pm.pos[3 * k + 2]); });
+    var a = new THREE.Vector3(), d = new THREE.Vector3();
+    rods.forEach(function (rd) {
+      var o = 6 * k, e = rd.ends;
+      a.set(e[o], e[o + 1], e[o + 2]);
+      d.set(e[o + 3] - e[o], e[o + 4] - e[o + 1], e[o + 5] - e[o + 2]);
+      var len = d.length();
+      rd.mesh.position.copy(a);
+      rd.mesh.scale.set(1, Math.max(len, 1e-9), 1);
+      if (len > 0) rd.mesh.quaternion.setFromUnitVectors(yAxis, d.divideScalar(len));
+    });
+    traces.forEach(function (line) { line.geometry.setDrawRange(0, k + 1); });
+    scrub.value = String(k);
+    timeLabel.textContent = "t = " + (S.t0 + S.t[k]).toFixed(2) + " s";
+    requestRender();
+  }
+
+  // ---------------------------------------------------------------- controls
+  var playBtn = document.getElementById("gm-play");
+  var scrub = document.getElementById("gm-scrub");
+  var timeLabel = document.getElementById("gm-time");
+  var speedSel = document.getElementById("gm-speed");
+  var themeBtn = document.getElementById("gm-theme");
+  scrub.max = String(N - 1);
+  var playing = N > 1, simTime = 0, last = null;
+  function setPlaying(on) { playing = on; playBtn.textContent = on ? "Pause" : "Play"; last = null; if (on) requestRender(); }
+  playBtn.addEventListener("click", function () {
+    if (!playing && frame >= N - 1) simTime = 0;
+    setPlaying(!playing);
+  });
+  scrub.addEventListener("input", function () {
+    setPlaying(false);
+    var k = parseInt(scrub.value, 10);
+    simTime = S.t[k];
+    setFrame(k);
+  });
+  document.getElementById("gm-reset").addEventListener("click", resetCamera);
+  document.getElementById("gm-axes").addEventListener("change", function (e) {
+    bodies.forEach(function (b) { if (b.axes) b.axes.visible = e.target.checked; });
+    requestRender();
+  });
+  document.getElementById("gm-traces").addEventListener("change", function (e) {
+    traceGroup.visible = e.target.checked; requestRender();
+  });
+  var themes = ["auto", "light", "dark"];
+  themeBtn.addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme") || "auto";
+    var next = themes[(themes.indexOf(cur) + 1) % 3];
+    if (next === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", next);
+    themeBtn.textContent = "Theme: " + next;
+  });
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", applyTheme);
+  }
+
+  function frameAt(t) { // the last stored frame at or before t
+    var lo = 0, hi = N - 1;
+    while (lo < hi) { var mid = (lo + hi + 1) >> 1; if (S.t[mid] <= t) lo = mid; else hi = mid - 1; }
+    return lo;
+  }
+
+  function resize() {
+    var w = host.clientWidth || 300;
+    renderer.setSize(w, w, false);
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
+    requestRender();
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(host);
+  window.addEventListener("resize", resize);
+
+  var pending = false, checked = false;
+  function requestRender() { if (!pending) { pending = true; requestAnimationFrame(tick); } }
+  controls.addEventListener("change", requestRender);
+  function tick(ts) {
+    pending = false;
+    if (playing && N > 1) {
+      if (last !== null) {
+        simTime += ((ts - last) / 1000) * parseFloat(speedSel.value);
+        if (simTime > S.t[N - 1]) simTime = 0;
+      }
+      last = ts;
+      var k = frameAt(simTime);
+      if (k !== frame) setFrame(k);
+    }
+    var moving = controls.update();
+    renderer.render(scene, camera);
+    if (!checked) { checked = true; selfCheck(); }
+    if (playing || moving) requestRender();
+  }
+
+  // The number of distinct colours on a coarse grid of the canvas, on the root element
+  // (data-gm-canvas-colors): a smoke test reads it to tell a drawn scene from a blank one.
+  function selfCheck() {
+    try {
+      var gl = renderer.getContext(), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+      var px = new Uint8Array(4 * w * h), seen = {};
+      gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      for (var i = 1; i < 32; i++) for (var j = 1; j < 32; j++) {
+        var o = 4 * (Math.floor((j * h) / 32) * w + Math.floor((i * w) / 32));
+        seen[px[o] + "," + px[o + 1] + "," + px[o + 2]] = 1;
+      }
+      document.documentElement.setAttribute("data-gm-canvas-colors", String(Object.keys(seen).length));
+    } catch (e) {
+      document.documentElement.setAttribute("data-gm-canvas-colors", "error");
+    }
+  }
+
+  applyTheme();
+  resize();
+  setFrame(0);
+  setPlaying(playing);
+})();
+</script>
+</body>
+</html>
