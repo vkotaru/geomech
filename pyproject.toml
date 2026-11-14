@@ -11,6 +11,12 @@ dependencies = [
     "numpy",
 ]
 
+
+[project.urls]
+Homepage = "https://github.com/vkotaru/geomech"
+Documentation = "https://vkotaru.github.io/geomech/"
+Repository = "https://github.com/vkotaru/geomech"
+Changelog = "https://github.com/vkotaru/geomech/blob/geomech/CHANGELOG.md"
 [project.optional-dependencies]
 dev = [
     "pytest",
