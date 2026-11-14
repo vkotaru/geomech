@@ -23,6 +23,9 @@ The pipeline:
 4. Optionally call `to_standard_form()` for `M(q) a + f + G u = 0`, or
    `linearize()` for the variation-based linearization `M δẋ = A δx + B δu`
    along a trajectory
+5. Optionally generate NumPy (or CasADi) code for the result with `geomech.codegen`
+   (`generate_module`, `lambdify`, `energy_function`; [code generation](docs/codegen.md));
+   `examples/generated/` holds the modules of nine systems
 
 ## How it works
 
@@ -115,6 +118,8 @@ Requires Python >= 3.10.
 
 ```bash
 pip install -e .
+pip install -e ".[casadi]"   # optional: the CasADi code generation target
+pip install -e ".[sim]"      # optional: scipy, for integrating generated models
 ```
 
 ## Quick start
@@ -261,7 +266,9 @@ geomech/
         operations/     # Add, Mul, Dot, Cross, Hat, Variation, TimeDerivative, ...
         transformations/# expand, simplify, pull, vector_rules
         math/           # extract_linear_coeff, collect, integrate_by_parts
-    dynamics/           # compute_eom, SystemVariables
+    dynamics/           # compute_eom, to_standard_form, linearize, SystemVariables
+    codegen/            # StateLayout, to_source, lambdify, generate_module, energy_function
+    numeric.py          # evaluate, check_eom, finite_difference_check
     utils/              # print_eom, print_tree, render_eom
 ```
 
