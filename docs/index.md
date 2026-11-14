@@ -1,4 +1,4 @@
-# geomech
+# Overview
 
 **Symbolic derivation of equations of motion on smooth manifolds.**
 
@@ -9,7 +9,7 @@ globally valid, singularity-free equations of motion.
 
 Given a Lagrangian and virtual work, geomech automatically derives
 globally valid, singularity-free equations of motion on Lie groups
-(\(SO(3)\), \(S^2\)) using Hamilton's principle and variational calculus --
+($SO(3)$, $S^2$) using Hamilton's principle and variational calculus --
 no Euler angles or quaternions required.
 
 **The pipeline:**
@@ -18,15 +18,15 @@ no Euler angles or quaternions required.
 2. Build kinetic/potential energy and virtual work expressions
 3. Call `compute_eom()` -- the library takes the variation of the action, applies the
    manifold kinematics, simplifies, integrates by parts and extracts the equations
-   ([The Pipeline, Stage by Stage](pipeline.md))
+   ([Deriving equations](pipeline.md))
 
 ## Quick links
 
-- [Getting Started](getting-started.md) -- installation and first example
+- [Installation and first system](getting-started.md) -- installation and first example
 - [Examples](examples.md) -- point mass, spherical pendulum, rigid body
-- [The Pipeline, Stage by Stage](pipeline.md) -- what `compute_eom` does, and how to see it
+- [Deriving equations](pipeline.md) -- what `compute_eom` does, and how to see it
 - [Conventions](conventions.md) and [Troubleshooting](troubleshooting.md)
-- [API Reference](reference/) -- auto-generated from source
+- [API reference](api/index.rst) -- generated from the docstrings
 
 ## Citation
 
@@ -39,4 +39,51 @@ If you use geomech in your research, please cite this package along with corresp
   url={https://github.com/vkotaru/geomech},
   year={2026}
 }
+```
+
+```{toctree}
+:caption: Getting started
+:hidden:
+
+Overview <self>
+getting-started
+examples
+```
+
+```{toctree}
+:caption: Guides
+:hidden:
+
+pipeline
+vbl
+codegen
+simulation
+visualization
+numeric-verification
+troubleshooting
+```
+
+```{toctree}
+:caption: Theory
+:hidden:
+
+conventions
+manifold-implementation-notes
+```
+
+```{toctree}
+:caption: API reference
+:hidden:
+
+api/index
+api/core-base
+api/core-operations
+api/core-transformations
+api/core-math
+api/dynamics
+api/numeric
+api/codegen
+api/simulation
+api/viz
+api/utils
 ```

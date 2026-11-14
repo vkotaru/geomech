@@ -2,7 +2,7 @@
 
 ## Point mass
 
-Derives Newton's equation \(m\ddot{x} = f - mge_3\) for a particle in a gravitational field.
+Derives Newton's equation $m\ddot{x} = f - mge_3$ for a particle in a gravitational field.
 
 ```python
 from geomech import *
@@ -24,9 +24,9 @@ eqs = compute_eom(L, dW, SystemVariables(vectors=[x]))
 print_eom(eqs)
 ```
 
-## Spherical pendulum on \(S^2\)
+## Spherical pendulum on $S^2$
 
-A point mass constrained to the surface of a sphere. The attitude \(q \in S^2\) is a unit vector -- no angles, no singularities.
+A point mass constrained to the surface of a sphere. The attitude $q \in S^2$ is a unit vector -- no angles, no singularities.
 
 ```python
 from geomech import *
@@ -50,11 +50,11 @@ eqs = compute_eom(L, dW, SystemVariables(vectors=[q]))
 print_eom(eqs)
 ```
 
-The library automatically uses the \(S^2\) variation formula \(\delta q = \xi \times q\) and time derivative \(\dot{q} = \omega \times q\) to produce the globally valid equations.
+The library automatically uses the $S^2$ variation formula $\delta q = \xi \times q$ and time derivative $\dot{q} = \omega \times q$ to produce the globally valid equations.
 
-## Rigid body on \(SO(3)\)
+## Rigid body on $SO(3)$
 
-A rigid body with rotation matrix \(R \in SO(3)\), body-frame inertia \(J\), and center of mass offset \(\rho\).
+A rigid body with rotation matrix $R \in SO(3)$, body-frame inertia $J$, and center of mass offset $\rho$.
 
 ```python
 from geomech import *
@@ -82,7 +82,7 @@ eqs = compute_eom(L, dW, SystemVariables(matrices=[R]))
 print_eom(eqs)
 ```
 
-The \(SO(3)\) variation \(\delta R = R\hat{\eta}\) and kinematics \(\dot{R} = R\hat{\Omega}\) are applied automatically.
+The $SO(3)$ variation $\delta R = R\hat{\eta}$ and kinematics $\dot{R} = R\hat{\Omega}$ are applied automatically.
 
 ## Double rigid pendulum
 

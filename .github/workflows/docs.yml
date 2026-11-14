@@ -1,42 +1,28 @@
 name: Docs
 
+# Builds the Sphinx site with warnings as errors, so a broken page, link or docstring fails
+# the pull request. Read the Docs builds and hosts the published site from main.
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: write
+  pull_request:
+    branches: [main]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure Git Credentials
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - uses: actions/setup-python@v5
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Cache MkDocs build artifacts
-        run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
-
-      - uses: actions/cache@v4
-        with:
-          key: mkdocs-material-${{ env.cache_id }}
-          path: ~/.cache
-          restore-keys: |
-            mkdocs-material-
-
-      - name: Install dependencies
+      - name: Install the package with the docs extra
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[docs]"
+          python -m pip install ".[docs]"
 
-      - name: Deploy docs
-        run: mkdocs gh-deploy --force
+      - name: Build the docs (warnings are errors)
+        run: python -m sphinx -W --keep-going -b html docs _build/html

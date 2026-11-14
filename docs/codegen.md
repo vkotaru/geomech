@@ -33,9 +33,9 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
 
 | Variable | Configuration slot | Velocity slot | Acceleration |
 |---|---|---|---|
-| `s: Scalar` (\(\mathbb{R}\)) | `s` (1) | `ṡ` (1) | `s̈` |
-| `x: Vector` (\(\mathbb{R}^3\)) | `x` (3) | `ẋ` (3) | `ẍ` |
-| `q: S2` | `q` (3, unit) | `ω` (3, \(\perp q\)) | `ω̇` |
+| `s: Scalar` ($\mathbb{R}$) | `s` (1) | `ṡ` (1) | `s̈` |
+| `x: Vector` ($\mathbb{R}^3$) | `x` (3) | `ẋ` (3) | `ẍ` |
+| `q: S2` | `q` (3, unit) | `ω` (3, $\perp q$) | `ω̇` |
 | `R: SO3` | `R` (9, row-major) | `Ω` (3) | `Ω̇` |
 
 - `state` holds every configuration slot in variable order (the `SystemVariables` order:
@@ -138,8 +138,8 @@ CI runs `--check`.
 
 ## Worked example: the spherical pendulum
 
-Lee et al. Eq. 5.14, \(L = \tfrac12 m l^2\,\omega\cdot\omega - m g l\, q\cdot e_3\) and
-\(\delta W = \xi\cdot f\):
+Lee et al. Eq. 5.14, $L = \tfrac12 m l^2\,\omega\cdot\omega - m g l\, q\cdot e_3$ and
+$\delta W = \xi\cdot f$:
 
 ```python
 import numpy as np

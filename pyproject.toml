@@ -43,7 +43,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/vkotaru/geomech"
-Documentation = "https://vkotaru.github.io/geomech/"
+Documentation = "https://geomech.readthedocs.io"
 Repository = "https://github.com/vkotaru/geomech"
 Changelog = "https://github.com/vkotaru/geomech/blob/main/CHANGELOG.md"
 [project.optional-dependencies]
@@ -61,11 +61,10 @@ sim = [
     "scipy",
 ]
 docs = [
-    "mkdocs-material",
-    "mkdocstrings[python]",
-    "mkdocs-gen-files",
-    "mkdocs-literate-nav",
-    "mkdocs-section-index",
+    "sphinx>=7.2",
+    "furo>=2024.1.29",
+    "myst-parser>=3.0",
+    "sphinx-copybutton>=0.5.2",
 ]
 
 [tool.setuptools.packages.find]

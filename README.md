@@ -6,6 +6,8 @@ This work builds on the methods and math described in
 1. [Global Formulations of Lagrangian and Hamiltonian Dynamics on Manifolds](https://link.springer.com/book/10.1007/978-3-319-56953-6) 
 2. [Symbolic Computation of Dynamics on Smooth Manifolds](https://link.springer.com/chapter/10.1007/978-3-030-43089-4_22) and its [Scala implementation](https://github.com/HybridRobotics/dynamics_on_manifolds).
 
+Documentation: https://geomech.readthedocs.io
+
 ## What it does
 
 Given a Lagrangian and virtual work, `geomech` automatically derives
@@ -19,20 +21,20 @@ The pipeline:
 2. Build kinetic/potential energy and virtual work expressions
 3. Call `compute_eom()` -- the library takes the variation of the action, applies the
    manifold kinematics, simplifies, integrates by parts and extracts the equations
-   ([pipeline, stage by stage](https://github.com/vkotaru/geomech/blob/main/docs/pipeline.md))
+   ([pipeline, stage by stage](https://geomech.readthedocs.io/en/latest/pipeline.html))
 4. Optionally call `to_standard_form()` for `M(q) a + f + G u = 0`, or
    `linearize()` for the variation-based linearization `M δẋ = A δx + B δu`
    along a trajectory
 5. Optionally generate NumPy (or CasADi) code for the result with `geomech.codegen`
-   (`generate_module`, `lambdify`, `energy_function`; [code generation](https://github.com/vkotaru/geomech/blob/main/docs/codegen.md));
+   (`generate_module`, `lambdify`, `energy_function`; [code generation](https://geomech.readthedocs.io/en/latest/codegen.html));
    `examples/generated/` holds the modules of nine systems
 6. Optionally simulate a generated model on its manifold with `geomech.simulation`
    (`simulate` with a Lie-group RK4 integrator or `solve_ivp`, energy checks, and `lqr`
-   from the linearization; [simulation](https://github.com/vkotaru/geomech/blob/main/docs/simulation.md),
+   from the linearization; [simulation](https://geomech.readthedocs.io/en/latest/simulation.html),
    `examples/inverted_rigid_pendulum_lqr.py`)
 7. Optionally draw the simulated system in 3-D and write one self-contained HTML report
    (animation, equations, standard form, verification numbers) with `geomech.viz`
-   ([visualization](https://github.com/vkotaru/geomech/blob/main/docs/visualization.md), `examples/report_*.py`); an agent skill that
+   ([visualization](https://geomech.readthedocs.io/en/latest/visualization.html), `examples/report_*.py`); an agent skill that
    follows this whole procedure is in `skills/geomech/`
 
 ## How it works
@@ -115,10 +117,10 @@ The full pipeline (`compute_eom`), each stage a recursive tree rewrite:
 (`expand`, `full_simplify`, then per variation vector: `collect` → IBP → `full_simplify`) →
 `expand` → extract the coefficient of each variation vector → `full_simplify`.
 
-[`docs/pipeline.md`](https://github.com/vkotaru/geomech/blob/main/docs/pipeline.md) has one paragraph per stage;
+[Deriving equations](https://geomech.readthedocs.io/en/latest/pipeline.html) has one paragraph per stage;
 `compute_eom(..., trace=EOMTrace())` keeps every stage, `GEOMECH_DEBUG=1` logs them, and
 `GEOMECH_TRACE=1` logs every named rewrite rule that fires
-([`docs/troubleshooting.md`](https://github.com/vkotaru/geomech/blob/main/docs/troubleshooting.md)).
+([Troubleshooting](https://geomech.readthedocs.io/en/latest/troubleshooting.html)).
 
 ## Installation
 
