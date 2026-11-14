@@ -1,11 +1,11 @@
-"""Adversarial review of ``geomech.codegen`` (``specs/reviews/codegen-review.md``).
+"""Adversarial review of ``geomech.codegen``.
 
 Passing tests record what held under attack; ``xfail(strict=True)`` tests are confirmed
 findings, named ``F<n>`` after the review. A strict xfail turns into a failure once the
 finding is fixed, so the marker has to be removed together with the fix.
 
 1. Translation on trees the 64 derived systems never produce: the typed random trees of
-   ``specs/reviews/scripts/engine_fuzz.py`` (rows, outer products, nested ``Transpose``,
+   ``scripts/engine_fuzz.py`` (rows, outer products, nested ``Transpose``,
    ``Vee``, literals) through ``lambdify`` for both targets against ``numeric.evaluate``.
 2. CSE and identifiers: names that are keywords, builtins, helpers, temporaries, LaTeX,
    unicode; no textual common subexpression left in the checked-in modules.
@@ -110,7 +110,7 @@ def _load_script(name, path):
 
 
 def _fuzz_setup(seed):
-    ef = _load_script("engine_fuzz", ROOT / "specs" / "reviews" / "scripts" / "engine_fuzz.py")
+    ef = _load_script("engine_fuzz", ROOT / "scripts" / "engine_fuzz.py")
     L = ef.Leaves()
     # no variation symbols in generated code: map them to ordinary vectors
     L.xi, L.xip, L.eta = L.a, L.b, L.c

@@ -1,7 +1,7 @@
 """Adversarial review of phase 5a (simplifier completeness, decision D1).
 
-Strict xfails (``reason="F<n>: ..."``) are confirmed findings of the review
-(``specs/reviews/phase5a-review.md``); every other test pins a property that held:
+Strict xfails (``reason="F<n>: ..."``) are confirmed findings of the review;
+every other test pins a property that held:
 
 - every rule firing is sound along curves: the two sides of each ``rule()`` call made by
   ``expand``/``pull``/``vector_rules``/``simplify`` agree as full (t, ε) Taylor jets on the
@@ -69,7 +69,7 @@ from geomech.numeric import Evaluator, check_eom, finite_difference_check
 from tests.vbl_systems import HALF
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FUZZ_PATH = os.path.join(REPO, "specs", "reviews", "scripts", "engine_fuzz.py")
+FUZZ_PATH = os.path.join(REPO, "scripts", "engine_fuzz.py")
 
 C = ["Constant"]
 

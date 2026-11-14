@@ -228,7 +228,7 @@ def test_f3_transpose_compares_the_operand_class():
 
 
 def test_f4_engine_fuzz_shrinker_offers_fresh_leaf_candidates():
-    sys.path.insert(0, os.path.join(ROOT, "specs", "reviews", "scripts"))
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
     try:
         import engine_fuzz
     finally:

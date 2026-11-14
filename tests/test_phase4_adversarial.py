@@ -1,4 +1,4 @@
-"""Adversarial review of phase 4 (debuggability): ``specs/reviews/phase4-review.md``.
+"""Adversarial review of phase 4 (debuggability).
 
 Confirmed findings are strict xfails (``reason="F<n>: ..."``); the passing tests pin
 what held: trace fidelity, failure behaviour, zero cost when off, the rule-name sync
@@ -408,7 +408,7 @@ def test_check_tree_flags_variation_over_a_manifold_point_and_deep_path():
 def test_check_tree_has_no_false_positive_on_fuzz_trees():
     """3000 random trees of the engine fuzzer and their five rewrites (18000 trees)."""
     np = pytest.importorskip("numpy")
-    sys.path.insert(0, str(ROOT / "specs/reviews/scripts"))
+    sys.path.insert(0, str(ROOT / "scripts"))
     try:
         import engine_fuzz as F
     finally:

@@ -1,10 +1,10 @@
-"""Adversarial review of phase 3 (`specs/fix-plan.md` 3.1–3.6): operators, printing.
+"""Adversarial review of phase 3 (3.1–3.6): operators, printing.
 
-Confirmed findings are strict ``xfail`` tests whose reason starts with ``F<n>``; the
-reproducers and diagnosis are in ``specs/reviews/phase3-review.md``. Everything else here
-pins what held: operator trees equal to the explicit constructors, ``Transpose`` collapse,
-numeric operands, error messages, precedence-aware LaTeX on random trees, ``repr`` on
-every node, and derived equations for operator-built Lagrangians checked by ``check_eom``.
+Confirmed findings are strict ``xfail`` tests whose reason starts with ``F<n>``.
+Everything else here pins what held: operator trees equal to the explicit constructors,
+``Transpose`` collapse, numeric operands, error messages, precedence-aware LaTeX on
+random trees, ``repr`` on every node, and derived equations for operator-built
+Lagrangians checked by ``check_eom``.
 """
 
 from __future__ import annotations

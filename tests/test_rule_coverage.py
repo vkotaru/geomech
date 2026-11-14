@@ -42,7 +42,7 @@ def rules_log():
 
 def _fuzz_trees(seed):
     np = pytest.importorskip("numpy")
-    sys.path.insert(0, str(ROOT / "specs/reviews/scripts"))
+    sys.path.insert(0, str(ROOT / "scripts"))
     try:
         import engine_fuzz as F
     finally:

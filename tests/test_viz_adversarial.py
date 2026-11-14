@@ -1,5 +1,5 @@
 # ruff: noqa: E501  (the injected JavaScript probes are kept on readable single lines)
-"""Adversarial review of ``geomech.viz`` (see ``specs/reviews/viz-skill-review.md``).
+"""Adversarial review of ``geomech.viz``.
 
 Confirmed findings are strict xfails (``reason="F<n>: …"``); everything else here held.
 The browser tests inject a probe into the generated page, read the three.js object
@@ -635,11 +635,11 @@ def test_latex_map_keeps_argument_commands_valid():
         assert not re.match(r"^\\[A-Za-z]+_", pretty_name(name)), pretty_name(name)
 
 
-BASE = "a4961bb"  # the merge base of the visualizer branch on main
+BASE = "5acff46"  # the merge base of the visualizer branch on main
 
 
 def test_to_latex_default_byte_identical_to_base(tmp_path):
-    """``to_latex(expr)`` without names prints every pinned system exactly as at a4961bb,
+    """``to_latex(expr)`` without names prints every pinned system exactly as at 5acff46,
     the base of the branch on ``main`` (skipped when that commit is not in the clone)."""
     base = tmp_path / "base"
     base.mkdir()

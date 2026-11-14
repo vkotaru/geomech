@@ -1,8 +1,7 @@
-"""Adversarial review of phase 1 (`specs/fix-plan.md`): S² rule, collect, Hat(Vee), extract,
+"""Adversarial review of phase 1: S² rule, collect, Hat(Vee), extract,
 oracle.
 
-The confirmed findings (``F<n>``, details and the fix log in
-``specs/reviews/phase1-review.md``) were first written as strict ``xfail`` tests and are
+The confirmed findings (``F<n>``) were first written as strict ``xfail`` tests and are
 now all passing: F1 (``collect`` loop) and F3 (default step) were fixed in the engine and
 the oracle. F2 (a gravity term next to a stiff ``k = 1e7`` term) is a resolution limit of
 the oracle's normalisation, not a bug: the flipped term moves the relative error by about

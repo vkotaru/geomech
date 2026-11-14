@@ -1,4 +1,4 @@
-"""Fixes from the phase 3 review (``specs/reviews/phase3-review.md``) beyond its xfail tests:
+"""Fixes from the phase 3 review beyond its xfail tests:
 ``sum()`` over expressions, float cancellation, the transposed scaled row, the hoist of a
 scaled row out of an inner product, LaTeX of negated operands, and error messages."""
 
