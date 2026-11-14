@@ -6,9 +6,11 @@ All notable changes to `geomech` are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-14
+
 ### Upgrading from 0.1.0
 
-This release changed derived equations and the public surface. In short:
+Version 0.2.0 changed derived equations and the public surface. In short:
 
 - **Equations on S² change value** when `∂L/∂ω` has a component along `q`: the variation
   rule is now `δω = ξ̇ − 2 ω×ξ` (Lee et al. eq. 5.13). Gyroscopic and coupling terms

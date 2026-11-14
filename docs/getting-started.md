@@ -5,8 +5,12 @@
 Requires Python >= 3.10.
 
 ```bash
-pip install -e .
+pip install geomech
 ```
+
+Optional extras: `geomech[sim]` (SciPy, for `solve_ivp` and `lqr`) and `geomech[casadi]`
+(the CasADi code generation target). From a clone, for development:
+`pip install -e ".[dev]"`.
 
 ## Your first derivation
 

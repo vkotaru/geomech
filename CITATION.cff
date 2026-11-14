@@ -19,4 +19,5 @@ keywords:
   - robotics
   - SO(3)
   - S2
-version: 0.2.0.dev0
+version: 0.2.0
+date-released: "2026-11-14"
