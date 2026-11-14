@@ -1,4 +1,4 @@
-# Verifying an equation numerically
+# Numeric verification
 
 `geomech.numeric` evaluates expression trees with numpy and checks the output of
 `compute_eom` against a finite-difference Euler–Lagrange residual that does not use the
@@ -85,63 +85,63 @@ of magnitude for such systems; it is **not** unconditional, see "Resolution" bel
 
 ### What it computes
 
-`compute_eom` returns, for each configuration variable, the coefficient \(E\) of its
-variation vector in \(\delta\!\int L\,dt + \int \delta W\,dt\) after integration by parts,
-so the equation of motion is \(E = 0\) and \(E = -(\text{Euler–Lagrange}) + \text{forcing}\)
-(for a point mass, \(E = -m\ddot x + f\)). The oracle evaluates the *numeric* Lagrangian
-with `Evaluator` and forms the Euler–Lagrange residual \(g\) by central differences:
+`compute_eom` returns, for each configuration variable, the coefficient $E$ of its
+variation vector in $\delta\!\int L\,dt + \int \delta W\,dt$ after integration by parts,
+so the equation of motion is $E = 0$ and $E = -(\text{Euler–Lagrange}) + \text{forcing}$
+(for a point mass, $E = -m\ddot x + f$). The oracle evaluates the *numeric* Lagrangian
+with `Evaluator` and forms the Euler–Lagrange residual $g$ by central differences:
 
-- \(\mathbb{R}\), \(\mathbb{R}^3\): \(g = \frac{d}{dt}\frac{\partial L}{\partial v} -
-  \frac{\partial L}{\partial q}\), \(E_{\text{true}} = -g + f\);
-- \(S^2\): the constrained Lagrangian \(\tilde L(q, \dot q) = L(q, q \times \dot q)\) on
-  \(|q| = 1\) with \(\dot q = \omega \times q\), \(E_{\text{true}} = -q \times g + f\),
+- $\mathbb{R}$, $\mathbb{R}^3$: $g = \frac{d}{dt}\frac{\partial L}{\partial v} -
+  \frac{\partial L}{\partial q}$, $E_{\text{true}} = -g + f$;
+- $S^2$: the constrained Lagrangian $\tilde L(q, \dot q) = L(q, q \times \dot q)$ on
+  $|q| = 1$ with $\dot q = \omega \times q$, $E_{\text{true}} = -q \times g + f$,
   compared **on the tangent plane only** (Lee et al., Chapter 5);
-- \(SO(3)\): the body-frame form \(g = \frac{d}{dt}\frac{\partial L}{\partial \Omega} -
-  \frac{\partial L}{\partial \Omega} \times \Omega - (A - A^\top)^\vee\) with
-  \(A = R^\top \frac{\partial L}{\partial R}\), \(E_{\text{true}} = -g + f\)
+- $SO(3)$: the body-frame form $g = \frac{d}{dt}\frac{\partial L}{\partial \Omega} -
+  \frac{\partial L}{\partial \Omega} \times \Omega - (A - A^\top)^\vee$ with
+  $A = R^\top \frac{\partial L}{\partial R}$, $E_{\text{true}} = -g + f$
   (Lee et al., Chapter 6).
 
-The forcing \(f\) is `inf_work` evaluated with the variable's variation set to each basis
-vector and the other variations zero. \(d/dt\) is a directional derivative along the sampled
-velocity and acceleration, so nothing is integrated: the library's \(E(q, v, \dot v, u)\) and
-\(E_{\text{true}}\) must agree at random accelerations, which pins the mass matrix, the
+The forcing $f$ is `inf_work` evaluated with the variable's variation set to each basis
+vector and the other variations zero. $d/dt$ is a directional derivative along the sampled
+velocity and acceleration, so nothing is integrated: the library's $E(q, v, \dot v, u)$ and
+$E_{\text{true}}$ must agree at random accelerations, which pins the mass matrix, the
 velocity terms and the forces at once.
 
 ### Resolution: what a term must be for the check to see it
 
 The error is measured relative to the size of the whole equation,
-\(\max(1, |P\,E_{\text{true}}|)\). A term \(t\) that is wrong (sign, missing factor) moves
-the error by \(2|P\,t| / \max(1, |P\,E_{\text{true}}|)\), so it is **resolved** at `rtol`
+$\max(1, |P\,E_{\text{true}}|)$. A term $t$ that is wrong (sign, missing factor) moves
+the error by $2|P\,t| / \max(1, |P\,E_{\text{true}}|)$, so it is **resolved** at `rtol`
 only if that quantity exceeds `rtol`. With parameters of order one every term is resolved
 by a wide margin. With a large parameter in the equation it is not: a point mass on a
-spring with `Scalar("k", value=1e7)` has \(|E_{\text{true}}| \approx 10^7\), the gravity
-term \(m g\, e_3\) is of order one, a flipped gravity term moves the error by
-\(\approx 4 \cdot 10^{-7}\), and `check_eom` returns `~1e-9` for the correct and
+spring with `Scalar("k", value=1e7)` has $|E_{\text{true}}| \approx 10^7$, the gravity
+term $m g\, e_3$ is of order one, a flipped gravity term moves the error by
+$\approx 4 \cdot 10^{-7}$, and `check_eom` returns `~1e-9` for the correct and
 `~1e-7` for the wrong equation: both pass at `1e-5`. The finite-difference noise scales
-with \(|L|\) as well (it is `6e-3` to `2e-2` in absolute terms for that system at the
+with $|L|$ as well (it is `6e-3` to `2e-2` in absolute terms for that system at the
 default step), so this is a limit of the finite-difference oracle, not of the
 normalisation alone.
 
 `assert_eom` therefore checks the resolution of every additive term of each equation
-(its tangent part on \(S^2\)) and raises, naming the term, its size and the resolution
+(its tangent part on $S^2$) and raises, naming the term, its size and the resolution
 `rtol · max(1, |E_true|)`, when a term is unresolved at every trial. Terms parallel to
-\(q\) or zero on the constraint set have nothing to resolve and are ignored. If you need
+$q$ or zero on the constraint set have nothing to resolve and are ignored. If you need
 to accept such an equation on the relative error alone, pass `require_resolved=False`;
 the better fix is to keep the parameters symbolic (random, order one) or to scale them so
 the terms are of comparable size. `check_eom` reports the relative error only.
 
 ### What it does not verify
 
-- **The normal component on \(S^2\).** The coefficient of \(\xi \perp q\) is only defined on
-  the tangent plane, so a term such as \(\omega \times (q \times \dot x) = q\,(\omega\cdot\dot x)\)
+- **The normal component on $S^2$.** The coefficient of $\xi \perp q$ is only defined on
+  the tangent plane, so a term such as $\omega \times (q \times \dot x) = q\,(\omega\cdot\dot x)$
   is invisible to the check. This is correct behaviour, not a gap: such a term has no
-  physical content. The same applies to the equation itself: on \(S^2\) the equation
+  physical content. The same applies to the equation itself: on $S^2$ the equation
   `E = 0` returned by `compute_eom` is only meaningful on the tangent plane,
-  \((I - qq^\top)E = 0\). `E` generally has a component along \(q\) (from the forcing,
-  from \(\omega \times c\), from \(A\dot\omega\), …), so anyone solving `E = 0` for
-  \(\dot\omega\), including from the blocks of `to_standard_form` or `linearize`, must
-  project: solve \((I - qq^\top)(M\dot\omega + f + G u) = 0\) with \(\dot\omega \perp q\).
-  The unprojected \(3 \times 3\) solve gives \(q \cdot \dot\omega \neq 0\) and a trajectory
+  $(I - qq^\top)E = 0$. `E` generally has a component along $q$ (from the forcing,
+  from $\omega \times c$, from $A\dot\omega$, …), so anyone solving `E = 0` for
+  $\dot\omega$, including from the blocks of `to_standard_form` or `linearize`, must
+  project: solve $(I - qq^\top)(M\dot\omega + f + G u) = 0$ with $\dot\omega \perp q$.
+  The unprojected $3 \times 3$ solve gives $q \cdot \dot\omega \neq 0$ and a trajectory
   that leaves the sphere.
 - **Anything below finite-difference noise.** `d/dt ∂L/∂v` nests two central differences
   with the same step, so the noise is about `h² + 1e-16 |L| / h²`: `~1e-8` for a

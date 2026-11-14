@@ -1,4 +1,4 @@
-# Manifold Rules: Derivation
+# Manifold rules
 
 The kinematic substitutions of pipeline stage 2 ([Pipeline](pipeline.md)), why the S²
 rule has a factor 2, and how the manifold points are kept out of the tree.

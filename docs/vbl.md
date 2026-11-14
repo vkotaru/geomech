@@ -1,4 +1,4 @@
-# Variation-based linearization
+# Linearization
 
 `linearize` turns the equations of motion produced by `compute_eom` into their
 linearization along an arbitrary trajectory,
@@ -7,11 +7,11 @@ $$
 \mathbf{M}\,\delta\dot{x} = \mathbf{A}\,\delta x + \mathbf{B}\,\delta u ,
 $$
 
-where the perturbation state \(\delta x\) is built from manifold-respecting
+where the perturbation state $\delta x$ is built from manifold-respecting
 perturbation variables rather than local coordinates. This is the variation-based
 linearization of Wu & Sreenath (2015) and of Lee et al., Appendix B; it is the model
 that LQR and variation-based geometric controllers consume. The result is a set of
-symbolic block matrices that are functions of the trajectory \((q, v, \dot v, u)\).
+symbolic block matrices that are functions of the trajectory $(q, v, \dot v, u)$.
 
 ```python
 from geomech import compute_eom, linearize
@@ -30,15 +30,15 @@ the linearized system.
 
 | Configuration | Configuration perturbation | Velocity perturbation |
 |---|---|---|
-| `s: Scalar` (\(\mathbb{R}\)) | \(\delta s\) = `Variation(s)` | \(\delta\dot s\) = `TimeDerivative(Variation(s))` |
-| `x: Vector` (\(\mathbb{R}^3\)) | \(\delta x\) = `Variation(x)` | \(\delta\dot x\) = `TimeDerivative(Variation(x))` |
-| `q: S2` | \(\xi\) = `q.get_variation_vector()`, \(\xi \perp q\) | \(\delta\omega\) = `Variation(ω)`, \(\omega\) = `q.get_tangent_vector()` |
-| `R: SO3` | \(\eta\) = `R.get_variation_vector()` | \(\delta\Omega\) = `Variation(Ω)`, \(\Omega\) = `R.get_tangent_vector()` |
+| `s: Scalar` ($\mathbb{R}$) | $\delta s$ = `Variation(s)` | $\delta\dot s$ = `TimeDerivative(Variation(s))` |
+| `x: Vector` ($\mathbb{R}^3$) | $\delta x$ = `Variation(x)` | $\delta\dot x$ = `TimeDerivative(Variation(x))` |
+| `q: S2` | $\xi$ = `q.get_variation_vector()`, $\xi \perp q$ | $\delta\omega$ = `Variation(ω)`, $\omega$ = `q.get_tangent_vector()` |
+| `R: SO3` | $\eta$ = `R.get_variation_vector()` | $\delta\Omega$ = `Variation(Ω)`, $\Omega$ = `R.get_tangent_vector()` |
 
-The engine produces \(\delta q = \xi \times q\) and \(\delta R = R\,\hat\eta\) eagerly,
-\(\delta(\text{constant}) = 0\), and canonicalises \(\delta(\dot v)\) as
-`TimeDerivative(Variation(v))`. Each input \(u\) (a `Scalar` or `Vector`) contributes
-\(\delta u\) = `Variation(u)`.
+The engine produces $\delta q = \xi \times q$ and $\delta R = R\,\hat\eta$ eagerly,
+$\delta(\text{constant}) = 0$, and canonicalises $\delta(\dot v)$ as
+`TimeDerivative(Variation(v))`. Each input $u$ (a `Scalar` or `Vector`) contributes
+$\delta u$ = `Variation(u)`.
 
 `LinearizedSystem.states` lists the configuration perturbations in `SystemVariables`
 order (scalars, vectors, matrices) followed by the velocity perturbations in the same
@@ -51,28 +51,28 @@ The system has one **kinematic row** per configuration variable, labelled
 `"kin:" + str(var)`, followed by one **dynamic row** per equation of motion, labelled by
 the `compute_eom` key (the variation vector).
 
-The kinematic rows come from commuting \(\delta\) and \(d/dt\) on the manifold
+The kinematic rows come from commuting $\delta$ and $d/dt$ on the manifold
 kinematics:
 
-- \(\mathbb{R}\), \(\mathbb{R}^3\): \(\tfrac{d}{dt}\delta x = \delta\dot x\), so
-  \(\mathbf{M}[\tfrac{d}{dt}\delta x] = I\), \(\mathbf{A}[\delta\dot x] = I\) (the two symbols print
+- $\mathbb{R}$, $\mathbb{R}^3$: $\tfrac{d}{dt}\delta x = \delta\dot x$, so
+  $\mathbf{M}[\tfrac{d}{dt}\delta x] = I$, $\mathbf{A}[\delta\dot x] = I$ (the two symbols print
   identically, `TimeDerivative(Variation(x))`; the row is an identity included so that every
   configuration variable has a kinematic row).
-- \(S^2\) (\(\dot q = \omega\times q\), \(\omega\perp q\)):
-  \(\dot\xi = q q^\top \hat\omega\, \xi + (I - q q^\top)\,\delta\omega\), so
-  \(\mathbf{M}[\dot\xi] = I\), \(\mathbf{A}[\xi] = q q^\top \hat\omega\),
-  \(\mathbf{A}[\delta\omega] = I - q q^\top\).
-- \(SO(3)\) (\(\dot R = R\hat\Omega\)): \(\dot\eta = -\hat\Omega\,\eta + \delta\Omega\), so
-  \(\mathbf{M}[\dot\eta] = I\), \(\mathbf{A}[\eta] = -\hat\Omega\),
-  \(\mathbf{A}[\delta\Omega] = I\).
+- $S^2$ ($\dot q = \omega\times q$, $\omega\perp q$):
+  $\dot\xi = q q^\top \hat\omega\, \xi + (I - q q^\top)\,\delta\omega$, so
+  $\mathbf{M}[\dot\xi] = I$, $\mathbf{A}[\xi] = q q^\top \hat\omega$,
+  $\mathbf{A}[\delta\omega] = I - q q^\top$.
+- $SO(3)$ ($\dot R = R\hat\Omega$): $\dot\eta = -\hat\Omega\,\eta + \delta\Omega$, so
+  $\mathbf{M}[\dot\eta] = I$, $\mathbf{A}[\eta] = -\hat\Omega$,
+  $\mathbf{A}[\delta\Omega] = I$.
 
 ## Sign convention
 
-`compute_eom` returns, for each variation vector, an expression \(E(q, v, \dot v, u)\)
-with \(E = 0\). By the library convention \(E\) is the coefficient of the variation in
+`compute_eom` returns, for each variation vector, an expression $E(q, v, \dot v, u)$
+with $E = 0$. By the library convention $E$ is the coefficient of the variation in
 the integrand after integration by parts, i.e. the *negative* of the Euler–Lagrange
-expression (which is why `to_standard_form` reports \(M = -J\) for a rigid body). VBL takes
-the first variation \(\delta E\), which is linear in the perturbation variables, and
+expression (which is why `to_standard_form` reports $M = -J$ for a rigid body). VBL takes
+the first variation $\delta E$, which is linear in the perturbation variables, and
 defines the blocks so that the physical inertia is positive:
 
 $$
@@ -83,7 +83,7 @@ $$
 \mathbf{B}[\delta u_j] = \operatorname{coeff}(\delta u_j, \delta E).
 $$
 
-Every additive term of \(\delta E\) must contain exactly one perturbation symbol. If a
+Every additive term of $\delta E$ must contain exactly one perturbation symbol. If a
 term contains none (an input that was not declared in `inputs`, a symbol missing the
 `Constant` attribute) or contains a perturbation only inside a calculus node that the
 extraction cannot see through, `linearize` raises `AlgebraicError` naming the term.
@@ -119,7 +119,7 @@ LinearizedSystem: M d/dt(dx) = A dx + B du
     B[\delta{M}] = I
 ```
 
-The equation of motion is \(E = -J\dot\Omega - \Omega\times J\Omega + M\)
+The equation of motion is $E = -J\dot\Omega - \Omega\times J\Omega + M$
 (Lee et al. Eq. 6.16). Its variation is
 
 $$
@@ -127,7 +127,7 @@ $$
         = -J\,\delta\dot\Omega + \big(\widehat{J\Omega} - \hat\Omega J\big)\,\delta\Omega + \delta M,
 $$
 
-so the blocks read, with \(\delta x = (\eta, \delta\Omega)\),
+so the blocks read, with $\delta x = (\eta, \delta\Omega)$,
 
 $$
 \begin{bmatrix} I & 0 \\ 0 & J \end{bmatrix}
@@ -139,7 +139,7 @@ $$
 \begin{bmatrix} 0 \\ I \end{bmatrix} \delta M ,
 $$
 
-which is the textbook linearization of the rigid body on \(TSO(3)\).
+which is the textbook linearization of the rigid body on $TSO(3)$.
 
 ## Reading the blocks
 
@@ -160,28 +160,28 @@ elastic spherical pendulum's scalar row has the 1×3 block `A[δω] = (ω*m*l*(2
 
 `str(lin)` lists the non-zero blocks row by row; `to_latex(block)` renders any block.
 
-### Blocks on \(S^2\) are defined on the constraint set
+### Blocks on $S^2$ are defined on the constraint set
 
-For an \(S^2\) variable the perturbation \((\xi, \delta\omega)\) is constrained:
-\(\xi \perp q\) and, from \(\delta(q\cdot\omega) = 0\),
-\(q\cdot\delta\omega = \xi\cdot(\omega\times q)\). `compute_eom` simplifies with
-\(q\cdot\omega = 0\) before `linearize` takes the variation (for example
-\(\omega\times(\omega\times q) \to -|\omega|^2 q\)), and the variations of the two forms
-differ by terms proportional to \(q\cdot\delta\omega - \xi\cdot(\omega\times q)\), which vanish
-on the constraint set. The \(\mathbf{A}\) blocks against \(\xi\) and \(\delta\omega\) are therefore
+For an $S^2$ variable the perturbation $(\xi, \delta\omega)$ is constrained:
+$\xi \perp q$ and, from $\delta(q\cdot\omega) = 0$,
+$q\cdot\delta\omega = \xi\cdot(\omega\times q)$. `compute_eom` simplifies with
+$q\cdot\omega = 0$ before `linearize` takes the variation (for example
+$\omega\times(\omega\times q) \to -|\omega|^2 q$), and the variations of the two forms
+differ by terms proportional to $q\cdot\delta\omega - \xi\cdot(\omega\times q)$, which vanish
+on the constraint set. The $\mathbf{A}$ blocks against $\xi$ and $\delta\omega$ are therefore
 unique as linear maps on the constraint set, and agree there with any hand derivation, but
-two correct derivations can print different \(3\times 3\) matrices. For the quadrotor with a
+two correct derivations can print different $3\times 3$ matrices. For the quadrotor with a
 cable-suspended load, `A[δx_L][ξ]` prints as
-\(-m_Q l\,\hat{\dot\omega}\hat q + m_Q l\,|\omega|^2 \hat q\) while the derivation from
-\(\ddot q = \dot\omega\times q + \omega\times(\omega\times q)\) gives
-\(-m_Q l\,(\hat{\dot\omega} + \hat\omega^2)\hat q\); both act identically on tangent
-\((\xi, \delta\omega)\). A consumer that needs a minimal (two-dimensional) representation
+$-m_Q l\,\hat{\dot\omega}\hat q + m_Q l\,|\omega|^2 \hat q$ while the derivation from
+$\ddot q = \dot\omega\times q + \omega\times(\omega\times q)$ gives
+$-m_Q l\,(\hat{\dot\omega} + \hat\omega^2)\hat q$; both act identically on tangent
+$(\xi, \delta\omega)$. A consumer that needs a minimal (two-dimensional) representation
 must project onto the tangent space (Lee et al., Appendix B).
 
 ## What `linearize` does not do
 
 - It does not reduce the perturbation to minimal coordinates at an equilibrium (Lee et al.
-  Appendix B basis \(\sigma\)); the output stays in the full perturbation vectors, as in
+  Appendix B basis $\sigma$); the output stays in the full perturbation vectors, as in
   Wu & Sreenath.
 - It does not synthesise controllers, discretise, simulate or generate code itself:
   [Code generation](codegen.md) turns a `LinearizedSystem` into `M_lin`, `A_lin`, `B_lin`

@@ -21,7 +21,7 @@ body gives `E = −J Ω̇ − Ω × JΩ + M` (Eq. 6.16 with every term moved to 
 
 **VBL.** `linearize` takes `δE` and defines its blocks so that the physical inertia is
 positive: `δE = −M δv̇ + A δx + B δu`, i.e. `M[δv̇] = −coeff(δv̇, δE)`, and the result reads
-`M δẋ = A δx + B δu` ([Variation-Based Linearization](vbl.md#sign-convention)).
+`M δẋ = A δx + B δu` ([Linearization](vbl.md#sign-convention)).
 
 ## S² equations live on the tangent plane
 
