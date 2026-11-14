@@ -1,0 +1,16 @@
+name: Feature request
+description: A new manifold, system, rule or tool
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What you want to do
+      description: The system or task, and where geomech stops you today.
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: References
+      description: Papers or book sections that define the mathematics.

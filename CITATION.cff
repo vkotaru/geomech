@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "geomech: symbolic equations of motion on smooth manifolds"
+abstract: >-
+  geomech derives coordinate-free equations of motion for mechanical systems on R, R³,
+  S², SO(3) and their products from a Lagrangian and virtual work, checks them
+  numerically, linearizes them along trajectories, generates NumPy and CasADi code,
+  simulates them with a Lie-group integrator, and renders them as 3-D reports.
+authors:
+  - family-names: Kotaru
+    given-names: Prasanth
+repository-code: "https://github.com/vkotaru/geomech"
+url: "https://github.com/vkotaru/geomech"
+license: BSD-3-Clause
+keywords:
+  - geometric mechanics
+  - equations of motion
+  - symbolic computation
+  - robotics
+  - SO(3)
+  - S2
+version: 0.2.0.dev0
