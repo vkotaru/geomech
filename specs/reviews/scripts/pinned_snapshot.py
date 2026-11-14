@@ -318,8 +318,9 @@ def _refresh(obj, seen=None):
         return
     seen.add(id(obj))
     if isinstance(obj, Matrix) and obj.flags is not None and obj.flags.is_identity:
-        obj.attr = list(IdentityMatrix.attr)
-        obj.flags = IdentityMatrix.flags
+        # the node classes are frozen (phase 5b): set past them, as unpickling does
+        object.__setattr__(obj, "attr", list(IdentityMatrix.attr))
+        object.__setattr__(obj, "flags", IdentityMatrix.flags)
         return
     if isinstance(obj, dict):
         for v in obj.values():

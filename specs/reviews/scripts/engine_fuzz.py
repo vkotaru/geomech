@@ -835,7 +835,7 @@ def shrink_candidates(expr):
         stack.extend(getattr(n, "nodes", None) or [])
     if isinstance(expr, (Add, VAdd, MAdd)) and len(nodes) > 2:
         for i in range(len(nodes)):
-            out.append(rebuild(expr, nodes[:i] + nodes[i + 1 :]))
+            out.append(rebuild(expr, (*nodes[:i], *nodes[i + 1 :])))
     for i, child in enumerate(nodes):
         ctype = getattr(child, "type", None)
         if ctype is None or ctype not in _FRESH:
@@ -850,7 +850,7 @@ def shrink_candidates(expr):
         if str(repl) == str(child):
             continue
         try:
-            out.append(rebuild(expr, nodes[:i] + [repl] + nodes[i + 1 :]))
+            out.append(rebuild(expr, (*nodes[:i], repl, *nodes[i + 1 :])))
         except Exception:
             pass
     return out

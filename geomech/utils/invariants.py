@@ -2,8 +2,9 @@
 
 The constructors validate most of these when a node is built; ``check_tree`` re-checks
 a whole tree after the fact, because a tree can also be assembled by hand
-(``Add([Add(a, b), c])`` does not flatten), mutated (``node.nodes[0] = ...``), or produced
-by a rewrite that bypasses a constructor guard. Each violation raises ``InvariantError``
+(``Add([Add(a, b), c])`` does not flatten), altered by ``object.__setattr__`` past the
+frozen node classes, unpickled from an older version, or produced by a rewrite that
+bypasses a constructor guard. Each violation raises ``InvariantError``
 naming the invariant, the offending subtree and its path from the root (``root.R.0``:
 the right child's first addend; ``L``/``R`` for binary nodes, the index for n-ary nodes,
 ``x`` for the operand of a unary node).
@@ -41,7 +42,14 @@ from __future__ import annotations
 
 import math
 import numbers
+from typing import Any
 
+from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Expr, Scalar
+from geomech.core.base.types import ExprType
+from geomech.core.operations.addition import Add, MAdd, VAdd
+from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
+from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee, is_row_vector
+from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
 from geomech.utils.errors import InvariantError
 
 __all__ = ["check_tree", "InvariantError"]
@@ -74,19 +82,12 @@ def _numeric_name_value(name):
         return None
 
 
-def check_tree(expr):
+def check_tree(expr) -> None:
     """Raise ``InvariantError`` if *expr* violates a structural invariant; else return None.
 
     See the module docstring for the list of checks. The walk is iterative, so deep
     trees do not hit the recursion limit; shared subtrees are checked once.
     """
-    from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Expr, Scalar
-    from geomech.core.base.types import ExprType
-    from geomech.core.operations.addition import Add, MAdd, VAdd
-    from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-    from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee, is_row_vector
-    from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
-
     S, V, M = ExprType.SCALAR, ExprType.VECTOR, ExprType.MATRIX
     nary = {Add: S, VAdd: V, MAdd: M}
     binary = {
@@ -99,7 +100,13 @@ def check_tree(expr):
         Dot: ((V, V),),
         Cross: ((V, V),),
     }
-    unary = {Hat: V, Vee: M, Transpose: None, TimeDerivative: None, Variation: None}
+    unary: dict[type, ExprType | None] = {
+        Hat: V,
+        Vee: M,
+        Transpose: None,
+        TimeDerivative: None,
+        Variation: None,
+    }
     unary[TimeIntegral] = None
 
     seen = set()
@@ -114,7 +121,7 @@ def check_tree(expr):
                 f"check_tree: {path} is a {type(node).__name__} ({node!r}), not an expression"
             )
         cls = type(node)
-        children = getattr(node, "nodes", None)
+        children: Any = getattr(node, "nodes", None)
         for i, child in enumerate(children or ()):
             if not isinstance(child, Expr):
                 raise InvariantError(
@@ -188,13 +195,13 @@ def check_tree(expr):
             if not children or len(children) != 1 or children[0] is None:
                 _fail(path, node, f"{cls.__name__} needs exactly one operand")
             inner = children[0]
-            want = unary[next(c for c in unary if isinstance(node, c))]
-            if want is not None and getattr(inner, "type", None) != want:
+            want_inner = unary[next(c for c in unary if isinstance(node, c))]
+            if want_inner is not None and getattr(inner, "type", None) != want_inner:
                 _fail(
                     f"{path}.x",
                     inner,
                     f"{cls.__name__} operand has type"
-                    f" {_type_name(getattr(inner, 'type', None))}, expected {want.name}",
+                    f" {_type_name(getattr(inner, 'type', None))}, expected {want_inner.name}",
                 )
             if isinstance(node, Hat) and is_row_vector(inner):
                 _fail(f"{path}.x", inner, "Hat operand is a row vector; Hat takes a column")

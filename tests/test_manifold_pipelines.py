@@ -240,18 +240,18 @@ class TestSphericalPendulumPipeline:
 
     def test_eom_str(self):
         """Full EOM string: d/dt(ω)*m*l*l*(-1) + Cross(q,e3)*m*g*l*(-1) + f"""
-        expected = "\\frac{d}{dt}(\\omega_{q})mll(-1)+Cross(q,e3)mgl(-1)+f"
+        expected = "\\frac{d}{dt}(\\omega_{q})*m*l*l*(-1)+Cross(q,e3)*m*g*l*(-1)+f"
         assert str(self.eqn) == f"({expected})"
 
     def test_M(self):
         """M[ω̇] = I*m*l*l*(-1)  (= -ml² I)"""
         ddw = str(TimeDerivative(self.omega))
         assert ddw in self.eq.M
-        assert str(self.eq.M[ddw]) == "Imll(-1)"
+        assert str(self.eq.M[ddw]) == "I*m*l*l*(-1)"
 
     def test_f(self):
         """f = Cross(q,e3)*m*g*l*(-1)  (= -mgl q×e3)"""
-        assert str(self.eq.f) == "Cross(q,e3)mgl(-1)"
+        assert str(self.eq.f) == "Cross(q,e3)*m*g*l*(-1)"
 
     def test_G(self):
         """G[f] = I  (direct tangent-space force)"""
@@ -303,7 +303,9 @@ class TestSphericalPendulumQdotPipeline:
 
     def test_eom_str(self):
         """EOM: Cross(q, Cross(ω̇, q))*m*l*l*(-1) + Cross(q,e3)*mgl*(-1) + f"""
-        expected = "Cross(q,Cross(\\frac{d}{dt}(\\omega_{q}),q))mll(-1)+Cross(q,e3)mgl(-1)+f"
+        expected = (
+            "Cross(q,Cross(\\frac{d}{dt}(\\omega_{q}),q))*m*l*l*(-1)+Cross(q,e3)*m*g*l*(-1)+f"
+        )
         assert str(self.eqn) == f"({expected})"
 
     def test_eom_has_three_terms(self):
@@ -313,11 +315,11 @@ class TestSphericalPendulumQdotPipeline:
         """M[ω̇] = Hat(q)*Hat(q)*m*l*l  (= ml²(qq^T - I), the S2 projection)."""
         ddw = str(TimeDerivative(self.omega))
         assert ddw in self.eq.M
-        assert str(self.eq.M[ddw]) == "Hat(q)Hat(q)mll"
+        assert str(self.eq.M[ddw]) == "Hat(q)*Hat(q)*m*l*l"
 
     def test_f_same_as_omega_formulation(self):
         """f should be identical to the ω formulation: Cross(q,e3)*mgl*(-1)."""
-        assert str(self.eq.f) == "Cross(q,e3)mgl(-1)"
+        assert str(self.eq.f) == "Cross(q,e3)*m*g*l*(-1)"
 
     def test_G(self):
         assert str(self.eq.G["f"]) == "I"
@@ -356,18 +358,18 @@ class TestFreeRigidBodyPipeline:
 
     def test_eom_str(self):
         """EOM: -J*ω̇ - ω×Jω + M = 0"""
-        expected = "J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)+M"
+        expected = "J*\\frac{d}{dt}(\\Omega_{R})*(-1)+Cross(\\Omega_{R},J*\\Omega_{R})*(-1)+M"
         assert str(self.eqn) == f"({expected})"
 
     def test_M(self):
         """M[Ω̇] = J*(-1)  (= -J, the inertia matrix)."""
         ddOm = str(TimeDerivative(self.Om))
         assert ddOm in self.eq.M
-        assert str(self.eq.M[ddOm]) == "J(-1)"
+        assert str(self.eq.M[ddOm]) == "J*(-1)"
 
     def test_f(self):
         """f = Cross(Ω, JΩ)*(-1)  (= -ω×Jω, the Coriolis term)."""
-        assert str(self.eq.f) == "Cross(\\Omega_{R},J\\Omega_{R})(-1)"
+        assert str(self.eq.f) == "Cross(\\Omega_{R},J*\\Omega_{R})*(-1)"
 
     def test_G(self):
         """G[M] = I  (direct torque input)."""
@@ -402,9 +404,9 @@ class TestRigidPendulumPivotPipeline:
     def test_eom_str(self):
         """EOM: -Jω̇ - ω×Jω - mg*ρ×(R^T e3) + M = 0"""
         expected = (
-            "J\\frac{d}{dt}(\\Omega_{R})(-1)"
-            "+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-            "+Cross(\\rho,(R)'e3)mg(-1)"
+            "J*\\frac{d}{dt}(\\Omega_{R})*(-1)"
+            "+Cross(\\Omega_{R},J*\\Omega_{R})*(-1)"
+            "+Cross(\\rho,(R)'*e3)*m*g*(-1)"
             "+M"
         )
         assert str(self.eqn) == f"({expected})"
@@ -413,7 +415,7 @@ class TestRigidPendulumPivotPipeline:
         """M[Ω̇] = -J  (same inertia as free rigid body)."""
         ddOm = str(TimeDerivative(self.Om))
         assert ddOm in self.eq.M
-        assert str(self.eq.M[ddOm]) == "J(-1)"
+        assert str(self.eq.M[ddOm]) == "J*(-1)"
 
     def test_f(self):
         """f = -ω×Jω - mg*ρ×(R^T e3).  Two terms: Coriolis + gravity."""
@@ -421,8 +423,8 @@ class TestRigidPendulumPivotPipeline:
         assert hasattr(f, "nodes")
         assert len(f.nodes) == 2, f"Expected 2 terms, got {len(f.nodes)}: {f}"
         f_str = str(f)
-        assert "Cross(\\Omega_{R},J\\Omega_{R})(-1)" in f_str
-        assert "Cross(\\rho,(R)'e3)mg(-1)" in f_str
+        assert "Cross(\\Omega_{R},J*\\Omega_{R})*(-1)" in f_str
+        assert "Cross(\\rho,(R)'*e3)*m*g*(-1)" in f_str
 
     def test_G(self):
         assert str(self.eq.G["M"]) == "I"
@@ -457,11 +459,11 @@ class TestRigidPendulumCOMPipeline:
         M = -(J + m*hat(ρ)²), since ρ×(ω̇×ρ) = -hat(ρ)²*ω̇.
         """
         expected = (
-            "J\\frac{d}{dt}(\\Omega_{R})(-1)"
-            "+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-            "+Cross(\\rho,Cross(\\frac{d}{dt}(\\Omega_{R}),\\rho))m(-1)"
-            "+Cross(\\Omega_{R},Cross(\\rho,Cross(\\Omega_{R},\\rho)))m(-1)"
-            "+Cross(\\rho,(R)'e3)mg(-1)"
+            "J*\\frac{d}{dt}(\\Omega_{R})*(-1)"
+            "+Cross(\\Omega_{R},J*\\Omega_{R})*(-1)"
+            "+Cross(\\rho,Cross(\\frac{d}{dt}(\\Omega_{R}),\\rho))*m*(-1)"
+            "+Cross(\\Omega_{R},Cross(\\rho,Cross(\\Omega_{R},\\rho)))*m*(-1)"
+            "+Cross(\\rho,(R)'*e3)*m*g*(-1)"
             "+M"
         )
         assert str(self.eqn) == f"({expected})"
@@ -470,7 +472,7 @@ class TestRigidPendulumCOMPipeline:
         """M = -(J + m*hat(ρ)²)  (COM inertia + parallel axis)."""
         ddOm = str(TimeDerivative(self.Om))
         assert ddOm in self.eq.M
-        assert str(self.eq.M[ddOm]) == "(J(-1)+Hat(\\rho)Hat(\\rho)m)"
+        assert str(self.eq.M[ddOm]) == "(J*(-1)+Hat(\\rho)*Hat(\\rho)*m)"
 
     def test_f_has_three_terms(self):
         """f has Coriolis + centripetal + gravity (3 terms)."""
@@ -480,7 +482,7 @@ class TestRigidPendulumCOMPipeline:
 
     def test_f_no_R_transpose_R(self):
         """R^T*R should have simplified to I."""
-        assert "(R)'R" not in str(self.eq.f)
+        assert "(R)'*R" not in str(self.eq.f)  # products print with * since phase 5b
 
     def test_f_no_acceleration(self):
         assert str(TimeDerivative(self.Om)) not in str(self.eq.f)
@@ -586,7 +588,7 @@ class TestMixedR3SO3Pipeline:
         eq = self.sf[key]
         ddx = str(TimeDerivative(TimeDerivative(self.x)))
         assert ddx in eq.M
-        assert str(eq.M[ddx]) == "Im(-1)"
+        assert str(eq.M[ddx]) == "I*m*(-1)"
         assert str(eq.f) == "0v"
         assert str(eq.G["F"]) == "I"
 
@@ -672,7 +674,7 @@ class TestSpringMassPipeline:
 
     def test_eom_str(self):
         """EOM: -m*ẍ - k*x + f = 0."""
-        expected = "m\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)+kx(-1)+f"
+        expected = "m*\\frac{d}{dt}(\\frac{d}{dt}(x))*(-1)+k*x*(-1)+f"
         assert str(self.eqn) == f"({expected})"
 
     def test_has_acceleration(self):
@@ -705,7 +707,7 @@ class TestSpringMassDamperPipeline:
 
     def test_eom_str(self):
         """EOM: -m*ẍ - c*ẋ - k*x + f = 0."""
-        expected = "m\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)+kx(-1)+f+c\\frac{d}{dt}(x)(-1)"
+        expected = "m*\\frac{d}{dt}(\\frac{d}{dt}(x))*(-1)+k*x*(-1)+f+c*\\frac{d}{dt}(x)*(-1)"
         assert str(self.eqn) == f"({expected})"
 
     def test_has_acceleration(self):
@@ -771,13 +773,13 @@ class TestDoubleSpringMassPipeline:
     def test_x1_eom_str(self):
         """x1 EOM: -m1*ẍ1 - k1*x1 + k2*x2 - k2*x1 + f1 = 0."""
         _, eqn = self.eom[str(self.x1.delta())]
-        expected = "m1\\frac{d}{dt}(\\frac{d}{dt}(x1))(-1)+k1x1(-1)+k2x2+k2x1(-1)+f1"
+        expected = "m1*\\frac{d}{dt}(\\frac{d}{dt}(x1))*(-1)+k1*x1*(-1)+k2*x2+k2*x1*(-1)+f1"
         assert str(eqn) == f"({expected})"
 
     def test_x2_eom_str(self):
         """x2 EOM: -m2*ẍ2 - k2*x2 + k2*x1 + f2 = 0."""
         _, eqn = self.eom[str(self.x2.delta())]
-        expected = "m2\\frac{d}{dt}(\\frac{d}{dt}(x2))(-1)+k2x2(-1)+k2x1+f2"
+        expected = "m2*\\frac{d}{dt}(\\frac{d}{dt}(x2))*(-1)+k2*x2*(-1)+k2*x1+f2"
         assert str(eqn) == f"({expected})"
 
     def test_x1_has_both_stiffness(self):
@@ -830,14 +832,14 @@ class TestDoubleRigidPendulumMassMatrixExact:
     def test_eta1_blocks_exact(self):
         M = self.sf[str(self.eta1)].M
         assert set(M) == {self.dOm1, self.dOm2}
-        assert str(M[self.dOm1]) == "(J1(-1)+Hat(\\rho_1)Hat(\\rho_1)m1+Hat(l_1)Hat(l_1)m2)"
-        assert str(M[self.dOm2]) == "Hat(l_1)(R1)'R2Hat(\\rho_2)m2"
+        assert str(M[self.dOm1]) == "(J1*(-1)+Hat(\\rho_1)*Hat(\\rho_1)*m1+Hat(l_1)*Hat(l_1)*m2)"
+        assert str(M[self.dOm2]) == "Hat(l_1)*(R1)'*R2*Hat(\\rho_2)*m2"
 
     def test_eta2_blocks_exact(self):
         M = self.sf[str(self.eta2)].M
         assert set(M) == {self.dOm1, self.dOm2}
-        assert str(M[self.dOm1]) == "Hat(\\rho_2)(R2)'R1Hat(l_1)m2"
-        assert str(M[self.dOm2]) == "(J2(-1)+Hat(\\rho_2)Hat(\\rho_2)m2)"
+        assert str(M[self.dOm1]) == "Hat(\\rho_2)*(R2)'*R1*Hat(l_1)*m2"
+        assert str(M[self.dOm2]) == "(J2*(-1)+Hat(\\rho_2)*Hat(\\rho_2)*m2)"
 
     def test_input_blocks_exact(self):
         assert {k: str(v) for k, v in self.sf[str(self.eta1)].G.items()} == {"M1": "I"}

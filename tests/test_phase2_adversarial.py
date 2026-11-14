@@ -242,7 +242,7 @@ class TestF3InputShape:
         assert str(compute_eom(L2, dW, variables, params=(l,))[key][1]) == ref
         assert str(compute_eom(L2, dW, variables, params=(p for p in [l]))[key][1]) == ref
         assert str(compute_eom(L2, dW, variables, params={l})[key][1]) == ref
-        assert str(TimeDerivative(l)) not in ref and "e3l" in ref
+        assert str(TimeDerivative(l)) not in ref and "e3*l" in ref
 
 
 # ---------------------------------------------------------------------------
@@ -304,7 +304,7 @@ class TestParamsLegitimateSystems:
         with pytest.raises(ValueError, match=r"'\\delta\{f\}' of the symbols 'f'"):
             compute_eom(L2, dW, variables)
         eom = compute_eom(L2, dW, variables, params=[f])
-        assert str(eom[str(x.delta())][1]).endswith("+f(2))")
+        assert str(eom[str(x.delta())][1]).endswith("+f*(2))")
         assert check_eom(L2, dW, variables, eom, inputs=[f], params=[f]) < TOL
 
     def test_vector_param_only_under_time_derivative(self):
@@ -609,8 +609,8 @@ class TestCalculusGuardsScope:
         assert isinstance(TimeDerivative(TimeDerivative(x)), TimeDerivative)
         assert isinstance(Variation(TimeDerivative(x)), Variation)
         assert isinstance(TimeDerivative(Variation(x)), TimeDerivative)
-        assert str((q * Scalar("l")).t_diff()) == "(Cross(\\omega_{q},q)l+q\\frac{d}{dt}(l))"
-        assert str((Matrix("A", attr=["Constant"]) * q).t_diff()) == "ACross(\\omega_{q},q)"
+        assert str((q * Scalar("l")).t_diff()) == "(Cross(\\omega_{q},q)*l+q*\\frac{d}{dt}(l))"
+        assert str((Matrix("A", attr=["Constant"]) * q).t_diff()) == "A*Cross(\\omega_{q},q)"
         assert str(Hat(q).t_diff()) == "Hat(Cross(\\omega_{q},q))"
         assert str(q.T()) == "(q)'"
 
@@ -682,18 +682,18 @@ class TestCapWarningAndNumbers:
 
     def test_zero_flag_does_not_break_like_term_merging(self):
         a = Scalar("a")
-        assert str(full_simplify(a + Number(0) * a + a)) == "a(2)"
+        assert str(full_simplify(a + Number(0) * a + a)) == "a*(2)"
         assert str(full_simplify(Number(0) + a + Number(0))) == "a"
         assert str(full_simplify(Number(2) + Number(-2) + a)) == "a"
 
     def test_ones_is_a_genuine_coefficient_where_it_matters(self):
         a, v, w = Scalar("a"), Vector("v"), Vector("w")
-        assert str(full_simplify(Number(1) * a + a)) == "a(2)"
-        assert str(full_simplify(v * Number(1) + v)) == "v(2)"
+        assert str(full_simplify(Number(1) * a + a)) == "a*(2)"
+        assert str(full_simplify(v * Number(1) + v)) == "v*(2)"
         assert str(full_simplify(Number(1) + Number(1))) == "(2)"
         assert str(full_simplify(Number(1) * Number(1))) == "(1)"
-        assert str(extract_linear_coeff(Dot(v, w) * Number(1), v)) == "w(1)"
-        assert str(extract_linear_coeff(Dot(v, w * Number(0)), v)) == "w(0)"
+        assert str(extract_linear_coeff(Dot(v, w) * Number(1), v)) == "w*(1)"
+        assert str(extract_linear_coeff(Dot(v, w * Number(0)), v)) == "w*(0)"
 
     def test_float_and_signed_zero_literals(self):
         a = Scalar("a")
@@ -718,4 +718,4 @@ class TestCapWarningAndNumbers:
     def test_named_numeric_scalar_keeps_its_name(self):
         """D1 is open: Scalar('m', value=0) is not folded to the Zero leaf."""
         m = Scalar("m", value=0)
-        assert not m.is_zero and str(full_simplify(m * Scalar("a"))) == "ma"
+        assert not m.is_zero and str(full_simplify(m * Scalar("a"))) == "m*a"

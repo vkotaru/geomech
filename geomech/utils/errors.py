@@ -51,7 +51,7 @@ class ExpressionMismatchError(Exception):
         super().__init__(msg)
 
     @classmethod
-    def unary(cls, operation, expected, expr):
+    def unary(cls, operation: str, expected, expr) -> "ExpressionMismatchError":
         """``{operation} expects a {expected}, got {type} '{expr}'`` for a one-operand node."""
         return cls(
             msg=(

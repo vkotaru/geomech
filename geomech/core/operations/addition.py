@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from geomech.core.base.expressions import (
+    Expr,
     MatrixExpr,
     ScalarExpr,
     VectorExpr,
     _node_operands,
+    _set_nodes,
 )
 from geomech.core.base.types import ExprType
 from geomech.core.operations.mixins import _NaryMixin
@@ -29,7 +31,7 @@ def _check_sizes(nodes, op_name: str):
                 raise SizeMismatchError(op_name, ref_size, s)
 
 
-def _flatten_nodes(args, expected_type: type, expr_type: ExprType) -> list:
+def _flatten_nodes(args, expected_type: type[_NaryMixin], expr_type: ExprType) -> list[Expr]:
     """Flatten nested same-type adds and validate types.
 
     Numbers are wrapped as ``Number`` (``Add(x, 1)``); any other non-expression operand
@@ -43,8 +45,8 @@ def _flatten_nodes(args, expected_type: type, expr_type: ExprType) -> list:
     ``MAdd.is_skew_symmetric``) vacuously true.
     """
     op = expected_type.__name__
-    nodes = []
-    written = []  # the first operand as the caller passed it, before flattening
+    nodes: list[Expr] = []
+    written: list[Expr] = []  # the first operand as the caller passed it, before flattening
 
     def _take(a):
         (a,) = _node_operands(op, a, numeric=True)
@@ -83,34 +85,34 @@ def _flatten_nodes(args, expected_type: type, expr_type: ExprType) -> list:
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Add(_NaryMixin, ScalarExpr):
     """Scalar addition (n-ary)."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, *args):
-        self.nodes = _flatten_nodes(args, Add, ExprType.SCALAR)
+        _set_nodes(self, _flatten_nodes(args, Add, ExprType.SCALAR))
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class VAdd(_NaryMixin, VectorExpr):
     """Vector addition (n-ary)."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, *args):
-        self.nodes = _flatten_nodes(args, VAdd, ExprType.VECTOR)
+        _set_nodes(self, _flatten_nodes(args, VAdd, ExprType.VECTOR))
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class MAdd(_NaryMixin, MatrixExpr):
     """Matrix addition (n-ary)."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, *args):
-        self.nodes = _flatten_nodes(args, MAdd, ExprType.MATRIX)
+        _set_nodes(self, _flatten_nodes(args, MAdd, ExprType.MATRIX))
 
     @property
     def is_symmetric(self):

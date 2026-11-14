@@ -45,9 +45,9 @@ class TestGyroscopicCouplingSO3:
     """
 
     EXPECTED = (
-        "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-        "+JCross(Cross(\\Omega_{R},(R)'e3),b)+Cross(\\Omega_{R},JCross((R)'e3,b))(-1)"
-        "+Cross((R)'e3,Cross(b,J\\Omega_{R}))(-1)+M)"
+        "(J*\\frac{d}{dt}(\\Omega_{R})*(-1)+Cross(\\Omega_{R},J*\\Omega_{R})*(-1)"
+        "+J*Cross(Cross(\\Omega_{R},(R)'*e3),b)+Cross(\\Omega_{R},J*Cross((R)'*e3,b))*(-1)"
+        "+Cross((R)'*e3,Cross(b,J*\\Omega_{R}))*(-1)+M)"
     )
 
     def test_J_on_velocity(self):
@@ -73,8 +73,8 @@ class TestInertialAngularMomentumSO3:
     """
 
     EXPECTED = (
-        "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-        "+Cross(J\\Omega_{R},(R)'e3)+JCross(\\Omega_{R},(R)'e3)+Cross(\\Omega_{R},J(R)'e3)(-1)"
+        "(J*\\frac{d}{dt}(\\Omega_{R})*(-1)+Cross(\\Omega_{R},J*\\Omega_{R})*(-1)"
+        "+Cross(J*\\Omega_{R},(R)'*e3)+J*Cross(\\Omega_{R},(R)'*e3)+Cross(\\Omega_{R},J*(R)'*e3)*(-1)"
         "+M)"
     )
 
@@ -105,11 +105,11 @@ class TestAnisotropicInertiaQdotForm:
         """
         s, eom, _ = derive(ps.s2_anisotropic_qdot)
         expected = (
-            "(Cross(Cross(\\omega_{q},q),ACross(\\omega_{q},q))(-1)"
-            "+Cross(q,ACross(\\frac{d}{dt}(\\omega_{q}),q))(-1)"
-            "+Cross(q,Aq)Dot(\\omega_{q},\\omega_{q})"
-            "+Cross(\\omega_{q},Cross(q,ACross(\\omega_{q},q)))(2)"
-            "+Cross(q,Cross(\\omega_{q},ACross(\\omega_{q},q)))(-1)+Cross(q,e3)mg(-1)+f)"
+            "(Cross(Cross(\\omega_{q},q),A*Cross(\\omega_{q},q))*(-1)"
+            "+Cross(q,A*Cross(\\frac{d}{dt}(\\omega_{q}),q))*(-1)"
+            "+Cross(q,A*q)*Dot(\\omega_{q},\\omega_{q})"
+            "+Cross(\\omega_{q},Cross(q,A*Cross(\\omega_{q},q)))*(2)"
+            "+Cross(q,Cross(\\omega_{q},A*Cross(\\omega_{q},q)))*(-1)+Cross(q,e3)*m*g*(-1)+f)"
         )
         assert str(equation(eom, s.symbols["q"])) == expected
 
@@ -133,13 +133,13 @@ class TestRelativeRateCouplingSO3xSO3:
         """
         s, eom, _ = derive(ps.so3_so3_relative_rate_coupling)
         assert str(equation(eom, s.symbols["R1"])) == (
-            "(J1\\frac{d}{dt}(\\Omega_{R1})(-1)+Cross(\\Omega_{R1},J1\\Omega_{R1})(-1)"
-            "+(R1)'R2\\frac{d}{dt}(\\Omega_{R2})k(-1)"
-            "+Cross((R1)'R2\\Omega_{R2},\\Omega_{R1})k(-1)+M1)"
+            "(J1*\\frac{d}{dt}(\\Omega_{R1})*(-1)+Cross(\\Omega_{R1},J1*\\Omega_{R1})*(-1)"
+            "+(R1)'*R2*\\frac{d}{dt}(\\Omega_{R2})*k*(-1)"
+            "+Cross((R1)'*R2*\\Omega_{R2},\\Omega_{R1})*k*(-1)+M1)"
         )
         assert str(equation(eom, s.symbols["R2"])) == (
-            "(J2\\frac{d}{dt}(\\Omega_{R2})(-1)+Cross(\\Omega_{R2},J2\\Omega_{R2})(-1)"
-            "+Cross(\\Omega_{R2},(R2)'R1\\Omega_{R1})k+(R2)'R1\\frac{d}{dt}(\\Omega_{R1})k(-1)"
+            "(J2*\\frac{d}{dt}(\\Omega_{R2})*(-1)+Cross(\\Omega_{R2},J2*\\Omega_{R2})*(-1)"
+            "+Cross(\\Omega_{R2},(R2)'*R1*\\Omega_{R1})*k+(R2)'*R1*\\frac{d}{dt}(\\Omega_{R1})*k*(-1)"
             "+M2)"
         )
 
@@ -154,8 +154,8 @@ class TestOffsetMassMatrixInertia:
         """
         s, eom, _ = derive(ps.so3_offset_mass_matrix_inertia)
         assert str(equation(eom, s.symbols["R"])) == (
-            "(Cross(\\rho,JCross(\\frac{d}{dt}(\\Omega_{R}),\\rho))(-1)"
-            "+Cross(\\Omega_{R},Cross(\\rho,JCross(\\Omega_{R},\\rho)))(-1)+M)"
+            "(Cross(\\rho,J*Cross(\\frac{d}{dt}(\\Omega_{R}),\\rho))*(-1)"
+            "+Cross(\\Omega_{R},Cross(\\rho,J*Cross(\\Omega_{R},\\rho)))*(-1)+M)"
         )
 
 

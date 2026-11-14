@@ -20,7 +20,7 @@ query is ever returned as a zero coefficient.
 
 from __future__ import annotations
 
-from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
+from geomech.core.base.expressions import IdentityMatrix, One, Zero, ZeroMatrix, ZeroVector
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
@@ -40,21 +40,24 @@ from geomech.utils.errors import AlgebraicError, NonLinearError
 # ---------------------------------------------------------------------------
 
 
-def _same(expr, query) -> bool:
-    """Node identity: same type and, for leaves, same name; otherwise the same rendered tree.
+def same_node(expr, query) -> bool:
+    """Node identity: same type and, for leaves, same name; otherwise ``==``.
 
-    The type guard is the one ``Expr.__eq__`` uses, so ``Mul(k, x)`` (rendered ``kx``)
-    never matches the leaf ``Scalar("kx")``.
+    The type guard is the one ``Expr.__eq__`` uses, so the leaf ``Scalar("k")`` never
+    matches ``Vector("k")`` (a leaf name cannot contain the product separator ``*``, so no
+    leaf prints like the product ``k*x``), and ``==`` on a calculus node or a ``Transpose``
+    also compares the class of its operand, so ``Variation(Scalar("x"))`` is not
+    ``Variation(Vector("x"))``.
     """
     if type(expr) is not type(query):
         return False
     e_name, q_name = getattr(expr, "name", None), getattr(query, "name", None)
     if e_name is not None or q_name is not None:
         return e_name == q_name
-    return str(expr) == str(query)
+    return expr == query
 
 
-def _has_algebraic(expr, query) -> bool:
+def has_algebraic(expr, query) -> bool:
     """Check if query appears algebraically in expr (not inside calculus ops).
 
     Calculus operators (d/dt, δ, ∫) are opaque boundaries — d/dt(η) does
@@ -67,7 +70,7 @@ def _has_algebraic(expr, query) -> bool:
     δx inside d/dt(δx)): such a term has no linear coefficient and must
     never be silently dropped.
     """
-    if _same(expr, query):
+    if same_node(expr, query):
         return True
     if isinstance(expr, (TimeDerivative, TimeIntegral, Variation)):
         if expr.has(query):
@@ -79,7 +82,7 @@ def _has_algebraic(expr, query) -> bool:
         return False
     nodes = getattr(expr, "nodes", None)
     if nodes:
-        return any(_has_algebraic(n, query) for n in nodes)
+        return any(has_algebraic(n, query) for n in nodes)
     return False
 
 
@@ -88,7 +91,7 @@ def _zero_or_raise(func, expr, query, zero):
 
     Never returns zero for a term that contains the query.
     """
-    if _has_algebraic(expr, query):
+    if has_algebraic(expr, query):
         raise AlgebraicError(
             f"{func}: unsupported node {type(expr).__name__} contains '{query}' in '{expr}'"
         )
@@ -167,14 +170,12 @@ def _scalar_from_scalar(expr, query):
 
     expr = coeff * query + ...  →  returns coeff (scalar).
     """
-    if _same(expr, query):
-        from geomech.core.base.expressions import One
-
+    if same_node(expr, query):
         return One
 
     match expr:
         case Add(nodes=nodes):
-            extracted = [_scalar_from_scalar(n, query) for n in nodes if _has_algebraic(n, query)]
+            extracted = [_scalar_from_scalar(n, query) for n in nodes if has_algebraic(n, query)]
             if not extracted:
                 return Zero
             if len(extracted) == 1:
@@ -183,32 +184,32 @@ def _scalar_from_scalar(expr, query):
 
         case Mul():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_scalar_from_scalar", "Mul", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return Mul(_scalar_from_scalar(left, query), right)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return Mul(left, _scalar_from_scalar(right, query))
             return Zero
 
         case Dot():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_scalar_from_scalar", "Dot", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return Dot(_scalar_from_vector(left, query), right)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return Dot(_scalar_from_vector(right, query), left)
             return Zero
 
         case VVMul():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_scalar_from_scalar", "VVMul", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 # left is Transpose(v), query inside v → Transpose(coeff) * right
                 return VVMul(Transpose(_scalar_from_vector(column_of(left), query)), right)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 # right is plain vector → left * coeff
                 return VVMul(left, _scalar_from_vector(right, query))
             return Zero
@@ -224,7 +225,7 @@ def _scalar_from_vector(expr, query):
     """
     match expr:
         case VAdd(nodes=nodes):
-            extracted = [_scalar_from_vector(n, query) for n in nodes if _has_algebraic(n, query)]
+            extracted = [_scalar_from_vector(n, query) for n in nodes if has_algebraic(n, query)]
             if not extracted:
                 return ZeroVector
             if len(extracted) == 1:
@@ -233,11 +234,11 @@ def _scalar_from_vector(expr, query):
 
         case SVMul():
             vec, scl = expr.left, expr.right
-            if _has_algebraic(vec, query) and _has_algebraic(scl, query):
+            if has_algebraic(vec, query) and has_algebraic(scl, query):
                 _nonlinear("_scalar_from_vector", "SVMul", expr, query)
-            if _has_algebraic(vec, query):
+            if has_algebraic(vec, query):
                 return SVMul(_scalar_from_vector(vec, query), scl)
-            if _has_algebraic(scl, query):
+            if has_algebraic(scl, query):
                 if scl == query:
                     return vec
                 return SVMul(vec, _scalar_from_scalar(scl, query))
@@ -246,21 +247,21 @@ def _scalar_from_vector(expr, query):
         case MVMul():
             # M v or (row) vᵀ M: both factors are linear, so coefficient = M c or cᵀ M
             mat, vec = expr.left, expr.right
-            if _has_algebraic(mat, query) and _has_algebraic(vec, query):
+            if has_algebraic(mat, query) and has_algebraic(vec, query):
                 _nonlinear("_scalar_from_vector", "MVMul", expr, query)
-            if _has_algebraic(mat, query):
+            if has_algebraic(mat, query):
                 return MVMul(_scalar_from(mat, query), vec)
-            if _has_algebraic(vec, query):
+            if has_algebraic(vec, query):
                 return MVMul(mat, _scalar_from(vec, query))
             return ZeroVector
 
         case Cross():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_scalar_from_vector", "Cross", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return MVMul(SMMul(Hat(right), -1), _scalar_from_vector(left, query))
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return MVMul(Hat(left), _scalar_from_vector(right, query))
             return ZeroVector
 
@@ -283,7 +284,7 @@ def _scalar_from_matrix(expr, query):
     """
     match expr:
         case MAdd(nodes=nodes):
-            extracted = [_scalar_from_matrix(n, query) for n in nodes if _has_algebraic(n, query)]
+            extracted = [_scalar_from_matrix(n, query) for n in nodes if has_algebraic(n, query)]
             if not extracted:
                 return ZeroMatrix
             if len(extracted) == 1:
@@ -292,11 +293,11 @@ def _scalar_from_matrix(expr, query):
 
         case SMMul():
             mat, scl = expr.left, expr.right
-            if _has_algebraic(mat, query) and _has_algebraic(scl, query):
+            if has_algebraic(mat, query) and has_algebraic(scl, query):
                 _nonlinear("_scalar_from_matrix", "SMMul", expr, query)
-            if _has_algebraic(mat, query):
+            if has_algebraic(mat, query):
                 return SMMul(_scalar_from_matrix(mat, query), scl)
-            if _has_algebraic(scl, query):
+            if has_algebraic(scl, query):
                 if scl == query:
                     return mat
                 return SMMul(mat, _scalar_from_scalar(scl, query))
@@ -304,11 +305,11 @@ def _scalar_from_matrix(expr, query):
 
         case MMMul():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_scalar_from_matrix", "MMMul", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return MMMul(_scalar_from_matrix(left, query), right)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return MMMul(left, _scalar_from_matrix(right, query))
             return ZeroMatrix
 
@@ -323,11 +324,11 @@ def _scalar_from_matrix(expr, query):
         case VVMul():
             # Outer product (a l) bᵀ = l (a bᵀ): coefficient of l is a bᵀ (or a cᵀ when l is in b)
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_scalar_from_matrix", "VVMul", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return VVMul(_scalar_from_vector(left, query), right)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return VVMul(left, Transpose(_scalar_from_vector(column_of(right), query)))
             return ZeroMatrix
 
@@ -347,7 +348,7 @@ def _vector_from_scalar(expr, query):
     """
     match expr:
         case Add(nodes=nodes):
-            extracted = [_vector_from_scalar(n, query) for n in nodes if _has_algebraic(n, query)]
+            extracted = [_vector_from_scalar(n, query) for n in nodes if has_algebraic(n, query)]
             if not extracted:
                 return ZeroVector
             if len(extracted) == 1:
@@ -356,19 +357,19 @@ def _vector_from_scalar(expr, query):
 
         case Mul():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_vector_from_scalar", "Mul", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return SVMul(_vector_from_scalar(left, query), right)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return SVMul(_vector_from_scalar(right, query), left)
             return ZeroVector
 
         case Dot():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_vector_from_scalar", "Dot", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 if left == query:
                     return right
                 if left.type == ExprType.VECTOR:
@@ -377,7 +378,7 @@ def _vector_from_scalar(expr, query):
                     f"_vector_from_scalar: Dot.left type={left.type}"
                     f" | query='{query}', expr='{expr}'"
                 )
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 if right == query:
                     return left
                 if right.type == ExprType.VECTOR:
@@ -391,15 +392,15 @@ def _vector_from_scalar(expr, query):
         case VVMul():
             # VVMul(Transpose(v), w) = v^T * w — scalar inner product
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_vector_from_scalar", "VVMul", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 # left = Transpose(v), query in v → coeff^T * right
                 inner = column_of(left)
                 if inner == query:
                     return right
                 return MVMul(Transpose(_vector_from_vector(inner, query)), right)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 if right == query:
                     return column_of(left)
                 return MVMul(Transpose(_vector_from_vector(right, query)), column_of(left))
@@ -414,14 +415,12 @@ def _vector_from_vector(expr, query):
 
     expr = coeff * query + ...  →  returns coeff (matrix).
     """
-    from geomech.core.base.expressions import IdentityMatrix
-
-    if _same(expr, query):
+    if same_node(expr, query):
         return IdentityMatrix
 
     match expr:
         case VAdd(nodes=nodes):
-            extracted = [_vector_from_vector(n, query) for n in nodes if _has_algebraic(n, query)]
+            extracted = [_vector_from_vector(n, query) for n in nodes if has_algebraic(n, query)]
             if not extracted:
                 return ZeroMatrix
             if len(extracted) == 1:
@@ -432,39 +431,39 @@ def _vector_from_vector(expr, query):
             left, right = expr.left, expr.right
             if left == right:
                 return ZeroMatrix  # x × x = 0 identically
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 # before the shortcuts: Cross(q, Cross(a, q)) is quadratic in q
                 _nonlinear("_vector_from_vector", "Cross", expr, query)
             if right == query:
                 return Hat(left)
             if left == query:
                 return SMMul(Hat(right), -1)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return MMMul(SMMul(Hat(right), -1), _vector_from_vector(left, query))
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return MMMul(Hat(left), _vector_from_vector(right, query))
             return ZeroMatrix
 
         case MVMul():
             mat, vec = expr.left, expr.right
-            if _has_algebraic(mat, query) and _has_algebraic(vec, query):
+            if has_algebraic(mat, query) and has_algebraic(vec, query):
                 # MVMul(Hat(q), q), MVMul(q aᵀ, q), ... are quadratic in q
                 _nonlinear("_vector_from_vector", "MVMul", expr, query)
-            if _has_algebraic(vec, query):
+            if has_algebraic(vec, query):
                 if vec == query:
                     return mat
                 return MMMul(mat, _vector_from_vector(vec, query))
-            if _has_algebraic(mat, query):
+            if has_algebraic(mat, query):
                 return _vector_from_mvmul_mat(mat, vec, query)
             return ZeroMatrix
 
         case SVMul():
             vec, scl = expr.left, expr.right
-            if _has_algebraic(vec, query) and _has_algebraic(scl, query):
+            if has_algebraic(vec, query) and has_algebraic(scl, query):
                 _nonlinear("_vector_from_vector", "SVMul", expr, query)
-            if _has_algebraic(vec, query):
+            if has_algebraic(vec, query):
                 return SMMul(_vector_from_vector(vec, query), scl)
-            if _has_algebraic(scl, query):
+            if has_algebraic(scl, query):
                 return _vector_from_vector_svmul_scalar(vec, scl, query)
             return ZeroMatrix
 
@@ -477,9 +476,7 @@ def _vector_from_mvmul_mat(mat, vec, query):
     match mat:
         case MAdd(nodes=nodes):
             extracted = [
-                _vector_from_vector(MVMul(n, vec), query)
-                for n in nodes
-                if _has_algebraic(n, query)
+                _vector_from_vector(MVMul(n, vec), query) for n in nodes if has_algebraic(n, query)
             ]
             if not extracted:
                 return ZeroMatrix
@@ -489,17 +486,17 @@ def _vector_from_mvmul_mat(mat, vec, query):
 
         case MMMul():
             left, right = mat.left, mat.right
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return _vector_from_vector(MVMul(left, MVMul(right, vec)), query)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return MMMul(left, _vector_from_vector(MVMul(right, vec), query))
             return ZeroMatrix
 
         case SMMul():
             inner_mat, scl = mat.left, mat.right
-            if _has_algebraic(inner_mat, query):
+            if has_algebraic(inner_mat, query):
                 return _vector_from_vector(MVMul(inner_mat, SVMul(vec, scl)), query)
-            if _has_algebraic(scl, query):
+            if has_algebraic(scl, query):
                 # SMMul(M, scl) * vec = M * (scl * vec) → query in SVMul scalar
                 return _vector_from_vector(MVMul(inner_mat, SVMul(vec, scl)), query)
             return ZeroMatrix
@@ -507,7 +504,7 @@ def _vector_from_mvmul_mat(mat, vec, query):
         case Hat():
             if mat.expr == query:
                 return SMMul(Hat(vec), -1)
-            if _has_algebraic(mat.expr, query):
+            if has_algebraic(mat.expr, query):
                 return MMMul(SMMul(Hat(vec), -1), _vector_from_vector(mat.expr, query))
             return ZeroMatrix
 
@@ -555,9 +552,7 @@ def _vector_from_vector_svmul_scalar(vec, scl, query):
     match scl:
         case Add(nodes=nodes):
             extracted = [
-                _vector_from_vector(SVMul(vec, n), query)
-                for n in nodes
-                if _has_algebraic(n, query)
+                _vector_from_vector(SVMul(vec, n), query) for n in nodes if has_algebraic(n, query)
             ]
             if not extracted:
                 return ZeroMatrix
@@ -567,28 +562,28 @@ def _vector_from_vector_svmul_scalar(vec, scl, query):
 
         case Mul():
             left, right = scl.left, scl.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_vector_from_vector", "Mul(SVMul scalar)", full_expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return _vector_from_vector(SVMul(SVMul(vec, right), left), query)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return _vector_from_vector(SVMul(SVMul(vec, left), right), query)
             return ZeroMatrix
 
         case Dot():
             left, right = scl.left, scl.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_vector_from_vector", "Dot(SVMul scalar)", full_expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return _vector_from_vector(MVMul(VVMul(vec, Transpose(right)), left), query)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return _vector_from_vector(MVMul(VVMul(vec, Transpose(left)), right), query)
             return ZeroMatrix
 
         case VVMul():
             # VVMul(Transpose(a), b) = a^T * b — same structure as Dot
             left, right = scl.left, scl.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear(
                     "_vector_from_vector",
                     "VVMul(SVMul scalar)",
@@ -596,12 +591,12 @@ def _vector_from_vector_svmul_scalar(vec, scl, query):
                     query,
                 )
             # left = Transpose(a), query in a
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 return _vector_from_vector(
                     MVMul(VVMul(vec, Transpose(right)), column_of(left)), query
                 )
             # right = b, query in b
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 return _vector_from_vector(MVMul(VVMul(vec, left), right), query)
             return ZeroMatrix
 
@@ -625,7 +620,7 @@ def _vector_from_matrix(expr, query):
     """
     match expr:
         case MAdd(nodes=nodes):
-            extracted = [_vector_from_matrix(n, query) for n in nodes if _has_algebraic(n, query)]
+            extracted = [_vector_from_matrix(n, query) for n in nodes if has_algebraic(n, query)]
             if not extracted:
                 return ZeroMatrix
             if len(extracted) == 1:
@@ -634,20 +629,20 @@ def _vector_from_matrix(expr, query):
 
         case MMMul():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_vector_from_matrix", "MMMul", expr, query)
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 if left == query:
                     return right
                 return MMMul(_vector_from_matrix(left, query), right)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 if right == query:
                     return left
                 return MMMul(left, _vector_from_matrix(right, query))
             return ZeroMatrix
 
         case VVMul():
-            if _has_algebraic(expr, query):
+            if has_algebraic(expr, query):
                 raise AlgebraicError(
                     f"Cannot extract vector query '{query}' from outer"
                     f" product '{expr}': rank-1 matrix does not"
@@ -657,11 +652,11 @@ def _vector_from_matrix(expr, query):
 
         case SMMul():
             mat, scl = expr.left, expr.right
-            if _has_algebraic(mat, query) and _has_algebraic(scl, query):
+            if has_algebraic(mat, query) and has_algebraic(scl, query):
                 _nonlinear("_vector_from_matrix", "SMMul", expr, query)
-            if _has_algebraic(mat, query):
+            if has_algebraic(mat, query):
                 return SMMul(_vector_from_matrix(mat, query), scl)
-            if _has_algebraic(scl, query):
+            if has_algebraic(scl, query):
                 raise AlgebraicError(
                     f"Cannot extract vector query '{query}' from"
                     f" '{expr}': scalar factor depends on query"
@@ -670,7 +665,7 @@ def _vector_from_matrix(expr, query):
             return ZeroMatrix
 
         case Hat() | Transpose():
-            if _has_algebraic(expr, query):
+            if has_algebraic(expr, query):
                 _no_left_coefficient("_vector_from_matrix", expr, query)
             return ZeroMatrix
 
@@ -685,14 +680,12 @@ def _vector_from_matrix(expr, query):
 
 def _matrix_from_matrix(expr, query):
     """Extract matrix query from matrix expr → matrix coefficient."""
-    from geomech.core.base.expressions import IdentityMatrix
-
-    if _same(expr, query):
+    if same_node(expr, query):
         return IdentityMatrix
 
     match expr:
         case MAdd(nodes=nodes):
-            extracted = [_matrix_from_matrix(n, query) for n in nodes if _has_algebraic(n, query)]
+            extracted = [_matrix_from_matrix(n, query) for n in nodes if has_algebraic(n, query)]
             if not extracted:
                 return ZeroMatrix
             if len(extracted) == 1:
@@ -701,13 +694,13 @@ def _matrix_from_matrix(expr, query):
 
         case MMMul():
             left, right = expr.left, expr.right
-            if _has_algebraic(left, query) and _has_algebraic(right, query):
+            if has_algebraic(left, query) and has_algebraic(right, query):
                 _nonlinear("_matrix_from_matrix", "MMMul", expr, query)
-            if _has_algebraic(right, query):
+            if has_algebraic(right, query):
                 if right == query:
                     return left
                 return MMMul(left, _matrix_from_matrix(right, query))
-            if _has_algebraic(left, query):
+            if has_algebraic(left, query):
                 if left == query:
                     return right
                 return MMMul(_matrix_from_matrix(left, query), right)
@@ -715,11 +708,11 @@ def _matrix_from_matrix(expr, query):
 
         case SMMul():
             mat, scl = expr.left, expr.right
-            if _has_algebraic(mat, query) and _has_algebraic(scl, query):
+            if has_algebraic(mat, query) and has_algebraic(scl, query):
                 _nonlinear("_matrix_from_matrix", "SMMul", expr, query)
-            if _has_algebraic(mat, query):
+            if has_algebraic(mat, query):
                 return SMMul(_matrix_from_matrix(mat, query), scl)
-            if _has_algebraic(scl, query):
+            if has_algebraic(scl, query):
                 # Z * <a, M b> is linear in M but its coefficient is a 4-tensor
                 _no_left_coefficient("_matrix_from_matrix", expr, query)
             return ZeroMatrix

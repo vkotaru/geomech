@@ -3,40 +3,55 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from geomech.core.base.expressions import (
+    PRODUCT_SEPARATOR,
     Expr,
     MatrixExpr,
+    Number,
     ScalarExpr,
     VectorExpr,
+    _is_number,
     _node_operands,
+    _set_nodes,
 )
 from geomech.core.base.types import ExprType
 from geomech.core.operations.mixins import _BinaryMixin
-from geomech.utils.errors import ExpressionMismatchError, SizeMismatchError
+from geomech.utils.errors import ExpressionMismatchError, SizeMismatchError, _operand_str
 
 # ---------------------------------------------------------------------------
 # Binary multiplication helpers
 # ---------------------------------------------------------------------------
 
 
-def _wrap_numeric(val):
+def wrap_numeric(val):
     """Wrap a number (int, float, numpy scalar) as a ``Number``; pass anything else through."""
-    from geomech.core.base.expressions import Number, _is_number
-
     if _is_number(val):
         return Number(val)
     return val
 
 
+_wrap_numeric = wrap_numeric  # the pre-5b name, imported by tests
+
+
 def _is_row(expr):
+    # geometry imports this module, so the import cannot sit at the top
     from geomech.core.operations.geometry import is_row_vector
 
     return is_row_vector(expr)
 
 
 def _q(expr):
-    from geomech.utils.errors import _operand_str
-
     return _operand_str(expr)
+
+
+# PRODUCT_SEPARATOR ("*", defined with the leaves, which may not contain it) is printed
+# between the two factors of every product node. Without it two different trees could
+# print alike (``Mul(ab, c)`` and ``Mul(a, bc)`` were both ``abc``), and ``str`` is the
+# identity of a node (fix plan decision D2). ``repr`` keeps ``·``.
+
+
+def _product_str(node) -> str:
+    """``str`` of a binary product: the two factors joined by ``PRODUCT_SEPARATOR``."""
+    return str(node.left) + PRODUCT_SEPARATOR + str(node.right)
 
 
 def _check_mul_sizes(op_name: str, l, r):
@@ -63,21 +78,21 @@ def _check_mul_sizes(op_name: str, l, r):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Mul(_BinaryMixin, ScalarExpr):
     """Scalar multiplication."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, l, r):
         l, r = _node_operands(type(self).__name__, l, r, numeric=True)
         if l.type == ExprType.SCALAR and r.type == ExprType.SCALAR:
-            self.nodes = [l, r]
+            _set_nodes(self, (l, r))
         else:
             raise ExpressionMismatchError("Mul", l.type, r.type, l, r)
 
-    def __str__(self):
-        return str(self.left) + str(self.right)
+    def __str__(self) -> str:
+        return _product_str(self)
 
 
 # ---------------------------------------------------------------------------
@@ -85,23 +100,23 @@ class Mul(_BinaryMixin, ScalarExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class SVMul(_BinaryMixin, VectorExpr):
     """Scalar-Vector multiplication.  Normalized: left=vector, right=scalar."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, l, r):
         l, r = _node_operands(type(self).__name__, l, r, numeric=True)
         if l.type == ExprType.VECTOR and r.type == ExprType.SCALAR:
-            self.nodes = [l, r]
+            _set_nodes(self, (l, r))
         elif l.type == ExprType.SCALAR and r.type == ExprType.VECTOR:
-            self.nodes = [r, l]
+            _set_nodes(self, (r, l))
         else:
             raise ExpressionMismatchError("SVMul", l.type, r.type, l, r)
 
-    def __str__(self):
-        return str(self.left) + str(self.right)
+    def __str__(self) -> str:
+        return _product_str(self)
 
 
 # ---------------------------------------------------------------------------
@@ -109,18 +124,18 @@ class SVMul(_BinaryMixin, VectorExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class SMMul(_BinaryMixin, MatrixExpr):
     """Scalar-Matrix multiplication.  Normalized: left=matrix, right=scalar."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, l, r):
         l, r = _node_operands(type(self).__name__, l, r, numeric=True)
         if l.type == ExprType.MATRIX and r.type == ExprType.SCALAR:
-            self.nodes = [l, r]
+            _set_nodes(self, (l, r))
         elif l.type == ExprType.SCALAR and r.type == ExprType.MATRIX:
-            self.nodes = [r, l]
+            _set_nodes(self, (r, l))
         else:
             raise ExpressionMismatchError("SMMul", l.type, r.type, l, r)
 
@@ -133,8 +148,8 @@ class SMMul(_BinaryMixin, MatrixExpr):
         """A scalar multiple of a skew-symmetric matrix is skew-symmetric."""
         return self.left.is_skew_symmetric
 
-    def __str__(self):
-        return str(self.left) + str(self.right)
+    def __str__(self) -> str:
+        return _product_str(self)
 
 
 # ---------------------------------------------------------------------------
@@ -142,11 +157,11 @@ class SMMul(_BinaryMixin, MatrixExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class MVMul(_BinaryMixin, VectorExpr):
     """Matrix-Vector multiplication."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, l, r):
         l, r = _node_operands("MVMul", l, r)
@@ -160,11 +175,11 @@ class MVMul(_BinaryMixin, VectorExpr):
                     )
                 )
             _check_mul_sizes("MVMul", l, r)
-            self.nodes = [l, r]
+            _set_nodes(self, (l, r))
         elif l.type == ExprType.VECTOR and r.type == ExprType.MATRIX:
             # row vector times matrix: vᵀ M (a row)
             if _is_row(l):
-                self.nodes = [l, r]
+                _set_nodes(self, (l, r))
             else:
                 raise ExpressionMismatchError(
                     msg=(
@@ -176,8 +191,8 @@ class MVMul(_BinaryMixin, VectorExpr):
         else:
             raise ExpressionMismatchError("MVMul", l.type, r.type, l, r)
 
-    def __str__(self):
-        return str(self.left) + str(self.right)
+    def __str__(self) -> str:
+        return _product_str(self)
 
 
 # ---------------------------------------------------------------------------
@@ -185,22 +200,22 @@ class MVMul(_BinaryMixin, VectorExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class MMMul(_BinaryMixin, MatrixExpr):
     """Matrix-Matrix multiplication."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, l, r):
         l, r = _node_operands("MMMul", l, r)
         if l.type == ExprType.MATRIX and r.type == ExprType.MATRIX:
             _check_mul_sizes("MMMul", l, r)
-            self.nodes = [l, r]
+            _set_nodes(self, (l, r))
         else:
             raise ExpressionMismatchError("MMMul", l.type, r.type, l, r)
 
-    def __str__(self):
-        return str(self.left) + str(self.right)
+    def __str__(self) -> str:
+        return _product_str(self)
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +223,7 @@ class MMMul(_BinaryMixin, MatrixExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class VVMul(_BinaryMixin, Expr):
     """Vector-Vector multiplication.
     Result type depends on Transpose:
@@ -216,7 +231,8 @@ class VVMul(_BinaryMixin, Expr):
       v * Transpose(w)  → matrix
     """
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
+    _result_type: ExprType = field(default=ExprType.SCALAR, init=False, repr=False)
 
     def __init__(self, l, r):
         l, r = _node_operands("VVMul", l, r)
@@ -225,12 +241,12 @@ class VVMul(_BinaryMixin, Expr):
             if l_row and not r_row:
                 # v^T * w → scalar: sizes must match
                 _check_mul_sizes("VVMul", l, r)
-                self.nodes = [l, r]
-                self._result_type = ExprType.SCALAR
+                _set_nodes(self, (l, r))
+                object.__setattr__(self, "_result_type", ExprType.SCALAR)
             elif not l_row and r_row:
                 # v * w^T → matrix (outer product): any sizes valid
-                self.nodes = [l, r]
-                self._result_type = ExprType.MATRIX
+                _set_nodes(self, (l, r))
+                object.__setattr__(self, "_result_type", ExprType.MATRIX)
             elif l_row:
                 raise ExpressionMismatchError(
                     msg=(
@@ -251,8 +267,8 @@ class VVMul(_BinaryMixin, Expr):
             raise ExpressionMismatchError("VVMul", l.type, r.type, l, r)
 
     @property
-    def type(self):
+    def type(self) -> ExprType:
         return self._result_type
 
-    def __str__(self):
-        return str(self.left) + str(self.right)
+    def __str__(self) -> str:
+        return _product_str(self)

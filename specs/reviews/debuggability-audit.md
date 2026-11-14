@@ -369,7 +369,7 @@ substitution; make it `raise TypeError(f"apply_manifold_rules: cannot rebuild {t
 ### F8. An invariant checker and three constructor guards (1 h)
 
 Nothing checks tree invariants after construction. Today you can build
-`TimeDerivative(S2('q'))`, `Variation(S2('q'))`, `Variation(SO3('R'))` (the the contributor notes
+`TimeDerivative(S2('q'))`, `Variation(S2('q'))`, `Variation(SO3('R'))` (the contributor notes'
 invariant "the tree never contains `TimeDerivative(q)` for a manifold point" is a
 convention, not a check; `calculus.py:69-70` has no guard) and `Transpose()` with no
 child (`geometry.py:118-122`, `type` is then `None`). Proposal:
@@ -588,7 +588,7 @@ argument instead of returning it (A18).
   rows, sign convention, worked free-rigid-body example, completeness rule),
   `manifold_rules.py:1-15`, `expand.py:1-22`, `extract.py:1-14` (dispatch grid),
   `ibp.py:1-9`. The gaps are the hypotheses the code checks (F9, F10), not the math.
-- **`REVIEW.md`, `CHANGELOG.md`, `specs/reviews/*`**: the known-limitation list
+- **An earlier code review, `CHANGELOG.md`, `specs/reviews/*`**: the known-limitation list
   (string equality, commutative rearrangements) and the spec/adversarial-review/final-review
   cycle are exactly what a returning author needs to re-orient. Do not let them go stale.
 - **Immutability and `match`/`case` rewrites**: every transformation is a pure function

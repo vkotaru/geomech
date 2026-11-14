@@ -65,29 +65,34 @@ the tree; transformations rewrite it using `match`/`case` pattern matching.
           x      x               ← Vector leaves
 ```
 
-**Pattern-matching transformations** -- tree rewrites use Python `match`/`case`:
+**Tree rewrites** -- one function per node class, picked by the class of the node
+(`match`/`case` inside a handler where a rule depends on the operands' classes):
 
 ```python
+def _elim_dot(expr):                         # binary
+    l, r = _eliminate(expr.left), _eliminate(expr.right)
+    if _is_zero(l) or _is_zero(r):
+        return rule("simplify.dot_zero", expr, Zero)
+    return Dot(l, r)
+
+
+def _elim_hat(expr):                         # unary
+    inner = _eliminate(expr.expr)
+    if isinstance(inner, Vee) and _is_skew_symmetric(inner.expr):
+        return rule("simplify.hat_vee_skew", expr, inner.expr)  # Hat(Vee(X)) = X
+    return Hat(inner)
+
+
+_ELIMINATE = {Dot: _elim_dot, Hat: _elim_hat, Add: _elim_add, ...}  # a leaf has none
+
+
 def _eliminate(expr):
-    """Remove zeros and apply identities."""
-    match expr:
-        case Dot():                          # binary
-            l, r = _eliminate(expr.left), _eliminate(expr.right)
-            if _is_zero(l) or _is_zero(r):
-                return rule("simplify.dot_zero", expr, Zero)
-            return Dot(l, r)
-        case Hat():                          # unary
-            inner = _eliminate(expr.expr)
-            if isinstance(inner, Vee) and _is_skew_symmetric(inner.expr):
-                return rule("simplify.hat_vee_skew", expr, inner.expr)  # Hat(Vee(X)) = X
-            return Hat(inner)
-        case Add(nodes=nodes):               # n-ary
-            children = [_eliminate(n) for n in nodes]
-            out = _simplify_add(children)
-            if _trace._TRACE_RULES:          # a fold logs only its own work
-                rule("simplify.add_fold", _folded_from(Add, children, expr), out)
-            return out
+    handler = _ELIMINATE.get(type(expr))
+    return _canonical_literal(expr) if handler is None else handler(expr)
 ```
+
+Nodes are frozen: a rewrite always builds new nodes, and a subtree can be shared by
+several trees.
 
 Every rewrite is logged through `rule(name, before, after)`; the names, with the hypothesis
 each rule needs, are listed in the module docstrings, and `GEOMECH_TRACE=1` logs every
@@ -236,7 +241,8 @@ simplify(expr)      # pull scalars, apply identities, eliminate zeros
 full_simplify(expr) # expand + simplify until convergence
 ```
 
-**Printing** -- `str(expr)` is the internal form and the equality key; for reading:
+**Printing** -- `str(expr)` is the internal form and the equality key (products print
+`*` between their factors: `m*g*Dot(e3,x)`); for reading:
 
 ```python
 to_latex(expr)      # LaTeX, parenthesised where juxtaposition would be ambiguous

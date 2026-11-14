@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from geomech.core.base.expressions import S2, SO3, Expr
+from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Expr, _set_nodes
 from geomech.core.operations.mixins import _CalcUnaryMixin
 
 
@@ -26,15 +26,13 @@ def _reject_manifold_leaf(expr, op, method, s2_form, so3_form):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Variation(_CalcUnaryMixin, Expr):
     """Variation operator δ{expr}.  Preserves the type of its inner expression."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, expr):
-        from geomech.core.base.expressions import TS2, TSO3
-
         _reject_manifold_leaf(expr, "Variation", "delta", "ξ × q", "R·Hat(η)")
         # δ(δ(...)) is a second-order variation — vanishes in Hamilton's principle
         if isinstance(expr, Variation):
@@ -57,7 +55,7 @@ class Variation(_CalcUnaryMixin, Expr):
                     f"Cannot take variation of variation vector {expr}. "
                     f"The variation vector is already an infinitesimal perturbation."
                 )
-        self.nodes = [expr]
+        _set_nodes(self, (expr,))
 
     def __str__(self):
         return "\\delta{" + str(self.expr) + "}"
@@ -77,15 +75,15 @@ class Variation(_CalcUnaryMixin, Expr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class TimeDerivative(_CalcUnaryMixin, Expr):
     """Time derivative d/dt{expr}.  Preserves the type of its inner expression."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, expr):
         _reject_manifold_leaf(expr, "TimeDerivative", "t_diff", "ω × q", "R·Hat(Ω)")
-        self.nodes = [expr]
+        _set_nodes(self, (expr,))
 
     def __str__(self):
         return "\\frac{d}{dt}(" + str(self.expr) + ")"
@@ -100,14 +98,14 @@ class TimeDerivative(_CalcUnaryMixin, Expr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class TimeIntegral(_CalcUnaryMixin, Expr):
     """Time integral ∫{expr}dt.  Preserves the type of its inner expression."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, expr):
-        self.nodes = [expr]
+        _set_nodes(self, (expr,))
 
     def __str__(self):
         return "\\int{" + str(self.expr) + "}dt"

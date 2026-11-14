@@ -74,8 +74,8 @@ full suite emits no `RuntimeWarning` from 2.10 (no pipeline is near the cap of 1
   (14). Existing tests touched: the four `params=[…]` additions (decision 1), the
   five-for-one replacement in `tests/test_geometry.py` (decision 2), the one-token typo
   fix in `tests/test_vbl_validation.py` (decision 3).
-- `mkdocs build --strict`: pass (the docs extras were installed into `venv/` with
-  `python -m ensurepip` + `pip install -e ".[docs]"`; the venv had no `pip`).
+- `mkdocs build --strict`: pass (the docs extras were installed into the development
+  virtual environment with `pip install -e ".[docs]"`).
 - `python specs/reviews/scripts/engine_fuzz.py --quick`: 0 wrong-value cases, 42
   findings as at baseline, same exception classes (`AlgebraicError`, `NonLinearError`,
   one pre-existing `ExpressionMismatchError` in `simplify[adversarial]` from the
@@ -94,7 +94,7 @@ full suite emits no `RuntimeWarning` from 2.10 (no pipeline is near the cap of 1
 
 ## Side effect to know about
 
-The first `pip install -e ".[docs]"` resolved to miniconda's `pip` (the venv had none)
-and installed `geomech` plus the docs extras into the miniconda base environment.
+The first `pip install -e ".[docs]"` resolved to a `pip` outside the development virtual
+environment and installed `geomech` plus the docs extras there.
 `geomech` was uninstalled from there again; `mkdocs`/`mkdocstrings`/`mkdocs-material` and
-friends may now be present in miniconda base if they were not before.
+friends may now be present in that environment if they were not before.

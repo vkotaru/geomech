@@ -312,7 +312,7 @@ patches are described under "Blocked".
     `str(s*aᵀ) == str(aᵀ*s)`, while `:120` pins `str(aᵀ*s) == "(as)'"`. Together with the
     xfail `str(x*a.T()) == "(a)'x"`, these cannot all hold.
   - The fix is ready as a one-line change: `expressions.py:120`, `_scale(b, a)` →
-    `SVMul(b, a)`. The patch is in a temporary directory at `patches/f1_code.patch`; the `_mul`
+    `SVMul(b, a)`. The patch (`f1_code.patch`) was kept in a temporary directory; the `_mul`
     docstring needs the matching sentence.
   - I tried it in place:
     - Both F1 xfails pass.
@@ -325,7 +325,7 @@ patches are described under "Blocked".
   - The blocker is `tests/test_repr_debug.py:137` `test_tangent_vector_shows_its_parent`.
     It asserts `tree_str(om) == f"TS2(..., of=S2 'q' @{id(q):#x})"` and
     `of=SO3 'R' @{id(R):#x}`.
-  - A ready implementation is in a temporary directory at `patches/f6_code.patch`. It adds
+  - A ready implementation (`f6_code.patch`) was kept in a temporary directory. It adds
     `_point_labels`, which numbers distinct points with the same name, covering both
     `S2`/`SO3` leaves and tangent parents, in order of first appearance.
   - Applied, the results were:

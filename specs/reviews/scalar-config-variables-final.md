@@ -162,7 +162,7 @@ MVMul))`. Add the three lines above as tests (expect "returned unchanged" or a t
 
 `tests/test_manifold_pipelines.py:497-560` checks only that substrings (`J1`, `\rho_1`, `m2`,
 `e3`, …) appear. That is why a wrong equation passed for the life of the test. The project
-standard (the contributor notes "Testing conventions") requires the actual derived equation. Now that the
+standard (the contributor notes, "Testing conventions") requires the actual derived equation. Now that the
 system is correct, pin the four M blocks exactly (I verified all four numerically):
 
 ```

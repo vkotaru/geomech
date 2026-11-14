@@ -17,7 +17,7 @@ pinned tests is complete and reproduces the pinned string, and the engine diff h
 remaining hole I could find. Four small things must change before merge, none in
 `geomech/`: the fuzz gate script crashes at the seed the plan's "Done when" is run with, a
 shipped notebook still teaches the old formula, the paper fix is sitting uncommitted in the
-Overleaf checkout, and the adversarial test file's docstring describes a state (xfail) that
+accompanying paper's working tree, and the adversarial test file's docstring describes a state (xfail) that
 no longer exists.
 
 ## Required changes
@@ -51,13 +51,13 @@ no longer exists.
    (the notebook's derived equation is a pendulum, `∂L/∂ω ⊥ q`, so its stored outputs are
    unaffected; no other notebook or example states the formula — grepped).
 
-3. **The paper fix is not committed.** the accompanying paper and
-   `03_toolbox.tex:116` do read `\dot{\xi} - 2\,\omega \times \xi`, and the surrounding
+3. **The paper fix is not committed.** The accompanying paper's background and toolbox
+   sections do read `\dot{\xi} - 2\,\omega \times \xi`, and the surrounding
    sentence is mathematically right (see "Verified", item 4), but `git status` in
-   the accompanying paper shows both files **modified and uncommitted** (together with
-   `04_applications.tex`, `07_appendix.tex`, `root.tex`). The engine report's "paper already
+   the paper's repository shows both files **modified and uncommitted** (together with
+   three other files). The engine report's "paper already
    carries −2; no change needed" was read off the dirty working tree. "Done when … paper
-   formula fixed" needs the two files committed and pushed to the Overleaf remote (the
+   formula fixed" needs the two files committed and pushed to the paper's remote (the
    other three modified files are outside this review; commit them or not as you intend).
 
 4. **`tests/test_phase1_adversarial.py` wording** (three lines, no assertion changes):
@@ -113,7 +113,7 @@ correctly, and the identities they state (`q·δω = −q·ξ̇`, the old rule b
 
 ### 2. The dynamics audit's rows, rebuilt from the public API
 
-a temporary directory builds the six F1 rows and the four F3 rows of
+A script in a temporary directory builds the six F1 rows and the four F3 rows of
 `specs/reviews/dynamics-audit.md` (plus the `((RJ)Ω)·e₃` grouping and `½(Ω×ρ)·J(Ω×ρ)`)
 without importing any test builder, runs `compute_eom` and `check_eom` with seeds 0 and 1
 at `h = 1e-4` (default) and `h = 1e-5`, and `assert_eom` with the resolution check:
@@ -225,7 +225,8 @@ are gone. The only inaccuracy is the "m g is of order 1e-2" phrase in the test d
   give three pipeline orders, none with `collect`, two without manifold rules: pre-existing,
   plan item 4.7, not made worse here.
 - `paper_context.md` is gitignored (`.gitignore:7`), so the corrected dispatch table the
-  engine report cites is on this machine only; the contributor notes tells readers to consult it.
+  engine report cites is not in the repository; the contributor notes tell readers to
+  consult it.
   Not a phase-1 defect, but the report's claim should be read with that in mind.
 - CHANGELOG: complete and accurate for every item I could test (S² rule and the
   quadrotor-with-load normal term, `collect` including the matrix-factor rule and the
@@ -244,7 +245,7 @@ are gone. The only inaccuracy is the "m g is of order 1e-2" phrase in the test d
 - A1. `geomech/core/math/extract.py:610-614` `_no_left_coefficient`: make the tensor rank
   follow the query type, e.g. `f"(the map is a {'4' if query.type is ExprType.MATRIX else '3'}-tensor, not C * query)"`,
   or drop the parenthesis and keep "has no left matrix coefficient".
-- A2. the accompanying paper: "which follows from differentiating
+- A2. Accompanying paper, background section: "which follows from differentiating
   `ξᵀq = 0` along (eq:s2_kin)" → "which follows from differentiating `ξᵀq = 0` along
   (eq:s2_kin) and from `ω × ξ ∥ q` for tangent `ω`, `ξ`".
 - A3. `geomech/numeric.py:407-414` `finite_difference_check` docstring: state the row

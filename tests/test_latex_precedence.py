@@ -109,7 +109,8 @@ def test_transpose_never_doubles_a_superscript():
 
     assert "^T^T" not in to_latex(Transpose(Transpose(v) * s))
     assert to_latex(Transpose(Vee(J))) == r"\left(\left(J\right)^\vee\right)^T"
-    assert to_latex(Transpose(Vector("x^*"))) == r"\left(x^*\right)^T"
+    # a superscripted name ('*' is the product separator and is not allowed in a name)
+    assert to_latex(Transpose(Vector("x^\\ast"))) == r"\left(x^\ast\right)^T"
 
 
 def test_strip_outer_parens_only_strips_a_matching_pair():

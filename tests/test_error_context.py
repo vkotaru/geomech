@@ -78,7 +78,7 @@ def test_row_product_hint_when_an_inner_product_kept_the_derivative():
     with pytest.raises(AlgebraicError) as info:
         separate_variations(dS, [dx])
     msg = str(info.value)
-    assert "survived integration by parts in the term '(\\frac{d}{dt}(\\delta{x}))'f'" in msg
+    assert "survived integration by parts in the term '(\\frac{d}{dt}(\\delta{x}))'*f'" in msg
     assert "write it as Dot(v, A * w)" in msg
 
 
@@ -205,8 +205,8 @@ def test_row_kinetic_energy_derives():
     eom = compute_eom(s.L, s.dW, s.variables)
     (eq,) = [e for _, e in eom.values()]
     assert str(eq) == (
-        "(A\\frac{d}{dt}(\\frac{d}{dt}(x))(-0.5)+(A)'\\frac{d}{dt}(\\frac{d}{dt}(x))(-0.5)"
-        "+Kx(-1)+f)"
+        "(A*\\frac{d}{dt}(\\frac{d}{dt}(x))*(-0.5)+(A)'*\\frac{d}{dt}(\\frac{d}{dt}(x))*(-0.5)"
+        "+K*x*(-1)+f)"
     )
     assert assert_eom(s.L, s.dW, s.variables, eom, inputs=s.inputs) < 1e-6
 
@@ -231,10 +231,10 @@ def test_collect_turns_an_inner_product_with_the_target_into_a_dot():
     target = x.delta().t_diff()
     v = x.t_diff()
     assert str(collect(VVMul(Transpose(target) * A, v), target)) == (
-        "Dot(\\frac{d}{dt}(\\delta{x}),A\\frac{d}{dt}(x))"
+        "Dot(\\frac{d}{dt}(\\delta{x}),A*\\frac{d}{dt}(x))"
     )
     assert str(collect(VVMul(Transpose(v) * A, target), target)) == (
-        "Dot(\\frac{d}{dt}(\\delta{x}),(A)'\\frac{d}{dt}(x))"
+        "Dot(\\frac{d}{dt}(\\delta{x}),(A)'*\\frac{d}{dt}(x))"
     )
     # an inner product without the target is left alone
     other = VVMul(Transpose(v), v)

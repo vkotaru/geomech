@@ -20,7 +20,7 @@ Python floats; the conventions follow Lee et al. (``S2.t_diff()`` is ``ω × q``
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 import numpy as np
 
@@ -45,7 +45,7 @@ from geomech.core.operations import (
 )
 
 if TYPE_CHECKING:
-    from geomech.dynamics import SystemVariables
+    from geomech.dynamics import LinearizedSystem, SystemVariables
 
 __all__ = [
     "hat",
@@ -70,18 +70,18 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 
-def hat(v):
+def hat(v: np.ndarray) -> np.ndarray:
     """Skew-symmetric matrix of ``v`` so that ``hat(v) @ w == v × w``."""
     v = np.asarray(v, dtype=float).reshape(3)
     return np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]], dtype=float)
 
 
-def vee(M):
+def vee(M: np.ndarray) -> np.ndarray:
     """Inverse of ``hat``: the ``(3, 1)`` vector of a skew-symmetric matrix."""
     return np.array([[M[2, 1]], [M[0, 2]], [M[1, 0]]])
 
 
-def rand_rot(rng):
+def rand_rot(rng: np.random.Generator) -> np.ndarray:
     """Random rotation matrix (QR of a Gaussian matrix, determinant forced to +1)."""
     A = rng.normal(size=(3, 3))
     Q, _ = np.linalg.qr(A)
@@ -220,7 +220,7 @@ class Evaluator:
         return self.leaf(node)
 
 
-def evaluate(expr, env=None, *, seed=0):
+def evaluate(expr: Expr, env: dict | None = None, *, seed: int = 0) -> Any:
     """Evaluate ``expr`` with the leaf values in ``env``; draw the rest from ``seed``.
 
     ``env`` maps the *printed name* of a leaf, ``str(leaf)``, to its value: a float for a
@@ -270,13 +270,15 @@ def _kinematic_symbols(variables):
     return out
 
 
-def sample_state(variables, inputs, rng):
+def sample_state(
+    variables: SystemVariables, inputs: Sequence[Expr], rng: np.random.Generator
+) -> dict[str, Any]:
     """Random trajectory point on the manifold: |q| = 1, q·ω = 0, q·ω̇ = 0, R ∈ SO(3).
 
     Returns an ``env`` for ``Evaluator`` holding the configuration, velocity and
     acceleration of every configuration variable and a value for every input.
     """
-    env = {}
+    env: dict[str, Any] = {}
     for var, (kq, kv, ka) in _kinematic_symbols(variables):
         if isinstance(var, Scalar):
             env[kq], env[kv], env[ka] = (float(rng.normal()) for _ in range(3))
@@ -297,7 +299,9 @@ def sample_state(variables, inputs, rng):
     return env
 
 
-def sample_direction(variables, inputs, env, rng):
+def sample_direction(
+    variables: SystemVariables, inputs: Sequence[Expr], env: dict, rng: np.random.Generator
+) -> tuple[dict, dict]:
     """Random perturbation direction tangent to the constraints.
 
     Returns ``(raw, pert)``. ``raw`` holds the generators used by ``perturbed_state``
@@ -306,7 +310,8 @@ def sample_direction(variables, inputs, env, rng):
     dstates and input variations) to their numeric values; for S² the induced
     velocity direction is δω = ξ × ω + w and δω̇ = ξ × ω̇ + a.
     """
-    raw, pert = {}, {}
+    raw: dict[str, Any] = {}
+    pert: dict[str, Any] = {}
     for var, (kq, kv, ka) in _kinematic_symbols(variables):
         if isinstance(var, Scalar):
             ds, dv, da = (float(rng.normal()) for _ in range(3))
@@ -329,10 +334,10 @@ def sample_direction(variables, inputs, env, rng):
             pert[str(Variation(Om))] = dW
             pert[str(Variation(Om).t_diff())] = ddW
         else:
-            dx, dv, da = (rng.normal(size=(3, 1)) for _ in range(3))
-            raw[kq] = (dx, dv, da)
+            dx, ddx, dddx = (rng.normal(size=(3, 1)) for _ in range(3))
+            raw[kq] = (dx, ddx, dddx)
             d = var.delta()
-            pert[str(d)], pert[str(d.t_diff())], pert[str(d.t_diff().t_diff())] = dx, dv, da
+            pert[str(d)], pert[str(d.t_diff())], pert[str(d.t_diff().t_diff())] = dx, ddx, dddx
     for u in inputs:
         du = float(rng.normal()) if isinstance(u, Scalar) else rng.normal(size=(3, 1))
         raw[str(u)] = du
@@ -340,7 +345,9 @@ def sample_direction(variables, inputs, env, rng):
     return raw, pert
 
 
-def perturbed_state(variables, inputs, env, raw, eps):
+def perturbed_state(
+    variables: SystemVariables, inputs: Sequence[Expr], env: dict, raw: dict, eps: float
+) -> dict:
     """Copy of *env* moved by *eps* along *raw* while staying on the manifold.
 
     R, R³: linear; SO(3): R exp(ε η̂), Ω + ε δΩ, Ω̇ + ε δΩ̇;
@@ -392,7 +399,9 @@ def _as_array(x):
     return np.atleast_2d(np.asarray(x, dtype=float))
 
 
-def linearized_rhs(lin, row, ev, pert, dvals):
+def linearized_rhs(
+    lin: LinearizedSystem, row: str, ev: Evaluator, pert: dict, dvals: dict
+) -> np.ndarray:
     """Numeric −M δv̇ + A δx + B δu for one row, blocks evaluated with *ev*."""
     total = 0.0
     for col, block in lin.M[row].items():
