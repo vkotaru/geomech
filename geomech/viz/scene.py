@@ -6,12 +6,12 @@ parameters, and evaluated with ``geomech.codegen.lambdify`` on the system's
 
 .. code-block:: python
 
-    scene = Scene(layout, params=p)
+    scene = Scene(layout)            # parameters come from the trajectory
     scene.add(RigidBody(R1, origin=ZeroVector, shape=Box(0.06, 0.03, 1.0), offset=[0, 0, -0.5]))
     scene.add(PointMass(x_L, radius=0.05))
     scene.add(Rod(x_Q, x_L))
     scene.add(Trace(R1 * l1 + R2 * l2))
-    frames = scene.frames(traj)      # positions and rotations per stored state
+    frames = scene.frames(traj)      # positions and rotations per stored state, with traj.p
 """
 
 from __future__ import annotations
@@ -186,15 +186,20 @@ class RigidBody:
 
 @dataclass
 class PointMass:
-    """A point mass drawn as a sphere at ``position`` (a vector expression)."""
+    """A point mass drawn as a sphere at ``position`` (a vector expression).
+
+    ``radius=None`` (the default) sizes the sphere from the scene when the report is
+    built: 6 % of the scene's half-size, at most 35 % of the largest body.
+    """
 
     position: Any
-    radius: float = 0.05
+    radius: float | None = None
     color: str | None = None
     name: str | None = None
 
     def __post_init__(self):
-        self.radius = _positive(self.radius, "PointMass: radius")
+        if self.radius is not None:
+            self.radius = _positive(self.radius, "PointMass: radius")
         self.color = _check_color(self.color)
         if self.name is None:
             self.name = str(self.position)
@@ -202,16 +207,21 @@ class PointMass:
 
 @dataclass
 class Rod:
-    """A rod (cable, massless link) between two vector expressions ``a`` and ``b``."""
+    """A rod (cable, massless link) between two vector expressions ``a`` and ``b``.
+
+    ``radius=None`` (the default) sizes the rod from the scene when the report is built:
+    1 % of the scene's half-size, at most 6 % of the largest body.
+    """
 
     a: Any
     b: Any
-    radius: float = 0.008
+    radius: float | None = None
     color: str | None = None
     name: str | None = None
 
     def __post_init__(self):
-        self.radius = _positive(self.radius, "Rod: radius")
+        if self.radius is not None:
+            self.radius = _positive(self.radius, "Rod: radius")
         self.color = _check_color(self.color)
         if self.name is None:
             self.name = f"{self.a} - {self.b}"
@@ -289,6 +299,10 @@ class _Evaluated:
         else:
             self.fn = lambdify(expr, layout)
 
+    @property
+    def needs_params(self) -> bool:
+        return self.fn is not None
+
     def __call__(self, states: np.ndarray, p: dict) -> np.ndarray:
         n = len(states)
         if self.slice is not None:
@@ -303,11 +317,95 @@ class _Evaluated:
 class _Constant:
     """A fixed inertial point (``origin=None`` or three numbers)."""
 
+    needs_params = False
+
     def __init__(self, value: np.ndarray):
         self.value = value
 
     def __call__(self, states: np.ndarray, p: dict) -> np.ndarray:
         return np.tile(self.value, (len(states), 1))
+
+
+class _Offset:
+    """A body-frame offset: three numbers, or a constant vector expression of the
+    parameters, evaluated with the parameters the scene is drawn with."""
+
+    def __init__(self, value: np.ndarray | None = None, fn: Callable | None = None, n=0):
+        self.value, self.fn, self.n_state = value, fn, n
+
+    @property
+    def needs_params(self) -> bool:
+        return self.fn is not None
+
+    def __call__(self, p: dict) -> np.ndarray:
+        if self.fn is None:
+            assert self.value is not None
+            return self.value.copy()
+        return np.asarray(self.fn(np.zeros(self.n_state), None, p), dtype=float).reshape(3)
+
+
+def _same_value(a, b) -> bool:
+    try:
+        x, y = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    except (TypeError, ValueError):
+        return bool(a == b)
+    return x.shape == y.shape and bool(np.array_equal(x, y))
+
+
+def _show(value) -> str:
+    try:
+        arr = np.asarray(value, dtype=float)
+    except (TypeError, ValueError):
+        return repr(value)
+    if arr.ndim == 0:
+        return f"{float(arr):.12g}"
+    return np.array2string(arr, precision=12, separator=", ").replace("\n", "")
+
+
+def check_same_params(given: dict | None, simulated: dict, what: str) -> None:
+    """Raise ``ValueError`` naming the first parameter whose value in *given* differs from
+    the simulated one (``trajectory.p``); parameters missing from either dict are not
+    compared."""
+    given = given or {}
+    for key in sorted(given):
+        if key in simulated and not _same_value(given[key], simulated[key]):
+            raise ValueError(
+                f"{what}: the parameter '{key}' is {_show(given[key])} there but"
+                f" {_show(simulated[key])} in trajectory.p, the parameters that were"
+                " simulated; the scene and the parameter table use trajectory.p, so drop"
+                " the params argument or pass the same p"
+            )
+
+
+def _state_entry(layout, j: int) -> str:
+    """The printed name of state entry *j* (``R1[0, 2]``, ``\\omega_{q}[1]``, ``s``)."""
+    for slot in [*layout.configuration, *layout.velocity]:
+        if slot.start is not None and slot.start <= j < slot.stop:
+            k = j - slot.start
+            if slot.shape == ():
+                return slot.key
+            if len(slot.shape) == 2:
+                return f"{slot.key}[{k // slot.shape[1]}, {k % slot.shape[1]}]"
+            return f"{slot.key}[{k}]"
+    return f"entry {j}"
+
+
+def check_finite_states(states: np.ndarray, t: np.ndarray, layout, what: str,
+                        rows: np.ndarray | None = None) -> None:  # fmt: skip
+    """Raise ``ValueError`` naming the first time and state entry that is NaN or
+    infinite (a diverged simulation)."""
+    finite = np.isfinite(states)
+    if finite.all():
+        return
+    i, j = (int(v) for v in np.argwhere(~finite)[0])
+    row = int(rows[i]) if rows is not None else i
+    n_bad = int(np.count_nonzero(~finite.all(axis=1)))
+    raise ValueError(
+        f"{what}: the state at t = {float(t[i]):.6g} (stored state {row}) is not finite:"
+        f" {_state_entry(layout, j)} = {states[i, j]}; {n_bad} of {len(states)} states are"
+        " non-finite. The simulation diverged: shorten t_span to end before"
+        f" t = {float(t[i]):.6g}, reduce dt, or check the model"
+    )
 
 
 def _numeric3(value, owner, what) -> np.ndarray:
@@ -371,8 +469,10 @@ class Scene:
 
     Args:
         layout: the ``StateLayout`` the simulated module was generated from.
-        params: the parameter dict of the simulation (``p``); the expressions of the
-            scene are evaluated with it.
+        params: optional. ``frames(traj)`` of a ``Trajectory`` always evaluates the scene
+            with ``traj.p``, the parameters that were simulated, and raises
+            ``ValueError`` when *params* gives a different value for one of them. Only
+            needed to evaluate bare state arrays (``frames(states)``).
 
     Every expression may use configuration variables and parameters of *layout* only;
     anything else raises ``ValueError`` naming the leaf when the element is added.
@@ -406,11 +506,11 @@ class Scene:
         _leaf_kinds(expr, self.layout, owner, what)
         return _Evaluated(expr, self.layout, "vector", owner)
 
-    def _offset(self, offset, owner):
+    def _offset(self, offset, owner) -> _Offset:
         from geomech.core.base.expressions import Expr
 
         if offset is None:
-            return np.zeros(3)
+            return _Offset(np.zeros(3))
         if isinstance(offset, Expr):
             from geomech.core.base.types import ExprType
 
@@ -428,11 +528,8 @@ class Scene:
                 )
             from geomech.codegen import lambdify
 
-            return np.asarray(
-                lambdify(offset, self.layout)(np.zeros(self.layout.n_state), None, self.params),
-                dtype=float,
-            ).reshape(3)
-        return _numeric3(offset, owner, "offset")
+            return _Offset(fn=lambdify(offset, self.layout), n=self.layout.n_state)
+        return _Offset(_numeric3(offset, owner, "offset"))
 
     def add(self, element):
         """Add a ``RigidBody``, ``PointMass``, ``Rod`` or ``Trace``; returns the element."""
@@ -502,21 +599,49 @@ class Scene:
         t = np.asarray(getattr(traj, "t", np.arange(len(state), dtype=float)), dtype=float)
         return t, state
 
+    def _needs_params(self) -> bool:
+        return any(
+            getattr(part, "needs_params", False)
+            for parts in self._compiled.values()
+            for part in parts
+        )
+
+    def params_for(self, traj) -> dict:
+        """The parameters the scene is drawn with: ``traj.p`` for a ``Trajectory`` (after
+        checking that ``Scene(params=...)`` agrees with it), else the scene's own."""
+        simulated = getattr(traj, "p", None)
+        if simulated is not None:
+            simulated = dict(simulated)
+            check_same_params(self.params, simulated, "Scene(params=...)")
+            return simulated
+        if not self.params and self.layout.param_names and self._needs_params():
+            raise ValueError(
+                "Scene.frames: the scene uses parameters but has none: pass a Trajectory"
+                " (its p is used), or build the Scene with params=p to evaluate bare states"
+            )
+        return self.params
+
     def frames(self, traj, indices: Sequence[int] | np.ndarray | None = None) -> SceneFrames:
         """The scene evaluated at every stored state of *traj* (a ``Trajectory`` or an
         ``(N, n_state)`` array), or at the rows *indices* of it.
 
-        Raises ``ValueError`` when an attitude is not a rotation (``RᵀR ≠ I`` or
-        ``det R ≠ 1`` beyond 1e-6) at some state.
+        A ``Trajectory`` is evaluated with its own parameters ``traj.p``; a bare array
+        with ``Scene(params=...)``.
+
+        Raises ``ValueError`` when a state is not finite (naming the first time and state
+        entry), when ``Scene(params=...)`` contradicts ``traj.p``, or when an attitude is
+        not a rotation (``RᵀR ≠ I`` or ``det R ≠ 1`` beyond 1e-6) at some state.
         """
         t, states = self._states(traj)
+        rows = None
         if indices is not None:
-            idx = np.asarray(indices, dtype=int)
-            t, states = t[idx], states[idx]
-        p = self.params
+            rows = np.asarray(indices, dtype=int)
+            t, states = t[rows], states[rows]
+        check_finite_states(states, t, self.layout, "Scene.frames", rows)
+        p = self.params_for(traj)
         out = SceneFrames(t=t)
         for body in self.bodies:
-            rot, origin, offset = self._compiled[id(body)]
+            rot, origin, offset_fn = self._compiled[id(body)]
             R = rot(states, p)
             err = np.abs(np.einsum("nki,nkj->nij", R, R) - np.eye(3)).max(initial=0.0)
             det = np.linalg.det(R) if len(R) else np.ones(0)
@@ -526,6 +651,7 @@ class Scene:
                     f" (max |RᵀR − I| = {err:.2e}, min det = {det.min():.6f})"
                 )
             pos = origin(states, p)
+            offset = offset_fn(p)
             center = pos + np.einsum("nij,j->ni", R, offset)
             out.bodies.append({"position": pos, "rotation": R, "center": center})
         for pm in self.points:
@@ -539,9 +665,10 @@ class Scene:
             out.traces.append(pt(states, p))
         return out
 
-    def body_offset(self, body: RigidBody) -> np.ndarray:
-        """The numeric body-frame offset of *body*'s shape."""
-        return self._compiled[id(body)][2].copy()
+    def body_offset(self, body: RigidBody, params: dict | None = None) -> np.ndarray:
+        """The numeric body-frame offset of *body*'s shape, with *params* (default: the
+        scene's own)."""
+        return self._compiled[id(body)][2](self.params if params is None else params)
 
     def __repr__(self):
         return (
