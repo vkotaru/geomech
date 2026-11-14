@@ -167,7 +167,14 @@ examples are generated, because unreduced terms make listings longer.
 | 5.6 | Split `_eliminate`, `linearize`, `to_latex`, `_collect_dot`, `pull` by node class (also what 4.5 needs) | dbg-F15 |
 | 5.7 | Type annotations on mixins/bases; `mypy geomech` in CI (9 errors today, 102 pyright) | dbg-F16 |
 
-## Decisions needed from the author (semantics; not changed without a yes)
+## Decisions (answered by the author on 2026-11-13)
+
+All phases 0–5 approved. Answers, as given: D1 (a) named scalars with a value stay
+symbolic; D2 (a) separator in the product family plus a type guard in `has()`; D3 and D4
+"compare by name; drop immutability claim" (D3 (b) now, freezing in phase 5; D4 (a)); D5
+keyword argument `trace=` (the recommendation, implemented in phase 4).
+
+The options as originally presented:
 
 | # | Question | Options | Recommendation |
 |---|---|---|---|

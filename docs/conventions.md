@@ -69,15 +69,30 @@ row, a sum whose first addend is a row, and d/dt, δ, ∫ of a row.
 - **Numbers.** `Number(2.5)` prints `(2.5)`, `Number(-1)` `(-1)`; `x * -1` and `-x` are
   `SVMul(x, (-1))`, printed `x(-1)`. A scalar factor is always normalised to the right of
   `SVMul`/`SMMul` (`m * x` is `SVMul(x, m)`, printed `xm`). `simplify` multiplies the
-  numeric factors of a product chain (`Mul(-0.5, Mul(m, 2)) → Mul(m, -1.0)`; an `int` times
-  a `float` prints as a float, hence `(-1.0)` next to `(-1)`), and sums numeric addends.
+  numeric factors of a product chain into one number placed last
+  (`Mul(-0.5, Mul(m, 2)) → Mul(m, -1)`, `(-1)mll → mll(-1)`); a float with an integer
+  value becomes an `int` (`0.5 · 2 · (-1)` prints `(-1)`, not `(-1.0)`), so every
+  equation prints integer coefficients the same way. Numeric addends are summed.
+- **Like terms.** Two addends merge when, after flattening their products, they have the
+  same vector or matrix base and the same symbolic factors as a multiset; their numbers
+  are added: `x(2)y + xy(3) → xy(5)`, `v a − v a → 0`, `(vᵀw)s + s(vᵀw) → (vᵀw)s(2)`
+  (`(vᵀ s) w` is first pulled to `(vᵀ w) s`). Addends with different symbolic
+  coefficients are not factored (`x a + x b` stays). Only scalar products and Dot are treated as commutative: bases and
+factors built with MMMul, MVMul, VVMul, Cross, SVMul or SMMul are compared operand by
+operand, so A B v s − B A v s, (a×b) m + (b×a) m and aᵀ b s − bᵀ a s are not merged (the
+last is equal but not recognised).
 - **Float cancellation.** Like terms are merged by their numeric coefficients; a sum
   whose magnitude is at most `1e-12` times the largest coefficient that went into it is
   treated as an exact zero (`_CANCEL_RTOL` in `simplification.py`): `x*0.1*3 − x*0.3` is `0`, not
   `x(5.55e-17)`.
 - **A named number.** `Scalar("(-1)")` without `value` prints exactly like `Number(-1)`
-  but is a symbol; `check_tree` rejects it. `Scalar("m", value=2)` is folded as the
-  number 2 and loses its name (decision D1 in `specs/fix-plan.md`).
+  but is a symbol; `check_tree` rejects it. `Scalar("m", value=2)` is a *symbol* with a
+  value: every simplification keeps it by name (`m + m` is `m(2)`, never `(4)`; with
+  `l = Scalar("l", value=3)`, `m·l` stays `ml`, never `(6)`), `to_latex` prints `m`, and only
+  `geomech.numeric` (`Evaluator`, `evaluate`, `check_eom`) uses the 2 (decision D1 in
+  `specs/fix-plan.md`). A number literal is a scalar leaf printed as its own value:
+  `Number(2)`, `Zero`, `One`, `Scalar("0.5", value=0.5)` and the numbers the operators
+  wrap (`2 * x`); `geomech.core.base.expressions.is_number_literal` tells them apart.
 
 ## `str` is the identity
 

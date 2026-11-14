@@ -20,6 +20,10 @@ Rules (name, identity, hypothesis):
   ibp.dot_prefactor   a Dot(ẋ, f) → a Dot(-x, ḟ) - Dot(x, ȧ f)
                                                        a is a non-constant scalar factor
   ibp.scalar_factor   ẋ g → -x ġ                       target is a factor of a Mul chain
+  ibp.product_rule    d/dt(∏ fᵢ^nᵢ) → Σ nᵢ fᵢ^(nᵢ-1) ḟᵢ ∏_{j≠i} fⱼ^nⱼ
+                                                       the rate ȧ of ibp.dot_prefactor;
+                                                       constant factors are skipped and
+                                                       repeated factors merged
 """
 
 from __future__ import annotations
@@ -27,6 +31,7 @@ from __future__ import annotations
 from geomech.core.base.expressions import One, Zero
 from geomech.core.math.collecting import collect
 from geomech.core.operations.addition import Add
+from geomech.core.operations.calculus import TimeDerivative
 from geomech.core.operations.geometry import Dot
 from geomech.core.operations.multiplication import Mul, SVMul
 from geomech.core.transformations.expansion import expand
@@ -170,7 +175,10 @@ def _apply_ibp(expr, target):
             if prefactor.is_constant:
                 return out
             # Non-constant prefactor a: the product rule also needs -Dot(x, ȧ f)
-            a_dot_f = SVMul(dot.right, _t_diff_product(prefactor))
+            a_rate = rule(
+                "ibp.product_rule", TimeDerivative(prefactor), _t_diff_product(prefactor)
+            )
+            a_dot_f = SVMul(dot.right, a_rate)
             return rule(
                 "ibp.dot_prefactor", expr, Add(out, Dot(target.t_integrate() * (-1), a_dot_f))
             )

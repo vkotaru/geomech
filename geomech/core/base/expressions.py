@@ -624,7 +624,7 @@ Zero = Scalar("0", value=0, attr=["Constant", "Zero"])
 One = Scalar("1", value=1, attr=["Constant", "Ones"])
 ZeroVector = Vector(s="0v", attr=["Constant", "Zero"])
 ZeroMatrix = Matrix("0", attr=["Constant", "Zero"])
-IdentityMatrix = Matrix("I", attr=["Constant", "Identity"])
+IdentityMatrix = Matrix("I", attr=["Constant", "Identity", "SymmetricMatrix"])
 O = ZeroMatrix
 I = IdentityMatrix
 
@@ -664,6 +664,34 @@ def Number(value):
         return Scalar(s=value, attr=["Constant"])
     else:
         raise TypeError(f"Number expects int, float, or str, got {type(value).__name__}")
+
+
+def is_number_literal(expr) -> bool:
+    """True for an anonymous numeric constant: a ``Scalar`` leaf printed as its own value.
+
+    ``Number(2)`` (``(2)``), ``Zero``/``One`` (``0``/``1``), ``Scalar("0.5", value=0.5)`` and
+    the numbers the operators wrap (``2 * x``) are literals; the simplifier folds them.
+    A *named* scalar with a value, ``Scalar("m", value=2)``, is a symbol: the value is
+    only what ``geomech.numeric`` evaluates it to, and simplification keeps the name
+    (fix plan decision D1).
+    """
+    if not isinstance(expr, Scalar) or expr.value is None or getattr(expr, "nodes", None):
+        return False
+    name = expr.name
+    if not isinstance(name, str):
+        return False
+    text = name[1:-1] if name.startswith("(") and name.endswith(")") else name
+    value = expr.value
+    # an int is compared exactly: float() of an int beyond the float range overflows
+    if isinstance(value, int):
+        try:
+            return int(text) == value
+        except ValueError:
+            pass  # e.g. "2.0" for the value 2
+    try:
+        return float(text) == float(value)
+    except (TypeError, ValueError, OverflowError):
+        return False
 
 
 def getScalars(x, attr=None):

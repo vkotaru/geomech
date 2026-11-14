@@ -21,9 +21,7 @@ each product and linearity of Hat). A rule fires only when an operand is a sum.
   expand.vvmul_inner_over_vadd VVMul over VAdd → Add (inner product vᵀ w; a VAdd inside
                                Transpose(v) or in w)
   expand.hat_over_vadd         Hat(a + b) = Hat(a) + Hat(b)
-
-``Vee`` is not distributed: its operand is a matrix, and Vee over an ``MAdd`` is not
-implemented yet (the operand is expanded, the ``Vee`` is kept).
+  expand.vee_over_madd         Vee(A + B) = Vee(A) + Vee(B)
 
 ``Transpose`` is not expanded on its own (Transpose(MAdd) and Transpose(VVMul)
 are left intact); the VVMul rule is the only place that looks through a
@@ -41,6 +39,7 @@ from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
 from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee, is_row_vector
 from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
+from geomech.core.transformations.utils import calculus_node
 from geomech.utils.trace import rule
 
 
@@ -218,14 +217,18 @@ def expand(expr):
                 return rule("expand.hat_over_vadd", expr, MAdd(*[Hat(n) for n in inner.nodes]))
             return Hat(inner)
 
+        # Vee is linear: Vee(A + B) = Vee(A) + Vee(B)
         case Vee():
-            return Vee(expand(expr.expr))
+            inner = expand(expr.expr)
+            if isinstance(inner, MAdd):
+                return rule("expand.vee_over_madd", expr, VAdd(*[Vee(n) for n in inner.nodes]))
+            return Vee(inner)
 
         case Variation():
-            return Variation(expand(expr.expr))
+            return calculus_node(Variation, expand(expr.expr))
 
         case TimeDerivative():
-            return TimeDerivative(expand(expr.expr))
+            return calculus_node(TimeDerivative, expand(expr.expr))
 
         case TimeIntegral():
             return TimeIntegral(expand(expr.expr))

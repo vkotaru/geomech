@@ -491,7 +491,9 @@ class TestSkewPropagation:
         for seed in range(3):
             assert np.allclose(evaluate(Hat(Vee(X)), seed=seed), evaluate(out, seed=seed))
         cancelled = name in ("K", "Hat", "MAdd_KK", "SMMul", "Transpose")
-        assert (str(out) == str(X)) == cancelled
+        # Hat(Vee(X)) = X for skew X; compared with X simplified, since Kᵀ now
+        # simplifies to K(-1) (phase 5a, Transpose(skew) = −skew)
+        assert (str(out) == str(full_simplify(X))) == cancelled
 
 
 # ---------------------------------------------------------------------------
@@ -563,14 +565,16 @@ def _with_term_changed(eom, key, pred, factor):
 
 
 class TestOracle:
-    def test_scalar_with_value_is_folded_by_engine_and_used_by_evaluator(self):
+    def test_scalar_with_value_stays_symbolic_in_engine_and_is_used_by_evaluator(self):
+        """Decision D1 (phase 5a): a named scalar with a value stays symbolic in the
+        engine (it used to be folded to the literal 2); the evaluator still uses the value."""
         m2, g = Scalar("m", value=2, attr=["Constant"]), Scalar("g", attr=["Constant"])
         e3, x, f = Vector("e3", attr=["Constant"]), Vector("x"), Vector("f")
         v = x.t_diff()
         L = HALF * m2 * Dot(v, v) - m2 * g * Dot(x, e3)
         variables = SystemVariables(vectors=[x])
         eom = compute_eom(L, Dot(x.delta(), f), variables)
-        assert "m" not in str(eom[str(x.delta())][1])  # folded to the literal 2
+        assert "m" in str(eom[str(x.delta())][1])  # kept by name (D1)
         assert check_eom(L, Dot(x.delta(), f), variables, eom, inputs=[f]) < TOL
 
     def test_flipped_terms_are_detected_with_random_parameters(self):

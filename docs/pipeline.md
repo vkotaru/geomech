@@ -53,14 +53,17 @@ tree stops changing (at most `max_iter=10` passes; hitting the cap emits the
 
 1. `pull`: hoist scalar factors out of products (`pull.dot_scaled`,
    `pull.mvmul_scaled`, …);
-2. `vector_rules`: geometric identities, top down — orthogonality
+2. `vector_rules`: geometric identities, bottom up — orthogonality
    (`vector.dot_cross_orthogonal`), unit norm (`vector.dot_unit_norm`), tangency on S²
-   (`vector.dot_tangent_orthogonal`, `vector.s2_tangent_recovery`, …). It recurses only
-   through `Add`, `Mul`, `VAdd`, `SVMul` and `Cross`: a rule does not fire below a `Dot`
-   operand, an `MVMul`, a `Hat` or a calculus node;
+   (`vector.dot_tangent_orthogonal`, `vector.s2_tangent_recovery`, …). Like `pull`, it
+   recurses through every node class (one shared `rebuild` helper), so a rule fires
+   below a `Dot` operand, an `MVMul`, a `Hat`, a `Transpose` or a calculus node too;
 3. `_eliminate`: bottom up, zeros, identities and numbers (`simplify.mul_fold`,
    `simplify.mvmul_hat_to_cross`, `simplify.orthogonal_transpose`,
-   `simplify.transpose_symmetric`, …).
+   `simplify.transpose_symmetric`, `simplify.transpose_skew`, the `MMMul`
+   associativity `simplify.mmmul_reassociate`/`simplify.mmmul_combine`, …). Like terms
+   are merged on flattened products: `x(2)y + xy(3) → xy(5)`, `v a − v a → 0`, and the
+   numbers of a product are folded into one placed last (`(-1)m → m(-1)`, `(-1.0) → (-1)`).
 
 The rules and the hypothesis each needs are listed in the docstrings of
 `geomech.core.transformations.pulling`, `.vector_identities` and `.simplification`
@@ -74,7 +77,8 @@ matrices). It first runs `expand` and `full_simplify` (`[ibp.prepare]`), then fo
 target in turn:
 
 1. `collect(expr, target)` `[ibp.collect[t]]` rewrites every term so that the target is
-   the *left* operand of a `Dot`: commutativity (`collect.flip`), the cyclic triple
+   the *left* operand of a `Dot`: commutativity (`collect.flip_target_right`,
+   `collect.flip_mvmul_left`, … : one name per call site), the cyclic triple
    product (`collect.triple_product_left`, `_right`, `_left_nested`, … : one name per
    rotation), peeling a matrix off the side holding the target,
    `Dot(M f, w) = Dot(f, Mᵀ w)` (`collect.peel_matrix`), stripping a common rotation
@@ -83,7 +87,8 @@ target in turn:
    inside the *matrix* factor of a product (`Hat(Ω)`, `Ω cᵀ`) cannot be exposed and
    raises `AlgebraicError` naming the term;
 2. one IBP pass `[ibp.integrate[t]]`: `a Dot(ẋ, f) → a Dot(−x, ḟ)` (`ibp.dot`), with the
-   product rule when the scalar prefactor `a` is not constant (`ibp.dot_prefactor`), and
+   product rule when the scalar prefactor `a` is not constant (`ibp.dot_prefactor`, whose
+   rate `ȧ` is logged as `ibp.product_rule`), and
    `ẋ g → −x ġ` for a scalar target in a product (`ibp.scalar_factor`). Boundary terms
    are dropped (Hamilton's principle);
 3. `full_simplify` `[ibp.simplify[t]]`.
@@ -95,7 +100,8 @@ extraction in stage 6 then fails, and `compute_eom` names the term (see
 ## 5. Expand `[expand]`
 
 `expand` distributes every product over sums (`expand.dot_over_vadd`,
-`expand.mvmul_over_sum`, …) so that each additive term of δS carries exactly one
+`expand.mvmul_over_sum`, …) and the linear maps `Hat` and `Vee` over a sum
+(`expand.hat_over_vadd`, `expand.vee_over_madd`) so that each additive term of δS carries exactly one
 variation vector as a direct factor.
 
 ## 6. Extraction `[raw[ξ]]`, `[equation[ξ]]`
@@ -158,10 +164,10 @@ dL                                        30 nodes  ((<δ(v:\Omega_{R}), M:J*·v
 dW                                         3 nodes  <v:\eta_{R}, v:M>
 dS                                        33 nodes  ((<δ(v:\Omega_{R}), M:J*·v:\Omega_{R}> + <v:\Omega_{R}, M:J*·δ(v:\O...
 manifold_rules                            41 nodes  ((<(d/dt(v:\eta_{R}) + cross(v:\Omega_{R}, v:\eta_{R})), M:J*·v:\Om...
-simplify                                  51 nodes  (<d/dt(v:\eta_{R}), M:J*·v:\Omega_{R}>·(0.5) + <cross(v:\Omega_{R},...
-ibp.prepare                               51 nodes  (<d/dt(v:\eta_{R}), M:J*·v:\Omega_{R}>·(0.5) + <cross(v:\Omega_{R},...
-ibp.collect[\frac{d}{dt}(\eta_{R})]       52 nodes  (<d/dt(v:\eta_{R}), M:J*·v:\Omega_{R}>·(0.5) + <cross(v:\Omega_{R},...
-ibp.integrate[\frac{d}{dt}(\eta_{R})]     56 nodes  (<-v:\eta_{R}, M:J*·d/dt(v:\Omega_{R})>·(0.5) + <cross(v:\Omega_{R}...
+simplify                                  51 nodes  (<d/dt(v:\eta_{R}), M:J*·v:\Omega_{R}>·0.5 + <cross(v:\Omega_{R}, v...
+ibp.prepare                               51 nodes  (<d/dt(v:\eta_{R}), M:J*·v:\Omega_{R}>·0.5 + <cross(v:\Omega_{R}, v...
+ibp.collect[\frac{d}{dt}(\eta_{R})]       52 nodes  (<d/dt(v:\eta_{R}), M:J*·v:\Omega_{R}>·0.5 + <cross(v:\Omega_{R}, v...
+ibp.integrate[\frac{d}{dt}(\eta_{R})]     56 nodes  (<-v:\eta_{R}, M:J*·d/dt(v:\Omega_{R})>·0.5 + <cross(v:\Omega_{R}, ...
 ibp.simplify[\frac{d}{dt}(\eta_{R})]      43 nodes  (-<v:\eta_{R}, M:J*·d/dt(v:\Omega_{R})> + <cross(v:\Omega_{R}, v:\e...
 ibp                                       43 nodes  (-<v:\eta_{R}, M:J*·d/dt(v:\Omega_{R})> + <cross(v:\Omega_{R}, v:\e...
 expand                                    43 nodes  (-<v:\eta_{R}, M:J*·d/dt(v:\Omega_{R})> + <cross(v:\Omega_{R}, v:\e...
@@ -206,15 +212,15 @@ geomech.rules: manifold.so3_variation_Omega: δ(v:\Omega_{R}) ==> (d/dt(v:\eta_{
 geomech.rules: vector.dot_tangent_orthogonal: <v:\omega_{q}, S2:q> ==> 0
 ```
 
-For the rigid pendulum above, 38 lines are logged. The rules that fire, with their line
+For the rigid pendulum above, 42 lines are logged. The rules that fire, with their line
 counts, are `manifold.so3_variation_Omega` (2), `expand.dot_over_vadd` (2),
 `expand.mul_over_add`, `expand.mvmul_over_sum`, `pull.dot_scaled` (2),
-`pull.mvmul_scaled` (2), `pull.svmul_nested` (2), `pull.smmul_nested`, `collect.flip`,
-`collect.peel_matrix`, `ibp.dot` (2), and in `_eliminate` `simplify.mul_fold` (4),
-`simplify.mvmul_hat_to_cross` (3), `simplify.mvmul_reassociate` (3),
-`simplify.transpose_hat_skew` (3), `simplify.transpose_symmetric` (2),
-`simplify.transpose_product` (2), `simplify.transpose_scaled`, `simplify.add_fold` (2),
-`simplify.vadd_fold`. A `*_fold` line means the fold itself changed the node (zeros
+`pull.mvmul_scaled` (3), `pull.svmul_nested` (3), `pull.mmmul_scaled`,
+`pull.transpose_scaled`, `collect.flip_mvmul_right`, `collect.peel_matrix`, `ibp.dot` (2),
+and in `_eliminate` `simplify.mul_fold` (7), `simplify.mvmul_hat_to_cross` (3),
+`simplify.mvmul_reassociate` (3), `simplify.transpose_hat_skew` (3),
+`simplify.transpose_symmetric` (2), `simplify.transpose_product` (2),
+`simplify.add_fold`, `simplify.vadd_fold`. A `*_fold` line means the fold itself changed the node (zeros
 dropped, numbers combined, like terms merged); a rewrite made by a child rule is logged
 once, by that rule, not again by every enclosing sum or product. The same rewrite can
 still be logged once per pass of `full_simplify` and once per copy of the subterm. A
