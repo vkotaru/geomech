@@ -5,9 +5,9 @@ from dataclasses import dataclass, field
 from geomech.core.base.expressions import (
     Expr,
     MatrixExpr,
-    Number,
     ScalarExpr,
     VectorExpr,
+    _node_operands,
 )
 from geomech.core.base.types import ExprType
 from geomech.core.operations.mixins import _BinaryMixin
@@ -19,10 +19,24 @@ from geomech.utils.errors import ExpressionMismatchError, SizeMismatchError
 
 
 def _wrap_numeric(val):
-    """Wrap int/float to Scalar constant."""
-    if isinstance(val, (int, float)):
+    """Wrap a number (int, float, numpy scalar) as a ``Number``; pass anything else through."""
+    from geomech.core.base.expressions import Number, _is_number
+
+    if _is_number(val):
         return Number(val)
     return val
+
+
+def _is_row(expr):
+    from geomech.core.operations.geometry import is_row_vector
+
+    return is_row_vector(expr)
+
+
+def _q(expr):
+    from geomech.utils.errors import _operand_str
+
+    return _operand_str(expr)
 
 
 def _check_mul_sizes(op_name: str, l, r):
@@ -56,11 +70,11 @@ class Mul(_BinaryMixin, ScalarExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, l, r):
-        l, r = _wrap_numeric(l), _wrap_numeric(r)
+        l, r = _node_operands(type(self).__name__, l, r, numeric=True)
         if l.type == ExprType.SCALAR and r.type == ExprType.SCALAR:
             self.nodes = [l, r]
         else:
-            raise ExpressionMismatchError("Mul", l.type, r.type)
+            raise ExpressionMismatchError("Mul", l.type, r.type, l, r)
 
     def __str__(self):
         return str(self.left) + str(self.right)
@@ -78,13 +92,13 @@ class SVMul(_BinaryMixin, VectorExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, l, r):
-        l, r = _wrap_numeric(l), _wrap_numeric(r)
+        l, r = _node_operands(type(self).__name__, l, r, numeric=True)
         if l.type == ExprType.VECTOR and r.type == ExprType.SCALAR:
             self.nodes = [l, r]
         elif l.type == ExprType.SCALAR and r.type == ExprType.VECTOR:
             self.nodes = [r, l]
         else:
-            raise ExpressionMismatchError("SVMul", l.type, r.type)
+            raise ExpressionMismatchError("SVMul", l.type, r.type, l, r)
 
     def __str__(self):
         return str(self.left) + str(self.right)
@@ -102,13 +116,13 @@ class SMMul(_BinaryMixin, MatrixExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, l, r):
-        l, r = _wrap_numeric(l), _wrap_numeric(r)
+        l, r = _node_operands(type(self).__name__, l, r, numeric=True)
         if l.type == ExprType.MATRIX and r.type == ExprType.SCALAR:
             self.nodes = [l, r]
         elif l.type == ExprType.SCALAR and r.type == ExprType.MATRIX:
             self.nodes = [r, l]
         else:
-            raise ExpressionMismatchError("SMMul", l.type, r.type)
+            raise ExpressionMismatchError("SMMul", l.type, r.type, l, r)
 
     @property
     def is_symmetric(self):
@@ -135,19 +149,32 @@ class MVMul(_BinaryMixin, VectorExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, l, r):
+        l, r = _node_operands("MVMul", l, r)
         if l.type == ExprType.MATRIX and r.type == ExprType.VECTOR:
+            if _is_row(r):
+                raise ExpressionMismatchError(
+                    msg=(
+                        f"MVMul: a matrix times a row vector is not defined: {_q(l)} * {_q(r)};"
+                        " a matrix multiplies a column vector (M * v), and a row vector"
+                        " multiplies a matrix from the left (v.T() * M)"
+                    )
+                )
             _check_mul_sizes("MVMul", l, r)
             self.nodes = [l, r]
         elif l.type == ExprType.VECTOR and r.type == ExprType.MATRIX:
-            # Transpose(v) * M case
-            from geomech.core.operations.geometry import Transpose
-
-            if isinstance(l, Transpose):
+            # row vector times matrix: vᵀ M (a row)
+            if _is_row(l):
                 self.nodes = [l, r]
             else:
-                raise ExpressionMismatchError("MVMul", l.type, r.type)
+                raise ExpressionMismatchError(
+                    msg=(
+                        f"MVMul: a column vector times a matrix is not defined: {_q(l)} *"
+                        f" {_q(r)}; write M * v for the column M v, or v.T() * M for the"
+                        " row vᵀ M"
+                    )
+                )
         else:
-            raise ExpressionMismatchError("MVMul", l.type, r.type)
+            raise ExpressionMismatchError("MVMul", l.type, r.type, l, r)
 
     def __str__(self):
         return str(self.left) + str(self.right)
@@ -165,11 +192,12 @@ class MMMul(_BinaryMixin, MatrixExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, l, r):
+        l, r = _node_operands("MMMul", l, r)
         if l.type == ExprType.MATRIX and r.type == ExprType.MATRIX:
             _check_mul_sizes("MMMul", l, r)
             self.nodes = [l, r]
         else:
-            raise ExpressionMismatchError("MMMul", l.type, r.type)
+            raise ExpressionMismatchError("MMMul", l.type, r.type, l, r)
 
     def __str__(self):
         return str(self.left) + str(self.right)
@@ -191,22 +219,36 @@ class VVMul(_BinaryMixin, Expr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, l, r):
-        from geomech.core.operations.geometry import Transpose
-
+        l, r = _node_operands("VVMul", l, r)
         if l.type == ExprType.VECTOR and r.type == ExprType.VECTOR:
-            if isinstance(l, Transpose) and not isinstance(r, Transpose):
+            l_row, r_row = _is_row(l), _is_row(r)
+            if l_row and not r_row:
                 # v^T * w → scalar: sizes must match
                 _check_mul_sizes("VVMul", l, r)
                 self.nodes = [l, r]
                 self._result_type = ExprType.SCALAR
-            elif not isinstance(l, Transpose) and isinstance(r, Transpose):
+            elif not l_row and r_row:
                 # v * w^T → matrix (outer product): any sizes valid
                 self.nodes = [l, r]
                 self._result_type = ExprType.MATRIX
+            elif l_row:
+                raise ExpressionMismatchError(
+                    msg=(
+                        f"VVMul: two row vectors cannot be multiplied: {_q(l)} * {_q(r)};"
+                        " write a.T() * b for the inner product aᵀb or a * b.T() for the"
+                        " outer product a bᵀ"
+                    )
+                )
             else:
-                raise ExpressionMismatchError("VVMul", l.type, r.type)
+                raise ExpressionMismatchError(
+                    msg=(
+                        f"VVMul: two column vectors cannot be multiplied: {_q(l)} * {_q(r)};"
+                        " write Dot(a, b) or a.T() * b for the inner product, a * b.T() for"
+                        " the outer product, or Cross(a, b)"
+                    )
+                )
         else:
-            raise ExpressionMismatchError("VVMul", l.type, r.type)
+            raise ExpressionMismatchError("VVMul", l.type, r.type, l, r)
 
     @property
     def type(self):

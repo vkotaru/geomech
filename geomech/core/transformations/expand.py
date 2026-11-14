@@ -8,7 +8,8 @@ Distribution rules implemented:
   Dot  over VAdd  → Add     (scalar from vectors)
   Cross over VAdd → VAdd    (vector)
   SVMul over VAdd/Add → VAdd (vector, left=vector right=scalar)
-  MVMul over MAdd/VAdd → VAdd (vector)
+  MVMul over MAdd/VAdd → VAdd (vector; also a row times a matrix, rᵀ M, over a sum of
+                        rows on the left or an MAdd on the right)
   SMMul over MAdd/Add → MAdd (matrix, left=matrix right=scalar)
   MMMul over MAdd → MAdd    (matrix)
   VVMul over VAdd → MAdd    (outer product  v wᵀ; a VAdd in v or inside Transpose(w))
@@ -19,12 +20,17 @@ Distribution rules implemented:
 are left intact); the VVMul rule is the only place that looks through a
 ``Transpose(VAdd)`` factor, because a bare ``VAdd`` of transposed vectors is not
 a valid ``VVMul`` operand.
+
+Row vectors that are not a ``Transpose`` node (``aᵀK``, ``s aᵀ``, ``aᵀ + bᵀ``) are
+distributed in place and keep their row form: ``(aᵀ(K + J)) b`` expands to
+``aᵀK b + aᵀJ b``. Inside such a row, a ``Transpose(VAdd)`` factor is split the same way
+as in a ``VVMul``.
 """
 
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
+from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee, is_row_vector
 from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
 
 
@@ -69,6 +75,38 @@ def _transposed_addends(node):
     return None
 
 
+def _row_addends(row):
+    """The addends of the expanded row vector *row*, each a row vector.
+
+    A ``Transpose`` node is only split (``_transposed_addends``), as in ``VVMul``; any
+    other row shape is expanded and a resulting ``VAdd`` of rows is split.
+    """
+    if isinstance(row, Transpose):
+        return _transposed_addends(row) or [row]
+    out = expand(row)
+    return list(out.nodes) if isinstance(out, VAdd) else [out]
+
+
+def _expand_row_mvmul(expr):
+    """Distribute the row ``rᵀ M`` over a sum of rows and over an ``MAdd`` matrix."""
+    ls = _row_addends(expr.left)
+    r = expand(expr.right)
+    rs = list(r.nodes) if isinstance(r, MAdd) else [r]
+    if len(ls) == 1 and len(rs) == 1:
+        return MVMul(ls[0], rs[0])
+    return VAdd(*[MVMul(nl, nr) for nl in ls for nr in rs])
+
+
+def _expand_row_svmul(expr):
+    """Distribute the row ``rᵀ s`` over a sum of rows and over an ``Add`` scalar."""
+    ls = _row_addends(expr.left)
+    r = expand(expr.right)
+    rs = list(r.nodes) if isinstance(r, Add) else [r]
+    if len(ls) == 1 and len(rs) == 1:
+        return SVMul(ls[0], rs[0])
+    return VAdd(*[SVMul(nl, nr) for nl in ls for nr in rs])
+
+
 def _expand_vvmul(expr):
     """Distribute an outer product ``v wᵀ`` (→ MAdd) or an inner product ``vᵀ w``
     (→ Add) over a ``VAdd`` in either factor.
@@ -82,16 +120,16 @@ def _expand_vvmul(expr):
         # outer product: left is a plain vector, right is Transpose(w)
         l = expand(expr.left)
         ls = list(l.nodes) if isinstance(l, VAdd) else [l]
-        rs = _transposed_addends(expr.right) or [expr.right]
+        rs = _row_addends(expr.right)
         if len(ls) == 1 and len(rs) == 1:
-            return VVMul(l, expr.right)
+            return VVMul(l, rs[0])
         return MAdd(*[VVMul(nl, nr) for nl in ls for nr in rs])
     # inner product: left is Transpose(v), right is a plain vector
     r = expand(expr.right)
-    ls = _transposed_addends(expr.left) or [expr.left]
+    ls = _row_addends(expr.left)
     rs = list(r.nodes) if isinstance(r, VAdd) else [r]
     if len(ls) == 1 and len(rs) == 1:
-        return VVMul(expr.left, r)
+        return VVMul(ls[0], r)
     return Add(*[VVMul(nl, nr) for nl in ls for nr in rs])
 
 
@@ -123,11 +161,17 @@ def expand(expr):
             return _distribute(l, r, Cross, VAdd, VAdd, VAdd)
 
         # --- Scalar * Vector  (left=vector, right=scalar) ---
+        case SVMul() if is_row_vector(expr.left):
+            return _expand_row_svmul(expr)
+
         case SVMul():
             l, r = expand(expr.left), expand(expr.right)
             return _distribute(l, r, SVMul, VAdd, VAdd, Add)
 
         # --- Matrix * Vector ---
+        case MVMul() if expr.left.type == ExprType.VECTOR:
+            return _expand_row_mvmul(expr)
+
         case MVMul():
             l, r = expand(expr.left), expand(expr.right)
             return _distribute(l, r, MVMul, VAdd, MAdd, VAdd)

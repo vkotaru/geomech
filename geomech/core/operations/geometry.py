@@ -7,6 +7,7 @@ from geomech.core.base.expressions import (
     MatrixExpr,
     ScalarExpr,
     VectorExpr,
+    _node_operands,
 )
 from geomech.core.base.types import ExprType
 from geomech.core.operations.mixins import _BaseMixin, _BinaryMixin, _UnaryMixin
@@ -24,6 +25,7 @@ class Dot(_BinaryMixin, ScalarExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, l, r):
+        l, r = _node_operands(type(self).__name__, l, r)
         if l.type == ExprType.VECTOR and r.type == ExprType.VECTOR:
             ls = getattr(l, "size", None)
             rs = getattr(r, "size", None)
@@ -31,7 +33,7 @@ class Dot(_BinaryMixin, ScalarExpr):
                 raise SizeMismatchError("Dot", ls, rs)
             self.nodes = [l, r]
         else:
-            raise ExpressionMismatchError("Dot", l.type, r.type)
+            raise ExpressionMismatchError("Dot", l.type, r.type, l, r)
 
     def __str__(self):
         return "Dot(" + str(self.left) + "," + str(self.right) + ")"
@@ -49,6 +51,7 @@ class Cross(_BinaryMixin, VectorExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, l, r):
+        l, r = _node_operands(type(self).__name__, l, r)
         if l.type == ExprType.VECTOR and r.type == ExprType.VECTOR:
             ls = getattr(l, "size", None)
             rs = getattr(r, "size", None)
@@ -56,7 +59,7 @@ class Cross(_BinaryMixin, VectorExpr):
                 raise SizeMismatchError("Cross", ls, rs)
             self.nodes = [l, r]
         else:
-            raise ExpressionMismatchError("Cross", l.type, r.type)
+            raise ExpressionMismatchError("Cross", l.type, r.type, l, r)
 
     def __str__(self):
         return "Cross(" + str(self.left) + "," + str(self.right) + ")"
@@ -74,10 +77,11 @@ class Hat(_UnaryMixin, MatrixExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, expr):
+        (expr,) = _node_operands("Hat", expr)
         if expr.type == ExprType.VECTOR:
             self.nodes = [expr]
         else:
-            raise ExpressionMismatchError("Hat", ExprType.VECTOR, expr.type)
+            raise ExpressionMismatchError.unary("Hat", ExprType.VECTOR, expr)
 
     @property
     def is_skew_symmetric(self):
@@ -100,10 +104,11 @@ class Vee(_UnaryMixin, VectorExpr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, expr):
+        (expr,) = _node_operands("Vee", expr)
         if expr.type == ExprType.MATRIX:
             self.nodes = [expr]
         else:
-            raise ExpressionMismatchError("Vee", ExprType.MATRIX, expr.type)
+            raise ExpressionMismatchError.unary("Vee", ExprType.MATRIX, expr)
 
     def __str__(self):
         return "Vee(" + str(self.expr) + ")"
@@ -116,14 +121,28 @@ class Vee(_UnaryMixin, VectorExpr):
 
 @dataclass(eq=False, repr=False)
 class Transpose(_BaseMixin, Expr):
-    """Transpose operator.  Preserves the type of its inner expression."""
+    """Transpose operator.  Preserves the type of its inner expression.
+
+    ``Transpose(Transpose(x))`` is ``x``: the constructor returns the inner operand
+    instead of building a double transpose, so a transposed row vector is a column
+    again and never reaches the engine as a ``Transpose`` node.
+    """
 
     nodes: list = field(default_factory=list)
+
+    def __new__(cls, expr=None):
+        if isinstance(expr, Transpose):
+            return expr.expr
+        return super().__new__(cls)
 
     def __init__(self, expr=None):
         if expr is None:
             # a childless Transpose had type None and leaked into the engine
             raise TypeError("Transpose: Transpose() needs an operand; write Transpose(expr)")
+        _node_operands("Transpose", expr)
+        if isinstance(expr, Transpose):
+            # __new__ returned expr.expr, which is already built
+            return
         self.nodes = [expr]
 
     @property
@@ -164,16 +183,68 @@ class Transpose(_BaseMixin, Expr):
     def t_diff(self):
         return Transpose(self.expr.t_diff())
 
-    def __mul__(self, other):
-        from geomech.core.operations.multiplication import MVMul, SVMul, VVMul, _wrap_numeric
 
-        other = _wrap_numeric(other)
-        match other.type:
-            case ExprType.SCALAR:
-                return Transpose(SVMul(self, other))
-            case ExprType.VECTOR:
-                return VVMul(self, other)
-            case ExprType.MATRIX:
-                return MVMul(self, other)
-            case _:
-                raise ExpressionMismatchError("Transpose.__mul__", self.type, other.type)
+# ---------------------------------------------------------------------------
+# Row vectors
+# ---------------------------------------------------------------------------
+
+
+def is_row_vector(expr):
+    """True if the vector-typed *expr* is a row vector.
+
+    The tree has one ``VECTOR`` type for columns and rows; orientation is structural.
+    A row is ``Transpose(column)``, a row times a matrix (``MVMul(vᵀ, M)``), a scalar
+    multiple of a row, a sum whose first addend is a row, or a calculus operator
+    (d/dt, δ, ∫) of a row. Every other vector expression is a column.
+    """
+    from geomech.core.operations.addition import VAdd
+    from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
+    from geomech.core.operations.multiplication import MVMul, SVMul
+
+    if getattr(expr, "type", None) != ExprType.VECTOR:
+        return False
+    match expr:
+        case Transpose():
+            return not is_row_vector(expr.expr)
+        case MVMul():
+            return expr.left.type == ExprType.VECTOR
+        case SVMul():
+            return is_row_vector(expr.left)
+        case VAdd():
+            return is_row_vector(expr.nodes[0])
+        case TimeDerivative() | Variation() | TimeIntegral():
+            return is_row_vector(expr.expr)
+        case _:
+            return False
+
+
+def column_of(row):
+    """The column vector whose transpose is the row vector *row*, built structurally.
+
+    ``(vᵀ)ᵀ = v``, ``(rᵀ M)ᵀ = Mᵀ r``, ``(r s)ᵀ = rᵀ s``, a sum of rows maps addend by
+    addend, and d/dt, δ, ∫ commute with the transpose. A row of any other shape falls back
+    to ``Transpose(row)``. For a ``Transpose`` node this is the same object as
+    ``Transpose(row)``; for the other row shapes (``aᵀK``, ``s aᵀ``) it gives a column the
+    engine can work with, where ``Transpose(MVMul(aᵀ, K))`` would be opaque.
+    """
+    from geomech.core.operations.addition import VAdd
+    from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
+    from geomech.core.operations.multiplication import MVMul, SVMul
+
+    match row:
+        case Transpose():
+            return row.expr
+        case MVMul() if row.left.type == ExprType.VECTOR:
+            return MVMul(Transpose(row.right), column_of(row.left))
+        case SVMul() if is_row_vector(row.left):
+            return SVMul(column_of(row.left), row.right)
+        case VAdd() if is_row_vector(row):
+            return VAdd(*[column_of(n) for n in row.nodes])
+        case TimeDerivative() if is_row_vector(row.expr):
+            return TimeDerivative(column_of(row.expr))
+        case Variation() if is_row_vector(row.expr):
+            return Variation(column_of(row.expr))
+        case TimeIntegral() if is_row_vector(row.expr):
+            return TimeIntegral(column_of(row.expr))
+        case _:
+            return Transpose(row)

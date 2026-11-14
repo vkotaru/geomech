@@ -7,6 +7,27 @@ All notable changes to `geomech` are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- Numbers on either side of the arithmetic operators: `2 * x`, `x + 1`, `1 + x`, `x - 1`,
+  `1 - x`, unary `-x` (the same tree as `x * -1`, so its `str` matches the existing
+  `x(-1)` output) and `x / 2` (division by a number only; dividing by an expression raises
+  `TypeError` suggesting an inverse symbol such as `Scalar('1/m')`). numpy integer and
+  floating scalars (`np.int64(2)`, `np.float64(0.5)`) are wrapped like `int`/`float`, also
+  on the left (`Expr.__array_ufunc__ = None` makes numpy defer); `bool` is still rejected.
+  `x.T()` is available on every expression, not only on vectors.
+- `geomech.core.operations.geometry.is_row_vector(expr)`: the row/column orientation of a
+  vector expression, decided structurally (`Transpose(column)`, `MVMul(row, M)`, a scalar
+  multiple or sum of rows, d/dt/δ/∫ of a row), and `column_of(row)`, the column whose
+  transpose is a row, built structurally (`(aᵀK)ᵀ = Kᵀa`, `(aᵀs)ᵀ = a s`).
+- A row vector times a matrix goes through the pipeline: `L = ½ m ẋ·ẋ − ½ xᵀK x` written
+  `x.T() * K * x`, `(x - e3).T() * K * (x - e3)` and `δW = -(dx.T() * A * v)` derive and
+  pass the finite-difference oracle (`tests/test_row_forms.py`, four new systems in
+  `tests/test_eom_oracle.py`). `expand` distributes the row shapes and keeps them in row
+  form (`(aᵀ(K + J)) b → aᵀK b + aᵀJ b`, `((a + b)ᵀK) c`, `(aᵀ + bᵀ) c`, `((a + b)ᵀ s) c`),
+  `extract_linear_coeff` takes the column of a row with `column_of`, and `pull` hoists the
+  scalar of a scaled row out of an inner product (`(aᵀs) b → aᵀb s`). A row in a kinetic
+  energy (`v.T() * A * v`) is not supported yet: integration by parts only handles `Dot`.
+- `0 + x` is `x` for every expression type, so `sum([a, b, c])` works for vectors and
+  matrices and leaves no `(0)` term in a scalar sum.
 - `compute_eom(L, dW, variables, params=[...])`: prescribed time-varying parameters (a
   cable length `l(t)`, a moving attachment point `b(t)`) are declared explicitly, mirroring
   `check_eom(params=...)`. Entries must be distinct, non-constant plain
@@ -60,6 +81,46 @@ All notable changes to `geomech` are recorded here. The format follows
   notebooks for the rigid pendulum, spherical pendulum, quadrotor and quadrotor with payload.
 
 ### Changed
+- `to_latex` is precedence-aware: composite operands of a cross product, of a matrix
+  product and of a transpose are wrapped in `\left( \right)` (`a \times \left(b \times
+  c\right)`, `R^T \left(a \times b\right)`, `\left(R a\right)^T`), a dot product
+  multiplied by anything is wrapped (`\left(b \cdot c\right) a`), the numeric factors of
+  a product are folded into one coefficient printed first (`-\frac{1}{2} s s`, `2.5 s`),
+  a scalar multiple of a cross product is wrapped (`m \left(a \times b\right)`), the
+  time derivative or variation of a composite prints `\frac{d}{dt}\left(…\right)` /
+  `\delta\left(…\right)`, and a transposed scalar multiple prints `s v^T`. Every
+  ambiguous pair of the dynamics audit (F8) now prints differently, and no output contains
+  a double superscript (`^T^T`). `print_eom`, `eom_to_latex` and `render_eom` typeset the
+  equations with `to_latex` instead of embedding `str(eqn)` in LaTeX math.
+- `repr` shows the leaf type and constness: `v:x`, `M:J`, `S2:q`, `SO3:R`, a trailing `*`
+  for a constant (`m*`, `M:J*`), numbers bare; products are joined with `·` so `*` is never
+  a multiplication (`m*·g*·<v:e3*, v:x>`). `str`, the equality key, is unchanged.
+- `print_tree` defaults to `style="indent"`; each leaf lists every flag that is set
+  (now including `is_identity`, `is_skew_symmetric`, `is_orthogonal`) and a `TS2`/`TSO3`
+  names its manifold point (`of=SO3 'R'`); when two distinct points share a name within
+  one call they are labelled `#1`, `#2`. The output is deterministic (no addresses). `tree_str` keeps `style="topdown"` as its default.
+- `to_latex` wraps a factor whose LaTeX starts with `-` (a negated transpose) unless it
+  leads an unsigned product: `x \left(-a^T b\right)`, `A \left(-K^T\right)`,
+  `-\left(-K^T\right)`, `a \cdot \left(-b\right)`; before, these printed `x -a^T b` (read
+  as a subtraction) and `--K^T`.
+- Like terms whose float coefficients cancel to roundoff (`|sum| ≤ 1e-12 ·` the largest
+  coefficient) are dropped: `full_simplify(x*0.1*3 - x*0.3)` is `0`, was `x(5.55e-17)`.
+  `simplify` rewrites a transposed scaled row `((a)'x)'` to the column `ax`.
+- The `tree_str`/`print_tree(style="topdown")` labels of the products are `S·V`, `S·M`,
+  `M·V`, `M·M`, `V·V` (were `S*V`, …), since `*` marks a constant leaf.
+- Tree-building errors name the operands: `Dot cannot combine SCALAR 'm' and VECTOR 'x'`,
+  `Hat expects a VECTOR, got SCALAR 'm'`, `Sub cannot combine VECTOR 'x' and SCALAR 'm'`;
+  `J * x.T()` (was the bare `operation cannot be performed`), `x * J`, `x * y` and
+  `x.T() * y.T()` explain the row/column problem and what to write instead. The operands
+  are quoted as written: `(p + q) + a` names the sum `p + q`, not its first addend, and
+  `a - 1` reports `Sub cannot combine VECTOR 'a' and SCALAR '(1)'` (was the internal
+  `VAdd … '(-1)'`). Non-expression operands in a `TypeError` are shortened past 80
+  characters like expressions. A non-expression
+  operand (`m * "x"`, `Add(m, None)`) raises `TypeError` naming it instead of an
+  `AttributeError` from inside the package. `ExpressionMismatchError` takes the operands as
+  optional `lhs`/`rhs` arguments; the class and its base are unchanged.
+- `t_integrate()` of a constant `Scalar`/`Vector`/`Matrix` raises `AlgebraicError` naming the
+  symbol (was an empty `NotImplementedError`).
 - Unknown `attr=[...]` strings raise `ValueError` naming the symbol and listing the valid
   attributes (`Constant`, `Zero`, `Ones`, `Identity`, `UnitNorm`, `SymmetricMatrix`,
   `SkewSymmetricMatrix`, `OrthogonalMatrix`, `Manifold`, `TangentVector`). Before, a typo
@@ -142,7 +203,29 @@ All notable changes to `geomech` are recorded here. The format follows
 - `compute_eom` validates `SystemVariables`: a constant, numeric or zero entry raises
   `ValueError`; an entry of the wrong expression type raises `TypeError`.
 
+### Removed
+- `UndefinedCaseError` (unreachable: every node type is SCALAR, VECTOR or MATRIX; it
+  carried no context) is removed from `geomech.utils.errors`. It was not exported from
+  `geomech`.
+
 ### Fixed
+- `Transpose(R) * v`, `Transpose(R) * M` and `Transpose(R) * s` raised
+  `ExpressionMismatchError` (the transpose was always treated as a row vector); they now
+  build `MVMul`, `MMMul` and `SMMul`. `Transpose(v) * s` built the double transpose
+  `Transpose(SVMul(Transpose(v), s))`, a column that the engine treated as a row and that
+  `to_latex` printed as `s v^T^T`; it is now the row `Transpose(SVMul(v, s))`. The other
+  order, `s * Transpose(v)`, was not affected and is unchanged: it builds the row
+  `SVMul(Transpose(v), s)` (`(v)'s`). The two orders therefore build different trees
+  (`(v)'s` and `(vs)'`); `simplify` rewrites `(s vᵀ) w` to `s (vᵀ w)`, but not yet
+  `(vᵀ s) w`.
+- `Transpose(Transpose(x))` is `x` at construction, and the row/column orientation is
+  decided by `is_row_vector` instead of "the operand is a `Transpose` node". Legal trees
+  that `expand`/`simplify` used to break with `ExpressionMismatchError` (engine fuzz
+  report, finding 6: `(a + (bᵀK)ᵀ) cᵀ`, `cᵀ(a + (bᵀK)ᵀ)`, `((aᵀK)ᵀ)ᵀ Q`) now go through;
+  `extract_linear_coeff` takes the column of a row with `column_of(row)` (the same object
+  as `Transpose(row)` for a `Transpose` node), so it also accepts rows that are not a
+  `Transpose` node. No pinned equation changes: `str` of every system
+  through `compute_eom`, `to_standard_form` and `linearize` is byte-identical.
 - The S² variation rule substituted `δω = ξ̇ − ω × ξ`, the tangential projection of the true
   `δω = ξ̇ − 2 ω × ξ` (Lee et al. eq. 5.13 with `qqᵀξ̇ = ω × ξ` on the constraint set). Every
   Lagrangian whose `∂L/∂ω` has a component along `q` (gyroscopic `c·ω`, anisotropic
