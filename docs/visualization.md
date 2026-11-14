@@ -1,4 +1,4 @@
-# Visualization and reports
+# Visualization
 
 `geomech.viz` draws a simulated system in 3-D and writes one self-contained HTML report
 with the animation, the derived equations, the standard form and the verification

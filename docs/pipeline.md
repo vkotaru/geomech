@@ -1,4 +1,4 @@
-# The Pipeline, Stage by Stage
+# Deriving equations
 
 `compute_eom(L, dW, variables)` runs the stages below, in this order (this is the order
 of the code in `geomech/dynamics/eom.py`; the README, Getting Started and the
@@ -39,7 +39,7 @@ vector by its kinematic expansion (rules `manifold.s2_variation_omega`,
 
 - S²: `δω → ξ̇ − 2 ω × ξ` (Lee et al. eq. 5.13 on the constraint set ξ ⊥ q; the
   derivation, and why the factor is 2, is in
-  [Manifold Rules: Derivation](manifold-implementation-notes.md));
+  [Manifold rules](manifold-implementation-notes.md));
 - SO(3): `δΩ → η̇ + Ω × η` (Lee et al. eq. 6.9).
 
 A tangent vector is matched by its printed name, so only the points listed in
@@ -126,7 +126,7 @@ naming it.
   (`E = M a + f + G u`).
 - `linearize(eom, variables, inputs)` takes the variation δE of each equation, expands
   it, partitions its terms by the perturbation symbol each carries and extracts the
-  blocks of `M δẋ = A δx + B δu` ([Variation-Based Linearization](vbl.md)).
+  blocks of `M δẋ = A δx + B δu` ([Linearization](vbl.md)).
 
 ## Seeing the stages
 

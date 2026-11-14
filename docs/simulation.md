@@ -210,7 +210,7 @@ R³ × R³) and the free rigid body (Euler's equations `J Ω̇ = J Ω × Ω`, `�
 ## LQR from the linearization
 
 `lqr(lin_module, x_eq, u_eq, p, Q, R, a_eq=None, module=None)` evaluates the generated `M_lin`,
-`A_lin`, `B_lin` ([Variation-Based Linearization](vbl.md)) at an equilibrium, forms
+`A_lin`, `B_lin` ([Linearization](vbl.md)) at an equilibrium, forms
 `Ā = M⁻¹A`, `B̄ = M⁻¹B` in reduced coordinates, solves the continuous algebraic Riccati
 equation (`scipy.linalg.solve_continuous_are`) and returns an `LQRController` with the
 gain `K`, the Riccati solution `P`, the reduced `A`, `B`, the closed-loop eigenvalues and

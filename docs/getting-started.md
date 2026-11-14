@@ -1,4 +1,4 @@
-# Getting Started
+# Installation and first system
 
 ## Installation
 
@@ -37,7 +37,7 @@ eqs = compute_eom(L, dW, SystemVariables(vectors=[x]))
 print_eom(eqs)
 ```
 
-This produces the equation \(m \ddot{x} = f - mge_3\), output as a LaTeX integral equation.
+This produces the equation $m \ddot{x} = f - mge_3$, output as a LaTeX integral equation.
 
 Every symbol in `L` and `dW` is one of three things: a configuration variable (listed in
 `SystemVariables`), a constant (`attr=["Constant"]`), or a prescribed time-varying
@@ -54,11 +54,11 @@ The `compute_eom` pipeline, in the order the code runs it:
 (`expand`, `full_simplify`, then per variation vector: `collect` → IBP → `full_simplify`) →
 `expand` → extract the coefficient of each variation vector → `full_simplify`.
 
-1. **Variation** -- \(\delta L\) by the product rule; manifold points are eager
-   (\(\delta R = R\hat{\eta}\) for \(SO(3)\), \(\delta q = \xi \times q\) for \(S^2\)),
-   and \(\delta S = \delta L + \delta W\)
-2. **Manifold rules** -- \(\delta\omega = \dot\xi - 2\,\omega \times \xi\) on \(S^2\),
-   \(\delta\Omega = \dot\eta + \Omega \times \eta\) on \(SO(3)\)
+1. **Variation** -- $\delta L$ by the product rule; manifold points are eager
+   ($\delta R = R\hat{\eta}$ for $SO(3)$, $\delta q = \xi \times q$ for $S^2$),
+   and $\delta S = \delta L + \delta W$
+2. **Manifold rules** -- $\delta\omega = \dot\xi - 2\,\omega \times \xi$ on $S^2$,
+   $\delta\Omega = \dot\eta + \Omega \times \eta$ on $SO(3)$
 3. **Simplify** -- expand once, then pull scalars, apply vector identities (orthogonality,
    unit norm, tangency) and eliminate zeros until nothing changes
 4. **Integrate by parts** -- for each variation vector, `collect` rotates every term so its
@@ -66,7 +66,7 @@ The `compute_eom` pipeline, in the order the code runs it:
 5. **Expand** -- distributes products over sums
 6. **Extract** -- the coefficient of each variation vector, simplified, is its equation
 
-[The Pipeline, Stage by Stage](pipeline.md) describes each stage and how to see it
+[Deriving equations](pipeline.md) describes each stage and how to see it
 (`compute_eom(..., trace=EOMTrace())`); [Troubleshooting](troubleshooting.md) lists the
 error messages and the debugging switches; [Conventions](conventions.md) the sign and
 printing conventions.
@@ -79,7 +79,7 @@ printing conventions.
 | `Vector` | Column vector (default 3x1) | `Vector('x')` |
 | `Matrix` | Square matrix (default 3x3) | `Matrix('J', attr=['Constant'])` |
 | `S2` | Unit vector on the 2-sphere | `S2('q')` |
-| `SO3` | Rotation matrix on \(SO(3)\) | `SO3('R')` |
+| `SO3` | Rotation matrix on $SO(3)$ | `SO3('R')` |
 
 Attributes are passed as a list of strings, `attr=['Constant']`, and the names are
 case-sensitive (`'constant'` raises `ValueError` listing the valid names).

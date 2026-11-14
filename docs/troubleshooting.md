@@ -25,7 +25,7 @@ old result can be recognised; they are not suspects for a wrong equation today.
 
 First confirm it numerically: `check_eom(L, dW, variables, eom)` compares the equation
 with a finite-difference Euler–Lagrange residual computed without the library's rules
-([Verifying an Equation Numerically](numeric-verification.md)); a relative error far
+([Numeric verification](numeric-verification.md)); a relative error far
 above `1e-5` means a wrong term. Then localise it in three steps.
 
 1. **Bisect with `summary()`.** Keep only the terms of `L` (and `dW`) that the wrong
@@ -322,7 +322,7 @@ The full list of invariants is in the docstring of `geomech/utils/invariants.py`
 - **`check_tree(expr)`**: the structural invariants of a hand-built or mutated tree.
 - **`check_eom(L, dW, variables, eom)`** / **`assert_eom`**: compare a derived equation
   with a finite-difference Euler–Lagrange residual computed without the library's rules
-  ([Verifying an Equation Numerically](numeric-verification.md)). A wrong term shows up as
+  ([Numeric verification](numeric-verification.md)). A wrong term shows up as
   a relative error far above `1e-5`.
 - **`scripts/engine_fuzz.py --quick`**: checks every rewrite numerically
   on random trees; a `[wrong-value]` finding names the transformation and a minimal

@@ -346,6 +346,11 @@ This release changed derived equations and the public surface. In short:
   notebooks for the rigid pendulum, spherical pendulum, quadrotor and quadrotor with payload.
 
 ### Changed
+- Documentation moved from MkDocs Material on GitHub Pages to Sphinx + Furo on Read the
+  Docs (https://geomech.readthedocs.io), with a left sidebar grouped into Getting started,
+  Guides, Theory and API reference. `pip install -e ".[docs]"` then
+  `python -m sphinx -W --keep-going -b html docs _build/html` builds it; CI fails on any
+  warning. Math in the Markdown pages uses MyST `$…$` / `$$…$$`.
 - `to_standard_form` validates `inputs` like `linearize`: both call the new
   `geomech.dynamics.eom.check_inputs`, so they accept and reject the same inputs with the
   same message after the caller's name. Before, `to_standard_form` only ran the name-clash
