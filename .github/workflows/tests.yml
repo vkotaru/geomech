@@ -17,14 +17,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install ruff and mypy
+        run: pip install ruff "mypy==2.4.1" numpy
 
       - name: Ruff format check
         run: ruff format --check geomech/ tests/
 
       - name: Ruff lint
         run: ruff check geomech/ tests/
+
+      - name: Mypy
+        run: mypy geomech --ignore-missing-imports
 
   test:
     runs-on: ubuntu-latest

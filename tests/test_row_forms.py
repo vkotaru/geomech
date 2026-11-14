@@ -91,12 +91,12 @@ VALS = {
 @pytest.mark.parametrize(
     "build, text",
     [
-        (lambda: (a.T() * (K + J)) * b, "((a)'Kb+(a)'Jb)"),
-        (lambda: ((a + b).T() * K) * c, "((a)'Kc+(b)'Kc)"),
-        (lambda: VVMul(SVMul(Transpose(a + b), x), c), "((a)'xc+(b)'xc)"),
-        (lambda: (a.T() + b.T()) * c, "((a)'c+(b)'c)"),
-        (lambda: c * ((a + b).T() * K), "(c(a)'K+c(b)'K)"),
-        (lambda: (a.T() * K) * (x + Scalar("y")), "((a)'Kx+(a)'Ky)"),
+        (lambda: (a.T() * (K + J)) * b, "((a)'*K*b+(a)'*J*b)"),
+        (lambda: ((a + b).T() * K) * c, "((a)'*K*c+(b)'*K*c)"),
+        (lambda: VVMul(SVMul(Transpose(a + b), x), c), "((a)'*x*c+(b)'*x*c)"),
+        (lambda: (a.T() + b.T()) * c, "((a)'*c+(b)'*c)"),
+        (lambda: c * ((a + b).T() * K), "(c*(a)'*K+c*(b)'*K)"),
+        (lambda: (a.T() * K) * (x + Scalar("y")), "((a)'*K*x+(a)'*K*y)"),
     ],
 )
 def test_expand_distributes_row_shapes(build, text):
@@ -109,8 +109,8 @@ def test_expand_distributes_row_shapes(build, text):
 
 def test_column_of_each_row_shape():
     assert column_of(Transpose(a)) is a
-    assert str(column_of(a.T() * K)) == "(K)'a"
-    assert str(column_of(SVMul(Transpose(a), x))) == "ax"
+    assert str(column_of(a.T() * K)) == "(K)'*a"
+    assert str(column_of(SVMul(Transpose(a), x))) == "a*x"
     assert str(column_of(a.T() + b.T())) == "(a+b)"
     assert str(column_of(TimeDerivative(Transpose(a)))) == "\\frac{d}{dt}(a)"
     for row in (a.T() * K, SVMul(Transpose(a), x), a.T() + b.T(), (a.T() * K) * J):

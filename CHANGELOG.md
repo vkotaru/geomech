@@ -6,7 +6,57 @@ All notable changes to `geomech` are recorded here. The format follows
 
 ## [Unreleased]
 
+### Upgrading from 0.1.0
+
+The 2026-11-13 fix plan (`specs/fix-plan.md`) changed derived equations and the public
+surface. In short:
+
+- **Equations on S² change value** when `∂L/∂ω` has a component along `q`: the variation
+  rule is now `δω = ξ̇ − 2 ω×ξ` (Lee et al. eq. 5.13). Gyroscopic and coupling terms
+  were at half strength before. A false `collect` identity that corrupted
+  `Dot(M v, b×c)` terms is also fixed. Re-derive any such system.
+- **Printed form**: products print with `*` (`m*l*l*(-1)`), numbers come last, and
+  equations are shorter after the simplifier changes. Any string you compared against
+  changes; values do not.
+- **Equality**: `Mul(ab, c) != Mul(a, bc)`; calculus nodes and `Transpose` compare their
+  operand's class; symbol names may not contain `*`.
+- **Immutable nodes**: node classes are frozen dataclasses with tuple operands.
+- **Module renames**: `core.transformations.{expand, pull, simplify, vector_rules}` and
+  `core.math.collect` are now `expansion`, `pulling`, `simplification`,
+  `vector_identities`, `collecting`. The functions keep their import paths from
+  `geomech`, `geomech.core.transformations` and `geomech.core.math`.
+- **New errors on input that used to pass silently**: unknown `attr` strings, a
+  configuration variable missing from `SystemVariables` (declare prescribed time-varying
+  symbols with `compute_eom(..., params=[...])`), duplicates, a time derivative of a
+  variation in the virtual work, a calculus node over a manifold leaf, and
+  `extract_linear_coeff` raising instead of returning zero. `docs/troubleshooting.md`
+  lists every message.
+- **Warnings**: `full_simplify` emits a `RuntimeWarning` at its iteration cap, which is
+  an exception under `-W error`.
+- **New tools**: `geomech.numeric` (`check_eom`, `assert_eom`, `evaluate`),
+  `linearize`, `compute_eom(..., trace=EOMTrace())`, `GEOMECH_DEBUG`, `GEOMECH_TRACE`,
+  `check_tree`. See `docs/pipeline.md`.
+
+Open follow-ups are listed in `specs/follow-ups.md`.
+
 ### Added
+- Structure and typing (phase 5b of `specs/fix-plan.md`, items 5.5–5.7, decisions D2 (a)
+  and D3 (a)):
+  - `geomech.core.base.constants`: the literals `NEG_ONE`, `NEG_TWO`, `HALF` (printed
+    `(-1)`, `(-2)`, `(0.5)`, the same as `Number(...)`), `negate(expr)` (the tree of
+    `-expr`) and `zero_like(expr)`/`zero_of(expr_type)`; every rewrite builds its −1, −2
+    and typed zeros from them.
+  - `geomech.core.transformations.utils`: `addends`, `sum_of`, `flatten_mul`, shared by the
+    simplifier, integration by parts, `compute_eom`, `to_standard_form` and `linearize`.
+  - Public names for helpers other modules used privately: `has_algebraic`, `same_node`
+    (`geomech.core.math.extract`), `check_variables` (`geomech.dynamics.eom`),
+    `wrap_numeric` (`geomech.core.operations.multiplication`; `_wrap_numeric` stays as an
+    alias), `term_key` (`geomech.core.transformations.simplification`).
+  - Type annotations: the operation mixins declare `nodes` (and are `Expr` for the type
+    checkers), `Expr` declares `type`, `str | None` where a default is `None`, and the
+    public functions of `geomech.dynamics`, `geomech.numeric` and `geomech.utils` are
+    annotated. `mypy geomech --ignore-missing-imports` passes and runs in CI (lint job);
+    `mypy` is in the `dev` extras, pinned to 2.4.1 there and in CI. pyright: 109 errors at the start of the phase, 5 now.
 - Simplifier completeness (phase 5a of `specs/fix-plan.md`); no derived equation changes
   value, most print shorter:
   - `vector_rules` and `pull` recurse through every node class with one structural helper
@@ -166,6 +216,39 @@ All notable changes to `geomech` are recorded here. The format follows
   notebooks for the rigid pendulum, spherical pendulum, quadrotor and quadrotor with payload.
 
 ### Changed
+- Products print a `*` between their factors (phase 5b, decision D2 (a)): `Mul`
+  (`m*l`), `SVMul` (`x*m`), `SMMul` (`J*(2)`), `MVMul` (`J*\Omega`), `MMMul` (`R*J`),
+  `VVMul` (`(a)'*b`). Every pinned equation string changes form; each changed output was
+  checked to be the old string with separators inserted and numerically identical
+  (`specs/reviews/phase5b-string-changes.md`). `repr` is unchanged (`·` between factors).
+- Equality (D2 (a)): two products whose factors concatenate alike are no longer equal
+  (`Mul(ab, c) != Mul(a, bc)`); a calculus node also compares the class of its operand
+  (`Variation(Scalar("x")) != Variation(Vector("x"))`); `expr.has(x)` uses the same `==`,
+  so `Scalar("m")` does not occur in `Dot(Vector("m"), w)`. A scalar and a vector variable
+  with one name now extract separately.
+- The product separator is reserved (phase 5b review F2): a symbol name containing `*`
+  (`Scalar("m*l")`, `Vector("x^*")`, any leaf class or `Number("a*b")`) raises
+  `ValueError`, since `Mul(Scalar("m*l"), g)` and `Mul(m, Mul(l, g))` would both print
+  `m*l*g` and compare equal. Write `ml` for a lumped constant and `x^\ast` for a star.
+  `Transpose` compares the class of its operand like the calculus nodes
+  (`Transpose(Vector("x")) != Transpose(Matrix("x"))`, review F3).
+- Nodes are immutable (D3 (a)): every node class is a frozen dataclass, operands are a
+  tuple (`expr.nodes == (a, b)`), `ExprFlags` and `ManifoldInfo` are frozen. Assigning to a
+  node raises `FrozenInstanceError`; pickling, `copy` and `deepcopy` work, and a tree
+  pickled before (operands in a list) unpickles with tuple operands.
+- Like terms are grouped in one pass by a canonical key (`term_key`) instead of pairwise,
+  and an inner product of two columns is symmetric: `aᵀb s − bᵀa s → 0`.
+- Number literals are normalised by `simplify`: a bare `Number(2.0)` becomes `(2)`, and
+  `Scalar("0.5", value=0.5)` is written `(0.5)` like `Number(0.5)` (`x0.5` → `x*(0.5)`).
+- The variation and the derivative of a `Constant` vector or matrix are `ZeroVector`
+  (`0v`) and `ZeroMatrix` (`0`) instead of a vector `0` and a matrix `O`.
+- `display_standard_form` writes an input key such as `R*e3*f` as `R e3 f`.
+- Long functions are split by node class: `_eliminate` (`_ELIMINATE` table), `pull`
+  (`_PULL`), `to_latex` (`_latex_handlers()`), `collect`'s `_collect_dot`, `linearize`
+  (`_kinematic_row`, `_dynamic_row`) and `compute_eom`'s extraction message
+  (`_higher_order_error`, `_ibp_left_error`, `_collect_error`); `compute_eom` passes the
+  extraction context with a small internal exception instead of an attribute set on the
+  error. Rule names are unchanged.
 - Pinned equation strings change form (phase 5a; every changed output was checked to be
   numerically identical, ≤ 1e-15 relative, at fixed states, see
   `specs/reviews/phase5a-string-changes.md`):
@@ -351,6 +434,9 @@ All notable changes to `geomech` are recorded here. The format follows
   `ValueError`; an entry of the wrong expression type raises `TypeError`.
 
 ### Removed
+- `is_leaf` and `has_nested_add` (unused by the engine; they were exported from `geomech`
+  and `geomech.core.transformations`) and the unreachable rule `vector.transpose_transpose`
+  (the `Transpose` constructor already collapses a double transpose). Phase 5b.
 - `UndefinedCaseError` (unreachable: every node type is SCALAR, VECTOR or MATRIX; it
   carried no context) is removed from `geomech.utils.errors`. It was not exported from
   `geomech`.

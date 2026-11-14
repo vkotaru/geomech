@@ -73,12 +73,12 @@ def _same_value(before, after, trials=4):
         (Hat(Cross(a, a)), "0"),
         (MVMul(J, Cross(a, a)), "0v"),
         (TimeDerivative(Cross(a, a)), "0v"),
-        (Hat(SVMul(v, s)), "Hat(v)s"),
+        (Hat(SVMul(v, s)), "Hat(v)*s"),
         (Hat(Cross(SVMul(a, s), a)), "0"),
         (SMMul(J, Dot(q, q)), "J"),
-        (MVMul(J, Cross(q, Cross(w, q))), "J\\omega_{q}"),
-        (Vee(SMMul(J, s)), "Vee(J)s"),
-        (MVMul(Transpose(SVMul(a, s)), J), "(a)'Js"),
+        (MVMul(J, Cross(q, Cross(w, q))), "J*\\omega_{q}"),
+        (Vee(SMMul(J, s)), "Vee(J)*s"),
+        (MVMul(Transpose(SVMul(a, s)), J), "(a)'*J*s"),
     ],
     ids=lambda x: str(x)[:30],
 )
@@ -111,11 +111,11 @@ def test_vee_distributes_over_madd():
     [
         (MVMul(Transpose(IdentityMatrix), v), "v"),
         (Transpose(IdentityMatrix), "I"),
-        (Transpose(SkewSymmMatrix("S")), "S(-1)"),
-        (Transpose(MAdd(SkewSymmMatrix("S"), Hat(a))), "(S+Hat(a))(-1)"),
+        (Transpose(SkewSymmMatrix("S")), "S*(-1)"),
+        (Transpose(MAdd(SkewSymmMatrix("S"), Hat(a))), "(S+Hat(a))*(-1)"),
         (MMMul(MMMul(A, Transpose(R)), R), "A"),
         (MMMul(Transpose(R), MMMul(R, A)), "A"),
-        (MVMul(MMMul(A, Transpose(R)), MVMul(R, v)), "Av"),
+        (MVMul(MMMul(A, Transpose(R)), MVMul(R, v)), "A*v"),
     ],
     ids=lambda x: str(x)[:30],
 )
@@ -139,16 +139,16 @@ x, y = Scalar("x"), Scalar("y")
 @pytest.mark.parametrize(
     "expr, expected",
     [
-        ((x * 2) * y + (x * 3) * y, "xy(5)"),
-        (x * (y * 2) + x * (y * 3), "xy(5)"),
-        (SVMul(v, Mul(s, 2)) + SVMul(v, s), "vs(3)"),
+        ((x * 2) * y + (x * 3) * y, "x*y*(5)"),
+        (x * (y * 2) + x * (y * 3), "x*y*(5)"),
+        (SVMul(v, Mul(s, 2)) + SVMul(v, s), "v*s*(3)"),
         (a * k - a * k, "0v"),
-        (k * (a + b) - k * a, "bk"),
+        (k * (a + b) - k * a, "b*k"),
         (J * k - J * k, "0"),
-        (VVMul(SVMul(Transpose(v), s), b) + Mul(s, VVMul(Transpose(v), b)), "(v)'bs(2)"),
-        (Mul(Number(-0.5), Mul(x, 2)), "x(-1)"),
+        (VVMul(SVMul(Transpose(v), s), b) + Mul(s, VVMul(Transpose(v), b)), "(v)'*b*s*(2)"),
+        (Mul(Number(-0.5), Mul(x, 2)), "x*(-1)"),
         (x * 0.5 * 2, "x"),
-        (Mul(Number(-1), x), "x(-1)"),
+        (Mul(Number(-1), x), "x*(-1)"),
     ],
     ids=lambda e: str(e)[:30],
 )
@@ -160,12 +160,12 @@ def test_like_terms_and_numbers(expr, expected):
 
 def test_integer_valued_float_prints_as_int():
     out = full_simplify(x * Number(0.5) * Number(-2))
-    assert str(out) == "x(-1)"
+    assert str(out) == "x*(-1)"
     assert isinstance(out.right.value, int)
 
 
 def test_non_integral_float_is_kept():
-    assert str(full_simplify(x * Number(0.1) * Number(3))) == "x(0.30000000000000004)"
+    assert str(full_simplify(x * Number(0.1) * Number(3))) == "x*(0.30000000000000004)"
 
 
 def test_so3_so3_relative_rate_terms_merge():
@@ -187,10 +187,10 @@ def test_so3_so3_relative_rate_terms_merge():
 @pytest.mark.parametrize(
     "expr, expected",
     [
-        (Scalar("m", value=1) * v, "vm"),
+        (Scalar("m", value=1) * v, "v*m"),
         (Scalar("m", value=2) + Scalar("l", value=3), "(m+l)"),
-        (Scalar("m", value=2) * Scalar("l", value=3), "ml"),
-        (Scalar("g", value=9.81) + Scalar("g", value=9.81), "g(2)"),
+        (Scalar("m", value=2) * Scalar("l", value=3), "m*l"),
+        (Scalar("g", value=9.81) + Scalar("g", value=9.81), "g*(2)"),
     ],
     ids=lambda e: str(e)[:20],
 )

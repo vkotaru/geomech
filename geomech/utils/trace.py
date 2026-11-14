@@ -35,6 +35,11 @@ import logging
 import os
 import sys
 from dataclasses import MISSING, dataclass, field
+from typing import Any, Callable, TextIO, TypeVar
+
+from geomech.utils.printing import print_tree
+
+_T = TypeVar("_T")
 
 logger = logging.getLogger("geomech")
 rules_logger = logging.getLogger("geomech.rules")
@@ -51,7 +56,7 @@ def _env_flag(name):
     return os.environ.get(name, "").strip() not in ("", "0", "false", "False", "no")
 
 
-def debug_enabled():
+def debug_enabled() -> bool:
     """True when ``GEOMECH_DEBUG`` is set (pipelines then run ``check_tree``)."""
     return _env_flag("GEOMECH_DEBUG")
 
@@ -72,7 +77,7 @@ def _ensure_handler(log):
     logger.addHandler(handler)
 
 
-def set_trace(on=True):
+def set_trace(on: bool = True) -> None:
     """Log every firing of a named rewrite rule (``name: before ==> after``).
 
     The lines go to the ``geomech.rules`` logger at ``DEBUG`` level; ``set_trace(True)``
@@ -89,18 +94,18 @@ def set_trace(on=True):
         _ensure_handler(rules_logger)
 
 
-def trace_enabled():
+def trace_enabled() -> bool:
     """True while rule firings are being logged (``set_trace``/``GEOMECH_TRACE``)."""
     return _TRACE_RULES
 
 
-def short_repr(expr, limit=STAGE_REPR_CHARS):
+def short_repr(expr: object, limit: int = STAGE_REPR_CHARS) -> str:
     """``repr(expr)`` cut to *limit* characters (with ``...``)."""
     s = repr(expr)
     return s if len(s) <= limit else s[: limit - 3] + "..."
 
 
-def rule(name, before, after):
+def rule(name: str, before: object, after: _T) -> _T:
     """Return *after*; when rule tracing is on, log ``name: before ==> after``.
 
     Every rewriting ``case`` of the transformation passes returns through this helper,
@@ -147,7 +152,7 @@ def _cut_pair(a, b, limit=RULE_REPR_CHARS):
     return "..." + _cut(a[start:], limit - 3), "..." + _cut(b[start:], limit - 3)
 
 
-def node_count(expr):
+def node_count(expr: object) -> int:
     """Number of nodes (leaves included) of the tree *expr*."""
     count = 0
     stack = [expr]
@@ -158,7 +163,7 @@ def node_count(expr):
     return count
 
 
-def configure_from_env():
+def configure_from_env() -> None:
     """Apply ``GEOMECH_DEBUG`` and ``GEOMECH_TRACE`` (called once when ``geomech`` is imported)."""
     if debug_enabled():
         logger.setLevel(logging.DEBUG)
@@ -172,7 +177,7 @@ def configure_from_env():
 # ---------------------------------------------------------------------------
 
 
-def stage_recorder(trace, where):
+def stage_recorder(trace: Any, where: str) -> Callable[[str, object], None] | None:
     """A ``record(stage, value)`` callable for one pipeline run, or ``None`` when idle.
 
     *trace* is an ``EOMTrace``/``LinearizationTrace`` (or ``None``); *where* prefixes the
@@ -238,7 +243,7 @@ class _Trace:
     def _store(self, stage, value):  # pragma: no cover - overridden
         pass
 
-    def stage_names(self):
+    def stage_names(self) -> list[str]:
         """The recorded stage names, in pipeline order."""
         return [name for name, _ in self.stages]
 
@@ -256,7 +261,7 @@ class _Trace:
             f"{type(self).__name__}: no stage {stage!r}; recorded stages: {self.stage_names()}"
         )
 
-    def format_summary(self, chars=STAGE_REPR_CHARS):
+    def format_summary(self, chars: int = STAGE_REPR_CHARS) -> str:
         """One line per stage: name, node count and the first *chars* characters of repr.
 
         After a run that raised, the first line is ``FAILED at <stage>: <exception>``.
@@ -280,14 +285,12 @@ class _Trace:
             lines.append(f"{name:<{width}}  {count}  {text}")
         return "\n".join(head + lines)
 
-    def summary(self, chars=STAGE_REPR_CHARS, file=None):
+    def summary(self, chars: int = STAGE_REPR_CHARS, file: TextIO | None = None) -> None:
         """Print ``format_summary()`` (one line per stage) to *file* (default stdout)."""
         print(self.format_summary(chars), file=file or sys.stdout)
 
-    def show(self, stage, style="indent"):
+    def show(self, stage: str, style: str = "indent") -> None:
         """Print the tree of one stage with ``print_tree(..., style="indent")``."""
-        from geomech.utils.printing import print_tree
-
         value = self[stage]
         if isinstance(value, dict):
             for key, item in value.items():
@@ -337,8 +340,8 @@ class EOMTrace(_Trace):
     dS: object = None
     after_manifold_rules: object = None
     after_simplify: object = None
-    variation_vectors: list = None
-    ibp_targets: list = None
+    variation_vectors: list | None = None
+    ibp_targets: list | None = None
     after_ibp_prepare: object = None
     ibp: dict = field(default_factory=dict)
     after_ibp: object = None

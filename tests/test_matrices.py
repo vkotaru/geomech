@@ -122,7 +122,8 @@ class TestMatrixOperations:
     def test_delta_constant(self):
         J = Matrix("J", attr=["Constant"])
         d = J.delta()
-        assert str(d) == "O"
+        # phase 5b: the zero leaf of the type, ZeroMatrix (printed 0; was a matrix "O")
+        assert str(d) == "0"
         assert d.is_constant
 
     def test_diff_variable(self):

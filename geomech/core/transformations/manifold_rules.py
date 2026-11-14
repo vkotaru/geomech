@@ -43,7 +43,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Scalar
+from geomech.core.base.constants import NEG_TWO
+from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Expr
 from geomech.core.operations.addition import VAdd
 from geomech.core.operations.calculus import TimeDerivative, Variation
 from geomech.core.operations.geometry import Cross
@@ -54,8 +55,6 @@ from geomech.utils.trace import rule
 if TYPE_CHECKING:  # the dynamics layer imports this module; avoid the cycle
     from geomech.dynamics.variables import SystemVariables
 
-_NEG2 = Scalar("(-2)", value=-2, attr=["Constant"])
-
 
 def apply_manifold_rules(expr, variables: SystemVariables):
     """Apply manifold kinematic substitutions to an expression.
@@ -63,7 +62,7 @@ def apply_manifold_rules(expr, variables: SystemVariables):
     Walks the expression tree and replaces Variation(TS2) and
     Variation(TSO3) nodes with their kinematic expansions.
     """
-    tangent_map = {}
+    tangent_map: dict[str, tuple[str, Expr, Expr, Expr]] = {}
 
     # S2 manifolds (vectors)
     for vec in variables.vectors:
@@ -98,7 +97,7 @@ def _substitute(expr, tangent_map):
                 return rule(
                     "manifold.s2_variation_omega",
                     expr,
-                    VAdd(TimeDerivative(var_vec), SVMul(Cross(omega, var_vec), _NEG2)),
+                    VAdd(TimeDerivative(var_vec), SVMul(Cross(omega, var_vec), NEG_TWO)),
                 )
             elif kind == "SO3":
                 # δ(Ω) = η̇ + Ω × η

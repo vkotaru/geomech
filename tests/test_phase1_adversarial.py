@@ -184,7 +184,7 @@ class TestS2RuleOnAdversarialLagrangians:
         L = HALF * Dot(om, om) + p * Dot(c, om) - g * Dot(q, e3)
         variables = SystemVariables(vectors=[q])
         eom = compute_eom(L, Dot(xi, f), variables, params=[p])
-        assert "c\\frac{d}{dt}(p)(-1)" in str(eom[str(xi)][1])
+        assert "c*\\frac{d}{dt}(p)*(-1)" in str(eom[str(xi)][1])
         assert check_eom(L, Dot(xi, f), variables, eom, inputs=[f], params=[p], h=H) < TOL
 
 

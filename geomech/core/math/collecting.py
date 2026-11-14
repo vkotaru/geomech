@@ -171,107 +171,104 @@ def _collect_dot(expr, vec):
         return expr
 
     # --- structural patterns (exactly one side has vec) ---
-
     match (l, r):
-        # MVMul + Cross: kinetic energy patterns
         case (Cross(), MVMul()):
             # Flip so MVMul is on the left, then recurse
             return collect(rule("collect.flip_cross_mvmul", expr, Dot(r, l)), vec)
-
         case (MVMul(), Cross()):
-            # Dot(M*a, Cross(b, c)) — use triple product to put vec on left
-            if r.left == vec:
-                # Dot(M*a, Cross(vec, c)) = Dot(vec, Cross(c, M*a))
-                return rule("collect.triple_product_mvmul_left", expr, Dot(vec, Cross(r.right, l)))
-            if r.right == vec:
-                # Dot(M*a, Cross(b, vec)) = Dot(vec, Cross(M*a, b))
-                return rule("collect.triple_product_mvmul_right", expr, Dot(vec, Cross(l, r.left)))
-            if l.has(vec):
-                # vec is inside the MVMul (directly as l.right or deeper): peel the
-                # matrix, Dot(M*f(vec), b×c) = Dot(f(vec), Mᵀ(b×c)), and recurse.  Note
-                # that (M v)·(b×c) is NOT v·((M b)×c); the only valid move is Mᵀ.
-                return _peel(l, r, vec, expr)
-            # vec is nested deeper in the Cross: rotate the triple product so the
-            # factor holding vec comes out (flipping here would flip straight back).
-            if r.left.has(vec):
-                # Dot(M*a, Cross(f(vec), c)) = Dot(f(vec), Cross(c, M*a))
-                return collect(
-                    rule(
-                        "collect.triple_product_mvmul_left_nested",
-                        expr,
-                        Dot(r.left, Cross(r.right, l)),
-                    ),
-                    vec,
-                )
-            # Dot(M*a, Cross(b, f(vec))) = Dot(f(vec), Cross(M*a, b))
-            return collect(
-                rule(
-                    "collect.triple_product_mvmul_right_nested",
-                    expr,
-                    Dot(r.right, Cross(l, r.left)),
-                ),
-                vec,
-            )
-
-        # Both sides are MVMul with the same rotation matrix prefix
-        # Dot(R*a, R*b) = Dot(a, b) for orthogonal R (SO3)
+            return _collect_mvmul_cross(expr, vec)
         case (MVMul(), MVMul()):
-            if isinstance(l.left, SO3) and isinstance(r.left, SO3) and l.left == r.left:
-                # Strip the common rotation: Dot(R*a, R*b) → Dot(a, b)
-                return collect(rule("collect.strip_rotation", expr, Dot(l.right, r.right)), vec)
-            if l.has(vec):
-                # Dot(M*vec, w) → Dot(vec, Mᵀ*w); deeper, peel the matrix off and let the
-                # Cross/MVMul rules expose vec (e.g. Dot(R1*(vec×a), R2*b) with R1 ≠ R2).
-                return _peel(l, r, vec, expr)
-            # vec is in the right MVMul: flip so it is on the left
-            return collect(rule("collect.flip_mvmul_pair", expr, Dot(r, l)), vec)
-
-        # MVMul on one side only
+            return _collect_mvmul_pair(expr, vec)
         case (MVMul(), _):
-            if l.has(vec):
-                # Dot(M*vec, w) → Dot(vec, Mᵀ*w); deeper, peel one matrix layer and let
-                # the Cross/MVMul rules expose vec (f(vec) = vec×b gives
-                # Dot(vec, Cross(b, Mᵀ*w))).  If f(vec) is a shape no rule can expose
-                # (SVMul, VAdd, ...) the recursion stops with the peeled Dot unchanged.
-                return _peel(l, r, vec, expr)
-            # vec not in MVMul — the other side holds it
-            return collect(rule("collect.flip_mvmul_left", expr, Dot(r, l)), vec)
-
+            return _collect_mvmul_other(expr, vec)
         case (_, MVMul()) if r.has(vec):
             # vec is inside the MVMul: flip so MVMul is on the left, recurse
             return collect(rule("collect.flip_mvmul_right", expr, Dot(r, l)), vec)
-
-        # Cross on one or both sides — scalar triple product
         case (Cross(), _) if l.has(vec):
             # Flip so vec's Cross is on the right, then use triple product
             return collect(rule("collect.flip_cross_left", expr, Dot(r, l)), vec)
-
         case (_, Cross()):
-            if r.left == vec:
-                # Dot(a, Cross(vec, c)) = Dot(vec, Cross(c, a))
-                return rule("collect.triple_product_left", expr, Dot(vec, Cross(r.right, l)))
-            if r.right == vec:
-                # Dot(a, Cross(b, vec)) = Dot(vec, Cross(a, b))
-                return rule("collect.triple_product_right", expr, Dot(vec, Cross(l, r.left)))
-            # vec is nested deeper in the Cross (e.g. Cross(f(vec), b))
-            if r.left.has(vec):
-                # Dot(a, Cross(f(vec), c)) — use triple product
-                # = Dot(f(vec), Cross(c, a))
-                return collect(
-                    rule(
-                        "collect.triple_product_left_nested", expr, Dot(r.left, Cross(r.right, l))
-                    ),
-                    vec,
-                )
-            if r.right.has(vec):
-                # Dot(a, Cross(b, f(vec))) = Dot(f(vec), Cross(a, b))
-                return collect(
-                    rule(
-                        "collect.triple_product_right_nested", expr, Dot(r.right, Cross(l, r.left))
-                    ),
-                    vec,
-                )
-            return expr
-
+            return _collect_triple_product(expr, vec)
         case _:
             return expr
+
+
+def _collect_mvmul_cross(expr, vec):
+    """``Dot(M a, Cross(b, c))``: rotate the triple product, or peel the matrix."""
+    l, r = expr.left, expr.right
+    if r.left == vec:
+        # Dot(M*a, Cross(vec, c)) = Dot(vec, Cross(c, M*a))
+        return rule("collect.triple_product_mvmul_left", expr, Dot(vec, Cross(r.right, l)))
+    if r.right == vec:
+        # Dot(M*a, Cross(b, vec)) = Dot(vec, Cross(M*a, b))
+        return rule("collect.triple_product_mvmul_right", expr, Dot(vec, Cross(l, r.left)))
+    if l.has(vec):
+        # vec is inside the MVMul (directly as l.right or deeper): peel the
+        # matrix, Dot(M*f(vec), b×c) = Dot(f(vec), Mᵀ(b×c)), and recurse.  Note
+        # that (M v)·(b×c) is NOT v·((M b)×c); the only valid move is Mᵀ.
+        return _peel(l, r, vec, expr)
+    # vec is nested deeper in the Cross: rotate the triple product so the
+    # factor holding vec comes out (flipping here would flip straight back).
+    if r.left.has(vec):
+        # Dot(M*a, Cross(f(vec), c)) = Dot(f(vec), Cross(c, M*a))
+        return collect(
+            rule("collect.triple_product_mvmul_left_nested", expr, Dot(r.left, Cross(r.right, l))),
+            vec,
+        )
+    # Dot(M*a, Cross(b, f(vec))) = Dot(f(vec), Cross(M*a, b))
+    return collect(
+        rule("collect.triple_product_mvmul_right_nested", expr, Dot(r.right, Cross(l, r.left))),
+        vec,
+    )
+
+
+def _collect_mvmul_pair(expr, vec):
+    """``Dot(M a, N b)``: strip a common rotation, peel the left matrix, or flip."""
+    l, r = expr.left, expr.right
+    # Dot(R*a, R*b) = Dot(a, b) for orthogonal R (SO3)
+    if isinstance(l.left, SO3) and isinstance(r.left, SO3) and l.left == r.left:
+        return collect(rule("collect.strip_rotation", expr, Dot(l.right, r.right)), vec)
+    if l.has(vec):
+        # Dot(M*vec, w) → Dot(vec, Mᵀ*w); deeper, peel the matrix off and let the
+        # Cross/MVMul rules expose vec (e.g. Dot(R1*(vec×a), R2*b) with R1 ≠ R2).
+        return _peel(l, r, vec, expr)
+    # vec is in the right MVMul: flip so it is on the left
+    return collect(rule("collect.flip_mvmul_pair", expr, Dot(r, l)), vec)
+
+
+def _collect_mvmul_other(expr, vec):
+    """``Dot(M a, w)`` with *w* neither a ``Cross`` nor an ``MVMul``: peel, or flip."""
+    l, r = expr.left, expr.right
+    if l.has(vec):
+        # Dot(M*vec, w) → Dot(vec, Mᵀ*w); deeper, peel one matrix layer and let
+        # the Cross/MVMul rules expose vec (f(vec) = vec×b gives
+        # Dot(vec, Cross(b, Mᵀ*w))).  If f(vec) is a shape no rule can expose
+        # (SVMul, VAdd, ...) the recursion stops with the peeled Dot unchanged.
+        return _peel(l, r, vec, expr)
+    # vec not in MVMul — the other side holds it
+    return collect(rule("collect.flip_mvmul_left", expr, Dot(r, l)), vec)
+
+
+def _collect_triple_product(expr, vec):
+    """``Dot(a, Cross(b, c))`` with the target in the ``Cross``: the cyclic rotations."""
+    l, r = expr.left, expr.right
+    if r.left == vec:
+        # Dot(a, Cross(vec, c)) = Dot(vec, Cross(c, a))
+        return rule("collect.triple_product_left", expr, Dot(vec, Cross(r.right, l)))
+    if r.right == vec:
+        # Dot(a, Cross(b, vec)) = Dot(vec, Cross(a, b))
+        return rule("collect.triple_product_right", expr, Dot(vec, Cross(l, r.left)))
+    # vec is nested deeper in the Cross (e.g. Cross(f(vec), b))
+    if r.left.has(vec):
+        # Dot(a, Cross(f(vec), c)) = Dot(f(vec), Cross(c, a))
+        return collect(
+            rule("collect.triple_product_left_nested", expr, Dot(r.left, Cross(r.right, l))),
+            vec,
+        )
+    if r.right.has(vec):
+        # Dot(a, Cross(b, f(vec))) = Dot(f(vec), Cross(a, b))
+        return collect(
+            rule("collect.triple_product_right_nested", expr, Dot(r.right, Cross(l, r.left))),
+            vec,
+        )
+    return expr

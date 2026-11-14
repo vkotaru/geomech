@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass, field, replace
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
@@ -32,6 +32,40 @@ def _attr_list(attr, name):
             f"attr must be a list of strings, got str {attr!r}{where}; write attr=[{attr!r}]"
         )
     return list(attr)
+
+
+#: Printed between the two factors of every product node (``Mul``, ``SVMul``, ``SMMul``,
+#: ``MVMul``, ``MMMul``, ``VVMul``): ``m*l``, ``J*\\Omega``, ``(a)'*b``. ``str`` is the
+#: identity of a node (fix plan decision D2), so the separator is reserved: no leaf name
+#: may contain it (``_check_leaf_name``). Every ``*`` in a printed form is then a product
+#: boundary, so two products print alike only when they multiply factors that print alike,
+#: in the same order (regroupings such as ``(a*b)*c`` and ``a*(b*c)`` do print alike).
+PRODUCT_SEPARATOR = "*"
+
+
+def _check_leaf_name(name):
+    """Reject a leaf name that contains ``PRODUCT_SEPARATOR``.
+
+    With ``Scalar("m*l")`` allowed, ``Mul(Scalar("m*l"), g)`` and ``Mul(m, Mul(l, g))``
+    would both print ``m*l*g`` and so compare equal, although they are different trees.
+    """
+    if isinstance(name, str) and PRODUCT_SEPARATOR in name:
+        raise ValueError(
+            f"symbol name {name!r} contains '{PRODUCT_SEPARATOR}', which is reserved as the"
+            " product separator; name a lumped constant without it (e.g. 'ml' or 'm_l') and"
+            " write a superscript star as '\\ast' (e.g. 'x^\\ast')"
+        )
+
+
+def _set_fields(node, **values):
+    """Set attributes of a node under construction (the node classes are frozen)."""
+    for key, value in values.items():
+        object.__setattr__(node, key, value)
+
+
+def _set_nodes(node, nodes):
+    """Set the operands of an operation node under construction, as a tuple."""
+    object.__setattr__(node, "nodes", tuple(nodes))
 
 
 def _is_number(val):
@@ -156,7 +190,7 @@ def _node_operands(op, *vals, numeric=False):
     return out
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Expr:
     """Base expression node.
 
@@ -167,6 +201,11 @@ class Expr:
 
     # numpy scalars (np.float64(2) * x) defer to __rmul__ & co. instead of broadcasting
     __array_ufunc__ = None
+
+    if TYPE_CHECKING:
+        # every concrete node defines these (a property, or a field of the leaf classes)
+        @property
+        def type(self) -> ExprType: ...
 
     # ------ arithmetic (one dispatch for leaves and operation nodes) ------
 
@@ -223,15 +262,35 @@ class Expr:
             " symbol, e.g. Scalar('1/m', attr=['Constant'])"
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        """Same class, same printed form and, for a calculus node, the same operand class.
+
+        ``str`` is the identity of a tree (the product family prints a separator that no
+        leaf name may contain, decision D2, so two products print alike only when they
+        multiply the same factors in the same order, up to regrouping); the class guard keeps
+        ``Scalar("x")`` and ``Vector("x")`` apart, and ``_identity_extra`` lets a node add
+        what its printed form leaves out (``Variation(Scalar x)`` vs ``Variation(Vector x)``
+        both print ``\\delta{x}``). Commutative rearrangements are different trees.
+        """
         if type(self) is not type(other):
             return False
-        return str(self) == str(other)
+        return str(self) == str(other) and self._identity_extra() == other._identity_extra()
 
-    def __hash__(self):
+    def _identity_extra(self) -> tuple:
+        """What ``__eq__`` compares beyond class and ``str``: nothing for most nodes."""
+        return ()
+
+    def __setstate__(self, state):
+        # unpickling bypasses __init__; operands pickled as a list (before nodes were
+        # frozen) become the tuple every node holds now
+        if isinstance(state, dict) and isinstance(state.get("nodes"), list):
+            state = {**state, "nodes": tuple(state["nodes"])}
+        self.__dict__.update(state)
+
+    def __hash__(self) -> int:
         return hash(str(self))
 
-    def __str__(self):
+    def __str__(self) -> str:
         raise NotImplementedError
 
     def __repr__(self):
@@ -239,28 +298,28 @@ class Expr:
 
         return repr_str(self)
 
-    def delta(self):
+    def delta(self) -> Expr:
         from geomech.core.operations.calculus import Variation
 
         return Variation(self)
 
-    def t_diff(self):
+    def t_diff(self) -> Expr:
         from geomech.core.operations.calculus import TimeDerivative
 
         return TimeDerivative(self)
 
-    def t_integrate(self):
+    def t_integrate(self) -> Expr:
         from geomech.core.operations.calculus import TimeIntegral
 
         return TimeIntegral(self)
 
-    def get_variation_vector(self):
+    def get_variation_vector(self) -> Expr:
         return self.delta()
 
-    def get_tangent_vector(self):
+    def get_tangent_vector(self) -> Expr:
         raise NotImplementedError
 
-    def T(self):
+    def T(self) -> Expr:
         """``Transpose(self)``; ``x.T().T()`` is ``x``."""
         from geomech.core.operations import Transpose
 
@@ -268,48 +327,63 @@ class Expr:
 
     # --- flag properties (read from flags if present, else False) ---
 
-    def _flag(self, name):
+    def _flag(self, name: str) -> bool:
         flags = getattr(self, "flags", None)
         return getattr(flags, name, False) if flags else False
 
     @property
-    def is_constant(self):
+    def is_constant(self) -> bool:
         return self._flag("is_constant")
 
     @property
-    def is_zero(self):
+    def is_zero(self) -> bool:
         return self._flag("is_zero")
 
     @property
-    def is_ones(self):
+    def is_ones(self) -> bool:
         return self._flag("is_ones")
 
     @property
-    def is_unit_norm(self):
+    def is_unit_norm(self) -> bool:
         return self._flag("is_unit_norm")
 
     @property
-    def is_numeric(self):
+    def is_numeric(self) -> bool:
         return self._flag("is_numeric")
 
     @property
-    def is_symmetric(self):
+    def is_symmetric(self) -> bool:
         return self._flag("is_symmetric")
 
     @property
-    def is_skew_symmetric(self):
+    def is_skew_symmetric(self) -> bool:
         return self._flag("is_skew_symmetric")
 
     @property
-    def is_orthogonal(self):
+    def is_orthogonal(self) -> bool:
         return self._flag("is_orthogonal")
 
     @property
-    def is_manifold(self):
+    def is_manifold(self) -> bool:
         return self._flag("is_manifold")
 
-    def has(self, elem):
-        return str(elem) == str(self)
+    def has(self, elem) -> bool:
+        """True if *elem* occurs in this tree: for a leaf, if it is *elem* (``==``, so a
+        ``Scalar("m")`` does not occur in a ``Vector("m")``)."""
+        return self == elem
+
+
+def _zero_leaf(leaf):
+    """The variation / time derivative of a constant vector or matrix leaf: ``ZeroVector``
+    (``0v``) or ``ZeroMatrix`` (``0``), or a zero leaf of the same name and the leaf's size
+    when that is not the default (3 or 3×3)."""
+    if isinstance(leaf, Matrix):
+        if tuple(leaf.size) == tuple(ZeroMatrix.size):
+            return ZeroMatrix
+        return Matrix("0", size=leaf.size, attr=["Constant", "Zero"])
+    if tuple(leaf.size) == tuple(ZeroVector.size):
+        return ZeroVector
+    return Vector("0v", size=leaf.size, attr=["Constant", "Zero"])
 
 
 def _raise_constant_integral(expr):
@@ -327,7 +401,7 @@ def _raise_constant_integral(expr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class ScalarExpr(Expr):
     """Base for scalar-typed expressions."""
 
@@ -340,22 +414,17 @@ class ScalarExpr(Expr):
         return (1,)
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Scalar(ScalarExpr):
-    name: str = None
+    name: str | None = None
     value: Any = None
     attr: list[str] | None = None
-    flags: ExprFlags = field(init=False, repr=False, default=None)
+    flags: ExprFlags = field(init=False, repr=False, default=ExprFlags())
 
-    def __post_init__(self):
-        self.flags = ExprFlags.from_attr_list(self.attr, self.name)
-        if self.value is not None:
-            self.flags.is_numeric = True
+    def __str__(self) -> str:
+        return cast(str, self.name)
 
-    def __str__(self):
-        return self.name
-
-    def delta(self):
+    def delta(self) -> Expr:
         if self.is_constant or self.is_numeric:
             return Zero
         else:
@@ -363,14 +432,14 @@ class Scalar(ScalarExpr):
 
             return Variation(self)
 
-    def t_diff(self):
+    def t_diff(self) -> Expr:
         if self.is_constant or self.is_numeric:
             return Zero
         from geomech.core.operations.calculus import TimeDerivative
 
         return TimeDerivative(self)
 
-    def t_integrate(self):
+    def t_integrate(self) -> Expr:
         if self.is_constant:
             _raise_constant_integral(self)
         from geomech.core.operations.calculus import TimeIntegral
@@ -380,10 +449,13 @@ class Scalar(ScalarExpr):
     # support Scalar(s='a') via custom __init__
     def __init__(self, s=None, *, name=None, value=None, attr=None, size=None):
         # 's' is the legacy positional arg; 'name' is the dataclass field
-        self.name = s if s is not None else name
-        self.value = value
-        self.attr = _attr_list(attr, self.name)  # never alias the caller's list
-        self.__post_init__()
+        name = s if s is not None else name
+        _check_leaf_name(name)
+        attr = _attr_list(attr, name)  # never alias the caller's list
+        flags = ExprFlags.from_attr_list(attr, name)
+        if value is not None:
+            flags = replace(flags, is_numeric=True)
+        _set_fields(self, name=name, value=value, attr=attr, flags=flags)
 
 
 # ---------------------------------------------------------------------------
@@ -391,7 +463,7 @@ class Scalar(ScalarExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class VectorExpr(Expr):
     """Base for vector-typed expressions."""
 
@@ -410,43 +482,36 @@ class VectorExpr(Expr):
         return Cross(self, other)
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Vector(VectorExpr):
-    name: str = None
+    name: str | None = None
     size: tuple = (3,)
     value: Any = None
     attr: list[str] | None = None
-    flags: ExprFlags = field(init=False, repr=False, default=None)
+    flags: ExprFlags = field(init=False, repr=False, default=ExprFlags())
 
-    def __post_init__(self):
-        self.flags = ExprFlags.from_attr_list(self.attr, self.name)
-        if self.value is None:
-            self.value = np.empty(self.size, dtype="object")
-        else:
-            self.size = self.value.shape
+    def __str__(self) -> str:
+        return cast(str, self.name)
 
-    def __str__(self):
-        return self.name
-
-    def delta(self):
+    def delta(self) -> Expr:
         if self.is_ones or self.is_zero or self.is_constant:
-            return Vector("0", attr=["Constant", "Zero"])
+            return _zero_leaf(self)
         else:
             from geomech.core.operations import Variation
 
             return Variation(self)
 
-    def t_diff(self):
+    def t_diff(self) -> Expr:
         if self.is_constant:
-            return Vector(s="0", size=self.size, attr=["Constant", "Zero"])
+            return _zero_leaf(self)
         from geomech.core.operations.calculus import TimeDerivative
 
         return TimeDerivative(self)
 
-    def get_variation_vector(self):
+    def get_variation_vector(self) -> Expr:
         return self.delta()
 
-    def t_integrate(self):
+    def t_integrate(self) -> Expr:
         if self.is_constant:
             _raise_constant_integral(self)
         from geomech.core.operations.calculus import TimeIntegral
@@ -455,60 +520,70 @@ class Vector(VectorExpr):
 
     # support Vector(s='x') via custom __init__
     def __init__(self, s=None, *, name=None, size=(3,), value=None, attr=None):
-        self.name = s if s is not None else name
-        self.size = size
-        self.value = value
-        self.attr = _attr_list(attr, self.name)  # never alias the caller's list
-        self.__post_init__()
+        name = s if s is not None else name
+        _check_leaf_name(name)
+        attr = _attr_list(attr, name)  # never alias the caller's list
+        if value is None:
+            value = np.empty(size, dtype="object")
+        else:
+            size = value.shape
+        flags = ExprFlags.from_attr_list(attr, name)
+        _set_fields(self, name=name, size=size, value=value, attr=attr, flags=flags)
 
 
+@dataclass(eq=False, repr=False, frozen=True)
 class TSO3(Vector):
     """Tangent space of SO3 manifold."""
 
+    #: the SO3 point this vector is tangent to (``Ω_R``, ``η_R``), or None for a bare one
+    SO3: Any = field(default=None, init=False, repr=False)
+
     def __init__(self, s, *, SO3=None):
         super().__init__(s)
-        self.SO3 = SO3
-        if self.attr is None:
-            self.attr = []
-        self.attr.append("TangentVector")
+        _set_fields(self, SO3=SO3, attr=[*(self.attr or []), "TangentVector"])
 
 
+@dataclass(eq=False, repr=False, frozen=True)
 class TS2(Vector):
     """Tangent space of S2 manifold."""
 
+    #: the S2 point this vector is tangent to (``ω_q``, ``ξ_q``), or None for a bare one
+    S2: Any = field(default=None, init=False, repr=False)
+
     def __init__(self, s, *, S2=None):
         super().__init__(s)
-        self.S2 = S2
-        if self.attr is None:
-            self.attr = []
-        self.attr.append("TangentVector")
+        _set_fields(self, S2=S2, attr=[*(self.attr or []), "TangentVector"])
 
 
+@dataclass(eq=False, repr=False, frozen=True)
 class S2(Vector):
     """S2 manifold (unit sphere in R3, ||q|| = 1)."""
+
+    manifold_info: ManifoldInfo = field(init=False, repr=False)
 
     def __init__(self, s=None, *, size=(3,), value=None, attr=None):
         attr = _attr_list(attr, s) or []  # copy: the caller's list is not mutated
         attr.append("Manifold")
         attr.append("UnitNorm")
         super().__init__(s, size=size, value=value, attr=attr)
-        self.manifold_info = ManifoldInfo(
-            tangent_vector_name="\\omega_{" + self.name + "}",
-            variation_vector_name="\\xi_{" + self.name + "}",
+        info = ManifoldInfo(
+            tangent_vector_name=f"\\omega_{{{self.name}}}",
+            variation_vector_name=f"\\xi_{{{self.name}}}",
         )
+        _set_fields(self, manifold_info=info)
 
-    def delta(self):
+    def delta(self) -> Expr:
         from geomech.core.operations import Cross
 
         return Cross(self.get_variation_vector(), self)
 
-    def get_tangent_vector(self):
+    def get_tangent_vector(self) -> Expr:
         return TS2(self.manifold_info.tangent_vector_name, S2=self)
 
-    def get_variation_vector(self):
+    def get_variation_vector(self) -> Expr:
         return TS2(self.manifold_info.variation_vector_name, S2=self)
 
-    def t_diff(self):
+    def t_diff(self) -> Expr:
         from geomech.core.operations import Cross
 
         return Cross(self.get_tangent_vector(), self)
@@ -519,7 +594,7 @@ class S2(Vector):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class MatrixExpr(Expr):
     """Base for matrix-typed expressions."""
 
@@ -528,38 +603,33 @@ class MatrixExpr(Expr):
         return ExprType.MATRIX
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Matrix(MatrixExpr):
-    name: str = None
+    name: str | None = None
     size: tuple = (3, 3)
     value: Any = None
     attr: list[str] | None = None
-    flags: ExprFlags = field(init=False, repr=False, default=None)
+    flags: ExprFlags = field(init=False, repr=False, default=ExprFlags())
 
-    def __post_init__(self):
-        self.flags = ExprFlags.from_attr_list(self.attr, self.name)
-        if self.value is None:
-            self.value = np.empty(self.size, dtype="object")
+    def __str__(self) -> str:
+        return cast(str, self.name)
 
-    def __str__(self):
-        return self.name
-
-    def delta(self):
+    def delta(self) -> Expr:
         if self.is_ones or self.is_zero or self.is_constant:
-            return Matrix("O", attr=["Constant", "Zero"])
+            return _zero_leaf(self)
         else:
             from geomech.core.operations import Variation
 
             return Variation(self)
 
-    def t_diff(self):
+    def t_diff(self) -> Expr:
         if self.is_constant:
-            return Matrix(s="0", size=self.size, attr=["Constant", "Zero"])
+            return _zero_leaf(self)
         from geomech.core.operations.calculus import TimeDerivative
 
         return TimeDerivative(self)
 
-    def t_integrate(self):
+    def t_integrate(self) -> Expr:
         if self.is_constant:
             _raise_constant_integral(self)
         from geomech.core.operations.calculus import TimeIntegral
@@ -568,49 +638,56 @@ class Matrix(MatrixExpr):
 
     # support Matrix(s='M') via custom __init__
     def __init__(self, s=None, *, name=None, size=(3, 3), value=None, attr=None):
-        self.name = s if s is not None else name
-        self.size = size
-        self.value = value
-        self.attr = _attr_list(attr, self.name) or []  # never alias the caller's list
-        self.__post_init__()
+        name = s if s is not None else name
+        _check_leaf_name(name)
+        attr = _attr_list(attr, name) or []  # never alias the caller's list
+        if value is None:
+            value = np.empty(size, dtype="object")
+        flags = ExprFlags.from_attr_list(attr, name)
+        _set_fields(self, name=name, size=size, value=value, attr=attr, flags=flags)
 
 
+@dataclass(eq=False, repr=False, frozen=True)
 class SkewSymmMatrix(Matrix):
     """Skew-symmetric matrix leaf (Xᵀ = −X); carries the ``SkewSymmetricMatrix`` flag."""
 
     def __init__(self, s=None, *, size=(3, 3), value=None, attr=None):
         # copy (the caller's list is not mutated) and append before super().__init__ so
-        # that __post_init__ sees the flag when it builds ExprFlags
+        # that the flags built there include it
         attr = _attr_list(attr, s) or []
         attr.append("SkewSymmetricMatrix")
         super().__init__(s, size=size, value=value, attr=attr)
 
 
+@dataclass(eq=False, repr=False, frozen=True)
 class SO3(Matrix):
     """SO(3) rotation matrix manifold (R^T R = I, det(R) = 1)."""
+
+    manifold_info: ManifoldInfo = field(init=False, repr=False)
 
     def __init__(self, s=None, *, size=(3, 3), value=None, attr=None):
         attr = _attr_list(attr, s) or []  # copy: the caller's list is not mutated
         attr.append("Manifold")
         attr.append("OrthogonalMatrix")
         super().__init__(s, size=size, value=value, attr=attr)
-        self.manifold_info = ManifoldInfo(
-            tangent_vector_name="\\Omega_{" + self.name + "}",
-            variation_vector_name="\\eta_{" + self.name + "}",
+        info = ManifoldInfo(
+            tangent_vector_name=f"\\Omega_{{{self.name}}}",
+            variation_vector_name=f"\\eta_{{{self.name}}}",
         )
+        _set_fields(self, manifold_info=info)
 
-    def delta(self):
+    def delta(self) -> Expr:
         from geomech.core.operations import Hat, MMMul
 
         return MMMul(self, Hat(self.get_variation_vector()))
 
-    def get_tangent_vector(self):
+    def get_tangent_vector(self) -> Expr:
         return TSO3(self.manifold_info.tangent_vector_name, SO3=self)
 
-    def get_variation_vector(self):
+    def get_variation_vector(self) -> Expr:
         return TSO3(self.manifold_info.variation_vector_name, SO3=self)
 
-    def t_diff(self):
+    def t_diff(self) -> Expr:
         from geomech.core.operations import Hat, MMMul
 
         return MMMul(self, Hat(self.get_tangent_vector()))

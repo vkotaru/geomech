@@ -7,16 +7,18 @@ to_standard_form(eom_dict, variables, inputs)
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Sequence
 
-from geomech.core.base.expressions import S2, SO3, Expr, Zero, ZeroVector
-from geomech.core.base.types import ExprType
-from geomech.core.math.extract import _has_algebraic, extract_linear_coeff
-from geomech.core.operations.addition import Add, VAdd
+from geomech.core.base.constants import zero_like
+from geomech.core.base.expressions import S2, SO3, Expr
+from geomech.core.math.extract import extract_linear_coeff, has_algebraic
 from geomech.core.operations.calculus import TimeDerivative
 from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.simplification import full_simplify
+from geomech.core.transformations.utils import addends, sum_of
 from geomech.dynamics.variables import SystemVariables
 from geomech.utils.errors import AlgebraicError, NonLinearError
+from geomech.utils.invariants import check_tree
 from geomech.utils.trace import debug_enabled, stage_recorder
 
 
@@ -36,12 +38,16 @@ class StandardFormEquation:
         Input influence coefficient for each input variable.
     """
 
-    M: dict = field(default_factory=dict)
-    f: Expr = None
-    G: dict = field(default_factory=dict)
+    M: dict[str, Expr] = field(default_factory=dict)
+    f: Expr | None = None
+    G: dict[str, Expr] = field(default_factory=dict)
 
 
-def to_standard_form(eom_dict, variables: SystemVariables, inputs=None):
+def to_standard_form(
+    eom_dict: dict[str, tuple[Expr, Expr]],
+    variables: SystemVariables,
+    inputs: Sequence[Expr] | None = None,
+) -> dict[str, StandardFormEquation]:
     """Decompose EOM into standard manipulator form.
 
     Parameters
@@ -80,8 +86,6 @@ def to_standard_form(eom_dict, variables: SystemVariables, inputs=None):
 
     accel_vars = _get_accel_vars(variables)
     debug = debug_enabled()
-    if debug:
-        from geomech.utils.invariants import check_tree
     record = stage_recorder(None, "to_standard_form")
 
     result = {}
@@ -127,31 +131,6 @@ def _get_accel_vars(variables: SystemVariables):
     return accels
 
 
-def _flatten_addends(expr):
-    """Return a flat list of addends from a scalar or vector expression."""
-    if isinstance(expr, (Add, VAdd)):
-        return list(expr.nodes)
-    return [expr]
-
-
-def _zero_for(eom_expr):
-    """Return the appropriate zero element for the EOM's type."""
-    if getattr(eom_expr, "type", None) == ExprType.SCALAR:
-        return Zero
-    return ZeroVector
-
-
-def _combine(terms, eom_expr):
-    """Combine a list of terms into a single expression matching *eom_expr*'s type."""
-    if not terms:
-        return _zero_for(eom_expr)
-    if len(terms) == 1:
-        return terms[0]
-    if getattr(eom_expr, "type", None) == ExprType.SCALAR:
-        return Add(*terms)
-    return VAdd(*terms)
-
-
 def _calculus_holding(term, query):
     """The outermost calculus node of *term* that contains *query* (for error messages)."""
     stack = [term]
@@ -164,9 +143,9 @@ def _calculus_holding(term, query):
 
 
 def _has_in_term(term, query, key, kind):
-    """``_has_algebraic(term, query)`` with the equation and term named on failure."""
+    """``has_algebraic(term, query)`` with the equation and term named on failure."""
     try:
-        return _has_algebraic(term, query)
+        return has_algebraic(term, query)
     except AlgebraicError as err:
         node = _calculus_holding(term, query)
         where = f" inside '{node}'" if node is not None else ""
@@ -200,7 +179,7 @@ def _extract(expr, query, key):
 def _extract_single(eom_expr, accel_vars, inputs, key="?"):
     """Extract M, f, G from a single EOM expression (scalar or vector)."""
     eom_expr = expand(eom_expr)
-    terms = _flatten_addends(eom_expr)
+    terms = addends(eom_expr)
 
     accel_terms = []
     input_terms = []
@@ -222,15 +201,15 @@ def _extract_single(eom_expr, accel_vars, inputs, key="?"):
 
     M = {}
     if accel_terms:
-        accel_expr = _combine(accel_terms, eom_expr)
+        accel_expr = sum_of(accel_terms, eom_expr.type)
         for a in accel_vars:
-            if _has_algebraic(accel_expr, a):
+            if has_algebraic(accel_expr, a):
                 coeff = _extract(accel_expr, a, key)
                 coeff = full_simplify(coeff)
                 # M must be free of accelerations: a term bilinear in two
                 # accelerations (c ẍ₁ ẍ₂) has no standard-form coefficient.
                 for b in accel_vars:
-                    if _has_algebraic(coeff, b):
+                    if has_algebraic(coeff, b):
                         raise NonLinearError(
                             f"to_standard_form: in equation '{key}', the coefficient of"
                             f" '{a}' still contains the"
@@ -241,16 +220,16 @@ def _extract_single(eom_expr, accel_vars, inputs, key="?"):
 
     G = {}
     if input_terms:
-        input_expr = _combine(input_terms, eom_expr)
+        input_expr = sum_of(input_terms, eom_expr.type)
         for u in inputs:
-            if _has_algebraic(input_expr, u):
+            if has_algebraic(input_expr, u):
                 coeff = _extract(input_expr, u, key)
                 coeff = full_simplify(coeff)
                 G[str(u)] = coeff
 
     if not residual_terms:
-        f = _zero_for(eom_expr)
+        f = zero_like(eom_expr)
     else:
-        f = full_simplify(_combine(residual_terms, eom_expr))
+        f = full_simplify(sum_of(residual_terms, eom_expr.type))
 
     return StandardFormEquation(M=M, f=f, G=G)

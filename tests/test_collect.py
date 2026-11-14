@@ -214,7 +214,7 @@ class TestKineticEnergyPatterns:
         expr = Dot(MVMul(M, v), Cross(w, u))
         result = collect(expr, v)
         assert result == Dot(v, MVMul(Transpose(M), Cross(w, u)))
-        assert str(result) == "Dot(v,(M)'Cross(w,u))"
+        assert str(result) == "Dot(v,(M)'*Cross(w,u))"
         rng = np.random.default_rng(0)
         for _ in range(3):
             env = {"M": rng.normal(size=(3, 3))}

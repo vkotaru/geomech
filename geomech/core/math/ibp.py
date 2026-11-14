@@ -28,6 +28,7 @@ Rules (name, identity, hypothesis):
 
 from __future__ import annotations
 
+from geomech.core.base.constants import negate
 from geomech.core.base.expressions import One, Zero
 from geomech.core.math.collecting import collect
 from geomech.core.operations.addition import Add
@@ -36,6 +37,7 @@ from geomech.core.operations.geometry import Dot
 from geomech.core.operations.multiplication import Mul, SVMul
 from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.simplification import full_simplify
+from geomech.core.transformations.utils import flatten_mul
 from geomech.utils.trace import rule, stage_recorder
 
 # ---------------------------------------------------------------------------
@@ -55,13 +57,13 @@ def _remove_factor(expr, target):
         # Try removing from left
         left_removed = _remove_factor(expr.left, target)
         if left_removed is not None:
-            if str(left_removed) == "1":
+            if left_removed is One:
                 return expr.right
             return Mul(left_removed, expr.right)
         # Try removing from right
         right_removed = _remove_factor(expr.right, target)
         if right_removed is not None:
-            if str(right_removed) == "1":
+            if right_removed is One:
                 return expr.left
             return Mul(expr.left, right_removed)
     return None
@@ -95,21 +97,11 @@ def _replace_in_chain(expr, old, new):
     return expr
 
 
-def _flatten_mul(expr, factors):
-    """Flatten a nested Mul chain into its list of factors (left to right)."""
-    if isinstance(expr, Mul):
-        _flatten_mul(expr.left, factors)
-        _flatten_mul(expr.right, factors)
-    else:
-        factors.append(expr)
-
-
 def _t_diff_product(expr):
     """d/dt of a scalar product with repeated factors merged:
     d/dt(∏ᵢ fᵢ^{nᵢ}) = Σᵢ nᵢ fᵢ^{nᵢ-1} ḟᵢ ∏_{j≠i} fⱼ^{nⱼ}  (e.g. d/dt(m l l) = 2 m l l̇).
     """
-    factors = []
-    _flatten_mul(expr, factors)
+    factors = flatten_mul(expr)
     terms = []
     seen = []
     for f in factors:
@@ -152,7 +144,7 @@ def _apply_ibp(expr, target):
         case Dot():
             if expr.left == target:
                 return rule(
-                    "ibp.dot", expr, Dot(expr.left.t_integrate() * (-1), expr.right.t_diff())
+                    "ibp.dot", expr, Dot(negate(expr.left.t_integrate()), expr.right.t_diff())
                 )
             return expr
 
@@ -163,7 +155,7 @@ def _apply_ibp(expr, target):
                 return rule(
                     "ibp.scalar_factor",
                     expr,
-                    Mul(target.t_integrate() * (-1), remainder.t_diff()),
+                    Mul(negate(target.t_integrate()), remainder.t_diff()),
                 )
             found = _split_dot_factor(expr, target)
             if found is None:
@@ -180,7 +172,7 @@ def _apply_ibp(expr, target):
             )
             a_dot_f = SVMul(dot.right, a_rate)
             return rule(
-                "ibp.dot_prefactor", expr, Add(out, Dot(target.t_integrate() * (-1), a_dot_f))
+                "ibp.dot_prefactor", expr, Add(out, Dot(negate(target.t_integrate()), a_dot_f))
             )
 
         case _:

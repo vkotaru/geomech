@@ -136,45 +136,45 @@ class TestNumericCoercion:
         a = Scalar("a")
         result = Mul(a, 2)
         assert isinstance(result, Mul)
-        assert str(result) == "a(2)"
+        assert str(result) == "a*(2)"
 
     def test_mul_int_left(self):
         a = Scalar("a")
         result = Mul(2, a)
         assert isinstance(result, Mul)
-        assert str(result) == "(2)a"
+        assert str(result) == "(2)*a"
 
     def test_mul_float(self):
         a = Scalar("a")
         result = Mul(a, 0.5)
         assert isinstance(result, Mul)
-        assert str(result) == "a(0.5)"
+        assert str(result) == "a*(0.5)"
 
     def test_svmul_int(self):
         x = Vector("x")
         result = SVMul(x, 3)
         assert isinstance(result, SVMul)
-        assert str(result) == "x(3)"
+        assert str(result) == "x*(3)"
 
     def test_svmul_int_left(self):
         x = Vector("x")
         result = SVMul(3, x)
         assert isinstance(result, SVMul)
         assert result.left == x
-        assert str(result) == "x(3)"
+        assert str(result) == "x*(3)"
 
     def test_smmul_int(self):
         M = Matrix("M")
         result = SMMul(M, 2)
         assert isinstance(result, SMMul)
-        assert str(result) == "M(2)"
+        assert str(result) == "M*(2)"
 
     def test_smmul_int_left(self):
         M = Matrix("M")
         result = SMMul(2, M)
         assert isinstance(result, SMMul)
         assert result.left == M
-        assert str(result) == "M(2)"
+        assert str(result) == "M*(2)"
 
 
 # ---------------------------------------------------------------------------
@@ -220,34 +220,34 @@ class TestNormalization:
 class TestMulStr:
     def test_mul_str(self):
         a, b = getScalars("a b")
-        assert str(Mul(a, b)) == "ab"
+        assert str(Mul(a, b)) == "a*b"
 
     def test_svmul_str(self):
         x = Vector("x")
         a = Scalar("a")
-        assert str(SVMul(x, a)) == "xa"
+        assert str(SVMul(x, a)) == "x*a"
 
     def test_smmul_str(self):
         M = Matrix("M")
         a = Scalar("a")
-        assert str(SMMul(M, a)) == "Ma"
+        assert str(SMMul(M, a)) == "M*a"
 
     def test_mvmul_str(self):
         M = Matrix("M")
         x = Vector("x")
-        assert str(MVMul(M, x)) == "Mx"
+        assert str(MVMul(M, x)) == "M*x"
 
     def test_mmmul_str(self):
         M, N = getMatrices("M N")
-        assert str(MMMul(M, N)) == "MN"
+        assert str(MMMul(M, N)) == "M*N"
 
     def test_vvmul_inner_str(self):
         x, y = getVectors(["x", "y"])
-        assert str(VVMul(Transpose(x), y)) == "(x)'y"
+        assert str(VVMul(Transpose(x), y)) == "(x)'*y"
 
     def test_vvmul_outer_str(self):
         x, y = getVectors(["x", "y"])
-        assert str(VVMul(x, Transpose(y))) == "x(y)'"
+        assert str(VVMul(x, Transpose(y))) == "x*(y)'"
 
 
 # ---------------------------------------------------------------------------
@@ -461,7 +461,7 @@ class TestMulOperator:
         x = Vector("x")
         result = x * 3
         assert isinstance(result, SVMul)
-        assert str(result) == "x(3)"
+        assert str(result) == "x*(3)"
 
     def test_matrix_times_vector(self):
         M = Matrix("M")
@@ -484,7 +484,7 @@ class TestMulOperator:
         M = Matrix("M")
         result = M * 2
         assert isinstance(result, SMMul)
-        assert str(result) == "M(2)"
+        assert str(result) == "M*(2)"
 
     def test_transposeT_times_vector(self):
         x, y = getVectors(["x", "y"])
@@ -689,21 +689,21 @@ class TestMulDelta:
         d = Mul(a, b).delta()
         assert isinstance(d, Add)
         assert d.arity == 2
-        assert str(d) == "(\\delta{a}b+a\\delta{b})"
+        assert str(d) == "(\\delta{a}*b+a*\\delta{b})"
 
     def test_mul_delta_constant_left(self):
         m = Scalar("m", attr=["Constant"])
         a = Scalar("a")
         d = Mul(m, a).delta()
         assert isinstance(d, Mul)
-        assert str(d) == "m\\delta{a}"
+        assert str(d) == "m*\\delta{a}"
 
     def test_mul_delta_constant_right(self):
         a = Scalar("a")
         m = Scalar("m", attr=["Constant"])
         d = Mul(a, m).delta()
         assert isinstance(d, Mul)
-        assert str(d) == "\\delta{a}m"
+        assert str(d) == "\\delta{a}*m"
 
     def test_mul_delta_both_constant(self):
         m = Scalar("m", attr=["Constant"])
@@ -717,14 +717,14 @@ class TestMulDelta:
         d = SVMul(x, a).delta()
         assert isinstance(d, VAdd)
         assert d.arity == 2
-        assert str(d) == "(\\delta{x}a+x\\delta{a})"
+        assert str(d) == "(\\delta{x}*a+x*\\delta{a})"
 
     def test_svmul_delta_constant_scalar(self):
         m = Scalar("m", attr=["Constant"])
         x = Vector("x")
         d = SVMul(x, m).delta()
         assert isinstance(d, SVMul)
-        assert str(d) == "\\delta{x}m"
+        assert str(d) == "\\delta{x}*m"
 
     def test_smmul_delta(self):
         a = Scalar("a")
@@ -739,7 +739,7 @@ class TestMulDelta:
         d = MVMul(M, x).delta()
         assert isinstance(d, VAdd)
         assert d.arity == 2
-        assert str(d) == "(\\delta{M}x+M\\delta{x})"
+        assert str(d) == "(\\delta{M}*x+M*\\delta{x})"
 
     def test_mvmul_delta_constant_matrix(self):
         J = Matrix("J", attr=["Constant"])
@@ -753,21 +753,21 @@ class TestMulDelta:
         d = MMMul(M, N).delta()
         assert isinstance(d, MAdd)
         assert d.arity == 2
-        assert str(d) == "(\\delta{M}N+M\\delta{N})"
+        assert str(d) == "(\\delta{M}*N+M*\\delta{N})"
 
     def test_vvmul_inner_delta(self):
         x, y = getVectors(["x", "y"])
         d = VVMul(Transpose(x), y).delta()
         assert isinstance(d, Add)
         assert d.arity == 2
-        assert str(d) == "((\\delta{x})'y+(x)'\\delta{y})"
+        assert str(d) == "((\\delta{x})'*y+(x)'*\\delta{y})"
 
     def test_vvmul_outer_delta(self):
         x, y = getVectors(["x", "y"])
         d = VVMul(x, Transpose(y)).delta()
         assert isinstance(d, MAdd)
         assert d.arity == 2
-        assert str(d) == "(\\delta{x}(y)'+x(\\delta{y})')"
+        assert str(d) == "(\\delta{x}*(y)'+x*(\\delta{y})')"
 
 
 class TestMulDiff:
@@ -775,14 +775,14 @@ class TestMulDiff:
         a, b = getScalars("a b")
         d = Mul(a, b).t_diff()
         assert isinstance(d, Add)
-        assert str(d) == "(\\frac{d}{dt}(a)b+a\\frac{d}{dt}(b))"
+        assert str(d) == "(\\frac{d}{dt}(a)*b+a*\\frac{d}{dt}(b))"
 
     def test_mul_diff_constant_left(self):
         m = Scalar("m", attr=["Constant"])
         a = Scalar("a")
         d = Mul(m, a).t_diff()
         assert isinstance(d, Mul)
-        assert str(d) == "m\\frac{d}{dt}(a)"
+        assert str(d) == "m*\\frac{d}{dt}(a)"
 
     def test_mul_diff_both_constant(self):
         m = Scalar("m", attr=["Constant"])

@@ -36,13 +36,13 @@ class TestCollectTerminates:
         """Dot(A (v s), B b) = Dot(v s, Aᵀ B b): the matrix is peeled off the side
         holding v, then no rule can expose v inside the SVMul, so it stops there."""
         e = Dot(MVMul(self.A, SVMul(self.v, self.s)), MVMul(self.B, self.b))
-        assert str(collect(e, self.v)) == "Dot(vs,(A)'Bb)"
+        assert str(collect(e, self.v)) == "Dot(v*s,(A)'*B*b)"
 
     def test_sum_containing_target_inside_left_mvmul(self):
         """Dot(A (v + a), B b) = Dot(v + a, Aᵀ B b); expand would distribute first
         in the pipeline, so the raw VAdd is left as is after the peel."""
         e = Dot(MVMul(self.A, VAdd(self.v, self.a)), MVMul(self.B, self.b))
-        assert str(collect(e, self.v)) == "Dot((v+a),(A)'Bb)"
+        assert str(collect(e, self.v)) == "Dot((v+a),(A)'*B*b)"
 
     def test_scalar_times_target_against_mvmul(self):
         """Dot(v s, B b): pull would hoist s first; raw input is unchanged."""
@@ -52,7 +52,7 @@ class TestCollectTerminates:
     def test_target_inside_mvmul_still_moves_left(self):
         """Dot(A v, w) → Dot(v, Aᵀ w): the useful case still works."""
         e = Dot(MVMul(self.A, self.v), self.b)
-        assert str(collect(e, self.v)) == "Dot(v,(A)'b)"
+        assert str(collect(e, self.v)) == "Dot(v,(A)'*b)"
 
 
 class TestStandardFormRejectsBilinearAcceleration:
