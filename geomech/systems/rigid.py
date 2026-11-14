@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 from geomech.core.base import SO3, Matrix, Vector, ZeroVector, getScalars
-from geomech.core.operations import Dot
+from geomech.core.operations import Dot, MVMul, Transpose
 from geomech.dynamics.variables import SystemVariables
 from geomech.systems._base import (
     E3,
@@ -18,6 +18,7 @@ from geomech.systems._base import (
     J_A,
     J_B,
     Reference,
+    check_count,
     frozen_array,
     make_system,
     register,
@@ -275,6 +276,124 @@ def double_rigid_pendulum():
     )
 
 
+#: Cross-section of the drawn chain links (m); also the box used for their default inertia.
+LINK_WIDTH = (0.06, 0.03)
+
+
+def chain_link_defaults(k: int) -> dict:
+    """Default parameters of link *k* (1-based) of ``n_link_rigid_chain``: a uniform box
+    of length ``L = 0.8^(k−1)`` m, mass ``m = 0.8^(k−1)`` kg and cross-section
+    ``LINK_WIDTH``, hanging along body −e₃ with its centre of mass half-way, and the box's
+    inertia about its centre of mass."""
+    L = m = 0.8 ** (k - 1)
+    wx, wy = LINK_WIDTH
+    J = np.diag([m * (wy**2 + L**2), m * (wx**2 + L**2), m * (wx**2 + wy**2)]) / 12
+    return {
+        f"m{k}": m,
+        f"J{k}": J,
+        f"\\rho_{k}": np.array([0.0, 0.0, -L / 2]),
+        f"l_{k}": np.array([0.0, 0.0, -L]),
+    }
+
+
+@register("(SO(3))ⁿ")
+def n_link_rigid_chain(*, n_links: int = 3):
+    """Chain of n rigid links on SO(3)ⁿ: link 1 hinged at the origin by a spherical joint,
+    link k + 1 hinged at the end of link k by a spherical joint.
+
+    Link k has attitude Rₖ, mass mₖ, inertia Jₖ about its centre of mass, its centre of
+    mass at ``ρₖ`` from its upper joint and its lower joint at ``lₖ`` from its upper joint
+    (both constant body-frame vectors; by default along body −e₃, so the chain hangs at
+    ``Rₖ = I``). Joints ``p₁ = 0``, ``pₖ₊₁ = pₖ + Rₖlₖ``; centres of mass
+    ``xₖ = pₖ + Rₖρₖ``. ``L = Σ ½ Ωₖ·JₖΩₖ + Σ ½ mₖ ẋₖ·ẋₖ − Σ mₖ g xₖ·e₃``; ``lₙ`` of the last
+    link does not enter L and is not a parameter.
+
+    Inputs ``[τ₁, …, τₙ]``: inertial-frame torques at the joints, τₖ acting on link k and
+    −τₖ on link k − 1 (τ₁ between the ground and link 1):
+    ``δW = Σₖ ηₖ·(RₖᵀTₖ)`` with ``Tₖ = τₖ − τₖ₊₁`` (``τₙ₊₁ = 0``), written term by term as
+    ``Σₖ (ηₖ·(Rₖᵀτₖ) − ηₖ₋₁·(Rₖ₋₁ᵀτₖ))``.
+
+    With ``n_links=2`` the Lagrangian is that of ``double_rigid_pendulum`` term for term
+    (same symbols ``J1, J2, \\rho_1, \\rho_2, l_1, m1, m2, g, e3``); the virtual work
+    differs only in the inputs (body moments ``M₁, M₂`` there, joint torques here, related
+    by ``M₁ = R₁ᵀ(τ₁ − τ₂)``, ``M₂ = R₂ᵀτ₂``). The default links are uniform boxes
+    (``chain_link_defaults``), each 0.8 times the one above. The scene draws each link as
+    a box from its upper joint (placed with ``ρₖ``, drawn with the default length) and a
+    sphere at each joint. ``n_links`` is an int from 1 to 20 (``MAX_SIZE``); any other
+    value raises ``ValueError``.
+    """
+    n = check_count(n_links, "n_link_rigid_chain: n_links")
+    ks = range(1, n + 1)
+    Rs = [SO3(f"R{k}") for k in ks]
+    Js = [_inertia(f"J{k}") for k in ks]
+    rhos = [Vector(f"\\rho_{k}", attr=["Constant"]) for k in ks]
+    ls = [Vector(f"l_{k}", attr=["Constant"]) for k in range(1, n)]
+    ms = getScalars(" ".join(f"m{k}" for k in ks), attr=["Constant"])
+    (g,) = getScalars("g", attr=["Constant"])
+    e3 = Vector("e3", attr=["Constant"])
+    taus = [Vector(f"\\tau_{k}") for k in ks]
+    joints, xs, p = [], [], None
+    for k in range(n):
+        joints.append(ZeroVector if p is None else p)
+        x = Rs[k] * rhos[k] if p is None else p + Rs[k] * rhos[k]
+        xs.append(x)
+        if k < n - 1:
+            p = Rs[k] * ls[k] if p is None else p + Rs[k] * ls[k]
+    terms = [
+        Dot(R.get_tangent_vector(), J * R.get_tangent_vector()) * HALF for R, J in zip(Rs, Js)
+    ]
+    terms += [Dot(x.t_diff(), x.t_diff()) * m * HALF for x, m in zip(xs, ms)]
+    KE = terms[0]
+    for t in terms[1:]:
+        KE = KE + t
+    PE = ms[0] * g * Dot(xs[0], e3)
+    for m, x in zip(ms[1:], xs[1:]):
+        PE = PE + m * g * Dot(x, e3)
+    dW = Dot(Rs[0].get_variation_vector(), MVMul(Transpose(Rs[0]), taus[0]))
+    for k in range(1, n):
+        dW = (
+            dW
+            + Dot(Rs[k].get_variation_vector(), MVMul(Transpose(Rs[k]), taus[k]))
+            - Dot(Rs[k - 1].get_variation_vector(), MVMul(Transpose(Rs[k - 1]), taus[k]))
+        )
+    params: dict = {"g": 9.81, "e3": E3}
+    for k in ks:
+        params.update(chain_link_defaults(k))
+    params.pop(f"l_{n}")
+    lengths = [-chain_link_defaults(k)[f"l_{k}"][2] for k in ks]
+    tip = joints[-1] + Rs[-1] * rhos[-1] * 2
+
+    def scene(layout, s):
+        from geomech.viz import Box, PointMass, RigidBody, Scene, Trace
+
+        sc = Scene(layout)
+        for k, (R, joint, rho, L_k) in enumerate(zip(Rs, joints, rhos, lengths), 1):
+            sc.add(RigidBody(R, joint, Box(*LINK_WIDTH, L_k), offset=rho, name=f"link {k}"))
+            sc.add(PointMass(joint, radius=0.04, color="cable", name=f"joint {k}"))
+        sc.add(Trace(tip, name="tip"))
+        return sc
+
+    x0: dict = {}
+    for k in ks:
+        sign = 1 if k % 2 else -1
+        x0[f"R{k}"] = rot([0.4 + 0.15 * k, 0.1 * k * sign, 0.05 * k])
+        x0[f"Omega_R{k}"] = [0.3, -0.2 * k, 2.0 * sign]
+    return make_system(
+        "n_link_rigid_chain",
+        "(SO(3))ⁿ",
+        KE - PE,
+        dW,
+        SystemVariables(matrices=Rs),
+        taus,
+        params,
+        Reference("check_eom", note="Chain of rigid links with spherical joints."),
+        x0=x0,
+        symbols=dict(R=tuple(Rs), joints=tuple(joints), x=tuple(xs), tau=tuple(taus), tip=tip),
+        scene=scene,
+        options={"n_links": n},
+    )
+
+
 @register("R³ × SO(3) × SO(3)")
 def two_rigid_bodies_spherical_joint():
     """Two free-flying rigid bodies joined by a spherical joint, on R³ × SO(3) × SO(3).
@@ -403,6 +522,7 @@ __all__ = [
     "heavy_top",
     "rigid_pendulum",
     "double_rigid_pendulum",
+    "n_link_rigid_chain",
     "two_rigid_bodies_spherical_joint",
     "rigid_body",
 ]

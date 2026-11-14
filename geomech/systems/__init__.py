@@ -44,10 +44,12 @@ from geomech.systems.aerial import (
     quadrotor_offset_com,
     quadrotor_suspended_load,
 )
+from geomech.systems.multibody import biped_3d, spacecraft_reaction_wheels
 from geomech.systems.rigid import (
     double_rigid_pendulum,
     free_rigid_body,
     heavy_top,
+    n_link_rigid_chain,
     rigid_body,
     rigid_pendulum,
     two_rigid_bodies_spherical_joint,
@@ -86,8 +88,11 @@ __all__ = [
     "heavy_top",
     "rigid_pendulum",
     "double_rigid_pendulum",
+    "n_link_rigid_chain",
     "two_rigid_bodies_spherical_joint",
     "rigid_body",
+    "spacecraft_reaction_wheels",
+    "biped_3d",
     "quadrotor",
     "quadrotor_offset_com",
     "quadrotor_suspended_load",

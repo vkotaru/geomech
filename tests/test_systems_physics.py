@@ -33,6 +33,7 @@ SEEDS = (0, 1, 2)
 UP = np.array([0.0, 0.0, 1.0])  # the physical vertical, independent of the param "e3"
 SIZED = {
     "n_link_spherical_chain": "n_links",
+    "n_link_rigid_chain": "n_links",
     "quadrotor_flexible_cable": "n_links",
     "multi_quadrotor_point_mass": "n_quads",
     "multi_quadrotor_rigid_load": "n_quads",
@@ -87,6 +88,11 @@ class Model:
         self.forces = lambda c, u: []
         self.moments = lambda u: []
         self.scalar_forces = lambda u: []
+        # kinetic energy and virtual work that need the attitudes themselves:
+        # extra_T(cp, cm) and extra_W(c0, vp, vm, u), with cp/cm the configurations at ±H
+        # along the velocity and vp/vm along the variation
+        self.extra_T = lambda cp, cm: 0.0
+        self.extra_W = lambda c0, vp, vm, u: 0.0
         self.g = self.p.get("g", 0.0)
         getattr(self, name)(n)
 
@@ -180,6 +186,36 @@ class Model:
         self.bodies = [(self.v("J1"), "\\Omega_{R1}"), (self.v("J2"), "\\Omega_{R2}")]
         self.body_moment(("M1", "R1"), ("M2", "R2"))
 
+    def n_link_rigid_chain(self, n):
+        """Joints p₁ = 0, pₖ₊₁ = pₖ + Rₖlₖ; centres of mass pₖ + Rₖρₖ; Jₖ about the centre
+        of mass; joint torque τₖ acts on link k and −τₖ on link k − 1 (inertial frame),
+        its work taken on finite-difference rotation variations of the attitudes."""
+
+        def pts(c, t):
+            out, p = [], np.zeros(3)
+            for k in range(1, n + 1):
+                out.append((self.v(f"m{k}"), p + c[f"R{k}"] @ self.v(f"\\rho_{k}")))
+                if k < n:
+                    p = p + c[f"R{k}"] @ self.v(f"l_{k}")
+            return out
+
+        self.points = pts
+        self.bodies = [(self.v(f"J{k}"), f"\\Omega_{{R{k}}}") for k in range(1, n + 1)]
+
+        def spatial_variation(Rp, Rm):
+            Om = ((Rp - Rm) / (2 * H)) @ (0.5 * (Rp + Rm)).T
+            return np.array([Om[2, 1], Om[0, 2], Om[1, 0]])
+
+        def extra_W(c0, vp, vm, u):
+            w = {k: spatial_variation(vp[f"R{k}"], vm[f"R{k}"]) for k in range(1, n + 1)}
+            W = 0.0
+            for k in range(1, n + 1):
+                tau = u[f"\\tau_{k}"]
+                W += tau @ w[k] - (tau @ w[k - 1] if k > 1 else 0.0)
+            return W
+
+        self.extra_W = extra_W
+
     def two_rigid_bodies_spherical_joint(self, n):
         self.points = lambda c, t: [
             (self.v("m1"), c["x"]),
@@ -194,6 +230,82 @@ class Model:
         self.bodies = [(self.v("J"), "\\Omega_{R}")]
         self.forces = lambda c, u: [(u["F"], lambda c: c["x"])]
         self.body_moment(("M", "R"))
+
+    # ---- multibody
+    def spacecraft_reaction_wheels(self, n):
+        """The bus and three wheels as separate rigid bodies. Each wheel i: mass m_w at
+        ρᵢ = 0.3 bᵢ, attitude ``R expm(θᵢ b̂ᵢ)``, inertia ``Iᵢ bᵢbᵢᵀ + J_t (I − bᵢbᵢᵀ)`` in
+        its own frame. ``J_b`` is documented as the bus plus the wheels' masses and
+        transverse inertias, so the bus alone has
+        ``J_bus = J_b − Σ (J_t (I − bᵢbᵢᵀ) + m_w (|ρᵢ|² I − ρᵢρᵢᵀ))``. ``m_w`` and ``J_t``
+        are chosen here only; a correct L does not depend on them. Angular velocities and
+        rotation variations come from central differences of the attitudes. The motor
+        applies +τᵢ bᵢ to wheel i and −τᵢ bᵢ to the bus."""
+        m_w, J_t = 0.7, 0.013
+        bs = [self.v(f"b{i}") for i in (1, 2, 3)]
+        Is = [self.v(f"I_{i}") for i in (1, 2, 3)]
+        rhos = [0.3 * b for b in bs]
+        J_bus = self.v("J_b") - sum(
+            J_t * (np.eye(3) - np.outer(b, b)) + m_w * ((r @ r) * np.eye(3) - np.outer(r, r))
+            for b, r in zip(bs, rhos)
+        )
+
+        def wheel(c, i):
+            return c["R"] @ expm_so3(c[f"\\theta_{i}"] * bs[i - 1])
+
+        def body_rate(Rp, Rm):  # body-frame angular velocity (or variation) by differences
+            Rd = (Rp - Rm) / (2 * H)
+            W = 0.5 * (Rp + Rm)
+            Om = W.T @ Rd
+            return np.array([Om[2, 1], Om[0, 2], Om[1, 0]])
+
+        def extra_T(cp, cm):
+            T = 0.5 * body_rate(cp["R"], cm["R"]) @ J_bus @ body_rate(cp["R"], cm["R"])
+            for i, (b, I_i, r) in enumerate(zip(bs, Is, rhos), 1):
+                w = body_rate(wheel(cp, i), wheel(cm, i))
+                Jw = I_i * np.outer(b, b) + J_t * (np.eye(3) - np.outer(b, b))
+                v = (cp["R"] @ r - cm["R"] @ r) / (2 * H)
+                T += 0.5 * w @ Jw @ w + 0.5 * m_w * v @ v
+            return T
+
+        def extra_W(c0, vp, vm, u):
+            eta = body_rate(vp["R"], vm["R"])
+            W = 0.0
+            for i, b in enumerate(bs, 1):
+                tau = u[f"\\tau_{i}"]
+                W += tau * b @ body_rate(wheel(vp, i), wheel(vm, i))  # +τ b on the wheel
+                W -= tau * b @ eta  # −τ b on the bus
+            return W
+
+        self.extra_T, self.extra_W = extra_T, extra_W
+
+    def biped_3d(self, n):
+        """Hip point mass at the top of the stance leg, legs of length l along their body
+        axis e₃ (foot to hip), centres of mass a from the foot, J about the centre of mass;
+        the hip torque acts +M_H on the swing leg and −M_H on the stance leg, the ankle
+        torque +M_A on the stance leg, all inertial-frame moments."""
+        l, a = self.v("l"), self.v("a")
+
+        def hip(c):
+            return c["R1"] @ np.array([0.0, 0.0, l])
+
+        self.points = lambda c, t: [
+            (self.v("m_H"), hip(c)),
+            (self.v("m"), c["R1"] @ np.array([0.0, 0.0, a])),
+            (self.v("m"), hip(c) - c["R2"] @ np.array([0.0, 0.0, l - a])),
+        ]
+        self.bodies = [(self.v("J"), "\\Omega_{R1}"), (self.v("J"), "\\Omega_{R2}")]
+
+        def spatial_variation(Rp, Rm):  # inertial rotation variation by differences
+            Om = ((Rp - Rm) / (2 * H)) @ (0.5 * (Rp + Rm)).T
+            return np.array([Om[2, 1], Om[0, 2], Om[1, 0]])
+
+        def extra_W(c0, vp, vm, u):
+            w1 = spatial_variation(vp["R1"], vm["R1"])
+            w2 = spatial_variation(vp["R2"], vm["R2"])
+            return u["M_H"] @ w2 - u["M_H"] @ w1 + u["M_A"] @ w1
+
+        self.extra_W = extra_W
 
     # ---- aerial
     def _thrust(self, R, point):
@@ -275,6 +387,7 @@ def errors(s, name, seed):
     for (m, xp), (_, xm) in zip(mdl.points(cp, H), mdl.points(cm, -H)):
         v = (xp - xm) / (2 * H)
         T += 0.5 * m * v @ v
+    T += mdl.extra_T(cp, cm)
     V = mdl.springs(c0) + sum(m * mdl.g * (x @ UP) for m, x in mdl.points(c0, 0.0))
     L_true = T - V
 
@@ -297,6 +410,7 @@ def errors(s, name, seed):
     dW = sum(F @ ((pt(vp) - pt(vm)) / (2 * H)) for F, pt in mdl.forces(c0, u))
     dW += sum(M @ col(direction[k]) for M, k in mdl.moments(u))
     dW += sum(f * direction[k] for f, k in mdl.scalar_forces(u))
+    dW += mdl.extra_W(c0, vp, vm, u)
     return (
         abs(L_lib - L_true) / max(1.0, abs(L_true)),
         abs(dW_lib - dW) / max(1.0, abs(dW)),
@@ -356,3 +470,57 @@ def test_the_check_detects_a_missing_term():
     assert errors(no_gravity, "heavy_top", 0)[0] > 1e-3
     reversed_moment = dataclasses.replace(top, dW=-top.dW)
     assert errors(reversed_moment, "heavy_top", 0)[1] > 1e-3
+
+
+def _replaced(s, **changes):
+    import dataclasses
+
+    return dataclasses.replace(s, **changes)
+
+
+def test_the_check_detects_a_dropped_hip_mass():
+    """The biped's Lagrangian without the hip point mass fails the model check."""
+    from geomech import Dot, Scalar, Vector
+    from geomech.core.base import HALF
+
+    s = get("biped_3d")
+    mH, g = Scalar("m_H", attr=["Constant"]), Scalar("g", attr=["Constant"])
+    e3, xH = Vector("e3", attr=["Constant"]), s.symbols["xH"]
+    vH = xH.t_diff()
+    no_hip = s.L - HALF * mH * Dot(vH, vH) + mH * g * Dot(e3, xH)
+    assert errors(_replaced(s, L=no_hip), "biped_3d", 0)[0] > 1e-3
+    assert errors(s, "biped_3d", 0)[0] < TOL
+
+
+def test_the_check_detects_a_flipped_wheel_torque():
+    """The spacecraft's virtual work with the sign of τ₁ on its wheel flipped fails."""
+    s = get("spacecraft_reaction_wheels")
+    tau1, th1 = s.symbols["tau"][0], s.symbols["theta"][0]
+    flipped = s.dW - tau1 * th1.delta() * 2
+    assert errors(_replaced(s, dW=flipped), "spacecraft_reaction_wheels", 0)[1] > 1e-3
+    # and the bus reaction is needed too: the wheel torque alone, without −τ b on the bus
+    b1, eta = s.symbols["b"][0], s.symbols["R"].get_variation_vector()
+    from geomech import Dot
+
+    no_reaction = s.dW + tau1 * Dot(b1, eta)
+    assert errors(_replaced(s, dW=no_reaction), "spacecraft_reaction_wheels", 0)[1] > 1e-3
+
+
+def test_the_check_detects_a_missing_joint_reaction():
+    """The rigid chain's virtual work without the reaction −τ₂ on link 1 fails, and so
+    does its Lagrangian without the rotational energy of link 2."""
+    from geomech import Dot, MVMul, Transpose
+    from geomech.core.base import HALF
+
+    s = get("n_link_rigid_chain", n_links=2)
+    R1, R2 = s.symbols["R"]
+    tau2 = s.symbols["tau"][1]
+    no_reaction = s.dW + Dot(R1.get_variation_vector(), MVMul(Transpose(R1), tau2))
+    assert errors(_replaced(s, dW=no_reaction), "n_link_rigid_chain", 0)[1] > 1e-3
+    Om2 = R2.get_tangent_vector()
+    from geomech import Matrix
+
+    J2 = Matrix("J2", attr=["Constant", "SymmetricMatrix"])
+    no_spin = s.L - Dot(Om2, J2 * Om2) * HALF
+    assert errors(_replaced(s, L=no_spin), "n_link_rigid_chain", 0)[0] > 1e-3
+    assert max(errors(s, "n_link_rigid_chain", 0)) < TOL

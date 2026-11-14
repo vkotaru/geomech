@@ -32,8 +32,11 @@ EXPECTED = {
     "heavy_top": 3,
     "rigid_pendulum": 3,
     "double_rigid_pendulum": 6,
+    "n_link_rigid_chain": 9,
     "two_rigid_bodies_spherical_joint": 9,
     "rigid_body": 6,
+    "spacecraft_reaction_wheels": 6,
+    "biped_3d": 6,
     "quadrotor": 6,
     "quadrotor_offset_com": 6,
     "quadrotor_suspended_load": 8,
@@ -44,6 +47,7 @@ EXPECTED = {
 }
 PARAMETRIC = {
     "n_link_spherical_chain": "n_links",
+    "n_link_rigid_chain": "n_links",
     "quadrotor_flexible_cable": "n_links",
     "multi_quadrotor_point_mass": "n_quads",
     "multi_quadrotor_rigid_load": "n_quads",

@@ -6,6 +6,23 @@ All notable changes to `geomech` are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Two systems in `geomech.systems`:
+  - `spacecraft_reaction_wheels` (SO(3) × R³, 6 dof): a rigid spacecraft with three
+    reaction wheels on the body axes, inputs the wheel motor torques; compared with
+    Lee et al. eqs. 9.61–9.62, and tested to conserve the energy and the inertial angular
+    momentum without input.
+  - `biped_3d` (SO(3) × SO(3), 6 dof): the single-support (swing) phase of a
+    three-dimensional compass-gait biped with a hip mass, inputs a hip torque between the
+    legs and an ankle torque; impacts and contact are not modelled.
+
+  - `n_link_rigid_chain(n_links=…)` ((SO(3))ⁿ, 3n dof): n rigid links joined by
+    spherical joints, hanging from a fixed pivot, inputs the joint torques; with two links
+    its Lagrangian is that of `double_rigid_pendulum`.
+
+  All three pass `check_eom`, generate, simulate and render through `Report`, and their
+  Lagrangian and virtual work are checked against an independent model of their bodies.
+
 ## [0.2.0] — 2026-11-14
 
 ### Upgrading from 0.1.0
