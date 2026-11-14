@@ -42,12 +42,16 @@ Open follow-ups are listed in `specs/follow-ups.md`.
 ### Added
 - 3-D visualizer and HTML report, `geomech.viz` (`specs/viz-and-skill.md`,
   `docs/visualization.md`):
-  - `Scene(layout, params)` with `RigidBody(R, origin, shape, offset, axes)`,
+  - `Scene(layout, params=None)` with `RigidBody(R, origin, shape, offset, axes)`,
     `PointMass`, `Rod`, `Trace` and the shapes `Box`, `Cylinder`, `Sphere`; geometry is
     written with geomech expressions of the configuration variables and parameters and
     evaluated with `geomech.codegen.lambdify` (anything else raises `ValueError` naming
     the leaf). `scene.frames(traj)` gives every body's position and rotation, every
-    point, rod and trace per stored state.
+    point, rod and trace per stored state. `Scene(layout)` needs no `params`:
+    `scene.frames(traj)` and `Report` evaluate the scene and fill the parameter table with
+    `traj.p`, and a `Scene(params=...)` or `Report(params=...)` value that differs from
+    `traj.p` raises `ValueError` naming the parameter and both values. A non-finite
+    state raises `ValueError` naming the first non-finite time and entry.
   - `Report(title, system=(L, dW, variables, inputs), ...)`: one self-contained HTML page
     with a summary (derivation time, `check_eom` error, energy and constraint drift,
     integrator), a three.js animation (solid bodies with body axes, lighting and shadows,
@@ -55,16 +59,40 @@ Open follow-ups are listed in `specs/follow-ups.md`.
     Lagrangian and equations one term per line, the standard form (block overview and
     each block), the parameters and the source. three.js r147 and MathJax 3.2.2 from
     pinned CDN URLs are the only external resources; light and dark themes.
+    - The view is scale-free: the camera frames everything drawn (shapes, axis arrows,
+      radii) with no minimum size, positions keep six significant figures of the scene
+      size, and default `PointMass`/`Rod` radii and arrow thickness follow the scene, so
+      a 1 mm and a 1 km scene look the same.
+    - Orientation: box faces +e₁/+e₂ are tinted, cylinders carry a tinted sector and
+      spheres caps, with a contrast rule (CIE76 ΔE ≥ 25) that works on every colour; an
+      inertial gizmo in the corner and, far from the origin, a second inertial triad
+      keep the inertial frame in view.
+    - MathJax typesets the equation containers only, without the `html`, `action`,
+      `bbox`, `unicode`, `require`, `autoload` and `setoptions` packages, so
+      `\href{javascript:…}` in a symbol name, title, description or unit is never a
+      link.
+    - Forced runs: the summary reads "Energy change … the work of the inputs, not an
+      integrator error" when `trajectory.u` is nonzero (`Report.forced()`), "Energy
+      change … inputs not recorded" when it is `None`, and "Energy drift" only for zero
+      recorded inputs.
+    - Playback shows the last frame before it loops; Play is disabled for a one-state
+      trajectory. The root element carries `data-gm-viewer` (ready, no WebGL, …).
   - `latex_names` / `pretty_name`: readable LaTeX for leaf names (`J1` → `J_1`,
-    `\Omega_{R1}` → `\Omega_1`), one-to-one, applied to leaves only.
+    `\Omega_{R1}` → `\Omega_1`), one-to-one, applied to leaves only; commands that take
+    an argument (`\bar1`, `\mathbf1`) are left unchanged, so every mapped name is valid
+    TeX.
   - Examples `examples/report_double_rigid_pendulum.py`, `report_spherical_pendulum.py`,
     `report_quadrotor_load.py`, run in CI.
 - `to_latex(expr, names=None)`: an optional map from leaf names to LaTeX; the default
   output is unchanged.
 - Agent skill `skills/geomech/` (`SKILL.md`, `reference.md`; copy for Claude Code in
   `.claude/skills/geomech/`): the procedure define, derive, `check_eom`, standard form,
-  generate, simulate, report, the conventions to state and the failure modes. Every
-  Python block in it runs in the test suite.
+  generate, simulate, report, the conventions to state (what `print_eom` prints versus
+  `str`, the scene drawn with `traj.p`, a forced run's energy change and its `u=None`
+  integrator check, the virtual work of a force at a point, the `pack` keys) and the
+  failure modes. Every Python block in it runs in the test suite. `.gitignore`
+  un-ignores `.claude/skills/geomech/` only.
+- `StateLayout.slot_names()`: the keys `pack` takes and `unpack` returns, in state order.
 - Simulation, `geomech.simulation` (roadmap feature 6, `specs/simulation.md`,
   `docs/simulation.md`); it consumes only `geomech.codegen` modules and imports scipy
   (extra `geomech[sim]`) only for `solve_ivp` and `lqr`:
@@ -88,7 +116,10 @@ Open follow-ups are listed in `specs/follow-ups.md`.
     projection), so `traj.state[-1]` can start the next segment. `u` is `None`, a
     constant 1-D array or a callable `u(t, state)`; a wrong shape (including 2-D),
     non-finite entries or a callable returning `None` raise naming `u` (and the time).
-    `t_span` must be finite. `output_every=k` stores every k-th step.
+    `t_span` must be finite. `output_every=k` stores every k-th step. `traj.u` records
+    the inputs at the stored states as the run used them (RKMK4: each stored step's
+    first stage, so a controller is never called twice at one state); an exception
+    raised by a controller propagates at once, unchanged, with a note giving the time.
   - `lqr(lin_module, x_eq, u_eq, p, Q, R, module=None)` → `LQRController` (gain, Riccati
     solution, reduced `A`, `B`, `error(state)`, callable as `u(t, state)`). With
     `module=` (the standard-form module) it checks that `(x_eq, u_eq)` is an equilibrium

@@ -13,9 +13,11 @@ paper_context.md
 # Visual Studio Code
 .vscode/
 
-# Claude
+# Claude: everything under .claude/ stays local except the geomech skill copy
 .claude/*
 !.claude/skills/
+.claude/skills/*
+!.claude/skills/geomech/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

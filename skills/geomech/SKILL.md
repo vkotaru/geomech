@@ -26,6 +26,12 @@ error messages.
    matrices=[…])` (S² points go in `vectors`, SO(3) in `matrices`).
 2. **Write L and δW.** `L = T − V` with `Dot`, `Cross`, `*`; a half is
    `Scalar("0.5", value=0.5, attr=["Constant"])`. Forces enter as `Dot(variation, force)`.
+   A force at a point enters as `Dot(δ(point), force)`, where `δ(point)` is the
+   variation of the point's position expression term by term: `x` → `x.delta()`, `q` →
+   `Cross(ξ, q)` (`δq = ξ × q`), `R` → `R * Cross(η, ·)` (`δR = R η̂`). A force `F` at
+   `x + l q` gives `Dot(x.delta() + Cross(xi, q) * l, F)`; at a body point `x + R ρ` it
+   gives `Dot(x.delta() + R * Cross(eta, rho), F)`. A moment `M` on `R` is
+   `Dot(eta, M)`.
 3. **Derive:** `eom = compute_eom(L, dW, variables)`.
 4. **Verify (mandatory):** `err = check_eom(L, dW, variables, eom, inputs=inputs)`.
    Report the number. A correct equation gives about 1e-7; never present an equation
@@ -39,9 +45,23 @@ error messages.
    variables, inputs))`, then `plant = load_module(module_source(sf, layout,
    lagrangian=L), "name")` (or `generate_module(sf, layout, "file.py", lagrangian=L)`).
 8. **Simulate:** `traj = simulate(plant, layout.pack(...), t_final, p)`; check
-   `traj.energy()` drift (unforced) and `traj.max_drift()`.
-9. **Report:** build a `Scene` (rigid bodies as boxes with a non-square cross-section,
-   point masses, rods, traces) and write `Report(...).write("x.html")`.
+   `traj.energy()` drift and `traj.max_drift()`. The `pack` keys are the configuration
+   names and `x_dot`, `omega_<name>`, `Omega_<name>` (`omega_q1` for `S2("q1")`,
+   `Omega_R2` for `SO3("R2")`); `layout.slot_names()` lists them. Energy is conserved
+   only without inputs: with nonzero inputs (`u=`, recorded in `traj.u`) `E(t) − E(0)`
+   is the work the inputs did, not an integrator error; call it "energy change", never
+   "drift". For a forced run, also simulate once from the same `x0` over the same
+   horizon with `u=None` and report that run's energy drift as the integrator check.
+9. **Report:** build a `Scene(layout)` (rigid bodies as boxes with a non-square
+   cross-section, point masses, rods, traces) and write `Report(...).write("x.html")`.
+   Do not pass parameters to the `Scene`: the report draws the scene and fills the
+   parameter table with `traj.p`, the parameters that were simulated, so the picture
+   cannot show a different system. A `params=` (on `Scene` or `Report`) that disagrees
+   with `traj.p` raises `ValueError` naming the parameter and both values. A forced run
+   is labelled "Energy change" in the summary automatically. The view is framed on the
+   whole trajectory: if an open-loop run drifts far away, the bodies look small at
+   t = 0, so for the report simulate a shorter horizon or close the loop with a
+   controller (`lqr`).
 
 ## Conventions to state with every result
 
@@ -50,7 +70,9 @@ error messages.
 - In the standard form **M = −(physical inertia)** (`M[ẍ] = −m I`, `M[Ω̇] = −J`).
 - **S² equations hold on the tangent plane** of their point: only `(I − qqᵀ) E = 0` is
   an equation; the S² mass block can be singular, which is expected.
-- Printed products use `*` (`m*l*l*(-1)`); `to_latex` gives LaTeX.
+- `print_eom(eom)` prints each equation as LaTeX source (`\int \xi_{q} \cdot (… -m l …)
+  dt`), like `to_latex(expr)`; `str(expr)` (and `print(expr)`) is the plain form, where
+  products are written with `*` (`m*l*l*(-1)`). Say which one you show.
 - Ω is the body-frame angular velocity; `Ṙ = R Ω̂`. Gravity is along −e₃ with
   `V = m g e₃·x`.
 
@@ -70,8 +92,11 @@ Quote the error text in the answer; do not silence or work around an error.
 ## Presentation
 
 Always present the report (`Report(...).write(...)`, or `report._repr_html_()` in a
-notebook) or, in a terminal, the equations (`print_eom(eom)`) with the `check_eom`
-number, the energy drift and the conventions above. Never draw a diagram by hand.
+notebook) or, in a terminal, the equations (`print_eom(eom)` for LaTeX source, or
+`print(eq)` for each `(variation, eq)` of `eom.values()` in the `*` form) with the
+`check_eom` number, the energy drift (or, for a forced run, the energy change, that it
+is the work of the inputs, and the drift of the same run with `u=None`) and the
+conventions above. Never draw a diagram by hand.
 
 ## Worked example: spherical pendulum (Lee et al. Eq. 5.14)
 
@@ -109,12 +134,12 @@ E = traj.energy()
 print(f"check_eom {err:.1e}, energy drift {np.max(np.abs(E - E[0])) / abs(E[0]):.1e}")
 
 bob = q * l
-scene = Scene(layout, params=p)
+scene = Scene(layout)                  # drawn with traj.p, the simulated parameters
 scene.add(Rod(ZeroVector, bob))
 scene.add(PointMass(bob, radius=0.08))
 scene.add(Trace(bob))
 Report("Spherical pendulum", system=(L, dW, variables, inputs), eom=eom, standard_form=sf,
-       scene=scene, trajectory=traj, params=p).write("spherical_pendulum.html")
+       scene=scene, trajectory=traj).write("spherical_pendulum.html")
 ```
 
 ## Worked example: double rigid pendulum (SO(3) × SO(3))
@@ -164,11 +189,11 @@ x0 = layout.pack(R1=expm_so3([0.7, 0.3, 0.0]), R2=expm_so3([1.1, -0.4, 0.3]),
                  Omega_R1=[0.4, -0.6, 4.0], Omega_R2=[-0.8, 0.5, -5.0])
 traj = simulate(plant, x0, 1.0, p)
 
-scene = Scene(layout, params=p)
+scene = Scene(layout)
 scene.add(RigidBody(R1, origin=ZeroVector, shape=Box(0.12, 0.05, 1.0), offset=[0, 0, -0.5]))
 scene.add(RigidBody(R2, origin=R1 * l1, shape=Box(0.12, 0.05, 0.8), offset=[0, 0, -0.4]))
 report = Report("Double rigid pendulum", system=(L, dW, variables, inputs), eom=eom,
-                standard_form=sf, scene=scene, trajectory=traj, params=p)
+                standard_form=sf, scene=scene, trajectory=traj)
 report.write("double_pendulum.html")
 print(f"check_eom {report.check_error:.1e}, energy drift {report.energy_drift():.1e}")
 ```
@@ -209,15 +234,20 @@ p = {"J": np.diag([0.02, 0.025, 0.04]), "e3": np.array([0, 0, 1.0]), "g": 9.81,
 x0 = layout.pack(x_L=np.zeros(3), q=[0, 0, -1], R=np.eye(3), Omega_R=[0, 0, 1.0])
 hover = np.r_[(p["m_Q"] + p["m_L"]) * p["g"], 0, 0, 0]       # u = [f, M]
 traj = simulate(plant, x0, 1.0, p, u=hover)
+free = simulate(plant, x0, 1.0, p)          # u=None: the integrator check of a forced run
+E = free.energy()
+print(f"unforced energy drift {np.max(np.abs(E - E[0])) / abs(E[0]):.1e}")
 
-scene = Scene(layout, params=p)
+scene = Scene(layout)
 scene.add(RigidBody(R, origin=xQ, shape=Box(0.16, 0.12, 0.06)))
 for off in [(0.25, 0, 0.03), (0, 0.25, 0.03), (-0.25, 0, 0.03), (0, -0.25, 0.03)]:
     scene.add(RigidBody(R, xQ, Cylinder(0.09, 0.012), offset=off, axes=False, color="rotor"))
 scene.add(Rod(xQ, xL))
 scene.add(PointMass(xL, radius=0.07))
-Report("Quadrotor with a load", system=(L, dW, variables, inputs), eom=eom,
-       standard_form=sf, scene=scene, trajectory=traj, params=p).write("quadrotor_load.html")
+report = Report("Quadrotor with a load", system=(L, dW, variables, inputs), eom=eom,
+                standard_form=sf, scene=scene, trajectory=traj)
+report.write("quadrotor_load.html")
+assert report.forced()     # hover thrust: the summary shows "Energy change", the inputs' work
 ```
 
 See `reference.md` for the API, the state layout and the error messages, and

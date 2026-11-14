@@ -28,7 +28,7 @@ Operators: `Dot(a, b)`, `Cross(a, b)`, `Hat(v)`, `Vee(M)`, `A * v`, `s * v`, `v.
 | `check_eom(L, dW, variables, eom, inputs=inputs)` | worst relative error; ~1e-7 when correct |
 | `to_standard_form(eom, variables, inputs)` | `{key: StandardFormEquation}` with `.M[accel]`, `.f`, `.G[input]` |
 | `linearize(eom, variables, inputs)` | `LinearizedSystem` (`M δẋ = A δx + B δu`) |
-| `print_eom(eom)`, `to_latex(expr, names=latex_names(eom))` | text and LaTeX |
+| `print_eom(eom)`, `to_latex(expr, names=latex_names(eom))` | LaTeX source (`\int \xi \cdot (…) dt`); `str(expr)` is the plain `*` form |
 
 ## Code generation and simulation
 
@@ -57,11 +57,16 @@ print(traj.energy()[[0, -1]], traj.max_drift())
 - `state` = configuration slots (variable order: scalars, vectors, matrices; `R`
   row-major), then velocity slots. `layout.pack(x=..., q=..., R=..., x_dot=...,
   omega_q=..., Omega_R=...)` builds it; missing velocities are zero;
-  `layout.unpack(traj.state)` splits it.
+  `layout.unpack(traj.state)` splits it. Velocity keys are `x_dot` (`s_dot`),
+  `omega_<name>` and `Omega_<name>` with the variable's name, indices included
+  (`S2("q1")` → `omega_q1`, `SO3("R2")` → `Omega_R2`); `layout.slot_names()` lists all
+  keys in state order.
 - `p` holds exactly the parameters of the layout, keyed by printed name
   (`"\\rho_1"`, `"J1"`); a missing key raises `KeyError`, an extra one `ValueError`.
 - `simulate(module, x0, t_final, p, u=None, method="rkmk4", dt=1e-3, output_every=1)`;
-  `u` is `None`, a constant array (`[f, M]` stacked) or `u(t, state)`.
+  `u` is `None`, a constant array (`[f, M]` stacked) or `u(t, state)`. `traj.u` records
+  the inputs used at the stored states; an exception raised by `u` propagates at once
+  with a note giving `t`.
   `x0` must be on the manifold (`|q| = 1`, `q·ω = 0`, `R ∈ SO(3)`).
 - `lqr(lin_module, x_eq, u_eq, p, Q, R, module=plant)` (needs scipy) returns a
   controller usable as `u`.
@@ -72,14 +77,18 @@ print(traj.energy()[[0, -1]], traj.max_drift())
 |---|---|
 | rigid body | `RigidBody(R, origin, shape, offset=None, axes=True, color=None)`; shape centred at `origin + R offset`, rotated by `R` |
 | shapes | `Box(lx, ly, lz)` (use `lx ≠ ly` for a link along e₃), `Cylinder(radius, length, axis="z")`, `Sphere(radius)` |
-| point mass | `PointMass(position, radius=0.05)` |
-| cable, massless link | `Rod(a, b, radius=0.008)` |
+| point mass | `PointMass(position, radius=None)` (default: sized from the scene) |
+| cable, massless link | `Rod(a, b, radius=None)` (default: sized from the scene) |
 | path | `Trace(point)` |
 | colours | `"link1"`…`"link4"`, `"load"`, `"cable"`, `"rotor"`, `"trace"` or `"#rrggbb"` |
 
 Expressions may use configuration variables and parameters only (`ValueError` naming
 the leaf otherwise). An S² point has no attitude: draw it as a rod plus a point mass.
 Several `RigidBody` entries may share one `R` (a quadrotor body, arms and rotors).
+`Scene(layout)` needs no parameters: `scene.frames(traj)` and `Report` evaluate it with
+`traj.p`. `params=` is only needed to evaluate bare state arrays, and a value that
+differs from `traj.p` raises `ValueError`. Sizes are in the scene's units; the view,
+the arrows and the default radii scale with the scene (1 mm and 1 km scenes look alike).
 
 ```python
 import numpy as np
@@ -105,16 +114,24 @@ except ValueError as err:
 ```
 
 `Report(title, system=(L, dW, variables, inputs), eom=None, standard_form=None,
-scene=None, trajectory=None, params=None, checks=True, units=None, source=None,
-derive_time=None, fps=60)` derives what is missing, runs `check_eom` and writes one
-HTML page with `report.write(path)`: summary (derivation time, `check_eom` error, energy
-and constraint drift, integrator), the 3-D animation (three.js and MathJax from pinned
-CDN URLs, the only external resources), L, the equations one term per line, the
-standard form (block overview, each M, f and G block), the parameters and the source.
+scene=None, trajectory=None, params=None, checks=True, *, units=None, source=None,
+derive_time=None, fps=60, description="")` (the arguments after `*` are keyword-only)
+derives what is missing, runs `check_eom` and writes one HTML page with
+`report.write(path)`: summary (derivation time, `check_eom` error, energy drift, or
+"Energy change" when `traj.u` is nonzero or was not recorded, constraint drift,
+integrator), the 3-D animation (three.js and MathJax from pinned CDN URLs, the only
+external resources; the view is framed on the whole trajectory), L, the equations one
+term per line, the standard form (block overview, each M, f and G block), the
+parameters and the source.
 
 ## Facts to state
 
 - `E = −(Euler–Lagrange) + forcing`; the equation is `E = 0`.
 - `M = −(physical inertia)` in the standard form; the linearization's M is positive.
 - S² equations hold on the tangent plane only; the S² mass block may be singular.
-- Products print with `*`; `str` is the identity of a symbol.
+- `str(expr)` writes products with `*` and is the identity of a symbol; `print_eom` and
+  `to_latex` print LaTeX.
+- A forced run's energy change is the work of its inputs, not an integrator error; its
+  integrator check is the energy drift of the same run with `u=None`.
+- Virtual work of a force `F` at a point: `Dot(δ(point), F)` with `δx = x.delta()`,
+  `δq = Cross(ξ, q)`, `δR = R η̂` (`R * Cross(eta, rho)` for a body point `R ρ`).

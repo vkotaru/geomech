@@ -98,7 +98,7 @@ def main(out="double_rigid_pendulum.html"):
     )
     traj = simulate(plant, x0, 10.0, p)
 
-    scene = Scene(layout, params=p)
+    scene = Scene(layout)  # drawn with traj.p, the simulated parameters
     scene.add(RigidBody(s["R1"], origin=ZeroVector, shape=Box(*link1), offset=[0, 0, -0.5]))
     scene.add(RigidBody(s["R2"], origin=s["R1"] * s["l1"], shape=Box(*link2), offset=[0, 0, -0.4]))
     scene.add(Trace(s["R1"] * s["l1"] + s["R2"] * (s["rho2"] * 2)))  # the tip of link 2
@@ -110,7 +110,6 @@ def main(out="double_rigid_pendulum.html"):
         standard_form=sf,
         scene=scene,
         trajectory=traj,
-        params=p,
         derive_time=derive_time,
         units={
             "m1": "kg",

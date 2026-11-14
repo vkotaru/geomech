@@ -54,6 +54,10 @@ class Trajectory:
         p: the parameters used.
         module: the generated module.
         info: integrator details (``n_steps``, ``dt`` or ``nfev``, ``rtol``, …).
+        u: the inputs at the stored states, ``(N, n_inputs)`` (zeros for ``u=None``), as
+            ``simulate`` recorded them; ``None`` for a ``Trajectory`` built without them
+            (inputs unknown). ``geomech.viz.Report`` reads it to tell a forced run from an
+            unforced one.
     """
 
     t: np.ndarray
@@ -63,6 +67,7 @@ class Trajectory:
     p: dict
     module: Any = field(repr=False)
     info: dict = field(default_factory=dict)
+    u: np.ndarray | None = field(default=None, repr=False)
 
     def energy(self, fn: Callable | None = None) -> np.ndarray:
         """``fn(state, p)`` at every output state, ``(N,)``.
@@ -157,7 +162,11 @@ def _input_function(model: Model, u) -> Callable[[float, np.ndarray], np.ndarray
     if callable(u):
 
         def ufun(t, x):
-            val = u(t, x)
+            try:
+                val = u(t, x)
+            except Exception as exc:  # the user's error, unchanged, with the time
+                _add_note(exc, f"simulate: raised by u(t, state) at t = {t:.6g}")
+                raise
             if val is None:
                 raise TypeError(
                     f"simulate: u(t, state) returned None at t = {t:.6g} (a controller"
@@ -203,9 +212,13 @@ def simulate(
         u: ``None`` (zero inputs), a constant 1-D array, or a callable ``u(t, state)``
             returning the inputs (e.g. an ``LQRController``). The inputs must be finite;
             a callable that returns ``None`` raises ``TypeError``. A callable is
-            evaluated at the RKMK4 stage states and, with ``"solve_ivp"``, at trial
-            steps that may be rejected and at times that are not monotone: it should be
-            a pure function of ``(t, state)``.
+            evaluated once per RKMK4 stage, and ``traj.u`` records the values of each
+            stored step's first stage (plus one call at the final state), so no state
+            is evaluated twice. With ``"solve_ivp"`` it is evaluated at trial steps that
+            may be rejected and at times that are not monotone, and once more at each
+            stored (interpolated) state after the run: there it should be a pure
+            function of ``(t, state)``. An exception raised by the callable propagates
+            unchanged, as soon as it is raised, with a note giving ``t``.
         method: ``"rkmk4"`` (fixed step, default) or ``"solve_ivp"``.
         dt: the step of ``"rkmk4"`` (shortened so that it divides ``tf − t0``) and the
             output spacing of ``"solve_ivp"``.
@@ -235,9 +248,10 @@ def simulate(
     keep = np.unique(np.r_[np.arange(0, n_steps + 1, int(output_every)), n_steps])
     ufun = _input_function(model, u)
     p = dict(p or {})
-    solve_accelerations(model, x0, ufun(t0, x0), p, check=True)  # singular system: raise now
+    u0 = ufun(t0, x0)
+    solve_accelerations(model, x0, u0, p, check=True)  # singular system: raise now
     if method == "rkmk4":
-        t, states = _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep)
+        t, states, inputs = _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep, u0)
         drift = constraint_drift(model, states)
         info = {"n_steps": n_steps, "dt": (tf - t0) / n_steps, "nfev": 4 * n_steps}
     else:
@@ -246,8 +260,11 @@ def simulate(
         )
         drift = constraint_drift(model, raw)
         states = np.array([project_state(model, x) for x in raw])
+        # the stored states are interpolated, never evaluated during the run
+        inputs = np.array([ufun(ti, x) for ti, x in zip(t, states)], dtype=float)
     info["output_every"] = int(output_every)
-    return Trajectory(t, states, drift, method, p, module, info)
+    inputs = inputs.reshape(len(t), model.n_inputs)
+    return Trajectory(t, states, drift, method, p, module, info, inputs)
 
 
 def _span(t_span) -> tuple[float, float]:
@@ -348,12 +365,23 @@ def _expm(v):
     return np.eye(3) + a * K + b * (K @ K)
 
 
+def _add_note(exc: BaseException, note: str) -> None:
+    """``exc.add_note(note)`` (Python ≥ 3.11), or the same ``__notes__`` entry on 3.10."""
+    try:
+        if hasattr(exc, "add_note"):
+            exc.add_note(note)
+        else:  # pragma: no cover - Python 3.10
+            exc.__notes__ = [*getattr(exc, "__notes__", []), note]  # type: ignore[attr-defined]
+    except Exception:  # pragma: no cover - an exception type that refuses attributes
+        pass
+
+
 def _lin(*terms):
     """Σ cᵢ Uᵢ for (c, U) pairs, componentwise."""
     return tuple(sum(c * U[k] for c, U in terms) for k in range(3))
 
 
-def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep):
+def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep, u0):
     """Runge–Kutta–Munthe-Kaas with the classical RK4 tableau (Munthe-Kaas 1999).
 
     With ``y = exp(U)·y_n``, the curve ``U(t)`` in the Lie algebra solves
@@ -376,13 +404,16 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep):
     the truncation error. After each step ``ω ← ω − (q·ω) q``: a change of the size of
     the local error, so the order is still 4, and ``q·ω`` stays at round-off.
 
-    Only the steps in *keep* (sorted indices into ``0..n_steps``) are stored.
+    Only the steps in *keep* (sorted indices into ``0..n_steps``) are stored, with the
+    inputs of their first stage (``u(t_n, x_n)``, *u0* at ``t0``): the controller is
+    called once per stage and once more at the final state, which no stage evaluates.
     """
     lie = _LieRK(model)
     h = (tf - t0) / n_steps
     t = t0 + h * np.arange(n_steps + 1)
     t[-1] = tf
     out = np.empty((keep.size, model.n_state))
+    inputs = np.empty((keep.size, model.n_inputs))
     out[0] = x = x0
     store = np.zeros(n_steps + 1, dtype=bool)
     store[keep] = True
@@ -392,7 +423,10 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep):
     zero += (np.zeros((len(model.so3), 3)),)
     for n in range(n_steps):
         tn = t[n]
-        K1 = lie.dexpinv(zero, lie.generator(tn, x, p, ufun), h)
+        un = u0 if n == 0 else ufun(tn, x)
+        if store[n]:
+            inputs[k - 1] = un
+        K1 = lie.dexpinv(zero, lie.generator(tn, x, p, lambda _t, _x: un), h)
         U2 = _lin((0.5, K1))
         K2 = lie.dexpinv(U2, lie.generator(tn + 0.5 * h, lie.act(U2, x), p, ufun), h)
         U3 = _lin((0.5, K2))
@@ -406,7 +440,8 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep):
         if store[n + 1]:
             out[k] = x
             k += 1
-    return t[keep], out
+    inputs[-1] = ufun(t[-1], x)  # the last step is always stored
+    return t[keep], out, inputs
 
 
 # ---------------------------------------------------------------------------
