@@ -22,8 +22,8 @@ by approving this plan.
 
 Commit the four reports and `specs/reviews/scripts/engine_fuzz.py`. Move the dynamics
 audit's Euler–Lagrange harness (its Appendix A) into
-`specs/reviews/scripts/euler_lagrange_check.py` so the report's "scratch directory"
-references point into the repo.
+`specs/reviews/scripts/euler_lagrange_check.py` so the report's references to its temporary
+directory point into the repo.
 
 ## Phase 1 — Wrong equations (mathematics)
 
@@ -40,8 +40,8 @@ numeric check against the independent Euler–Lagrange harness.
   called; second source of truth) or route through `manifold_rules`.
 - `docs/manifold-implementation-notes.md`: replace "needs verification" with the
   derivation and the symptom (gyroscopic terms come out at half strength).
-- Paper: the accompanying paper and `03_toolbox.tex:116` state the wrong
-  formula; fix both.
+- Paper: the accompanying paper states the wrong formula in two places (background and
+  toolbox sections); fix both.
 - Existing test to change: `tests/test_manifold_rules.py::TestS2ManifoldRules::test_variation_of_omega_expands`
   (pins the −1).
 - New pinned pipeline tests, each with a numeric EL check: spherical pendulum on a

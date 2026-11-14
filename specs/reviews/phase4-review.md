@@ -18,7 +18,7 @@ blame for a child's rewrite (F3). The other three are a trace that silently mixe
 
 ## 1. Bug hunts (main deliverable)
 
-Each bug was injected into a plain copy of `bffba73` (no git history) inside the
+Each bug was injected into a plain copy of `bffba73` (no git history) inside a
 temporary directory. Each copy got a `scenario.py` whose `check_eom` fails. A *fresh* agent, which
 knew nothing about the bug or the code, then debugged it. It was told to use only the
 phase-4 tooling (`EOMTrace`, `GEOMECH_DEBUG`, `GEOMECH_TRACE`/`set_trace`, `check_tree`,

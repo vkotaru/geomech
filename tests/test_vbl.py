@@ -97,7 +97,7 @@ class TestPointMassR3:
         self.dF = self.s.symbols["F"].delta()
 
     def test_pinned_eom(self):
-        assert str(self.eom[str(self.dx)][1]) == "(\\frac{d}{dt}(\\frac{d}{dt}(x))m(-1)+F)"
+        assert str(self.eom[str(self.dx)][1]) == "(\\frac{d}{dt}(\\frac{d}{dt}(x))*m*(-1)+F)"
 
     def test_structure(self):
         assert self.lin.rows == ["kin:x", str(self.dx)]
@@ -115,7 +115,7 @@ class TestPointMassR3:
 
     def test_dynamic_row_exact(self):
         row = str(self.dx)
-        assert str(self.lin.M[row][str(self.da)]) == "Im"
+        assert str(self.lin.M[row][str(self.da)]) == "I*m"
         assert str(self.lin.B[row][str(self.dF)]) == "I"
         _zero_blocks_except(self.lin.M[row], {str(self.da)})
         _zero_blocks_except(self.lin.A[row], set())
@@ -151,7 +151,7 @@ class TestSpringMassR:
         self.df = self.s.symbols["f"].delta()
 
     def test_pinned_eom(self):
-        expected = "(m\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)+kx(-1)+f)"
+        expected = "(m*\\frac{d}{dt}(\\frac{d}{dt}(x))*(-1)+k*x*(-1)+f)"
         assert str(self.eom[str(self.dx)][1]) == expected
 
     def test_kinematic_row_exact(self):
@@ -165,7 +165,7 @@ class TestSpringMassR:
     def test_dynamic_row_exact(self):
         row = str(self.dx)
         assert str(self.lin.M[row][str(self.da)]) == "m"
-        assert str(self.lin.A[row][str(self.dx)]) == "k(-1)"
+        assert str(self.lin.A[row][str(self.dx)]) == "k*(-1)"
         assert str(self.lin.B[row][str(self.df)]) == "1"
         _zero_blocks_except(self.lin.M[row], {str(self.da)})
         _zero_blocks_except(self.lin.A[row], {str(self.dx)})
@@ -203,7 +203,7 @@ class TestFreeRigidBody:
         self.dM = self.s.symbols["M"].delta()
 
     def test_pinned_eom(self):
-        expected = "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)+M)"
+        expected = "(J*\\frac{d}{dt}(\\Omega_{R})*(-1)+Cross(\\Omega_{R},J*\\Omega_{R})*(-1)+M)"
         assert str(self.eom[str(self.eta)][1]) == expected
 
     def test_structure(self):
@@ -214,7 +214,7 @@ class TestFreeRigidBody:
     def test_kinematic_row_exact(self):
         row = "kin:R"
         assert str(self.lin.M[row][str(self.eta.t_diff())]) == "I"
-        assert str(self.lin.A[row][str(self.eta)]) == "Hat(\\Omega_{R})(-1)"
+        assert str(self.lin.A[row][str(self.eta)]) == "Hat(\\Omega_{R})*(-1)"
         assert str(self.lin.A[row][str(self.dOm)]) == "I"
         _zero_blocks_except(self.lin.M[row], {str(self.eta.t_diff())})
         _zero_blocks_except(self.lin.B[row], set())
@@ -222,7 +222,9 @@ class TestFreeRigidBody:
     def test_dynamic_row_exact(self):
         row = str(self.eta)
         assert str(self.lin.M[row][str(self.ddOm)]) == "J"
-        assert str(self.lin.A[row][str(self.dOm)]) == ("(Hat(J\\Omega_{R})+Hat(\\Omega_{R})J(-1))")
+        assert str(self.lin.A[row][str(self.dOm)]) == (
+            "(Hat(J*\\Omega_{R})+Hat(\\Omega_{R})*J*(-1))"
+        )
         assert str(self.lin.B[row][str(self.dM)]) == "I"
         _zero_blocks_except(self.lin.M[row], {str(self.ddOm)})
         _zero_blocks_except(self.lin.A[row], {str(self.dOm)})
@@ -265,16 +267,18 @@ class TestRigidPendulumPivot:
 
     def test_pinned_eom(self):
         expected = (
-            "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-            "+Cross(\\rho,(R)'e3)mg(-1)+M)"
+            "(J*\\frac{d}{dt}(\\Omega_{R})*(-1)+Cross(\\Omega_{R},J*\\Omega_{R})*(-1)"
+            "+Cross(\\rho,(R)'*e3)*m*g*(-1)+M)"
         )
         assert str(self.eom[str(self.eta)][1]) == expected
 
     def test_gravity_block_exact(self):
         row = str(self.eta)
-        assert str(self.lin.A[row][str(self.eta)]) == "Hat(\\rho)Hat((R)'e3)mg(-1)"
+        assert str(self.lin.A[row][str(self.eta)]) == "Hat(\\rho)*Hat((R)'*e3)*m*g*(-1)"
         assert str(self.lin.M[row][str(self.ddOm)]) == "J"
-        assert str(self.lin.A[row][str(self.dOm)]) == ("(Hat(J\\Omega_{R})+Hat(\\Omega_{R})J(-1))")
+        assert str(self.lin.A[row][str(self.dOm)]) == (
+            "(Hat(J*\\Omega_{R})+Hat(\\Omega_{R})*J*(-1))"
+        )
 
     def test_blocks_numeric(self):
         row = str(self.eta)
@@ -322,21 +326,21 @@ class TestSphericalPendulumS2:
         self.df = self.s.symbols["f"].delta()
 
     def test_pinned_eom(self):
-        expected = "(\\frac{d}{dt}(\\omega_{q})mll(-1)+Cross(q,e3)mgl(-1)+f)"
+        expected = "(\\frac{d}{dt}(\\omega_{q})*m*l*l*(-1)+Cross(q,e3)*m*g*l*(-1)+f)"
         assert str(self.eom[str(self.xi)][1]) == expected
 
     def test_kinematic_row_exact(self):
         row = "kin:q"
         assert str(self.lin.M[row][str(self.xi.t_diff())]) == "I"
-        assert str(self.lin.A[row][str(self.xi)]) == "q(q)'Hat(\\omega_{q})"
-        assert str(self.lin.A[row][str(self.dom)]) == "(I+q(q)'(-1))"
+        assert str(self.lin.A[row][str(self.xi)]) == "q*(q)'*Hat(\\omega_{q})"
+        assert str(self.lin.A[row][str(self.dom)]) == "(I+q*(q)'*(-1))"
         _zero_blocks_except(self.lin.M[row], {str(self.xi.t_diff())})
         _zero_blocks_except(self.lin.B[row], set())
 
     def test_dynamic_row_exact(self):
         row = str(self.xi)
-        assert str(self.lin.M[row][str(self.ddom)]) == "Imll"
-        assert str(self.lin.A[row][str(self.xi)]) == "Hat(e3)Hat(q)mgl(-1)"
+        assert str(self.lin.M[row][str(self.ddom)]) == "I*m*l*l"
+        assert str(self.lin.A[row][str(self.xi)]) == "Hat(e3)*Hat(q)*m*g*l*(-1)"
         assert str(self.lin.B[row][str(self.df)]) == "I"
         _zero_blocks_except(self.lin.M[row], {str(self.ddom)})
         _zero_blocks_except(self.lin.A[row], {str(self.xi)})
@@ -401,7 +405,7 @@ class TestQuadrotor:
 
     def test_pinned_eom(self):
         assert str(self.eom[str(self.dx)][1]) == (
-            "(\\frac{d}{dt}(\\frac{d}{dt}(x))m(-1)+e3mg(-1)+Re3f)"
+            "(\\frac{d}{dt}(\\frac{d}{dt}(x))*m*(-1)+e3*m*g*(-1)+R*e3*f)"
         )
 
     def test_structure(self):
@@ -416,9 +420,9 @@ class TestQuadrotor:
 
     def test_translational_row_exact(self):
         row = str(self.dx)
-        assert str(self.lin.M[row][str(self.dx.t_diff().t_diff())]) == "Im"
-        assert str(self.lin.A[row][str(self.eta)]) == "RHat(e3)f(-1)"
-        assert str(self.lin.B[row][str(self.df)]) == "Re3"
+        assert str(self.lin.M[row][str(self.dx.t_diff().t_diff())]) == "I*m"
+        assert str(self.lin.A[row][str(self.eta)]) == "R*Hat(e3)*f*(-1)"
+        assert str(self.lin.B[row][str(self.df)]) == "R*e3"
         _zero_blocks_except(self.lin.M[row], {str(self.dx.t_diff().t_diff())})
         _zero_blocks_except(self.lin.A[row], {str(self.eta)})
         _zero_blocks_except(self.lin.B[row], {str(self.df)})
@@ -426,7 +430,9 @@ class TestQuadrotor:
     def test_rotational_row_exact(self):
         row = str(self.eta)
         assert str(self.lin.M[row][str(self.dOm.t_diff())]) == "J"
-        assert str(self.lin.A[row][str(self.dOm)]) == ("(Hat(J\\Omega_{R})+Hat(\\Omega_{R})J(-1))")
+        assert str(self.lin.A[row][str(self.dOm)]) == (
+            "(Hat(J*\\Omega_{R})+Hat(\\Omega_{R})*J*(-1))"
+        )
         assert str(self.lin.B[row][str(self.dM)]) == "I"
         _zero_blocks_except(self.lin.A[row], {str(self.dOm)})
         _zero_blocks_except(self.lin.B[row], {str(self.dM)})
@@ -484,7 +490,7 @@ class TestDoubleRigidPendulum:
             row = "kin:" + str(R)
             eta, Om = R.get_variation_vector(), R.get_tangent_vector()
             assert str(self.lin.M[row][str(eta.t_diff())]) == "I"
-            assert str(self.lin.A[row][str(eta)]) == f"Hat(\\Omega_{{{R}}})(-1)"
+            assert str(self.lin.A[row][str(eta)]) == f"Hat(\\Omega_{{{R}}})*(-1)"
             assert str(self.lin.A[row][str(Variation(Om))]) == "I"
             _zero_blocks_except(self.lin.M[row], {str(eta.t_diff())})
             _zero_blocks_except(self.lin.A[row], {str(eta), str(Variation(Om))})
@@ -497,11 +503,12 @@ class TestDoubleRigidPendulum:
         dOm2 = str(Variation(self.R2.get_tangent_vector()).t_diff())
         M = self.lin.M
         assert (
-            str(M[str(eta1)][dOm1]) == "(J1+Hat(\\rho_1)Hat(\\rho_1)m1(-1)+Hat(l_1)Hat(l_1)m2(-1))"
+            str(M[str(eta1)][dOm1])
+            == "(J1+Hat(\\rho_1)*Hat(\\rho_1)*m1*(-1)+Hat(l_1)*Hat(l_1)*m2*(-1))"
         )
-        assert str(M[str(eta1)][dOm2]) == "Hat(l_1)(R1)'R2Hat(\\rho_2)m2(-1)"
-        assert str(M[str(eta2)][dOm1]) == "Hat(\\rho_2)(R2)'R1Hat(l_1)m2(-1)"
-        assert str(M[str(eta2)][dOm2]) == "(J2+Hat(\\rho_2)Hat(\\rho_2)m2(-1))"
+        assert str(M[str(eta1)][dOm2]) == "Hat(l_1)*(R1)'*R2*Hat(\\rho_2)*m2*(-1)"
+        assert str(M[str(eta2)][dOm1]) == "Hat(\\rho_2)*(R2)'*R1*Hat(l_1)*m2*(-1)"
+        assert str(M[str(eta2)][dOm2]) == "(J2+Hat(\\rho_2)*Hat(\\rho_2)*m2*(-1))"
 
     def test_finite_difference(self):
         finite_difference_check(self.lin, self.eom, self.s.variables, self.s.inputs)
@@ -553,7 +560,7 @@ class TestElasticSphericalPendulum:
             assert np.atleast_2d(np.asarray(ev(block))).shape == shape, (col, block)
 
     def test_row_block_for_omega_exact(self):
-        assert str(self.lin.A[str(self.dl)][str(self.dom)]) == "(\\omega_{q}ml(2))'"
+        assert str(self.lin.A[str(self.dl)][str(self.dom)]) == "(\\omega_{q}*m*l*(2))'"
 
     def test_finite_difference(self):
         finite_difference_check(self.lin, self.eom, self.s.variables, self.s.inputs)
@@ -590,8 +597,8 @@ class TestQuadrotorWithLoad:
         """
         xL, q = self.s.symbols["xL"], self.s.symbols["q"]
         B = self.lin.B
-        assert str(B[str(xL.delta())]["\\delta{f}"]) == "Re3"
-        assert str(B[str(q.get_variation_vector())]["\\delta{f}"]) == "Cross(q,Re3)l(-1)"
+        assert str(B[str(xL.delta())]["\\delta{f}"]) == "R*e3"
+        assert str(B[str(q.get_variation_vector())]["\\delta{f}"]) == "Cross(q,R*e3)*l*(-1)"
 
     def test_finite_difference(self):
         finite_difference_check(self.lin, self.eom, self.s.variables, self.s.inputs)
@@ -641,9 +648,9 @@ def test_no_unfolded_numeric_factors(name):
     """Blocks print without a `(-1)(-1)` chain: numeric factors are folded by simplify."""
     _, _, lin = _derive(name)
     for text in _all_block_strings(lin):
-        assert "(-1)(-1)" not in text, text
-        assert "(-1.0)(-1" not in text, text
-        assert "(-1)(-1.0" not in text, text
+        assert "(-1)*(-1)" not in text, text
+        assert "(-1.0)*(-1" not in text, text
+        assert "(-1)*(-1.0" not in text, text
 
 
 @pytest.mark.parametrize("name", ALL_SYSTEMS)

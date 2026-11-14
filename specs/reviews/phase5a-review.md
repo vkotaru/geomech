@@ -229,13 +229,13 @@ asymmetry. Pipelines compare by `str` only at fixed-point checks, and those conv
 | suite `GEOMECH_TRACE=1` | 2171 passed, 2 xfailed |
 | `engine_fuzz.py --cases 3000 --seed 77` | 0 wrong values in consistent mode; 237 distinct findings, all classes above |
 | examples (6) | all run |
-| notebooks (4), executed into a scratch dir | all run; outputs identical to the committed ones |
+| notebooks (4), executed into a temporary directory | all run; outputs identical to the committed ones |
 | timing, median `compute_eom` (ms), base → 5a | quadrotor+load 10.9 → 11.8; double rigid pendulum 17.6 → 20.1; double spherical pendulum 22.2 → 17.6; R³×S²×SO(3) 13.5 → 14.4; SO(3)×SO(3) 8.0 → 8.6; worst 1.14×. `linearize`: worst 1.2×, two systems faster |
 | `ruff format --check`, `ruff check` on the new test file | clean |
 
 ### Reviewer artefacts
 
-The harness lives in a temporary directory and is not part of the repository:
+The harness lived in a temporary directory and is not part of the repository:
 `run.py <tree> <out.pkl>`, `compare.py`, `s2blocks.py`, `fuzz_rules.py <tree> <cases> <seed>`,
 `my_systems.py`. The 47cce2d worktree was removed after the runs.
 
@@ -270,7 +270,7 @@ were flipped by removing their markers; no assertion was changed.
   all (same bug: it imported the installed `geomech`); it now inserts the same root.
   `pinned_snapshot.py` and `euler_lagrange_check.py` were already correct (`../../..` from
   the script directory). Verified from a git worktree of cbd3653 with the fixed scripts
-  copied in, run from `/tmp`: `engine_fuzz.py --quick` printed "fuzzing geomech from
+  copied in, run from a temporary directory: `engine_fuzz.py --quick` printed "fuzzing geomech from
   <worktree>/geomech", and all four scripts resolve `geomech` to the worktree.
 - **Note.** `tests/test_phase1_adversarial.py` test renamed to
   `test_scalar_with_value_stays_symbolic_in_engine_and_is_used_by_evaluator`; body

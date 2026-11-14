@@ -5,28 +5,61 @@
 changed. ``vector_rules``, ``pull`` and ``apply_manifold_rules`` recurse through every node
 class with these two functions, so a rule written for one node fires wherever that node
 sits in the tree (under a ``Dot``, ``Hat``, ``MVMul``, a calculus operator, ...).
+
+``addends(expr)``, ``sum_of(terms, expr_type)`` and ``flatten_mul(expr)`` take sums and
+product chains apart and put them back together; the simplifier, integration by parts,
+``to_standard_form`` and ``linearize`` share them.
 """
 
+from __future__ import annotations
+
+from geomech.core.base.constants import zero_of
+from geomech.core.base.expressions import S2, SO3, Expr
+from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
-from geomech.core.operations.mixins import _BinaryMixin, _NaryMixin
+from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
+from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
+from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
 
 
-def is_leaf(expr):
-    match expr:
-        case _BinaryMixin() | _NaryMixin():
-            return False
+def addends(expr: Expr) -> list[Expr]:
+    """The addends of a sum (``Add``, ``VAdd``, ``MAdd``) as a list; ``[expr]`` otherwise."""
+    if isinstance(expr, (Add, VAdd, MAdd)):
+        return list(expr.nodes)
+    return [expr]
+
+
+def sum_of(terms: list[Expr], expr_type: ExprType | None) -> Expr:
+    """``terms`` added up as a sum of *expr_type*: the inverse of ``addends``.
+
+    No term gives the zero of the type (``zero_of``), one term is returned as it is,
+    several make an ``Add``, ``VAdd`` or ``MAdd``. A missing type counts as scalar.
+    """
+    if not terms:
+        return zero_of(expr_type)
+    if len(terms) == 1:
+        return terms[0]
+    match expr_type:
+        case ExprType.VECTOR:
+            return VAdd(*terms)
+        case ExprType.MATRIX:
+            return MAdd(*terms)
         case _:
-            return True
+            return Add(*terms)
 
 
-def has_nested_add(expr):
-    match expr:
-        case Add() | VAdd() | MAdd():
-            return True
-        case _BinaryMixin():
-            return has_nested_add(expr.left) or has_nested_add(expr.right)
-        case _:
-            return False
+def flatten_mul(expr: Expr) -> list[Expr]:
+    """The factors of a scalar ``Mul`` chain, left to right (``[expr]`` for a non-``Mul``)."""
+    factors: list[Expr] = []
+    stack = [expr]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, Mul):
+            stack.append(node.right)
+            stack.append(node.left)
+        else:
+            factors.append(node)
+    return factors
 
 
 def calculus_node(cls, operand):
@@ -38,9 +71,6 @@ def calculus_node(cls, operand):
     ``q.t_diff()``/``R.t_diff()`` for ``TimeDerivative`` and ``q.delta()``/``R.delta()`` for
     ``Variation``. Any other operand gives ``cls(operand)``.
     """
-    from geomech.core.base.expressions import S2, SO3
-    from geomech.core.operations.calculus import TimeDerivative, Variation
-
     if isinstance(operand, (S2, SO3)):
         if cls is TimeDerivative:
             return operand.t_diff()
@@ -59,10 +89,6 @@ def rebuild(expr, children, caller="rebuild"):
     raises ``TypeError`` naming *caller*: returning the old node would silently drop the
     rewrite of a child.
     """
-    from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-    from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
-    from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
-
     cls = type(expr)
     if isinstance(expr, (Add, VAdd, MAdd)):
         return cls(*children)

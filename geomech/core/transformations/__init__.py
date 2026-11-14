@@ -17,15 +17,12 @@ from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.manifold_rules import apply_manifold_rules
 from geomech.core.transformations.pulling import pull
 from geomech.core.transformations.simplification import full_simplify, simplify
-from geomech.core.transformations.utils import has_nested_add, is_leaf
 from geomech.core.transformations.vector_identities import vector_rules
 
 __all__ = [
     "apply_manifold_rules",
     "expand",
     "full_simplify",
-    "has_nested_add",
-    "is_leaf",
     "pull",
     "simplify",
     "vector_rules",

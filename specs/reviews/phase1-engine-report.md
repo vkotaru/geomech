@@ -39,7 +39,7 @@ Line numbers below refer to the working tree after the change.
 - `specs/reviews/scripts/engine_fuzz.py:1127-1129`: the `manifold_rules[tangential delta]`
   campaign, whose reference was the old projection formula, removed; the `[full delta]`
   campaign (exact jets) is the reference. Comment at `:322-326` updated.
-- Paper: the accompanying paper and `03_toolbox.tex:116` already carry
+- Paper: the accompanying paper (background and toolbox sections) already carries
   `\dot{\xi} - 2\,\omega \times \xi`; no change needed.
 
 ### Pinned tests (`tests/test_s2_variation_fix.py`, 9 tests, each `str(E)` + `assert_eom`)
@@ -231,4 +231,4 @@ matrix cell that now raises by design; fuzz finding 13). `collect[target occurs 
   the SO(3)×SO(3) equation are not merged (commutative like-term limitation).
 - `Transpose(Transpose(v))` / `Vee(Hat(v))` around a query still raise in
   `_vector_from_vector` (documented; `full_simplify` removes them before the pipeline extracts).
-- the accompanying paper needed no edit (formula already −2).
+- The accompanying paper needed no edit (formula already −2).

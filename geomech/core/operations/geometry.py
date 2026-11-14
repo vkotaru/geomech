@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any
 
 from geomech.core.base.expressions import (
     Expr,
@@ -8,6 +9,7 @@ from geomech.core.base.expressions import (
     ScalarExpr,
     VectorExpr,
     _node_operands,
+    _set_nodes,
 )
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import VAdd
@@ -21,11 +23,11 @@ from geomech.utils.errors import ExpressionMismatchError, SizeMismatchError
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Dot(_BinaryMixin, ScalarExpr):
     """Dot product of two vectors → scalar."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, l, r):
         l, r = _node_operands(type(self).__name__, l, r)
@@ -34,7 +36,7 @@ class Dot(_BinaryMixin, ScalarExpr):
             rs = getattr(r, "size", None)
             if ls is not None and rs is not None and ls != rs:
                 raise SizeMismatchError("Dot", ls, rs)
-            self.nodes = [l, r]
+            _set_nodes(self, (l, r))
         else:
             raise ExpressionMismatchError("Dot", l.type, r.type, l, r)
 
@@ -47,11 +49,11 @@ class Dot(_BinaryMixin, ScalarExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Cross(_BinaryMixin, VectorExpr):
     """Cross product of two 3-vectors → vector."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, l, r):
         l, r = _node_operands(type(self).__name__, l, r)
@@ -60,7 +62,7 @@ class Cross(_BinaryMixin, VectorExpr):
             rs = getattr(r, "size", None)
             if ls is not None and rs is not None and ls != rs:
                 raise SizeMismatchError("Cross", ls, rs)
-            self.nodes = [l, r]
+            _set_nodes(self, (l, r))
         else:
             raise ExpressionMismatchError("Cross", l.type, r.type, l, r)
 
@@ -73,16 +75,16 @@ class Cross(_BinaryMixin, VectorExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Hat(_UnaryMixin, MatrixExpr):
     """Hat map: R^3 → so(3)."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, expr):
         (expr,) = _node_operands("Hat", expr)
         if expr.type == ExprType.VECTOR:
-            self.nodes = [expr]
+            _set_nodes(self, (expr,))
         else:
             raise ExpressionMismatchError.unary("Hat", ExprType.VECTOR, expr)
 
@@ -100,16 +102,16 @@ class Hat(_UnaryMixin, MatrixExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Vee(_UnaryMixin, VectorExpr):
     """Vee map: so(3) → R^3."""
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
     def __init__(self, expr):
         (expr,) = _node_operands("Vee", expr)
         if expr.type == ExprType.MATRIX:
-            self.nodes = [expr]
+            _set_nodes(self, (expr,))
         else:
             raise ExpressionMismatchError.unary("Vee", ExprType.MATRIX, expr)
 
@@ -122,7 +124,7 @@ class Vee(_UnaryMixin, VectorExpr):
 # ---------------------------------------------------------------------------
 
 
-@dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False, frozen=True)
 class Transpose(_BaseMixin, Expr):
     """Transpose operator.  Preserves the type of its inner expression.
 
@@ -131,9 +133,9 @@ class Transpose(_BaseMixin, Expr):
     again and never reaches the engine as a ``Transpose`` node.
     """
 
-    nodes: list = field(default_factory=list)
+    nodes: tuple = ()
 
-    def __new__(cls, expr=None):
+    def __new__(cls, expr=None) -> Any:
         if isinstance(expr, Transpose):
             return expr.expr
         return super().__new__(cls)
@@ -146,15 +148,16 @@ class Transpose(_BaseMixin, Expr):
         if isinstance(expr, Transpose):
             # __new__ returned expr.expr, which is already built
             return
-        self.nodes = [expr]
+        _set_nodes(self, (expr,))
 
     @property
-    def expr(self):
+    def expr(self) -> Any:
+        # None only for a malformed node without an operand, which check_tree reports
         return self.nodes[0] if self.nodes else None
 
     @property
-    def type(self):
-        return self.expr.type if self.expr else None
+    def type(self) -> ExprType:
+        return self.expr.type if self.expr else None  # type: ignore[return-value]
 
     @property
     def is_constant(self):
@@ -179,6 +182,15 @@ class Transpose(_BaseMixin, Expr):
 
     def __str__(self):
         return "(" + str(self.expr) + ")'"
+
+    def _identity_extra(self) -> tuple:
+        """The operand's class (and what it adds): ``Transpose(Vector x)`` (a row) and
+        ``Transpose(Matrix x)`` both print ``(x)'`` but differ. ``Hat`` and ``Vee`` need no
+        such guard: their operand has one fixed type (``VECTOR``/``MATRIX``)."""
+        expr = self.expr
+        if expr is None:
+            return ()
+        return (type(expr), *expr._identity_extra())
 
     def delta(self):
         return Transpose(self.expr.delta())

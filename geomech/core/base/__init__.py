@@ -1,3 +1,4 @@
+from geomech.core.base.constants import HALF, NEG_ONE, NEG_TWO, negate, zero_like, zero_of
 from geomech.core.base.expressions import (
     S2,
     SO3,

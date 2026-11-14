@@ -52,10 +52,10 @@ class TestSimplify:
         assert str(full_simplify(Number(0.1) * 3 - 0.3 + x)) == "x"
 
     def test_genuine_small_coefficient_kept(self):
-        assert str(full_simplify(x * 1e-20 + y)) == "(x(1e-20)+y)"
+        assert str(full_simplify(x * 1e-20 + y)) == "(x*(1e-20)+y)"
 
     def test_transposed_scaled_row_is_scaled_column(self):
-        assert str(simplify(Transpose(SVMul(Transpose(a), x)))) == "ax"
+        assert str(simplify(Transpose(SVMul(Transpose(a), x)))) == "a*x"
 
     def test_scaled_row_hoisted_from_inner_product(self):
         assert str(full_simplify((a.T() - b.T()) * c - a.T() * c + b.T() * c)) == "0"
@@ -85,7 +85,9 @@ class TestMessages:
     def test_sum_operand_quoted_as_written(self):
         with pytest.raises(ExpressionMismatchError) as ei:
             (Dot(a, a) + Dot(b, a) * x) + a
-        assert str(ei.value) == ("Add cannot combine SCALAR '(Dot(a,a)+Dot(b,a)x)' and VECTOR 'a'")
+        assert str(ei.value) == (
+            "Add cannot combine SCALAR '(Dot(a,a)+Dot(b,a)*x)' and VECTOR 'a'"
+        )
 
     def test_vector_minus_number(self):
         with pytest.raises(ExpressionMismatchError) as ei:

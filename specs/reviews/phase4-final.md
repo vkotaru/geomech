@@ -87,7 +87,7 @@ and change `README.md:88` "Every rewrite returns through `rule(name, before, aft
 | Timing | `compute_eom`, median of 40, 3 alternating rounds, tracing off | quadrotor with load: base 11.31 / 10.92 / 10.87 ms, head 10.77 / 10.86 / 11.20 ms (noise); double rigid pendulum: base 18.48 / 18.11 / 17.78 ms, head 17.61 / 17.56 / 17.93 ms |
 | Logging | `GEOMECH_DEBUG=1` with and without `basicConfig(level=DEBUG)` first | 23 lines both ways, no duplicates |
 
-The base worktree (`57232da`, under a temporary directory) and all scratch copies were removed;
+The base worktree (`57232da`, a temporary git worktree) and all scratch copies were removed;
 `git worktree list` shows only the main checkout.
 
 ### Docs read as a newcomer (item 3)
@@ -129,7 +129,7 @@ The base worktree (`57232da`, under a temporary directory) and all scratch copie
   `geomech.utils.printing` and `geomech.core.operations.multiplication`, all unchanged. The
   paper names functions only (`apply_manifold_rules()`, `full_simplify()`,
   `integrate_by_parts()`, `separate_variations()`, `expand`, `simplify`) plus the helper
-  `_is_tangent_to_s2` (`03_toolbox.tex:176`), which still exists in `vector_identities.py:124`.
+  `_is_tangent_to_s2` (toolbox section), which still exists in `vector_identities.py:124`.
   The only stale path is `specs/fix-plan.md:55` (`collect.py`), a historical spec; it is fine.
 - The 10 test files that imported old module paths had only their import lines changed
   (checked line by line); `test_rule_names.py::test_submodule_is_the_module` was rewritten
@@ -183,7 +183,7 @@ check, but only after R1.
 - **A4.** `pipeline.md:241-246` and `troubleshooting.md:37,288` send users to a script under
   `specs/reviews/scripts/`. If the fuzzer is now part of the debugging story, move it to
   `scripts/` or into `geomech.numeric` (F7's `check_rewrite`).
-- **A5.** `paper_context.md` is still gitignored (`.gitignore:7`) while the contributor notes cites
+- **A5.** `paper_context.md` is still gitignored (`.gitignore:7`) while the contributor notes cite
   it (unchanged from the implementation report; author decision).
 
 ## Phase 5 follow-ups surfaced

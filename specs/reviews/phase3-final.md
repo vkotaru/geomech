@@ -103,10 +103,10 @@ All commands use `source venv/bin/activate`. The venv is Python 3.12.13. `nbconv
 |---|---|---|
 | Suite | `python -m pytest tests/ -q -W error -p no:cacheprovider` | **1931 passed, 5 xfailed** (the 5 are pre-existing), exit 0 |
 | Lint | `ruff format --check geomech/ tests/ && ruff check geomech/ tests/` | 83 files formatted; all checks passed |
-| Docs | `mkdocs build --strict -d <scratch>/site` | exit 0. Only the two existing INFO lines remain: `manifold-implementation-notes.md` is not in the nav, and the `reference/` link |
+| Docs | `mkdocs build --strict -d <tmp>/site` | exit 0. Only the two existing INFO lines remain: `manifold-implementation-notes.md` is not in the nav, and the `reference/` link |
 | Fuzz | `python -W error specs/reviews/scripts/engine_fuzz.py --cases 2000 --seed 5150 --no-json` | exit 0; **143 distinct findings**: 63 flag-dependent, 75 unsupported-linear-term, 5 documented-error-on-legal-input (all in `collect`, same counts as base); **0 wrong-value** |
 | Examples | each of the 6 scripts with `python -W error examples/<f>.py` | all exit 0; no `/home` paths or `0x` addresses in the output |
-| Notebooks | each of the 4 notebooks executed twice with `jupyter nbconvert --execute --ExecutePreprocessor.record_timing=False --output-dir <scratch>/runN` | details below |
+| Notebooks | each of the 4 notebooks executed twice with `jupyter nbconvert --execute --ExecutePreprocessor.record_timing=False --output-dir <tmp>/runN` | details below |
 
 **Fuzz at base**, same seed, script from the `1e10349` worktree: 158 findings. The extra
 findings are:
@@ -125,7 +125,7 @@ findings are:
 ### 2. `str` invariance against `1e10349`
 
 **Method:**
-- I added the worktree `git worktree add --detach <scratch>/wt_base 1e10349`. It is
+- I added the worktree `git worktree add --detach <tmp>/wt_base 1e10349`. It is
   removed and pruned; `git worktree list` now shows only the main tree.
 - I used my own dump script, which imports `geomech` and `tests.*` from the given root and
   asserts the import path. It ran every argument-free system builder in
@@ -262,7 +262,7 @@ Both files carry identical blocks. I ran every line with `a, b` scalars, `x, y` 
 
 - **A1.** `row_spring` gives `Kx(-1.0)`, a float from 0.5 + 0.5 when `Kᵀx` merges into
   `Kx`. `to_latex` prints `-K x`, so only `str` shows it.
-- **A2.** The four row systems are checked only numerically. the contributor notes asks pipeline tests
+- **A2.** The four row systems are checked only numerically. The contributor notes ask pipeline tests
   to assert the derived equation itself. The numeric comparison with the hand-derived
   formula meets the intent, but pinning `str` for `row_spring`/`row_quadratic_form`
   (above) would catch a regression to an equivalent but uglier form.
@@ -277,7 +277,7 @@ Both files carry identical blocks. I ran every line with `a, b` scalars, `x, y` 
 - **A6.** `_CANCEL_RTOL = 1e-12` (`simplify.py:291`) drops float like-terms that cancel to
   roundoff. This is sound, but it is a convention to list in the 4.7 "Conventions" page.
 - **A7.** The plan's "regenerate the paper's listings from `to_latex` and diff by eye" is
-  moot. The the accompanying paper sources contain no `to_latex` output (the `lstlisting` blocks
+  moot. The accompanying paper's sources contain no `to_latex` output (the `lstlisting` blocks
   are Python input; the equations are hand-typed). Neither phase report says so.
 - **A8.** `print_tree` uses `├─` for every child, including the last one. This is
   cosmetic.

@@ -1,14 +1,31 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
+from geomech.core.base.constants import zero_like
 from geomech.core.base.types import ExprType
+
+if TYPE_CHECKING:
+    # For the type checkers the mixins are expressions (every class that uses one is an
+    # Expr subclass), so ``self.type``, ``self.flags`` and the operators are known. At run
+    # time they stay plain classes ahead of the Expr base in the MRO.
+    from geomech.core.base.expressions import Expr as _NodeBase
+else:
+    _NodeBase = object
 
 # ---------------------------------------------------------------------------
 # Base — shared by all operation nodes
 # ---------------------------------------------------------------------------
 
 
-class _BaseMixin:
-    """Shared base for all operation nodes."""
+class _BaseMixin(_NodeBase):
+    """Shared base for all operation nodes.
+
+    ``nodes`` is the tuple of operands, set once by the node's constructor (the node
+    classes are frozen dataclasses).
+    """
+
+    nodes: tuple[Any, ...]
 
     def has(self, elem):
         if self == elem:
@@ -46,30 +63,16 @@ class _NaryMixin(_BaseMixin):
         return "(" + "+".join(str(n) for n in self.nodes) + ")"
 
     def delta(self):
-        from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
-
         if self.is_constant:
-            match self.type:
-                case ExprType.SCALAR:
-                    return Zero
-                case ExprType.VECTOR:
-                    return ZeroVector
-                case ExprType.MATRIX:
-                    return ZeroMatrix
-        return type(self)(*[n.delta() for n in self.nodes])
+            return zero_like(self)
+        cls: Any = type(self)
+        return cls(*[n.delta() for n in self.nodes])
 
     def t_diff(self):
-        from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
-
         if self.is_constant:
-            match self.type:
-                case ExprType.SCALAR:
-                    return Zero
-                case ExprType.VECTOR:
-                    return ZeroVector
-                case ExprType.MATRIX:
-                    return ZeroMatrix
-        return type(self)(*[n.t_diff() for n in self.nodes])
+            return zero_like(self)
+        cls: Any = type(self)
+        return cls(*[n.t_diff() for n in self.nodes])
 
 
 # ---------------------------------------------------------------------------
@@ -101,24 +104,17 @@ class _BinaryMixin(_BaseMixin):
 
         op_name: 'delta' or 't_diff'
         """
-        from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
-
         if self.is_constant:
-            match self.type:
-                case ExprType.SCALAR:
-                    return Zero
-                case ExprType.VECTOR:
-                    return ZeroVector
-                case ExprType.MATRIX:
-                    return ZeroMatrix
+            return zero_like(self)
         op = lambda node: getattr(node, op_name)()
+        cls: Any = type(self)
         if self.left.is_constant:
-            return type(self)(self.left, op(self.right))
+            return cls(self.left, op(self.right))
         if self.right.is_constant:
-            return type(self)(op(self.left), self.right)
+            return cls(op(self.left), self.right)
         # Product rule: op(l*r) = op(l)*r + l*op(r)
-        term1 = type(self)(op(self.left), self.right)
-        term2 = type(self)(self.left, op(self.right))
+        term1 = cls(op(self.left), self.right)
+        term2 = cls(self.left, op(self.right))
         from geomech.core.operations.addition import Add, MAdd, VAdd
 
         match self.type:
@@ -157,30 +153,16 @@ class _UnaryMixin(_BaseMixin):
         return self.expr.is_zero
 
     def delta(self):
-        from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
-
         if self.is_constant:
-            match self.type:
-                case ExprType.SCALAR:
-                    return Zero
-                case ExprType.VECTOR:
-                    return ZeroVector
-                case ExprType.MATRIX:
-                    return ZeroMatrix
-        return type(self)(self.expr.delta())
+            return zero_like(self)
+        cls: Any = type(self)
+        return cls(self.expr.delta())
 
     def t_diff(self):
-        from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
-
         if self.is_constant:
-            match self.type:
-                case ExprType.SCALAR:
-                    return Zero
-                case ExprType.VECTOR:
-                    return ZeroVector
-                case ExprType.MATRIX:
-                    return ZeroMatrix
-        return type(self)(self.expr.t_diff())
+            return zero_like(self)
+        cls: Any = type(self)
+        return cls(self.expr.t_diff())
 
 
 # ---------------------------------------------------------------------------
@@ -200,15 +182,20 @@ class _CalcUnaryMixin(_UnaryMixin):
     def type(self):
         return self.expr.type
 
-    def t_integrate(self):
-        from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
+    def _identity_extra(self) -> tuple:
+        """The classes from this node down to the first operand that is not a calculus
+        node, and what that operand adds itself (a ``Transpose`` adds its operand's class):
+        ``Variation(Scalar x)`` and ``Variation(Vector x)`` print alike but differ."""
+        chain = []
+        node = self.expr
+        while isinstance(node, _CalcUnaryMixin):
+            chain.append(type(node))
+            node = node.expr
+        chain.append(type(node))
+        return (*chain, *node._identity_extra())
 
+    def t_integrate(self):
         if self.is_constant:
-            match self.type:
-                case ExprType.SCALAR:
-                    return Zero
-                case ExprType.VECTOR:
-                    return ZeroVector
-                case ExprType.MATRIX:
-                    return ZeroMatrix
-        return type(self)(self.expr.t_integrate())
+            return zero_like(self)
+        cls: Any = type(self)
+        return cls(self.expr.t_integrate())

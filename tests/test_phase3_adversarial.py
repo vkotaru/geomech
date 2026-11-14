@@ -60,9 +60,9 @@ A, K, R = Matrix("A"), Matrix("K"), Matrix("R")
 
 def test_f1_scalar_times_row_keeps_old_tree():
     # At 1e10349 ScalarExpr.__mul__ built SVMul(Transpose(a), x): one transpose, a row.
-    assert str(x * a.T()) == "(a)'x"
+    assert str(x * a.T()) == "(a)'*x"
     assert x * a.T() == SVMul(Transpose(a), x)
-    assert str(Number(2) * a.T()) == "(a)'(2)"
+    assert str(Number(2) * a.T()) == "(a)'*(2)"
 
 
 def test_f1_row_forms_cancel():
@@ -84,7 +84,7 @@ def test_f2_quadratic_form_row_times_matrix():
 def test_f2_expand_row_times_matrix_sum():
     J = Matrix("J")
     out = expand((a.T() * (K + J)) * b)
-    assert str(out) in ("((a)'Kb+(a)'Jb)", "(a)'Kb+(a)'Jb")
+    assert str(out) in ("((a)'*K*b+(a)'*J*b)", "(a)'Kb+(a)'Jb")
 
 
 def test_f3_negated_transpose_in_product_latex():
@@ -187,7 +187,7 @@ def test_numpy_operands():
         x / np.float64(0)
     with pytest.raises(TypeError, match="bool"):
         np.bool_(True) * x
-    assert str(x / np.float64(2)) == "x(0.5)"
+    assert str(x / np.float64(2)) == "x*(0.5)"
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +203,7 @@ def test_transpose_collapse_and_copy():
     t = Transpose(a)
     for clone in (copy.copy(t), copy.deepcopy(t), pickle.loads(pickle.dumps(t))):
         assert type(clone) is Transpose and clone == t
-    assert str(copy.deepcopy(VVMul(Transpose(a), b))) == "(a)'b"
+    assert str(copy.deepcopy(VVMul(Transpose(a), b))) == "(a)'*b"
 
 
 def test_row_shapes_multiply():

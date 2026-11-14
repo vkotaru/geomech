@@ -22,12 +22,18 @@ numeric literal in its flattened ``Mul`` chain and, for vectors and matrices, in
 scalars of its ``SVMul``/``SMMul``), its other scalar factors and its vector/matrix base;
 two addends merge when their bases are equal and their factors are equal as multisets
 (``x(2)y + xy(3) → xy(5)``, ``v a + v a(-1) → 0``, ``(vᵀw)s + s(vᵀw) → (vᵀw)s(2)``).
+"Equal" is ``term_key``: the operands of a ``Dot`` and of an inner product ``aᵀb`` commute
+(``aᵀb s − bᵀa s → 0``) and so do the factors of a ``Mul``; every other product keeps its
+order. Grouping is one pass over the addends, keyed by ``term_key``.
 Numeric literals are anonymous numbers only: a named ``Scalar("m", value=2)`` is a symbol
 and is never folded (decision D1); its value is used by ``geomech.numeric`` only.
   simplify.mul_fold                Mul: a zero factor gives 0, a factor one is dropped,
                                    numeric factors of a Mul chain are multiplied into one
                                    number placed last; a float with an integer value
                                    becomes an int (``(-1.0) → (-1)``)
+
+Every numeric literal leaf is put in the spelling ``Number`` gives it (``(2.0)`` → ``(2)``,
+``Scalar("0.5", value=0.5)`` → ``(0.5)``), so equal numbers print, and compare, the same.
   simplify.svmul_zero              v·0 = 0·s = 0 (vector)
   simplify.svmul_one               v·1 = v
   simplify.smmul_zero              M·0 = 0·s = 0 (matrix)
@@ -81,10 +87,10 @@ from __future__ import annotations
 
 import warnings
 
+from geomech.core.base.constants import NEG_ONE, zero_like
 from geomech.core.base.expressions import (
     IdentityMatrix,
     Number,
-    Scalar,
     Zero,
     ZeroMatrix,
     ZeroVector,
@@ -102,7 +108,10 @@ from geomech.core.operations.multiplication import (
     SVMul,
     VVMul,
 )
-from geomech.core.transformations.utils import calculus_node
+from geomech.core.transformations.expansion import expand
+from geomech.core.transformations.pulling import pull
+from geomech.core.transformations.utils import calculus_node, flatten_mul
+from geomech.core.transformations.vector_identities import vector_rules
 from geomech.utils import trace as _trace
 from geomech.utils.trace import rule
 
@@ -114,9 +123,6 @@ from geomech.utils.trace import rule
 def simplify(expr):
     """Pull scalars, apply vector identities, then eliminate zeros and
     combine numeric constants — single call does everything."""
-    from geomech.core.transformations.pulling import pull
-    from geomech.core.transformations.vector_identities import vector_rules
-
     expr = pull(expr)
     expr = vector_rules(expr)
     return _eliminate(expr)
@@ -135,8 +141,6 @@ def full_simplify(expr, max_iter=10):
         expression; that last result may already be the fixed point, which only one more
         pass could confirm (hence "confirmed").
     """
-    from geomech.core.transformations.expansion import expand
-
     expr = expand(expr)
     for _ in range(max_iter):
         prev = expr
@@ -178,222 +182,220 @@ def _folded_from(cls, children, expr):
 
 
 def _eliminate(expr):
-    """Bottom-up pass: zeros, identities, numeric constant combining."""
-    match expr:
-        # ---- n-ary addition ----
-        case Add(nodes=nodes):
-            children = [_eliminate(n) for n in nodes]
-            out = _simplify_add(children)
-            if _trace._TRACE_RULES:
-                rule("simplify.add_fold", _folded_from(Add, children, expr), out)
-            return out
-        case VAdd(nodes=nodes):
-            children = [_eliminate(n) for n in nodes]
-            out = _simplify_vadd(children)
-            if _trace._TRACE_RULES:
-                rule("simplify.vadd_fold", _folded_from(VAdd, children, expr), out)
-            return out
-        case MAdd(nodes=nodes):
-            children = [_eliminate(n) for n in nodes]
-            out = _simplify_madd(children)
-            if _trace._TRACE_RULES:
-                rule("simplify.madd_fold", _folded_from(MAdd, children, expr), out)
-            return out
+    """Bottom-up pass: zeros, identities, numeric constant combining.
 
-        # ---- scalar * scalar ----
-        case Mul():
-            children = [_eliminate(expr.left), _eliminate(expr.right)]
-            out = _simplify_mul(*children)
-            if _trace._TRACE_RULES:
-                rule("simplify.mul_fold", _folded_from(Mul, children, expr), out)
-            return out
+    One function per node class (``_elim_add``, ``_elim_mvmul``, ...), picked from
+    ``_ELIMINATE`` by the class of *expr*; a leaf is returned as it is, except a numeric
+    literal, which is put in its normal form (``_canonical_literal``).
+    """
+    handler = _ELIMINATE.get(type(expr))
+    return _canonical_literal(expr) if handler is None else handler(expr)
 
-        # ---- scalar * vector ----
-        case SVMul():
-            vec, scl = _eliminate(expr.left), _eliminate(expr.right)
-            if _is_zero(scl) or _is_zero(vec):
-                return rule("simplify.svmul_zero", expr, ZeroVector)
-            if _is_one(scl):
-                return rule("simplify.svmul_one", expr, vec)
-            return SVMul(vec, _exact_literal(scl))
 
-        # ---- scalar * matrix ----
-        case SMMul():
-            mat, scl = _eliminate(expr.left), _eliminate(expr.right)
-            if _is_zero(scl) or _is_zero(mat):
-                return rule("simplify.smmul_zero", expr, ZeroMatrix)
-            if _is_one(scl):
-                return rule("simplify.smmul_one", expr, mat)
-            return SMMul(mat, _exact_literal(scl))
+def _elim_add(expr):
+    children = [_eliminate(n) for n in expr.nodes]
+    out = _simplify_add(children)
+    if _trace._TRACE_RULES:
+        rule("simplify.add_fold", _folded_from(Add, children, expr), out)
+    return out
 
-        # ---- matrix * vector ----
-        case MVMul():
-            mat, vec = _eliminate(expr.left), _eliminate(expr.right)
-            if _is_zero(mat) or _is_zero(vec):
-                return rule("simplify.mvmul_zero", expr, ZeroVector)
-            if _is_identity(mat):
-                return rule("simplify.mvmul_identity", expr, vec)
-            # Hat(v) * w = Cross(v, w)
-            if isinstance(mat, Hat):
-                return rule("simplify.mvmul_hat_to_cross", expr, Cross(mat.expr, vec))
-            # (A * B) * v → A * (B * v)  (matrix associativity)
-            if isinstance(mat, MMMul):
-                return rule(
-                    "simplify.mvmul_reassociate",
-                    expr,
-                    _eliminate(MVMul(mat.left, MVMul(mat.right, vec))),
-                )
-            # A * (B * v) → (A*B) * v  when A*B simplifies (e.g. R'*R = I)
-            if isinstance(vec, MVMul):
-                combined = _eliminate(MMMul(mat, vec.left))
-                if not isinstance(combined, MMMul):
-                    # A*B simplified (e.g. to I), so use the result
-                    return rule(
-                        "simplify.mvmul_combine", expr, _eliminate(MVMul(combined, vec.right))
-                    )
-            return MVMul(mat, vec)
 
-        # ---- matrix * matrix ----
-        case MMMul():
-            l, r = _eliminate(expr.left), _eliminate(expr.right)
-            if _is_zero(l) or _is_zero(r):
-                return rule("simplify.mmmul_zero", expr, ZeroMatrix)
-            if _is_identity(l):
-                return rule("simplify.mmmul_identity", expr, r)
-            if _is_identity(r):
-                return rule("simplify.mmmul_identity", expr, l)
-            # R^T * R = I  when R is orthogonal (SO3)
-            if isinstance(l, Transpose) and l.expr.is_orthogonal and l.expr == r:
-                return rule("simplify.orthogonal_transpose", expr, IdentityMatrix)
-            # R * R^T = I  when R is orthogonal (SO3)
-            if isinstance(r, Transpose) and r.expr.is_orthogonal and r.expr == l:
-                return rule("simplify.orthogonal_transpose", expr, IdentityMatrix)
-            # (A * B) * C → A * (B * C)  (matrix associativity, as for MVMul)
-            if isinstance(l, MMMul):
-                return rule(
-                    "simplify.mmmul_reassociate",
-                    expr,
-                    _eliminate(MMMul(l.left, MMMul(l.right, r))),
-                )
-            # A * (B * C) → (A*B) * C  when A*B simplifies (e.g. R'*R = I)
-            if isinstance(r, MMMul):
-                combined = _eliminate(MMMul(l, r.left))
-                if not isinstance(combined, MMMul):
-                    return rule(
-                        "simplify.mmmul_combine", expr, _eliminate(MMMul(combined, r.right))
-                    )
-            return MMMul(l, r)
+def _elim_vadd(expr):
+    children = [_eliminate(n) for n in expr.nodes]
+    out = _simplify_vadd(children)
+    if _trace._TRACE_RULES:
+        rule("simplify.vadd_fold", _folded_from(VAdd, children, expr), out)
+    return out
 
-        # ---- vector * vector ----
-        case VVMul():
-            l, r = _eliminate(expr.left), _eliminate(expr.right)
-            if _is_zero(l) or _is_zero(r):
-                # inner product vᵀw → scalar 0; outer product v wᵀ → 3×3 zero
-                return rule("simplify.vvmul_zero", expr, _zero_for(expr))
-            return VVMul(l, r)
 
-        # ---- binary geometry ops ----
-        case Dot():
-            l, r = _eliminate(expr.left), _eliminate(expr.right)
-            if _is_zero(l) or _is_zero(r):
-                return rule("simplify.dot_zero", expr, Zero)
-            return Dot(l, r)
+def _elim_madd(expr):
+    children = [_eliminate(n) for n in expr.nodes]
+    out = _simplify_madd(children)
+    if _trace._TRACE_RULES:
+        rule("simplify.madd_fold", _folded_from(MAdd, children, expr), out)
+    return out
 
-        case Cross():
-            l, r = _eliminate(expr.left), _eliminate(expr.right)
-            if _is_zero(l) or _is_zero(r):
-                return rule("simplify.cross_zero", expr, ZeroVector)
-            return Cross(l, r)
 
-        # ---- unary geometry ops ----
-        case Hat():
-            inner = _eliminate(expr.expr)
-            if _is_zero(inner):
-                return rule("simplify.hat_zero", expr, ZeroMatrix)
-            # Hat(Vee(X)) = X only for skew-symmetric X (Vee reads three entries of X,
-            # so for a general matrix Hat(Vee(X)) is the skew part of X, e.g. Hat(Vee(I)) = 0).
-            if isinstance(inner, Vee) and _is_skew_symmetric(inner.expr):
-                return rule("simplify.hat_vee_skew", expr, inner.expr)
-            return Hat(inner)
+def _elim_mul(expr):
+    children = [_eliminate(expr.left), _eliminate(expr.right)]
+    out = _simplify_mul(*children)
+    if _trace._TRACE_RULES:
+        rule("simplify.mul_fold", _folded_from(Mul, children, expr), out)
+    return out
 
-        case Vee():
-            inner = _eliminate(expr.expr)
-            if _is_zero(inner):
-                return rule("simplify.vee_zero", expr, ZeroVector)
-            if isinstance(inner, Hat):
-                return rule("simplify.vee_hat", expr, inner.expr)
-            return Vee(inner)
 
-        case Transpose():
-            inner = _eliminate(expr.expr)
-            if isinstance(inner, Transpose):
-                return rule("simplify.transpose_transpose", expr, inner.expr)
-            # Symmetric matrix: J^T = J
-            if inner.is_symmetric:
-                return rule("simplify.transpose_symmetric", expr, inner)
-            # Hat is skew-symmetric: Hat(v)^T = -Hat(v)
-            if isinstance(inner, Hat):
-                return rule(
-                    "simplify.transpose_hat_skew",
-                    expr,
-                    SMMul(inner, Scalar("(-1)", value=-1, attr=["Constant"])),
-                )
-            # any other skew-symmetric matrix: S^T = -S
-            if _is_skew_symmetric(inner) and not isinstance(inner, SMMul):
-                return rule(
-                    "simplify.transpose_skew",
-                    expr,
-                    SMMul(inner, Scalar("(-1)", value=-1, attr=["Constant"])),
-                )
-            # (s*M)^T = s*M^T
-            if isinstance(inner, SMMul):
-                return rule(
-                    "simplify.transpose_scaled",
-                    expr,
-                    SMMul(_eliminate(Transpose(inner.left)), inner.right),
-                )
-            # a transposed scaled row is the scaled column: (aᵀ s)ᵀ = a s
-            if isinstance(inner, SVMul) and isinstance(inner.left, Transpose):
-                return rule(
-                    "simplify.transpose_scaled_row", expr, SVMul(inner.left.expr, inner.right)
-                )
-            # (A*B)^T = B^T * A^T
-            if isinstance(inner, MMMul):
-                return rule(
-                    "simplify.transpose_product",
-                    expr,
-                    _eliminate(MMMul(Transpose(inner.right), Transpose(inner.left))),
-                )
-            return Transpose(inner)
+def _elim_svmul(expr):
+    vec, scl = _eliminate(expr.left), _eliminate(expr.right)
+    if _is_zero(scl) or _is_zero(vec):
+        return rule("simplify.svmul_zero", expr, ZeroVector)
+    if _is_one(scl):
+        return rule("simplify.svmul_one", expr, vec)
+    return SVMul(vec, _canonical_literal(scl))
 
-        # ---- calculus ops ----
-        case Variation():
-            inner = _eliminate(expr.expr)
-            if _is_zero(inner):
-                return rule("simplify.variation_zero", expr, _zero_for(inner))
-            return calculus_node(Variation, inner)
 
-        case TimeDerivative():
-            inner = _eliminate(expr.expr)
-            if _is_zero(inner):
-                return rule("simplify.time_derivative_zero", expr, _zero_for(inner))
-            # d/dt(∫x dt) = x
-            if isinstance(inner, TimeIntegral):
-                return rule("simplify.time_derivative_integral", expr, inner.expr)
-            return calculus_node(TimeDerivative, inner)
+def _elim_smmul(expr):
+    mat, scl = _eliminate(expr.left), _eliminate(expr.right)
+    if _is_zero(scl) or _is_zero(mat):
+        return rule("simplify.smmul_zero", expr, ZeroMatrix)
+    if _is_one(scl):
+        return rule("simplify.smmul_one", expr, mat)
+    return SMMul(mat, _canonical_literal(scl))
 
-        case TimeIntegral():
-            inner = _eliminate(expr.expr)
-            if _is_zero(inner):
-                return rule("simplify.time_integral_zero", expr, _zero_for(inner))
-            # ∫(d/dt(x)) dt = x
-            if isinstance(inner, TimeDerivative):
-                return rule("simplify.time_integral_derivative", expr, inner.expr)
-            return TimeIntegral(inner)
 
-        # ---- leaves ----
-        case _:
-            return expr
+def _elim_mvmul(expr):
+    mat, vec = _eliminate(expr.left), _eliminate(expr.right)
+    if _is_zero(mat) or _is_zero(vec):
+        return rule("simplify.mvmul_zero", expr, ZeroVector)
+    if _is_identity(mat):
+        return rule("simplify.mvmul_identity", expr, vec)
+    # Hat(v) * w = Cross(v, w)
+    if isinstance(mat, Hat):
+        return rule("simplify.mvmul_hat_to_cross", expr, Cross(mat.expr, vec))
+    # (A * B) * v → A * (B * v)  (matrix associativity)
+    if isinstance(mat, MMMul):
+        return rule(
+            "simplify.mvmul_reassociate",
+            expr,
+            _eliminate(MVMul(mat.left, MVMul(mat.right, vec))),
+        )
+    # A * (B * v) → (A*B) * v  when A*B simplifies (e.g. R'*R = I)
+    if isinstance(vec, MVMul):
+        combined = _eliminate(MMMul(mat, vec.left))
+        if not isinstance(combined, MMMul):
+            # A*B simplified (e.g. to I), so use the result
+            return rule("simplify.mvmul_combine", expr, _eliminate(MVMul(combined, vec.right)))
+    return MVMul(mat, vec)
+
+
+def _elim_mmmul(expr):
+    l, r = _eliminate(expr.left), _eliminate(expr.right)
+    if _is_zero(l) or _is_zero(r):
+        return rule("simplify.mmmul_zero", expr, ZeroMatrix)
+    if _is_identity(l):
+        return rule("simplify.mmmul_identity", expr, r)
+    if _is_identity(r):
+        return rule("simplify.mmmul_identity", expr, l)
+    # R^T * R = I  when R is orthogonal (SO3)
+    if isinstance(l, Transpose) and l.expr.is_orthogonal and l.expr == r:
+        return rule("simplify.orthogonal_transpose", expr, IdentityMatrix)
+    # R * R^T = I  when R is orthogonal (SO3)
+    if isinstance(r, Transpose) and r.expr.is_orthogonal and r.expr == l:
+        return rule("simplify.orthogonal_transpose", expr, IdentityMatrix)
+    # (A * B) * C → A * (B * C)  (matrix associativity, as for MVMul)
+    if isinstance(l, MMMul):
+        return rule(
+            "simplify.mmmul_reassociate",
+            expr,
+            _eliminate(MMMul(l.left, MMMul(l.right, r))),
+        )
+    # A * (B * C) → (A*B) * C  when A*B simplifies (e.g. R'*R = I)
+    if isinstance(r, MMMul):
+        combined = _eliminate(MMMul(l, r.left))
+        if not isinstance(combined, MMMul):
+            return rule("simplify.mmmul_combine", expr, _eliminate(MMMul(combined, r.right)))
+    return MMMul(l, r)
+
+
+def _elim_vvmul(expr):
+    l, r = _eliminate(expr.left), _eliminate(expr.right)
+    if _is_zero(l) or _is_zero(r):
+        # inner product vᵀw → scalar 0; outer product v wᵀ → 3×3 zero
+        return rule("simplify.vvmul_zero", expr, zero_like(expr))
+    return VVMul(l, r)
+
+
+def _elim_dot(expr):
+    l, r = _eliminate(expr.left), _eliminate(expr.right)
+    if _is_zero(l) or _is_zero(r):
+        return rule("simplify.dot_zero", expr, Zero)
+    return Dot(l, r)
+
+
+def _elim_cross(expr):
+    l, r = _eliminate(expr.left), _eliminate(expr.right)
+    if _is_zero(l) or _is_zero(r):
+        return rule("simplify.cross_zero", expr, ZeroVector)
+    return Cross(l, r)
+
+
+def _elim_hat(expr):
+    inner = _eliminate(expr.expr)
+    if _is_zero(inner):
+        return rule("simplify.hat_zero", expr, ZeroMatrix)
+    # Hat(Vee(X)) = X only for skew-symmetric X (Vee reads three entries of X,
+    # so for a general matrix Hat(Vee(X)) is the skew part of X, e.g. Hat(Vee(I)) = 0).
+    if isinstance(inner, Vee) and _is_skew_symmetric(inner.expr):
+        return rule("simplify.hat_vee_skew", expr, inner.expr)
+    return Hat(inner)
+
+
+def _elim_vee(expr):
+    inner = _eliminate(expr.expr)
+    if _is_zero(inner):
+        return rule("simplify.vee_zero", expr, ZeroVector)
+    if isinstance(inner, Hat):
+        return rule("simplify.vee_hat", expr, inner.expr)
+    return Vee(inner)
+
+
+def _elim_transpose(expr):
+    inner = _eliminate(expr.expr)
+    if isinstance(inner, Transpose):
+        return rule("simplify.transpose_transpose", expr, inner.expr)
+    # Symmetric matrix: J^T = J
+    if inner.is_symmetric:
+        return rule("simplify.transpose_symmetric", expr, inner)
+    # Hat is skew-symmetric: Hat(v)^T = -Hat(v)
+    if isinstance(inner, Hat):
+        return rule("simplify.transpose_hat_skew", expr, SMMul(inner, NEG_ONE))
+    # any other skew-symmetric matrix: S^T = -S
+    if _is_skew_symmetric(inner) and not isinstance(inner, SMMul):
+        return rule("simplify.transpose_skew", expr, SMMul(inner, NEG_ONE))
+    # (s*M)^T = s*M^T
+    if isinstance(inner, SMMul):
+        return rule(
+            "simplify.transpose_scaled",
+            expr,
+            SMMul(_eliminate(Transpose(inner.left)), inner.right),
+        )
+    # a transposed scaled row is the scaled column: (aᵀ s)ᵀ = a s
+    if isinstance(inner, SVMul) and isinstance(inner.left, Transpose):
+        return rule("simplify.transpose_scaled_row", expr, SVMul(inner.left.expr, inner.right))
+    # (A*B)^T = B^T * A^T
+    if isinstance(inner, MMMul):
+        return rule(
+            "simplify.transpose_product",
+            expr,
+            _eliminate(MMMul(Transpose(inner.right), Transpose(inner.left))),
+        )
+    return Transpose(inner)
+
+
+def _elim_variation(expr):
+    inner = _eliminate(expr.expr)
+    if _is_zero(inner):
+        return rule("simplify.variation_zero", expr, zero_like(inner))
+    return calculus_node(Variation, inner)
+
+
+def _elim_time_derivative(expr):
+    inner = _eliminate(expr.expr)
+    if _is_zero(inner):
+        return rule("simplify.time_derivative_zero", expr, zero_like(inner))
+    # d/dt(∫x dt) = x
+    if isinstance(inner, TimeIntegral):
+        return rule("simplify.time_derivative_integral", expr, inner.expr)
+    return calculus_node(TimeDerivative, inner)
+
+
+def _elim_time_integral(expr):
+    inner = _eliminate(expr.expr)
+    if _is_zero(inner):
+        return rule("simplify.time_integral_zero", expr, zero_like(inner))
+    # ∫(d/dt(x)) dt = x
+    if isinstance(inner, TimeDerivative):
+        return rule("simplify.time_integral_derivative", expr, inner.expr)
+    return TimeIntegral(inner)
 
 
 # ---------------------------------------------------------------------------
@@ -443,29 +445,19 @@ def _exact(value):
     return value
 
 
-def _exact_literal(expr):
-    """*expr* with ``_exact`` applied when it is a numeric literal (``(2.0)`` → ``(2)``).
+def _canonical_literal(expr):
+    """A numeric literal in the one spelling ``Number`` gives it; anything else unchanged.
 
-    The scalar factor of an ``SVMul``/``SMMul`` is not folded by ``_simplify_mul``, so it
-    is normalised here: ``v·(2.0)`` and ``v·(2)`` then print, and compare, the same as
-    ``x·(2.0)`` and ``x·(2)`` do.
+    The value goes through ``_exact`` (``(2.0)`` → ``(2)``) and the name becomes the
+    ``Number`` form, so the literal one half prints ``(0.5)`` whether it was built as
+    ``Number(0.5)``, ``0.5 * x`` or ``Scalar("0.5", value=0.5)``. ``Zero`` and ``One``
+    (printed ``0`` and ``1``) keep their names. A named scalar with a value
+    (``Scalar("m", value=2)``) is not a literal and is never touched (decision D1).
     """
-    if is_number_literal(expr) and isinstance(expr.value, float):
-        value = _exact(expr.value)
-        if isinstance(value, int):
-            return Number(value)
-    return expr
-
-
-def _zero_for(expr):
-    """Return the appropriate typed zero constant."""
-    match getattr(expr, "type", None):
-        case ExprType.VECTOR:
-            return ZeroVector
-        case ExprType.MATRIX:
-            return ZeroMatrix
-        case _:
-            return Zero
+    if not is_number_literal(expr) or expr.name in ("0", "1"):
+        return expr
+    canonical = Number(_exact(expr.value))
+    return expr if canonical.name == expr.name else canonical
 
 
 # ---------------------------------------------------------------------------
@@ -556,9 +548,7 @@ def _split_term(expr, expr_type):
             scalars.append(node.right)
             node = node.left
         base = node
-    factors = []
-    for sc in scalars:
-        _flatten_mul(sc, factors)
+    factors = [f for sc in scalars for f in flatten_mul(sc)]
     coeff = 1
     rest = []
     for f in factors:
@@ -569,59 +559,52 @@ def _split_term(expr, expr_type):
     return _exact(coeff), base, rest
 
 
+def term_key(expr) -> str:
+    """A canonical string for *expr* up to the commutativity the like-term merge knows.
+
+    Two expressions have the same key exactly when they are the same tree except that the
+    operands of a ``Dot`` may be swapped, the factors of a ``Mul`` chain may be reordered,
+    and an inner product ``aᵀb`` of two columns (``VVMul(Transpose(a), b)``) may be
+    written ``bᵀa`` (at any depth). Every other node compares its operands in order, and a leaf
+    by class and printed name. The key is injective on such classes: a leaf is written
+    ``Class#len#name`` (the length makes it self-delimiting), a node
+    ``Class(key,key,...)`` with the operand keys sorted for ``Dot`` and the flattened
+    ``Mul`` factors, and an inner product ``VVMul.inner(key,key)`` with the keys of its
+    two columns sorted.
+    """
+    nodes = getattr(expr, "nodes", None)
+    cls = type(expr).__name__
+    if not nodes:
+        name = str(expr)
+        return f"{cls}#{len(name)}#{name}"
+    if isinstance(expr, Mul):
+        keys = sorted(term_key(f) for f in flatten_mul(expr))
+    elif (
+        isinstance(expr, VVMul)
+        and expr.type == ExprType.SCALAR
+        and isinstance(expr.left, Transpose)
+    ):
+        # the inner product aᵀb of two columns is symmetric: aᵀb = bᵀa
+        keys = sorted((term_key(expr.left.expr), term_key(expr.right)))
+        return "VVMul.inner(" + ",".join(keys) + ")"
+    elif isinstance(expr, Dot):
+        keys = sorted(term_key(n) for n in nodes)
+    else:
+        keys = [term_key(n) for n in nodes]
+    return cls + "(" + ",".join(keys) + ")"
+
+
 def _commutative_equal(a, b):
-    """Structural equality that respects commutativity of Dot and Mul."""
-    if a is b:
-        return True
-    if type(a) is not type(b):
-        return False
-
-    # Commutative binary ops: check both orderings
-    if isinstance(a, Dot):
-        return (_commutative_equal(a.left, b.left) and _commutative_equal(a.right, b.right)) or (
-            _commutative_equal(a.left, b.right) and _commutative_equal(a.right, b.left)
-        )
-    if isinstance(a, Mul):
-        fa, fb = [], []
-        _flatten_mul(a, fa)
-        _flatten_mul(b, fb)
-        return _same_factors(fa, fb)
-
-    # Non-commutative binary ops: order matters
-    if isinstance(a, (SVMul, SMMul, MVMul, MMMul, VVMul, Cross)):
-        return _commutative_equal(a.left, b.left) and _commutative_equal(a.right, b.right)
-
-    # N-ary: same length and all children match in order
-    a_nodes = getattr(a, "nodes", None)
-    b_nodes = getattr(b, "nodes", None)
-    if a_nodes is not None and b_nodes is not None:
-        if len(a_nodes) != len(b_nodes):
-            return False
-        return all(_commutative_equal(an, bn) for an, bn in zip(a_nodes, b_nodes))
-
-    # Unary ops
-    a_inner = getattr(a, "expr", None)
-    b_inner = getattr(b, "expr", None)
-    if a_inner is not None and b_inner is not None:
-        return _commutative_equal(a_inner, b_inner)
-
-    # Leaves: fall back to string comparison
-    return str(a) == str(b)
+    """Equality up to the commutativity of ``Dot``, ``Mul`` and inner products (``term_key``)."""
+    return a is b or term_key(a) == term_key(b)
 
 
-def _same_factors(fa, fb):
-    """The two factor lists are equal as multisets (``_commutative_equal`` per factor)."""
-    if len(fa) != len(fb):
-        return False
-    left = list(fb)
-    for f in fa:
-        for k, g in enumerate(left):
-            if _commutative_equal(f, g):
-                del left[k]
-                break
-        else:
-            return False
-    return True
+def _like_key(base, factors):
+    """The like-term key of an addend split as (base, factors): equal keys merge."""
+    return (
+        None if base is None else term_key(base),
+        tuple(sorted(term_key(f) for f in factors)),
+    )
 
 
 def _chain(factors):
@@ -651,34 +634,26 @@ def _collect_like_terms(nodes, expr_type):
     """Merge like terms (same base, same symbolic factors) by summing their coefficients.
 
     A term that merges with nothing is kept as it is; a merged group is rebuilt from its
-    first term with the summed coefficient (dropped when the sum is 0).
+    first term with the summed coefficient (dropped when the sum is 0). Terms are grouped
+    by ``_like_key`` in one pass (linear in the number of addends); the groups keep the
+    order of their first terms and their coefficients are summed in addend order.
     """
     if len(nodes) <= 1:
         return nodes
 
     split = [_split_term(n, expr_type) for n in nodes]
-    group = list(range(len(nodes)))  # index of the group's first term
+    first = {}  # like key → index of the group's first term
+    group = []  # index of each term's group (its first term)
     coeffs = [c for c, _, _ in split]
     scales = [abs(c) for c in coeffs]
     merged = [False] * len(nodes)
 
-    for i in range(len(nodes)):
-        if group[i] != i:
-            continue
-        _, bi, fi = split[i]
-        for j in range(i + 1, len(nodes)):
-            if group[j] != j:
-                continue
-            _, bj, fj = split[j]
-            if (bi is None) != (bj is None):
-                continue
-            if bi is not None and not _commutative_equal(bi, bj):
-                continue
-            if not _same_factors(fi, fj):
-                continue
+    for j, (_, base, factors) in enumerate(split):
+        i = first.setdefault(_like_key(base, factors), j)
+        group.append(i)
+        if i != j:
             coeffs[i] += coeffs[j]
             scales[i] = max(scales[i], abs(coeffs[j]))
-            group[j] = i
             merged[i] = True
 
     result = []
@@ -707,8 +682,7 @@ def _simplify_mul(l, r):
         return r
     if _is_one(r):
         return l
-    factors = []
-    _flatten_mul(Mul(l, r), factors)
+    factors = flatten_mul(Mul(l, r))
     numerics = [f for f in factors if _is_numeric_leaf(f)]
     if not numerics:
         return Mul(l, r)
@@ -733,10 +707,26 @@ def _simplify_mul(l, r):
     return Mul(_chain(others), Number(combined))
 
 
-def _flatten_mul(expr, factors):
-    """Flatten nested Mul into a list of factors."""
-    if isinstance(expr, Mul):
-        _flatten_mul(expr.left, factors)
-        _flatten_mul(expr.right, factors)
-    else:
-        factors.append(expr)
+#: ``_eliminate``'s handler for each node class (a leaf has none and is kept).
+#: Looked up by the exact class (``type(expr)``), not along the MRO: a subclass of a
+#: node class is not dispatched and is kept as it is, like a leaf. No such subclass exists;
+#: one added later needs its own entry here (pinned in test_phase5b_structure.py).
+_ELIMINATE = {
+    Add: _elim_add,
+    VAdd: _elim_vadd,
+    MAdd: _elim_madd,
+    Mul: _elim_mul,
+    SVMul: _elim_svmul,
+    SMMul: _elim_smmul,
+    MVMul: _elim_mvmul,
+    MMMul: _elim_mmmul,
+    VVMul: _elim_vvmul,
+    Dot: _elim_dot,
+    Cross: _elim_cross,
+    Hat: _elim_hat,
+    Vee: _elim_vee,
+    Transpose: _elim_transpose,
+    Variation: _elim_variation,
+    TimeDerivative: _elim_time_derivative,
+    TimeIntegral: _elim_time_integral,
+}

@@ -79,19 +79,19 @@ class TestTransposedMatrixProducts:
     def test_transposed_matrix_times_vector_is_mvmul(self, sym):
         out = Transpose(sym["R"]) * sym["a"]
         assert isinstance(out, MVMul)
-        assert str(out) == str(MVMul(Transpose(sym["R"]), sym["a"])) == "(R)'a"
+        assert str(out) == str(MVMul(Transpose(sym["R"]), sym["a"])) == "(R)'*a"
         np.testing.assert_allclose(num(out), R_VAL.T @ A_VAL)
 
     def test_transposed_matrix_times_matrix_is_mmmul(self, sym):
         out = Transpose(sym["R"]) * sym["K"]
         assert isinstance(out, MMMul)
-        assert str(out) == "(R)'K"
+        assert str(out) == "(R)'*K"
         np.testing.assert_allclose(num(out), R_VAL.T @ K_VAL)
 
     def test_transposed_matrix_times_scalar_is_smmul(self, sym):
         out = Transpose(sym["R"]) * sym["s"]
         assert isinstance(out, SMMul)
-        assert str(out) == "(R)'s"
+        assert str(out) == "(R)'*s"
         np.testing.assert_allclose(num(out), S_VAL * R_VAL.T)
 
     def test_transposed_matrix_times_number(self, sym):
@@ -117,7 +117,7 @@ class TestRowVectorProducts:
         assert isinstance(out, Transpose)
         assert isinstance(out.expr, SVMul)
         assert not isinstance(out.expr.left, Transpose)  # no ((a)'s)'
-        assert str(out) == "(as)'"
+        assert str(out) == "(a*s)'"
         assert is_row_vector(out)
         np.testing.assert_allclose(num(out), S_VAL * A_VAL.T)
 
@@ -126,7 +126,7 @@ class TestRowVectorProducts:
         phase 3 (printed ``(a)'s``), so existing trees keep comparing equal (phase 3
         review F1). It is the same row as ``Transpose(a) * s`` numerically."""
         a, s = sym["a"], sym["s"]
-        assert str(s * Transpose(a)) == "(a)'s"
+        assert str(s * Transpose(a)) == "(a)'*s"
         np.testing.assert_allclose(num(s * Transpose(a)), num(Transpose(a) * s))
         np.testing.assert_allclose(num(2 * Transpose(a)), num(Transpose(a) * 2))
 
@@ -231,7 +231,7 @@ class TestRowOrientationSurvivesTransformations:
     def test_expand_double_transpose_addend(self, sym):
         a, b, c = sym["a"], sym["b"], sym["c"]
         expr = VVMul(VAdd(a, Transpose(Transpose(b))), Transpose(c))
-        assert str(expand(expr)) == "(a(c)'+b(c)')"
+        assert str(expand(expr)) == "(a*(c)'+b*(c)')"
 
     @pytest.mark.parametrize("transform", [simplify, full_simplify])
     def test_simplify_row_times_matrix(self, sym, transform):
@@ -239,7 +239,7 @@ class TestRowOrientationSurvivesTransformations:
         row = MVMul(Transpose(a), K)
         expr = MVMul(Transpose(Transpose(row)), Q)
         out = transform(expr)
-        assert str(out) == "(a)'KQ"
+        assert str(out) == "(a)'*K*Q"
         np.testing.assert_allclose(num(out), A_VAL.T @ K_VAL @ Q_VAL)
 
 
@@ -257,9 +257,9 @@ class TestNumericOperands:
     def test_rmul(self):
         out = 2 * self.x
         assert isinstance(out, Mul)
-        assert str(out) == "(2)x"
-        assert str(2 * self.v) == str(self.v * 2) == "v(2)"
-        assert str(2 * self.M) == str(self.M * 2) == "M(2)"
+        assert str(out) == "(2)*x"
+        assert str(2 * self.v) == str(self.v * 2) == "v*(2)"
+        assert str(2 * self.M) == str(self.M * 2) == "M*(2)"
 
     def test_add_and_radd(self):
         assert str(self.x + 1) == "(x+(1))"
@@ -268,15 +268,15 @@ class TestNumericOperands:
 
     def test_sub_and_rsub(self):
         assert str(self.x - 1) == "(x+(-1))"
-        assert str(1 - self.x) == "((1)+x(-1))"
+        assert str(1 - self.x) == "((1)+x*(-1))"
         assert str(self.x - 2.5) == "(x+(-2.5))"
 
     def test_neg_builds_the_same_tree_as_times_minus_one(self):
         for e in (self.x, self.v, self.M, Dot(self.v, self.v), Cross(self.v, self.v)):
             assert str(-e) == str(e * -1)
             assert type(-e) is type(e * -1)
-        assert str(-self.x) == "x(-1)"
-        assert str(-self.v) == "v(-1)"
+        assert str(-self.x) == "x*(-1)"
+        assert str(-self.v) == "v*(-1)"
 
     def test_neg_matches_existing_pinned_sub(self):
         """``a - b`` has always built ``a + b(-1)``; ``a + -b`` is the same tree."""
@@ -289,12 +289,12 @@ class TestNumericOperands:
         """``-m*g*Dot(e3, x)`` used to raise TypeError (dynamics audit F7 nit)."""
         m, g = Scalar("m", attr=["Constant"]), Scalar("g", attr=["Constant"])
         e3, x = Vector("e3", attr=["Constant"]), Vector("x")
-        assert str(-m * g * Dot(e3, x)) == "m(-1)gDot(e3,x)"
+        assert str(-m * g * Dot(e3, x)) == "m*(-1)*g*Dot(e3,x)"
 
     def test_div_by_number(self):
-        assert str(self.x / 2) == str(self.x * 0.5) == "x(0.5)"
-        assert str(self.v / 4) == "v(0.25)"
-        assert str(self.M / 2) == "M(0.5)"
+        assert str(self.x / 2) == str(self.x * 0.5) == "x*(0.5)"
+        assert str(self.v / 4) == "v*(0.25)"
+        assert str(self.M / 2) == "M*(0.5)"
 
     def test_div_numeric_value(self):
         env = {"v": A_VAL}
@@ -316,8 +316,8 @@ class TestNumericOperands:
     )
     def test_numpy_scalars_wrap_like_python_numbers(self, value, text):
         """Follow-up F-3 of the phase 2 review: ``x * np.int64(2)`` raised AttributeError."""
-        assert str(self.x * value) == "x" + text
-        assert str(value * self.x) == text + "x"
+        assert str(self.x * value) == "x*" + text
+        assert str(value * self.x) == text + "*x"
         assert str(self.x + value) == "(x+" + text + ")"
         assert str(Number(value)) == text
 
@@ -339,7 +339,7 @@ class TestNumericOperands:
 
     def test_constructors_wrap_numbers(self):
         assert str(Add(self.x, 1)) == "(x+(1))"
-        assert str(Mul(self.x, np.int64(3))) == "x(3)"
+        assert str(Mul(self.x, np.int64(3))) == "x*(3)"
 
     def test_vector_plus_number_names_the_operands(self):
         with pytest.raises(ExpressionMismatchError, match="VAdd cannot combine VECTOR 'v'"):

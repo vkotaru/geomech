@@ -4,8 +4,8 @@ Branch `fix/phase1-equations`, range `1dd98ab..c96d31c` (636e963 numeric oracle,
 fixes). Reviewed: `git diff 1dd98ab..c96d31c -- geomech/` in full, the two phase-1 reports, the
 new test files, `docs/numeric-verification.md`. Nothing under `geomech/` and no existing test was
 modified. New file: `tests/test_phase1_adversarial.py` (88 passing tests, 7 strict `xfail` with
-`F<n>` in the reason). Scratch scripts and the old-engine worktree lived in the session
-temporary directory; the numbers below are from those runs.
+`F<n>` in the reason). Scratch scripts and the old-engine worktree lived in a temporary
+directory; the numbers below are from those runs.
 
 Baseline on this machine: `python -m pytest tests/ -q` → 1441 passed, 5 xfailed; with the new
 file → **1529 passed, 12 xfailed**; `ruff format --check` + `ruff check` clean.

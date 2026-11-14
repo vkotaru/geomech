@@ -36,7 +36,7 @@ class TestPullDot:
         x, y = getVectors(["x", "y"])
         result = pull(Dot(x, SVMul(y, a)))
         assert isinstance(result, Mul)
-        assert str(result) == "aDot(x,y)"
+        assert str(result) == "a*Dot(x,y)"
 
     def test_dot_scalar_both(self):
         """dot(a*x, b*y) → a * b * dot(x, y)"""
@@ -44,7 +44,7 @@ class TestPullDot:
         x, y = getVectors(["x", "y"])
         result = pull(Dot(SVMul(x, a), SVMul(y, b)))
         assert isinstance(result, Mul)
-        assert str(result) == "abDot(x,y)"
+        assert str(result) == "a*b*Dot(x,y)"
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ class TestPullCross:
         assert isinstance(result, SVMul)
         assert isinstance(result.left, Cross)
         assert result.right == a
-        assert str(result) == "Cross(x,y)a"
+        assert str(result) == "Cross(x,y)*a"
 
     def test_cross_scalar_right(self):
         """cross(x, a*y) → a * cross(x, y)"""
@@ -101,7 +101,7 @@ class TestPullCross:
         assert isinstance(result, SVMul)
         assert isinstance(result.left, Cross)
         assert result.right == a
-        assert str(result) == "Cross(x,y)a"
+        assert str(result) == "Cross(x,y)*a"
 
     def test_cross_scalar_both(self):
         """cross(a*x, b*y) → (a*b) * cross(x, y)"""
@@ -111,7 +111,7 @@ class TestPullCross:
         assert isinstance(result, SVMul)
         assert isinstance(result.left, Cross)
         assert isinstance(result.right, Mul)
-        assert str(result) == "Cross(x,y)ab"
+        assert str(result) == "Cross(x,y)*a*b"
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +166,7 @@ class TestPullMVMul:
         result = pull(MVMul(SMMul(M, a), x))
         assert isinstance(result, SVMul)
         assert isinstance(result.left, MVMul)
-        assert str(result) == "Mxa"
+        assert str(result) == "M*x*a"
 
     def test_mvmul_scalar_right(self):
         """M*(a*x) → (M*x)*a — pull scalar from vector side."""
@@ -176,7 +176,7 @@ class TestPullMVMul:
         result = pull(MVMul(M, SVMul(x, a)))
         assert isinstance(result, SVMul)
         assert isinstance(result.left, MVMul)
-        assert str(result) == "Mxa"
+        assert str(result) == "M*x*a"
 
     def test_mvmul_scalar_both(self):
         """(a*M)*(b*x) → (M*x)*(a*b) — pull scalars from both sides."""
@@ -187,7 +187,7 @@ class TestPullMVMul:
         assert isinstance(result, SVMul)
         assert isinstance(result.left, MVMul)
         assert isinstance(result.right, Mul)
-        assert str(result) == "Mxab"
+        assert str(result) == "M*x*a*b"
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ class TestPullVAdd:
         x, y = getVectors(["x", "y"])
         result = pull(VAdd(SVMul(SVMul(x, a), a), y))
         assert isinstance(result, VAdd)
-        assert str(result) == "(xaa+y)"
+        assert str(result) == "(x*a*a+y)"
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +232,7 @@ class TestPullSMMul:
         assert isinstance(result, SMMul)
         assert isinstance(result.right, Mul)
         assert str(result.left) == "M"
-        assert str(result) == "Mab"
+        assert str(result) == "M*a*b"
 
 
 # ---------------------------------------------------------------------------
@@ -254,7 +254,7 @@ class TestPullMMMul:
         result = pull(MMMul(SMMul(M, a), N))
         assert isinstance(result, SMMul)
         assert isinstance(result.left, MMMul)
-        assert str(result) == "MNa"
+        assert str(result) == "M*N*a"
 
     def test_mmmul_scalar_right(self):
         """M*(a*N) → (M*N)*a — pull scalar from right matrix."""
@@ -263,7 +263,7 @@ class TestPullMMMul:
         result = pull(MMMul(M, SMMul(N, a)))
         assert isinstance(result, SMMul)
         assert isinstance(result.left, MMMul)
-        assert str(result) == "MNa"
+        assert str(result) == "M*N*a"
 
     def test_mmmul_scalar_both(self):
         """(a*M)*(b*N) → (M*N)*(a*b) — pull scalars from both sides."""
@@ -273,7 +273,7 @@ class TestPullMMMul:
         assert isinstance(result, SMMul)
         assert isinstance(result.left, MMMul)
         assert isinstance(result.right, Mul)
-        assert str(result) == "MNab"
+        assert str(result) == "M*N*a*b"
 
 
 # ---------------------------------------------------------------------------
@@ -303,7 +303,7 @@ class TestPullDeepNesting:
         expr = Dot(Cross(SVMul(x, a), y), z)
         result = pull(expr)
         assert isinstance(result, Mul)
-        assert str(result) == "aDot(Cross(x,y),z)"
+        assert str(result) == "a*Dot(Cross(x,y),z)"
 
     def test_mvmul_with_nested_smmul(self):
         """(a*M)*(b*x) → (M*x)*(a*b) — scalars from both sides combined."""
@@ -316,7 +316,7 @@ class TestPullDeepNesting:
         assert isinstance(result.left, MVMul)
         assert str(result.left.left) == "M"
         assert str(result.left.right) == "x"
-        assert str(result) == "Mxab"
+        assert str(result) == "M*x*a*b"
 
     def test_leaf_vector_passthrough(self):
         """Leaf vector returned as-is (identity case)."""

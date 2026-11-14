@@ -71,6 +71,7 @@ or an old result can be recognised; for a wrong equation with the current versio
 | The equation `(ω m + f)` | a tangent vector listed as a configuration variable | `TypeError` |
 | An entry like `x + y` or `q.t_diff()` in `SystemVariables` gave an unrelated stray-symbol error | composite entries were accepted | `TypeError` "is a VAdd expression, not a single symbol" |
 | `(0)x` in a result, `is_zero` false | `Number(0) * x` was not flagged zero | flagged zero |
+| Two different products printed alike and compared equal (`Mul(ab, c)` and `Mul(a, bc)` both `abc`; `Variation(Scalar("x")) == Variation(Vector("x"))`) | products printed their factors with no separator, and `==` compared the printed form only | products print `*` (`ab*c`, `a*bc`), and a calculus node also compares its operand's class (phase 5b) |
 | `x(5.55e-17)` | float roundoff of a cancelled like term | sums within `1e-12` of the largest coefficient are dropped ([Conventions](conventions.md)) |
 | A substitution silently not applied under an unusual node | `apply_manifold_rules` returned the old node when it could not rebuild one | `TypeError` |
 | Partially simplified output without a word | `full_simplify` stopped at `max_iter` silently | `RuntimeWarning` "no confirmed fixed point after N passes" |
@@ -98,7 +99,7 @@ it, and the coefficient of `η` cannot be read off:
 ```
 AlgebraicError: compute_eom: while extracting the equation for '\eta_{R}': the time
 derivative '\frac{d}{dt}(\eta_{R})' of the variation vector '\eta_{R}' survived integration
-by parts in the term 'Dot(w,Vee(Hat(\frac{d}{dt}(\eta_{R}))A))'
+by parts in the term 'Dot(w,Vee(Hat(\frac{d}{dt}(\eta_{R}))*A))'
 of δS; collect could not expose it as the left operand of a Dot (Dot(\frac{d}{dt}(\eta_{R}), f)),
 so the term was not integrated by parts and has no coefficient. Inspect the term with
 print_tree(term, style='indent'), or run compute_eom(..., trace=EOMTrace()) and look at the
@@ -209,24 +210,24 @@ ones of the example). Every message starts with the function or node that raised
 | `params=l` | `TypeError: compute_eom: params must be a sequence of leaves, got Scalar 'l'; write params=[l]` |
 | a `Constant` param | `ValueError: compute_eom: params entry 'm' is constant; a prescribed parameter varies in time (drop it from params or remove the 'Constant' attribute)` |
 | a param that is a variable | `ValueError: compute_eom: params entry 'x' is also a configuration variable (SystemVariables.vectors); a symbol is either prescribed or a degree of freedom` |
-| a velocity inside a matrix factor, `a·((Ω cᵀ) b)` | `AlgebraicError: compute_eom: while integrating by parts (stage ibp, targets \frac{d}{dt}(\eta_{R})): collect: the target '\frac{d}{dt}(\eta_{R})' occurs inside the matrix factor '\frac{d}{dt}(\eta_{R})(c2)'' of the term 'Dot(\frac{d}{dt}(\eta_{R})(c2)'c3,c1)'; transposition exposes a target only in the vector operand ((M f(v))·w = f(v)·(Mᵀ w)), so this term cannot be integrated by parts` — write it as `(a·Ω)(c·b)` |
+| a velocity inside a matrix factor, `a·((Ω cᵀ) b)` | `AlgebraicError: compute_eom: while integrating by parts (stage ibp, targets \frac{d}{dt}(\eta_{R})): collect: the target '\frac{d}{dt}(\eta_{R})' occurs inside the matrix factor '\frac{d}{dt}(\eta_{R})*(c2)'' of the term 'Dot(\frac{d}{dt}(\eta_{R})*(c2)'*c3,c1)'; transposition exposes a target only in the vector operand ((M f(v))·w = f(v)·(Mᵀ w)), so this term cannot be integrated by parts` — write it as `(a·Ω)(c·b)` |
 | an acceleration in `L` (`½ ẍ·ẍ`) | see [the AlgebraicErrors about a calculus operator](#the-algebraicerrors-about-a-calculus-operator) |
 | a `d/dt(η)` survived IBP | see [the AlgebraicErrors about a calculus operator](#the-algebraicerrors-about-a-calculus-operator) |
-| a term quadratic in a variation | `NonLinearError: compute_eom: while extracting the equation for '\delta{x}' from δS (extraction, after the stage 'expand'): _vector_from_scalar: nonlinear — '\delta{x}' appears in both sides of VVMul in '(\delta{x})'\delta{x}'` |
+| a term quadratic in a variation | `NonLinearError: compute_eom: while extracting the equation for '\delta{x}' from δS (extraction, after the stage 'expand'): _vector_from_scalar: nonlinear — '\delta{x}' appears in both sides of VVMul in '(\delta{x})'*\delta{x}'` |
 
 ### `to_standard_form`
 
 | Mistake | Message |
 |---|---|
 | a jerk | see [the AlgebraicErrors about a calculus operator](#the-algebraicerrors-about-a-calculus-operator) |
-| a term bilinear in two accelerations | `NonLinearError: to_standard_form: in equation '\delta{x1}', the coefficient of '\frac{d}{dt}(\frac{d}{dt}(x1))' still contains the acceleration '\frac{d}{dt}(\frac{d}{dt}(x2))' in '\frac{d}{dt}(\frac{d}{dt}(x2))m'; the equation is not linear in the accelerations` |
+| a term bilinear in two accelerations | `NonLinearError: to_standard_form: in equation '\delta{x1}', the coefficient of '\frac{d}{dt}(\frac{d}{dt}(x1))' still contains the acceleration '\frac{d}{dt}(\frac{d}{dt}(x2))' in '\frac{d}{dt}(\frac{d}{dt}(x2))*m'; the equation is not linear in the accelerations` |
 
 ### `linearize`
 
 | Mistake | Message |
 |---|---|
 | an input missing from `inputs` (or a symbol missing `Constant`) | `AlgebraicError: linearize: in row '\delta{x}', the term '\delta{f}' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries '\delta{f}' (of 'f'), which is neither a configuration, velocity nor input variation. If the symbol is an input, list it in `inputs`; if it is a constant, give it attr=['Constant']; if it is a prescribed parameter (compute_eom(..., params=[...])), linearize does not support prescribed parameters yet (pass params=[...] to linearize to have it say so).` |
-| equations with a prescribed param, `linearize(..., params=[l])` | `AlgebraicError: linearize: in row '\xi_{q}', the term '\frac{d}{dt}(\omega_{q})m\delta{l}l(-2)' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries the variation of the prescribed parameter(s) 'l' declared in params: linearize does not support prescribed parameters yet (the variation of a prescribed parameter vanishes along the reference, but its rate does not in general).` |
+| equations with a prescribed param, `linearize(..., params=[l])` | `AlgebraicError: linearize: in row '\xi_{q}', the term '\frac{d}{dt}(\omega_{q})*m*\delta{l}*l*(-2)' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries the variation of the prescribed parameter(s) 'l' declared in params: linearize does not support prescribed parameters yet (the variation of a prescribed parameter vanishes along the reference, but its rate does not in general).` |
 | other `SystemVariables` than for `compute_eom` | `ValueError: linearize: eom keys ['\\delta{x}'] do not match the variation vectors ['\\xi_{q}'] of the given SystemVariables` |
 | an input that is a variable | `ValueError: linearize: input 'x' is also a configuration variable` |
 | `ω` as an input | `ValueError: linearize: input '\omega_{q}' is a tangent or variation vector of a configuration variable; its variation is part of the perturbation state, not an input` |
@@ -236,8 +237,8 @@ ones of the example). Every message starts with the function or node that raised
 
 | Call | Message |
 |---|---|
-| `extract_linear_coeff(a*a, a)` | `NonLinearError: _scalar_from_scalar: nonlinear — 'a' appears in both sides of Mul in 'aa'` |
-| `extract_linear_coeff(x * x.T(), x)` | `AlgebraicError: Cannot extract vector query 'x' from outer product 'x(x)'': rank-1 matrix does not factor as C * q` |
+| `extract_linear_coeff(a*a, a)` | `NonLinearError: _scalar_from_scalar: nonlinear — 'a' appears in both sides of Mul in 'a*a'` |
+| `extract_linear_coeff(x * x.T(), x)` | `AlgebraicError: Cannot extract vector query 'x' from outer product 'x*(x)'': rank-1 matrix does not factor as C * q` |
 | `extract_linear_coeff(Dot(ẋ, f), x)` | `AlgebraicError: extract_linear_coeff: 'x' appears only inside the calculus operator '\frac{d}{dt}(x)' (a higher order derivative, a variation or an integral of the query); such a term has no linear coefficient` |
 | `extract_linear_coeff(Hat(x), x)` | `AlgebraicError: _vector_from_matrix: 'Hat(x)' is linear in 'x' but has no left matrix coefficient (the map is a 3-tensor, not C * query)` |
 | `collect(x, x)` | `TypeError: collect: expected a scalar expression, got Vector 'x' of type VECTOR` |

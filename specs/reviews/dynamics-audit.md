@@ -25,7 +25,7 @@ harness reproduces all nine pinned systems in `tests/vbl_systems.py` to 1e-6 or 
 `to_standard_form` was checked by evaluating `Σ M[a]·a + f + Σ G[u]·u` against `E` at random
 points; `linearize` with `tests/numeric_helpers.finite_difference_check`.
 
-The probe scripts were run from a scratch directory; the harness is kept at `specs/reviews/scripts/euler_lagrange_check.py`.
+The probe scripts were run from a temporary directory; the harness is kept at `specs/reviews/scripts/euler_lagrange_check.py`.
 
 ## Findings, by severity
 

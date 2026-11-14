@@ -17,7 +17,7 @@ The goal: "when I debug in 6 months or 1 year from now, it should be easy to deb
 | `str` byte-identity | **Identical.** All 65 argument-free builders of `tests/vbl_systems.py`, `tests/phase1_systems.py` and `tests/test_eom_oracle.py` (the 61 of earlier phases plus the 4 with default arguments; the 2 new systems excluded) through `str(L)`, `str(dW)`, δS, `apply_manifold_rules`, `full_simplify`, `integrate_by_parts`, `expand`, `compute_eom`, `to_standard_form` (every field) and `linearize` (every attribute), in a worktree at `57232da` and in this tree: 379 556 bytes at base. The only 2 differing lines are the two expected `AlgebraicError` texts (`so3_/s2_outer_product_on_velocity`), which now start with `compute_eom: while integrating by parts (stage ibp, …):` followed by the unchanged engine message; with the error lines removed the dumps are byte-identical. The worktree was removed. |
 | Runtime, happy path | `compute_eom` on the quadrotor with a cable-suspended load (median of 40, three alternating rounds): **base 10.9 / 10.9 / 10.9 ms, now 10.9 / 10.9 / 10.9 ms**. Suite wall time: base 6.83–6.90 s (1931 tests); now 7.48–7.67 s (2011 tests), and **6.89–7.12 s for the same 1933 pre-existing tests** (the difference is the conftest `check_tree` pass, test time only). |
 | `ruff format --check` / `ruff check` on `geomech/ tests/` | clean (92 files) |
-| `ruff check examples/` | 111 errors, all pre-existing (star imports; identical count at base); the contributor notes exempts the example scripts. No example was changed. |
+| `ruff check examples/` | 111 errors, all pre-existing (star imports; identical count at base); the contributor notes exempt the example scripts. No example was changed. |
 | `mkdocs build --strict` | exit 0; the only INFO line left is the existing `reference/` link (the `manifold-implementation-notes.md` "not in nav" line is gone). |
 | `engine_fuzz.py --quick -W error` | exit 0, 36 distinct findings, identical to base except the `collect.py` line numbers in "where:". 0 wrong-value. |
 | Examples (6), `-W error` | all exit 0, output byte-identical to base. |
@@ -195,7 +195,8 @@ All re-raises keep the exception type and chain the original (`raise type(err)(�
   from the submodules in `geomech/__init__.py:66-72` and are the plain functions. Renaming
   the modules (`_expand.py`) was rejected: it would make `geomech.core.transformations.simplify`
   the function, which is exactly what the item forbids. Grepped: repo, examples,
-  notebooks, docs, a downstream application, the accompanying paper; no other import of these names.
+  notebooks, docs, a downstream application, the accompanying paper; no other import of
+  these names.
 - `manifold_rules.py` now imports `SystemVariables` under `TYPE_CHECKING` only (the package
   `__init__` importing it created an import cycle through `geomech.dynamics`).
 
@@ -228,8 +229,8 @@ All re-raises keep the exception type and chain the original (`raise type(err)(�
   perturbation, params, inputs, constant).
 - `mkdocs.yml` nav: Pipeline, Conventions, Troubleshooting, and
   `manifold-implementation-notes.md` as "Manifold Rules: Derivation". I kept that page
-  (the contributor notes tells readers to read it before changing the S²/SO(3) rules, and I may not
-  edit the contributor notes); its stale rule lists (one listed `Vee(a + b) → Vee(a) + Vee(b)`, which
+  (the contributor notes tell readers to read it before changing the S²/SO(3) rules, and I
+  may not edit them); its stale rule lists (one listed `Vee(a + b) → Vee(a) + Vee(b)`, which
   never fires) were replaced by the named rules that depend on the manifold structure.
 - Same pipeline order in `README.md` ("The pipeline" step 3 and "How it works", with the
   `_eliminate` snippet refreshed: it showed the pre-phase-1 `Hat(Vee(M)) = M`),
@@ -238,7 +239,7 @@ All re-raises keep the exception type and chain the original (`raise type(err)(�
 - Stale text the reviews listed: `variables.py:12` ("not yet used in EOM pipeline") and the
   `extract.py` header (`(query, expr)` signature, "Assumes query appears linearly") were
   already fixed in phase 1/2 (`865699f`, `feeb476`); nothing left to change.
-- **`paper_context.md`**: `.gitignore:7` ignores it while the contributor notes cites it as a
+- **`paper_context.md`**: `.gitignore:7` ignores it while the contributor notes cite it as a
   design document next to `docs/manifold-implementation-notes.md`. A fresh clone has no such
   file. Not changed (per instructions); the author should either track it or drop the
   reference.

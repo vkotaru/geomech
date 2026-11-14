@@ -98,106 +98,140 @@ def pull(expr):
 
 
 def _at_node(expr):
-    """The rules of the module docstring at the root of *expr* (operands already pulled)."""
-    match expr:
-        # --- Dot(vec, vec) → scalar ---
-        case Dot():
-            l, r = expr.left, expr.right
-            match (l, r):
-                case (SVMul(), SVMul()):
-                    return rule(
-                        "pull.dot_scaled", expr, Mul(l.right, Mul(r.right, Dot(l.left, r.left)))
-                    )
-                case (SVMul(), _):
-                    return rule("pull.dot_scaled", expr, Mul(l.right, Dot(l.left, r)))
-                case (_, SVMul()):
-                    return rule("pull.dot_scaled", expr, Mul(r.right, Dot(l, r.left)))
-                case _:
-                    return expr
+    """The rules of the module docstring at the root of *expr* (operands already pulled).
 
-        # --- Scalar * Vector ---
-        case SVMul() if isinstance(expr.left, SVMul):
-            l = expr.left
-            return rule("pull.svmul_nested", expr, SVMul(l.left, Mul(l.right, expr.right)))
+    One function per node class, picked from ``_PULL`` by the class of *expr*; sums,
+    scalar products, calculus nodes and leaves have no rule.
+    """
+    handler = _PULL.get(type(expr))
+    return expr if handler is None else handler(expr)
 
-        # --- Cross(vec, vec) → vector ---
-        case Cross():
-            l, r = expr.left, expr.right
-            match (l, r):
-                case (SVMul(), SVMul()):
-                    return rule(
-                        "pull.cross_scaled",
-                        expr,
-                        SVMul(Cross(l.left, r.left), Mul(l.right, r.right)),
-                    )
-                case (SVMul(), _):
-                    return rule("pull.cross_scaled", expr, SVMul(Cross(l.left, r), l.right))
-                case (_, SVMul()):
-                    return rule("pull.cross_scaled", expr, SVMul(Cross(l, r.left), r.right))
-                case _:
-                    return expr
 
-        # --- row vector * Matrix → row vector ---
-        case MVMul() if expr.left.type == ExprType.VECTOR:
-            return _pull_row_mvmul(expr)
-
-        # --- Matrix * Vector → vector ---
-        case MVMul():
-            l, r = expr.left, expr.right
-            match (l, r):
-                case (SMMul(), SVMul()):
-                    return rule(
-                        "pull.mvmul_scaled",
-                        expr,
-                        SVMul(MVMul(l.left, r.left), Mul(l.right, r.right)),
-                    )
-                case (SMMul(), _):
-                    return rule("pull.mvmul_scaled", expr, SVMul(MVMul(l.left, r), l.right))
-                case (_, SVMul()):
-                    return rule("pull.mvmul_scaled", expr, SVMul(MVMul(l, r.left), r.right))
-                case _:
-                    return expr
-
-        # --- Scalar * Matrix ---
-        case SMMul() if isinstance(expr.left, SMMul):
-            l = expr.left
-            return rule("pull.smmul_nested", expr, SMMul(l.left, Mul(l.right, expr.right)))
-
-        # --- Matrix * Matrix → matrix ---
-        case MMMul():
-            l, r = expr.left, expr.right
-            match (l, r):
-                case (SMMul(), SMMul()):
-                    return rule(
-                        "pull.mmmul_scaled",
-                        expr,
-                        SMMul(MMMul(l.left, r.left), Mul(l.right, r.right)),
-                    )
-                case (SMMul(), _):
-                    return rule("pull.mmmul_scaled", expr, SMMul(MMMul(l.left, r), l.right))
-                case (_, SMMul()):
-                    return rule("pull.mmmul_scaled", expr, SMMul(MMMul(l, r.left), r.right))
-                case _:
-                    return expr
-
-        # --- Vector * Vector (inner or outer product) ---
-        case VVMul():
-            return _pull_vvmul(expr)
-
-        # --- unary geometry ---
-        case Transpose() if isinstance(expr.expr, SVMul):
-            inner = expr.expr
-            return rule("pull.transpose_scaled", expr, SVMul(Transpose(inner.left), inner.right))
-        case Transpose() if isinstance(expr.expr, SMMul):
-            inner = expr.expr
-            return rule("pull.transpose_scaled", expr, SMMul(Transpose(inner.left), inner.right))
-        case Hat() if isinstance(expr.expr, SVMul):
-            inner = expr.expr
-            return rule("pull.hat_scaled", expr, SMMul(Hat(inner.left), inner.right))
-        case Vee() if isinstance(expr.expr, SMMul):
-            inner = expr.expr
-            return rule("pull.vee_scaled", expr, SVMul(Vee(inner.left), inner.right))
-
-        # --- sums, scalar products, calculus, leaves: nothing at the node ---
+def _pull_dot(expr):
+    """``Dot(vec, vec)``: the scalars of scaled operands come out."""
+    l, r = expr.left, expr.right
+    match (l, r):
+        case (SVMul(), SVMul()):
+            return rule("pull.dot_scaled", expr, Mul(l.right, Mul(r.right, Dot(l.left, r.left))))
+        case (SVMul(), _):
+            return rule("pull.dot_scaled", expr, Mul(l.right, Dot(l.left, r)))
+        case (_, SVMul()):
+            return rule("pull.dot_scaled", expr, Mul(r.right, Dot(l, r.left)))
         case _:
             return expr
+
+
+def _pull_svmul(expr):
+    """``(v s) t = v (s t)``."""
+    if isinstance(expr.left, SVMul):
+        l = expr.left
+        return rule("pull.svmul_nested", expr, SVMul(l.left, Mul(l.right, expr.right)))
+    return expr
+
+
+def _pull_cross(expr):
+    """``Cross(vec, vec)``: the scalars of scaled operands come out."""
+    l, r = expr.left, expr.right
+    match (l, r):
+        case (SVMul(), SVMul()):
+            return rule(
+                "pull.cross_scaled",
+                expr,
+                SVMul(Cross(l.left, r.left), Mul(l.right, r.right)),
+            )
+        case (SVMul(), _):
+            return rule("pull.cross_scaled", expr, SVMul(Cross(l.left, r), l.right))
+        case (_, SVMul()):
+            return rule("pull.cross_scaled", expr, SVMul(Cross(l, r.left), r.right))
+        case _:
+            return expr
+
+
+def _pull_mvmul(expr):
+    """A matrix times a vector (or a row times a matrix): scaled operands come out."""
+    if expr.left.type == ExprType.VECTOR:
+        return _pull_row_mvmul(expr)
+    l, r = expr.left, expr.right
+    match (l, r):
+        case (SMMul(), SVMul()):
+            return rule(
+                "pull.mvmul_scaled",
+                expr,
+                SVMul(MVMul(l.left, r.left), Mul(l.right, r.right)),
+            )
+        case (SMMul(), _):
+            return rule("pull.mvmul_scaled", expr, SVMul(MVMul(l.left, r), l.right))
+        case (_, SVMul()):
+            return rule("pull.mvmul_scaled", expr, SVMul(MVMul(l, r.left), r.right))
+        case _:
+            return expr
+
+
+def _pull_smmul(expr):
+    """``(M s) t = M (s t)``."""
+    if isinstance(expr.left, SMMul):
+        l = expr.left
+        return rule("pull.smmul_nested", expr, SMMul(l.left, Mul(l.right, expr.right)))
+    return expr
+
+
+def _pull_mmmul(expr):
+    """A matrix product: the scalars of scaled operands come out."""
+    l, r = expr.left, expr.right
+    match (l, r):
+        case (SMMul(), SMMul()):
+            return rule(
+                "pull.mmmul_scaled",
+                expr,
+                SMMul(MMMul(l.left, r.left), Mul(l.right, r.right)),
+            )
+        case (SMMul(), _):
+            return rule("pull.mmmul_scaled", expr, SMMul(MMMul(l.left, r), l.right))
+        case (_, SMMul()):
+            return rule("pull.mmmul_scaled", expr, SMMul(MMMul(l, r.left), r.right))
+        case _:
+            return expr
+
+
+def _pull_transpose(expr):
+    """``(v s)ᵀ = vᵀ s``, ``(M s)ᵀ = Mᵀ s``."""
+    inner = expr.expr
+    if isinstance(inner, SVMul):
+        return rule("pull.transpose_scaled", expr, SVMul(Transpose(inner.left), inner.right))
+    if isinstance(inner, SMMul):
+        return rule("pull.transpose_scaled", expr, SMMul(Transpose(inner.left), inner.right))
+    return expr
+
+
+def _pull_hat(expr):
+    """``Hat(v s) = Hat(v) s``."""
+    inner = expr.expr
+    if isinstance(inner, SVMul):
+        return rule("pull.hat_scaled", expr, SMMul(Hat(inner.left), inner.right))
+    return expr
+
+
+def _pull_vee(expr):
+    """``Vee(M s) = Vee(M) s``."""
+    inner = expr.expr
+    if isinstance(inner, SMMul):
+        return rule("pull.vee_scaled", expr, SVMul(Vee(inner.left), inner.right))
+    return expr
+
+
+#: ``_at_node``'s handler for each node class with a pull rule.
+#: Looked up by the exact class (``type(expr)``), not along the MRO: a subclass of a
+#: node class is not dispatched and is returned unchanged, like a leaf. No such subclass exists;
+#: one added later needs its own entry here (pinned in test_phase5b_structure.py).
+_PULL = {
+    Dot: _pull_dot,
+    SVMul: _pull_svmul,
+    Cross: _pull_cross,
+    MVMul: _pull_mvmul,
+    SMMul: _pull_smmul,
+    MMMul: _pull_mmmul,
+    VVMul: _pull_vvmul,
+    Transpose: _pull_transpose,
+    Hat: _pull_hat,
+    Vee: _pull_vee,
+}

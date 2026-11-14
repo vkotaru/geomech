@@ -126,7 +126,8 @@ simplify(expr)      # pull scalars, apply identities, eliminate zeros
 full_simplify(expr) # expand + simplify until convergence
 ```
 
-**Printing** -- `str(expr)` is the internal form and the equality key; for reading:
+**Printing** -- `str(expr)` is the internal form and the equality key (products print
+`*` between their factors: `m*g*Dot(e3,x)`); for reading:
 
 ```python
 to_latex(expr)      # LaTeX, parenthesised where juxtaposition would be ambiguous

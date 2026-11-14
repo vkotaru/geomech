@@ -59,7 +59,7 @@ message points to the wrong remedy.
 | Suite | `python -m pytest tests/ -q -W error::RuntimeWarning` | **1699 passed, 5 xfailed**, 0 warnings promoted (6.2 s) |
 | Format | `ruff format --check geomech/ tests/` | 76 files already formatted |
 | Lint | `ruff check geomech/ tests/` | All checks passed |
-| Docs | `mkdocs build --strict -d <scratch>` | exit 0 (INFO only: `manifold-implementation-notes.md` not in nav; `reference/` link) |
+| Docs | `mkdocs build --strict -d <tmp>` | exit 0 (INFO only: `manifold-implementation-notes.md` not in nav; `reference/` link) |
 | Fuzz | `engine_fuzz.py --cases 2000 --seed 2024` at HEAD and at `865699f` | 149 findings in both: 9 documented-error-on-legal-input, 62 flag-dependent, 78 unsupported-linear-term. **0 wrong-value** in both. No new exception class. |
 | Examples | all 6 `examples/*.py` at HEAD and `865699f`, stdout diffed | all exit 0 at HEAD. `action_integral`, `nary_check`, `point_mass`, `quick_check`: identical. `rigid_pendulum`: only `J1`→`J2` on the second link (2.12). `sanity_check`: exited 1 at base (`xi.delta()`), 0 now. |
 | Notebooks | `jupyter nbconvert --execute --to notebook --stdout` for all 4 notebooks, in both trees | all exit 0, 0 error outputs; cell outputs (text/latex/plain) **identical** to `865699f` for `quadrotor`, `quadrotor_payload`, `rigid_pendulum`, `spherical_pendulum`. A probe notebook confirmed that the base kernel imported the base tree. |
@@ -173,7 +173,7 @@ the stray check, which names `y`.
 
 ### 6. Byte-identical pinned output against `865699f`
 
-I made a worktree at `865699f` in a temporary directory and have since removed it with
+I made a temporary git worktree at `865699f` and have since removed it with
 `git worktree remove` and `git worktree prune`. In both trees I ran every argument-free system
 builder in `tests/vbl_systems.py`, `tests/phase1_systems.py` and `tests/test_eom_oracle.py`
 (61 distinct systems; the union of the 85 list entries the review counted) through
@@ -211,8 +211,8 @@ Examples and notebooks: see section 1.
   decisions recorded in the implementation report. I checked each one: the assertions are
   unchanged, apart from the deleted `Transpose()`-is-None tests, which pinned the defect.
 - **A-7 Side effect from the implementer.** The implementer reported that the docs extras may
-  have been installed into the miniconda base environment. This is worth checking
-  (`conda list mkdocs`), but it does not affect the branch.
+  have been installed into an environment outside the development virtual environment.
+  This is worth checking, but it does not affect the branch.
 
 ## Follow-ups this branch surfaced (phases 3–5)
 

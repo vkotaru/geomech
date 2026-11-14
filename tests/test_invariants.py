@@ -7,6 +7,8 @@ past them) and a check that the message names the invariant, the subtree and its
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
 import geomech
@@ -36,6 +38,14 @@ from geomech import (
 )
 from tests import conftest
 from tests.vbl_systems import HALF, quadrotor_with_load, spherical_pendulum_s2
+
+
+def _replace_child(node, index, child):
+    """Put *child* at operand *index* of *node*, bypassing the frozen node (phase 5b, D3):
+    the only way left to build the malformed trees these tests feed to check_tree."""
+    nodes = list(node.nodes)
+    nodes[index] = child
+    object.__setattr__(node, "nodes", tuple(nodes))
 
 
 def _vectors():
@@ -89,7 +99,7 @@ def test_nested_same_class_sum():
 def test_operand_type_of_a_sum():
     a, b = getScalars("a b")
     node = Add(a, b)
-    node.nodes[1] = Vector("x")
+    _replace_child(node, 1, Vector("x"))
     with pytest.raises(
         InvariantError, match=r"Add addend has type VECTOR, expected SCALAR at root\.1"
     ):
@@ -99,7 +109,7 @@ def test_operand_type_of_a_sum():
 def test_operand_types_of_a_product():
     a, b = _vectors()
     node = Cross(a, b)
-    node.nodes[0] = Scalar("m")
+    _replace_child(node, 0, Scalar("m"))
     with pytest.raises(InvariantError, match=r"Cross operand types SCALAR x VECTOR"):
         check_tree(node)
 
@@ -108,7 +118,7 @@ def test_vvmul_needs_exactly_one_row():
     a, b = _vectors()
     node = VVMul(Transpose(a), b)
     check_tree(node)
-    node.nodes[0] = a  # two columns
+    _replace_child(node, 0, a)  # two columns
     with pytest.raises(InvariantError, match="exactly one row operand; both operands are columns"):
         check_tree(node)
 
@@ -145,13 +155,13 @@ def test_vadd_does_not_mix_rows_and_columns():
 def test_no_calculus_over_a_manifold_point():
     q = S2("q")
     node = TimeDerivative(Vector("x"))
-    node.nodes[0] = q
+    _replace_child(node, 0, q)
     with pytest.raises(
         InvariantError, match="TimeDerivative directly over the manifold point 'q'"
     ):
         check_tree(node)
     node = Variation(Vector("x"))
-    node.nodes[0] = SO3("R")
+    _replace_child(node, 0, SO3("R"))
     with pytest.raises(InvariantError, match="Variation directly over the manifold point 'R'"):
         check_tree(node)
 
@@ -159,7 +169,7 @@ def test_no_calculus_over_a_manifold_point():
 def test_no_variation_of_a_variation_vector():
     q = S2("q")
     node = Variation(q.get_tangent_vector())
-    node.nodes[0] = q.get_variation_vector()
+    _replace_child(node, 0, q.get_variation_vector())
     with pytest.raises(InvariantError, match="variation of a variation vector"):
         check_tree(node)
 
@@ -183,7 +193,7 @@ def test_numeric_scalars_are_consistent():
     with pytest.raises(InvariantError, match="printed like a number but has no value"):
         check_tree(Scalar("(-1)") * Scalar("m"))
     bad = Scalar("k", value=2)
-    bad.flags.is_numeric = False
+    object.__setattr__(bad, "flags", dataclasses.replace(bad.flags, is_numeric=False))
     with pytest.raises(InvariantError, match="inconsistent with is_numeric=False"):
         check_tree(bad)
     with pytest.raises(InvariantError, match=r"printed '\(2\)' has value 3"):
@@ -192,14 +202,14 @@ def test_numeric_scalars_are_consistent():
 
 def test_unary_needs_its_operand():
     node = Transpose(Vector("a"))
-    node.nodes = []
+    object.__setattr__(node, "nodes", ())  # nodes are frozen: bypass to build a bad tree
     with pytest.raises(InvariantError, match="Transpose needs exactly one operand"):
         check_tree(node)
 
 
 def test_not_an_expression():
     node = Add(*getScalars("a b"))
-    node.nodes[0] = 3
+    _replace_child(node, 0, 3)
     with pytest.raises(InvariantError, match=r"operand 0 of Add at root is a int \(3\)"):
         check_tree(node)
 

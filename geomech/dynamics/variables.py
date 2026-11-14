@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 
-def check_group_is_sequence(group_name, group):
+def check_group_is_sequence(group_name: str, group: object) -> None:
     """A ``SystemVariables`` group must be a list (or tuple) of variables, not one leaf.
 
     A bare leaf (``vectors=x``) or a one-shot iterator would otherwise fail with Python's

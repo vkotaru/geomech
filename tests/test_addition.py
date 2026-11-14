@@ -307,21 +307,21 @@ class TestSubtraction:
         result = a - b
         assert isinstance(result, Add)
         assert result.arity == 2
-        assert str(result) == "(a+b(-1))"
+        assert str(result) == "(a+b*(-1))"
 
     def test_vector_sub(self):
         x, y = getVectors(["x", "y"])
         result = x - y
         assert isinstance(result, VAdd)
         assert result.arity == 2
-        assert str(result) == "(x+y(-1))"
+        assert str(result) == "(x+y*(-1))"
 
     def test_matrix_sub(self):
         M, N = getMatrices("M N")
         result = M - N
         assert isinstance(result, MAdd)
         assert result.arity == 2
-        assert str(result) == "(M+N(-1))"
+        assert str(result) == "(M+N*(-1))"
 
     def test_scalar_sub_type_mismatch(self):
         a = Scalar("a")
@@ -518,6 +518,6 @@ class TestEmptyAddition:
 
     def test_single_operand_is_allowed(self):
         (a,) = getScalars("a")
-        assert Add(a).nodes == [a]
+        assert Add(a).nodes == (a,)
         A = Matrix("A", attr=["SymmetricMatrix"])
         assert MAdd(A).is_symmetric and not MAdd(A).is_skew_symmetric
