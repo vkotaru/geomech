@@ -182,7 +182,7 @@ New tests: 127.
 Commands run:
 
 - Full suite `python -m pytest tests/ -q -W error`: **3008 passed, 2 xfailed in 77 s**. Before this feature it was 2881 passed in about 17 s.
-- `ruff format --check` and `ruff check` on `geomech/ tests/ scripts/ examples/generated/ examples/inverted_rigid_pendulum_lqr.py`: clean. `ruff check examples/` still reports the existing star-import errors of the older example scripts (`sanity_check.py` and others), which CI does not lint and which `../the contributor notes exempts. No existing file was reformatted.
+- `ruff format --check` and `ruff check` on `geomech/ tests/ scripts/ examples/generated/ examples/inverted_rigid_pendulum_lqr.py`: clean. `ruff check examples/` still reports the existing star-import errors of the older example scripts (`sanity_check.py` and others), which CI does not lint; the example scripts are exempt from unused-import lint by project convention. No existing file was reformatted.
 - `mypy geomech --ignore-missing-imports`: no issues (46 files).
 - `mkdocs build --strict`: passes. griffe asked for annotations on the public signatures, so `ArrayLike` annotations were added.
 - `python scripts/regenerate_generated.py --check`: 18 modules, no drift. The generated modules are unchanged; the only edit to `module.py` is a docstring.

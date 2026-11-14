@@ -45,13 +45,43 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
 - `a` stacks the accelerations in variable order; it is an argument only of the functions
   whose expressions contain an acceleration (`compute_eom` equations, linearization blocks).
 - `u` stacks the inputs in the order given (a scalar takes 1 entry, a vector 3).
-- `p` is a `dict` keyed by `str(symbol)` of every parameter: a float for a scalar, any
-  array of 3 or 3×3 entries for a vector or matrix. A missing key raises `KeyError`, an
-  extra one `ValueError`, both naming the key. Numeric literals (`0.5`, `(-1)`) and the
+- **Required arguments.** A generated function converts (and so requires) only the arrays
+  its expressions use: `a` when they contain an acceleration, `u` when they contain an
+  input. Passing `None` for a required array raises `ValueError`
+  (`u must have 1 entries, got None (u is required here)`), and so does a wrong size.
+  A function whose expressions have no input accepts `u=None`, which is always the case
+  for a system without inputs; likewise `a=None` (the default of `lambdify`) without
+  accelerations. The generated code never reads `None` as zero input. That shorthand
+  belongs to `geomech.simulation` (`accelerations(module, state, u=None, p)`,
+  `simulate(..., u=None)`), whose functions document `None` as zero input; `mass`,
+  `bias`, `input_matrix` and `energy` take no `u` at all.
+- `p` is a `dict` keyed by `str(symbol)` of every parameter: for a scalar a Python or
+  NumPy scalar, or a 0-d or single-element array or sequence (converted to a float; more
+  entries raise `ValueError` naming the parameter); any array of 3 or 3×3 entries for a
+  vector or matrix. A missing key raises `KeyError`, an extra one `ValueError`, both
+  naming the key. Numeric literals (`0.5`, `(-1)`) and the
   zero and identity constants are inlined, never parameters. A *named* scalar with a value
   (`Scalar("m", value=2)`) is a symbol, so it is a parameter.
-- `collect_params(exprs, variables, inputs)` lists the symbols of the expressions that are
-  not covered by the variables and inputs (sorted by name): the `params` to pass.
+- `collect_params(system, variables, inputs)` lists the symbols that the variables and
+  inputs do not cover (sorted by name): the `params` to pass. Pass what the system is made
+  of: `[L, dW]` (the usual call), `[L]` plus the equations, the dict of `compute_eom` or
+  of `to_standard_form`, a `LinearizedSystem`, one expression, or a list of these. The
+  tangent and variation vectors of the variables (`ω`, `ξ`, `Ω`, `η`, which `dW` and
+  `compute_eom` hold) are left out, and `StateLayout` rejects them as parameters.
+  Anything it cannot walk (a number, a string, an object without symbols) raises
+  `TypeError` instead of giving `[]`.
+- `layout.pack(**slots)` builds a flat `state` from named slot values and
+  `layout.unpack(state)` splits one (or a `(N, n_state)` array such as
+  `Trajectory.state`) into a dict. The names are the slot identifiers below (`x_L`, `q`,
+  `R`, `x_L_dot`, `omega_q`, `Omega_R`); `pack` also takes a dict keyed by those names or
+  by the printed symbols. Every configuration slot is required, a velocity left out is
+  zero, `R` is a 3×3 matrix or its 9 row-major entries. `pack` does not project onto the
+  manifold; `simulate` and `lqr` check the state.
+
+  ```python
+  x_eq = layout.pack(x_L=np.zeros(3), q=[0, 0, -1], R=np.eye(3))   # at rest
+  layout.unpack(traj.state)["q"]                                    # (N, 3)
+  ```
 - `layout.state_from_env(env)`, `accel_from_env`, `inputs_from_env`, `params_from_env`
   convert an `Evaluator` env (printed-name keys, `(3, 1)` columns) to the flat arrays, and
   `env_from_arrays(state, a, u, p)` converts back.
@@ -85,9 +115,23 @@ a vector equation three. For `compute_eom` output the module has
 of `LinearizedSystem.rows` and the columns of `dstates`, `states` and `inputs`; the slices
 are recorded in `LINEARIZATION`.
 
+**One layout for everything.** Generate the standard-form and the linearization module
+from the same `StateLayout`, built with the same `SystemVariables` and the same `inputs`
+list (same order) as `to_standard_form` and `linearize`. The columns of `input_matrix`
+follow the layout's inputs and those of `B_lin` follow `lin.inputs`; with a different
+order the two would pair a column with a different entry of `u`, and a controller
+designed on `B_lin` would act on the wrong channels. `generate_module` therefore raises
+`ValueError` when the variables (rows and states) or inputs of a `LinearizedSystem` are
+not those of the layout in the same order, naming both orders, and
+`lqr(..., module=...)` checks that the two modules have the same `LAYOUT` (see
+[Troubleshooting](troubleshooting.md#code-generation-and-simulation)).
+
 `examples/generated/` holds the modules of the nine systems of `tests/vbl_systems.py`
 (`<name>.py` from the standard form with `energy`, `<name>_lin.py` from `linearize`).
-`python scripts/regenerate_generated.py` rewrites them; CI fails when they drift.
+`python scripts/regenerate_generated.py` rewrites them (and deletes the files of systems
+no longer listed); `--check` writes nothing and exits 1 when a module is out of date or
+missing, when a stale file is left over, or when a generated file is not tracked by git.
+CI runs `--check`.
 
 ## Worked example: the spherical pendulum
 
@@ -121,8 +165,8 @@ src = generate_module(sf, layout, "spherical_pendulum.py", lagrangian=L)
 def mass(state, p):
     """Mass matrix M(state): blocks M[a_j] per equation (M = -physical inertia)."""
     _check_params(p, _PARAMS)
-    l = p["l"]
-    m = p["m"]
+    l = _scalar(p["l"], "l")
+    m = _scalar(p["m"], "m")
     out = np.zeros((3, 3))
     out[0:3, 0:3] = np.eye(3) * (m * l * l * -1)
     return out
@@ -134,11 +178,11 @@ def bias(state, p):
     state = _arr(state, 6, "state")
     q = state[0:3]
     e3 = _vec(p["e3"])
-    g = p["g"]
-    l = p["l"]
-    m = p["m"]
+    g = _scalar(p["g"], "g")
+    l = _scalar(p["l"], "l")
+    m = _scalar(p["m"], "m")
     out = np.zeros(3)
-    out[0:3] = np.cross(q, e3) * (m * g * l * -1)
+    out[0:3] = _cross(q, e3) * (m * g * l * -1)
     return out
 
 
@@ -173,19 +217,23 @@ Each node class maps to one construct; vectors are `(3,)` arrays and matrices `(
 | `MMMul` | `A @ B` | `ca.mtimes(A, B)` | |
 | `VVMul` | inner `a @ b`, outer `np.outer(a, b)` | `ca.dot`, `ca.mtimes(a, b.T)` | by `is_row_vector` |
 | `Dot` | `a @ b` | `ca.dot(a, b)` | |
-| `Cross` | `np.cross(a, b)` | `ca.cross(a, b)` | |
+| `Cross` | `_cross(a, b)` | `ca.cross(a, b)` | NumPy: component-wise helper, same values as `np.cross` at a fraction of its per-call cost |
 | `Hat` / `Vee` | `_hat(v)` / `_vee(M)` | same | helpers emitted once per module |
 | `Transpose` | `M.T`; of a vector, the vector | same | |
 | `TimeDerivative` of a leaf | its velocity or acceleration slot | same | anything else raises |
 | zero / identity | `0.0`, `np.zeros(3)`, `np.zeros((3, 3))`, `np.eye(3)` | `ca.DM.zeros`, `ca.DM.eye(3)` | |
+| `±inf` / `nan` literal | `np.inf`, `-np.inf`, `np.nan` | `ca.inf`, `-ca.inf`, `np.nan` | inlined, never a parameter |
 
 - **Rows.** There is one vector type; a row (`is_row_vector`) is generated as the same
   3-vector as its column, and the structure only decides between the inner and the outer
   product of a `VVMul` and the side of a row `MVMul`. A scalar equation's block for a
   vector acceleration (or input, or linearization column) fills a 1×3 block of the matrix.
-- **Common subexpressions.** A subtree that occurs more than once (keyed by `str`, the
-  engine's identity) is computed once into a local `_tN`; long expressions are split into
-  locals so that every line is short. Nothing else is simplified.
+- **Common subexpressions.** A subtree that occurs more than once is computed once into a
+  local `_tN`; long expressions are split into locals so that every line is short.
+  Nothing else is simplified. Subtrees are compared structurally (a leaf by its `str`,
+  the engine's identity; an operation by its class and operands), with the identity of
+  each node object computed once per function, so generation time is linear in the
+  number of node objects, also for trees that reuse a subtree many times.
 - **Signs.** Those of [Conventions](conventions.md): `M` is −(physical inertia) in the
   standard form (`mass` of a point mass is `−m I`), and the linearization blocks have the
   positive inertia (`M δẋ = A δx + B δu`).
@@ -202,7 +250,9 @@ block is singular (rank 2: `Hat(q) Hat(q) m_Q l²` in the quadrotor with a suspe
 or full rank (`−m l² I` for the spherical pendulum, where the engine already used
 `q · ω̇ = 0`). Either way the unprojected 3×3 solve is not the equation of motion: the
 generated module does **not** solve for the accelerations. Replace each S² block row by
-`P_q · row` (with `P_q = I − qqᵀ`) plus `q qᵀ` on its own `ω̇` column and its right-hand
+`P_q · row` (with `P_q = I − qqᵀ`) plus a multiple `s q qᵀ` on its own `ω̇` column (`s` =
+the tangent inertia, see [Simulation](simulation.md#accelerations-and-the-s2-solve)) and
+its right-hand
 side by `−P_q (bias + G u)`; the system is then square and full rank and its solution
 satisfies `q · ω̇ = 0`. `geomech.simulation.accelerations` does exactly this
 ([Simulation](simulation.md#accelerations-and-the-s2-solve)).

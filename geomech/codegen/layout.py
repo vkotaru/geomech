@@ -22,7 +22,7 @@ from __future__ import annotations
 import keyword
 import re
 from dataclasses import dataclass
-from typing import Any, Iterable, Sequence
+from typing import Any, Sequence
 
 import numpy as np
 
@@ -39,7 +39,7 @@ from geomech.core.base.expressions import (
 )
 from geomech.core.base.types import ExprType
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-from geomech.dynamics.eom import check_variables
+from geomech.dynamics.eom import check_inputs, check_variables
 from geomech.dynamics.variables import SystemVariables
 
 __all__ = ["Slot", "StateLayout", "base_symbol", "collect_params", "is_literal_leaf"]
@@ -134,14 +134,24 @@ class StateLayout:
     """How the configuration, velocity, acceleration, input and parameter symbols of a
     system map to the flat arrays ``state``, ``a``, ``u`` and the dict ``p``.
 
+    One layout serves every module of a system: build it with the ``SystemVariables`` and
+    the ``inputs`` list (same order) passed to ``to_standard_form`` and ``linearize``, and
+    generate the standard-form and the linearization module from it (``generate_module``
+    checks the linearization against it). ``pack``/``unpack`` convert between named slot
+    values and the flat ``state``.
+
     Args:
         variables: the ``SystemVariables`` of the system (scalars, then vectors, then
             matrices; each matrix an ``SO3``).
-        inputs: input leaves (``Scalar``/``Vector``), stacked into ``u`` in this order.
+        inputs: input leaves (``Scalar``/``Vector``), stacked into ``u`` in this order;
+            validated by ``geomech.dynamics.eom.check_inputs`` (an ordered sequence, no
+            constant, no configuration variable, nothing printed like a velocity or
+            acceleration), the check of ``to_standard_form`` and ``linearize``.
         params: named constants (any ``Scalar``/``Vector``/``Matrix`` leaf that is neither
             a configuration variable nor an input, or the ``TimeDerivative`` of one for a
             prescribed rate), passed as ``p[str(symbol)]``. Numeric literals are inlined
-            by the code generator and are not parameters.
+            by the code generator and are not parameters; tangent and variation vectors
+            (``ω``, ``ξ``, ``Ω``, ``η``) are rejected. ``collect_params`` lists them.
 
     Raises ``TypeError``/``ValueError`` naming the symbol for an invalid entry and for two
     symbols that print alike (``str`` is the identity of a symbol in the engine and the key
@@ -160,7 +170,8 @@ class StateLayout:
             )
         check_variables(variables, caller="StateLayout")
         self.variables = variables
-        self.inputs = tuple(_as_sequence(inputs, "inputs"))
+        # the input checks of to_standard_form/linearize, without equations to compare
+        self.inputs = tuple(check_inputs(inputs, variables, (), "StateLayout"))
         self.params = tuple(_as_sequence(params, "params"))
         self._slots: dict[str, Slot] = {}
         self._names: set[str] = set()
@@ -233,12 +244,7 @@ class StateLayout:
 
     def _build_inputs(self) -> list[Slot]:
         slots, offset = [], 0
-        for u in self.inputs:
-            if not isinstance(u, (Scalar, Vector)) or isinstance(u, (S2, TS2, TSO3)):
-                raise TypeError(
-                    f"StateLayout: input '{u}' must be a plain Scalar or Vector leaf, got"
-                    f" {type(u).__name__}"
-                )
+        for u in self.inputs:  # leaves of the right class: checked by check_inputs
             _check_size(u, "input")
             slot = self._add(u, "input", "u", offset)
             slots.append(slot)
@@ -259,6 +265,13 @@ class StateLayout:
                 raise ValueError(
                     f"StateLayout: parameter '{sym}' is a numeric literal or a zero/identity"
                     " constant; literals are inlined in the generated code, not parameters"
+                )
+            if isinstance(sym, (TS2, TSO3)):
+                raise ValueError(
+                    f"StateLayout: parameter '{sym}' is a tangent or variation vector of a"
+                    " configuration variable; it is part of the state or of the perturbation"
+                    " state, not a parameter (a variation in δW belongs to the derivation,"
+                    " not to the generated code)"
                 )
             _check_size(base, "parameter")
             slots.append(self._add(sym, "param", "p", None))
@@ -355,6 +368,68 @@ class StateLayout:
             env[key] = val if np.isscalar(val) else _column(np.asarray(val, float), None)
         return env
 
+    def _state_slot(self, key) -> Slot:
+        for s in self.configuration + self.velocity:
+            if key in (s.name, s.key):
+                return s
+        names = [s.name for s in self.configuration + self.velocity]
+        raise KeyError(
+            f"StateLayout.pack: '{key}' is not a configuration or velocity slot; the slots"
+            f" are {names} (or their printed names {list(self.slices)})"
+        )
+
+    def pack(self, values: dict | None = None, /, **slots) -> np.ndarray:
+        """The flat ``state`` from named slot values.
+
+        Keys are the slot names of ``unpack`` (the Python identifiers of the generated
+        code: ``x_L``, ``q``, ``R``, ``x_L_dot``, ``omega_q``, ``Omega_R``, ``s_dot`` …),
+        as keyword arguments, or those names or the printed symbols (``"\\omega_{q}"``)
+        as keys of *values*. Every configuration slot is required; a velocity slot that
+        is not given is zero. ``R`` may be a 3×3 matrix or its 9 row-major entries.
+        Values are not projected onto the manifold: ``simulate`` and ``lqr`` check
+        ``|q| = 1``, ``q·ω = 0`` and ``RᵀR = I``.
+
+        Raises ``KeyError`` for an unknown or missing configuration slot and
+        ``ValueError`` for a value of the wrong size.
+        """
+        given: dict[str, Any] = {}
+        for key, val in [*(values or {}).items(), *slots.items()]:
+            slot = self._state_slot(str(key) if not isinstance(key, str) else key)
+            if slot.key in given:
+                raise ValueError(f"StateLayout.pack: '{slot.name}' given twice")
+            given[slot.key] = val
+        missing = [s.name for s in self.configuration if s.key not in given]
+        if missing:
+            raise KeyError(f"StateLayout.pack: no value for the configuration slot(s) {missing}")
+        out = np.zeros(self.n_state)
+        for s in self.configuration + self.velocity:
+            if s.key not in given:
+                continue
+            val = np.asarray(given[s.key], dtype=float).reshape(-1)
+            if val.size != s.size:
+                raise ValueError(
+                    f"StateLayout.pack: '{s.name}' needs {s.size} entries (shape"
+                    f" {s.shape}), got {val.size}"
+                )
+            out[s.slice] = val
+        return out
+
+    def unpack(self, state) -> dict[str, np.ndarray]:
+        """``{slot name: value}`` of a flat ``state`` (or of a ``(..., n_state)`` array,
+        such as ``Trajectory.state``): the inverse of ``pack``. Scalars have shape ``()``,
+        vectors ``(3,)`` and ``R`` ``(3, 3)`` (with the leading axes of *state*)."""
+        x = np.asarray(state, dtype=float)
+        if x.shape[-1:] != (self.n_state,):
+            raise ValueError(
+                f"StateLayout.unpack: state must have {self.n_state} entries on its last"
+                f" axis, got shape {x.shape}"
+            )
+        lead = x.shape[:-1]
+        return {
+            s.name: x[..., s.slice].reshape(lead + s.shape)
+            for s in self.configuration + self.velocity
+        }
+
     @staticmethod
     def _pack(slots, n, env) -> np.ndarray:
         out = np.zeros(n)
@@ -411,21 +486,61 @@ def _symbols(expr, out):
         out.setdefault(str(expr), expr)
 
 
-def collect_params(
-    exprs: Iterable[Expr], variables: SystemVariables, inputs: Sequence[Expr] = ()
-) -> list[Expr]:
+_WHAT_TO_PASS = (
+    "pass the expressions of the system ([L, dW], or [L] plus the equations), the dict of"
+    " compute_eom or of to_standard_form, a LinearizedSystem, or an iterable of these"
+)
+
+
+def _walk(obj, out, depth=0):
+    """Collect the symbols of *obj*: an ``Expr``, a system or an iterable of them."""
+    from geomech.dynamics.standard_form import StandardFormEquation
+    from geomech.dynamics.vbl import LinearizedSystem
+
+    if isinstance(obj, Expr):
+        _symbols(obj, out)
+    elif isinstance(obj, StandardFormEquation):
+        for block in [*obj.M.values(), obj.f, *obj.G.values()]:
+            if block is not None:
+                _symbols(block, out)
+    elif isinstance(obj, LinearizedSystem):
+        for blocks in (obj.M, obj.A, obj.B):
+            for row in blocks.values():
+                for block in row.values():
+                    _symbols(block, out)
+    elif isinstance(obj, dict):
+        _walk(list(obj.values()), out, depth)
+    elif isinstance(obj, (str, bytes)) or not hasattr(obj, "__iter__") or depth > 2:
+        raise TypeError(
+            f"collect_params: cannot find symbols in {type(obj).__name__} {str(obj)[:60]!r};"
+            f" {_WHAT_TO_PASS}"
+        )
+    else:
+        for item in obj:
+            _walk(item, out, depth + 1)
+
+
+def collect_params(exprs, variables: SystemVariables, inputs: Sequence[Expr] = ()) -> list[Expr]:
     """The symbols of *exprs* that a ``StateLayout(variables, inputs)`` does not cover.
 
+    *exprs* is what the system is made of: ``[L, dW]`` (or ``[L]`` plus the
+    equations), the dict returned by ``compute_eom`` or by ``to_standard_form``, a
+    ``LinearizedSystem``, one ``Expr``, or an iterable of these. Anything else (a number,
+    a string, an object without symbols) raises ``TypeError`` rather than giving ``[]``.
+
     Numeric literals and the zero/identity constants are left out (they are inlined), as
-    are the configuration, velocity and acceleration symbols of *variables* and the
-    *inputs*. The rest, sorted by printed name, are the parameters to pass as ``params``.
+    are the configuration, velocity and acceleration symbols of *variables*, their
+    tangent and variation vectors (``ω``, ``ξ``, ``Ω``, ``η``, which ``δW`` and
+    ``compute_eom`` hold) and the *inputs*. The rest, sorted by printed name, are the
+    parameters to pass as ``params``.
     """
     known = StateLayout(variables, inputs)
     found: dict[str, Expr] = {}
-    for e in exprs:
-        _symbols(e, found)
+    _walk(exprs, found)
     return [
         sym
         for key, sym in sorted(found.items())
-        if known.slot(key) is None and not is_literal_leaf(sym)
+        if known.slot(key) is None
+        and not is_literal_leaf(sym)
+        and not isinstance(sym, (TS2, TSO3))
     ]

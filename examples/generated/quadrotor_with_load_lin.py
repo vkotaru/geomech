@@ -248,10 +248,19 @@ _PARAMS = ("J", "e3", "g", "l", "m_L", "m_Q")
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -268,6 +277,12 @@ def _hat(v):
 
 def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
+
+
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
 
 
 def _check_params(p, names):
@@ -291,9 +306,9 @@ def M_lin(state, a, u, p):
     state = _arr(state, 24, "state")
     q = state[3:6]
     J = _mat(p["J"])
-    l = p["l"]
-    m_L = p["m_L"]
-    m_Q = p["m_Q"]
+    l = _scalar(p["l"], "l")
+    m_L = _scalar(p["m_L"], "m_L")
+    m_Q = _scalar(p["m_Q"], "m_Q")
     _t0 = _hat(q)
     _t1 = m_Q * l
     out = np.zeros((18, 18))
@@ -324,9 +339,9 @@ def A_lin(state, a, u, p):
     f = u[0]
     J = _mat(p["J"])
     e3 = _vec(p["e3"])
-    g = p["g"]
-    l = p["l"]
-    m_Q = p["m_Q"]
+    g = _scalar(p["g"], "g")
+    l = _scalar(p["l"], "l")
+    m_Q = _scalar(p["m_Q"], "m_Q")
     _t0 = np.outer(q, q)
     _t1 = _hat(omega_q)
     _t2 = _hat(Omega_R)
@@ -339,17 +354,16 @@ def A_lin(state, a, u, p):
     _t9 = R @ _t8
     _t10 = _hat(x_L_dot)
     _t11 = _t1 @ _t3
-    _t12 = _hat(np.cross(omega_q_dot, q)) @ _t3
+    _t12 = _hat(_cross(omega_q_dot, q)) @ _t3
     _t13 = _t5 * l
     _t14 = _t10 @ _t3
     _t15 = _t5 * -2
-    _t16 = _hat(np.cross(omega_q, x_L_dot)) @ _t3
+    _t16 = _hat(_cross(omega_q, x_L_dot)) @ _t3
     _t17 = l * f
     _t18 = _hat(R @ e3) @ _t3 * (_t17 * -1)
     _t19 = _t10 @ _t11 * _t5 + _hat(x_L_ddot) @ _t3 * _t5 + _t12 * (_t13 * -1)
     _t20 = _t19 + _t3 @ _t4 * _t13 + _t1 @ _t14 * _t15 + _t16 * _t5
-    _t21 = _hat(np.cross(omega_q, q)) * _t5
-    _t22 = _hat(np.cross(q, x_L_dot)) * (_t5 * 2)
+    _t21 = _hat(_cross(q, x_L_dot)) * (_t5 * 2)
     out = np.zeros((18, 18))
     out[0:3, 9:12] = np.eye(3)
     out[3:6, 3:6] = _t0 @ _t1
@@ -361,8 +375,8 @@ def A_lin(state, a, u, p):
     out[9:12, 12:15] = np.outer(q, omega_q) * (l * m_Q * -2)
     out[12:15, 3:6] = _t20 + _t8 @ _t3 * (m_Q * g * l) + _t18
     out[12:15, 6:9] = _t3 @ _t9 * _t17
-    out[12:15, 9:12] = _t21 + _t11 * _t15 + _t3 @ _t1 * _t5
-    out[12:15, 12:15] = _t14 * _t5 + _t22 + _t3 @ _t10 * _t6
+    out[12:15, 9:12] = _hat(_cross(omega_q, q)) * _t5 + _t11 * _t15 + _t3 @ _t1 * _t5
+    out[12:15, 12:15] = _t14 * _t5 + _t21 + _t3 @ _t10 * _t6
     out[15:18, 15:18] = _hat(J @ Omega_R) + _t2 @ J * -1
     return out
 
@@ -374,11 +388,11 @@ def B_lin(state, a, u, p):
     q = state[3:6]
     R = state[6:15].reshape(3, 3)
     e3 = _vec(p["e3"])
-    l = p["l"]
+    l = _scalar(p["l"], "l")
     _t0 = R @ e3
     out = np.zeros((18, 4))
     out[9:12, 0] = _t0
-    out[12:15, 0] = np.cross(q, _t0) * (l * -1)
+    out[12:15, 0] = _cross(q, _t0) * (l * -1)
     out[15:18, 1:4] = np.eye(3)
     return out
 
@@ -394,6 +408,6 @@ def kinematics(state):
     _t0 = (R @ _hat(Omega_R)).reshape(9)
     out = np.zeros(15)
     out[0:3] = x_L_dot
-    out[3:6] = np.cross(omega_q, q)
+    out[3:6] = _cross(omega_q, q)
     out[6:15] = _t0
     return out

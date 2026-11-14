@@ -12,9 +12,14 @@ rest of the engine) and produces Python source through a *target* (``NumpyTarget
   same 3-vector, and the row/column structure (``is_row_vector``) only decides between the
   inner and the outer product of a ``VVMul`` and the side of an ``MVMul`` (``vᵀM`` is
   ``Mᵀv``).
-- **Common subexpressions**: a subtree that occurs more than once (keyed by ``str``, the
-  engine's identity) is computed once into a local ``_tN``. A long expression is also
-  split into locals so that every generated line stays short (and ruff-clean).
+- **Common subexpressions**: a subtree that occurs more than once is computed once into a
+  local ``_tN``. Subtrees are identified structurally: a leaf by its class and ``str``
+  (the engine's identity), an operation by its class and the identities of its operands.
+  The identity of each node object is computed once per emission pass (a dict keyed by
+  ``id(node)``), so generation is linear in the number of distinct node objects, also on
+  trees that share subtrees, whose ``str`` grows exponentially with depth. A long
+  expression is also split into locals so that every generated line stays short (and
+  ruff-clean).
 """
 
 from __future__ import annotations
@@ -25,7 +30,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from geomech.codegen.layout import Slot, StateLayout, base_symbol, is_literal_leaf
-from geomech.core.base.expressions import Matrix, Scalar, Vector
+from geomech.core.base.expressions import TS2, TSO3, Matrix, Scalar, Vector
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
@@ -100,8 +105,11 @@ class Emitter:
         self.what = what
         self.lines: list[str] = []
         self.used: dict[str, Slot] = {}
-        self._cache: dict[tuple, Code] = {}
+        self._cache: dict[int, Code] = {}
         self._counts: Counter = Counter()
+        # id(node) -> (structural key, node); the node is kept so that its id is not reused
+        self._keys: dict[int, tuple[int, Any]] = {}
+        self._intern: dict[tuple, int] = {}
         self._n_temps = 0
 
     # ------------------------------------------------------------------ public
@@ -113,7 +121,7 @@ class Emitter:
 
     def emit(self, node) -> Code:
         """The code of *node*; statements it needs are appended to ``self.lines``."""
-        key = (type(node), str(node))
+        key = self._key(node)
         if key in self._cache:
             return self._cache[key]
         code = self._dispatch(node)
@@ -142,8 +150,23 @@ class Emitter:
 
     # ------------------------------------------------------------------ counting
 
+    def _key(self, node) -> int:
+        """The structural identity of *node*: equal for equal subtrees (see the module
+        docstring), computed once per node object."""
+        hit = self._keys.get(id(node))
+        if hit is not None:
+            return hit[0]
+        children = _children(node)
+        if children:
+            sig: tuple = (type(node), tuple(self._key(c) for c in children))
+        else:
+            sig = (type(node), str(node))
+        key = self._intern.setdefault(sig, len(self._intern))
+        self._keys[id(node)] = (key, node)
+        return key
+
     def _count(self, node):
-        key = (type(node), str(node))
+        key = self._key(node)
         self._counts[key] += 1
         if self._counts[key] == 1:
             for child in _children(node):
@@ -223,9 +246,9 @@ class Emitter:
     # ------------------------------------------------------------------ leaves
 
     def _time_derivative(self, node) -> Code:
-        if self.layout.slot(node) is not None:
-            return self._slot(node)
         base = base_symbol(node)
+        if base is not None and self.layout.slot(node) is not None:
+            return self._slot(node)
         if base is not None:
             raise ValueError(
                 f"codegen: {self.what} contains '{node}', the time derivative of the"
@@ -241,6 +264,14 @@ class Emitter:
     def _leaf(self, node) -> Code:
         if is_literal_leaf(node):
             return self.target.literal(node)
+        if self.layout.slot(node) is None and isinstance(node, (TS2, TSO3)):
+            raise ValueError(
+                f"codegen: {self.what} contains '{node}', a tangent or variation vector that"
+                " is not a velocity of the layout; only configuration, velocity,"
+                " acceleration, input and parameter symbols can be generated (a variation"
+                " vector such as ξ or η, the Variation of a manifold point, has no numeric"
+                " value here, and is not a parameter)"
+            )
         if self.layout.slot(node) is None:
             raise ValueError(
                 f"codegen: {self.what} contains the symbol '{node}' ({type(node).__name__}),"

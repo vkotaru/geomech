@@ -61,12 +61,15 @@ def to_standard_form(
     inputs : list[Scalar | Vector], optional
         Input variables (forces, torques). Default (``None``): no inputs. Validated by
         ``check_inputs``, exactly as in ``linearize``: a ``TypeError`` for an entry that
-        is not a plain ``Scalar``/``Vector`` leaf (or one leaf instead of a sequence), a
+        is not a plain ``Scalar``/``Vector`` leaf, one leaf instead of a sequence, or a
+        ``set``/``dict`` (the order of *inputs* is the order of the input columns), a
         ``ValueError`` for a constant or duplicate input, a configuration variable, a
         tangent or variation vector (``ω``, ``ξ``, ``Ω``, ``η``), or an input printed like
-        a different leaf of the equations (a constant ``g`` of ``L`` given as
-        ``Scalar("g")``, or another class, ``attr`` or size), since leaves are matched by
-        printed name.
+        a velocity or acceleration, or like a different node of the equations (a constant
+        ``g`` of ``L`` given as ``Scalar("g")``, another class, ``attr`` or size, or an
+        operation node such as ``d/dt(l)``), since leaves are matched by printed name; an
+        ``AlgebraicError`` for an input whose rate occurs in the equations (a param of
+        ``compute_eom``). A non-dict *eom_dict* raises ``TypeError``.
 
     Returns
     -------
@@ -89,6 +92,10 @@ def to_standard_form(
     ``NonLinearError``. With ``GEOMECH_DEBUG=1`` the blocks of each equation are logged
     on the ``geomech`` logger and ``check_tree`` runs on every equation and block.
     """
+    if not isinstance(eom_dict, dict):
+        raise TypeError(
+            f"to_standard_form: eom must be the dict returned by compute_eom, got {type(eom_dict)}"
+        )
     inputs = check_inputs(
         inputs, variables, [eq for _, eq in eom_dict.values()], "to_standard_form"
     )

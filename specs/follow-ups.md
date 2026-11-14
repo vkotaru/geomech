@@ -51,3 +51,31 @@ derived equation.
     note) were not updated after phase 1.
 23. `row_spring` and `row_quadratic_form` (`tests/test_row_forms.py`) are checked
     numerically only; pin their strings.
+
+## Code generation and simulation
+
+From the final review of the input-validation, code-generation and simulation branch
+(`specs/reviews/codegen-simulation-final.md`, "Open items"). Its R1 to R5 and the state
+helper (`StateLayout.pack`/`unpack`) are fixed, and the codegen energy now imports the
+public `perturbation_variables`/`partition_terms` of `geomech.dynamics.vbl`. Open:
+
+24. `energy_function`/`momenta` do not support prescribed parameters
+    (`compute_eom(..., params=[l])`): the variation of `L` carries `δl`, which is no
+    velocity or configuration perturbation, and the term partition rejects it, as in
+    `linearize`.
+25. `TimeDerivative(Transpose(x))` is rejected by the code generator as "a TimeDerivative
+    of the non-leaf expression". Conforming (no engine output holds it), but
+    `d/dt(xᵀ) = ẋᵀ` could be generated.
+26. Simulation stepper overhead: 35–55 µs per RKMK4 stage outside the generated functions
+    (preallocated stage arrays, one fused `mass`/`bias`/`input_matrix` call per stage).
+    `Trajectory.energy` calls `energy` once per stored state and is not vectorised.
+27. `lqr` on an S² block: an anisotropic `Q` weights directions of `tangent_basis(q_eq)`,
+    which turns by 90° under a tiny change of `q_eq` where the two smallest components of
+    `q_eq` tie (near `±e₃`, for example). Documented in `docs/simulation.md` ("Anisotropic
+    weights on an S² block depend on the basis"); a `bases=` argument to `lqr` taking a
+    user basis per S² variable would remove the dependence.
+28. The test suite grew from about 17 s to about 60 s (the 10 s RKMK4 energy runs of
+    `tests/test_simulation_conservation.py`, slowest 5.3 s). Option: a registered `slow`
+    marker on those rows, deselected locally with `-m "not slow"` and run in CI.
+29. `StateLayout.pack` covers `state` only; `u` is still stacked by hand in the layout's
+    input order (`layout.input_slices`). A `pack_inputs(**inputs)` would complete it.

@@ -387,8 +387,8 @@ class LinearizationTrace(_Trace):
         ``{label: δE}``, the expanded, simplified variation of the equation.
     buckets
         ``{label: {printed perturbation symbol: expression}}``, the partition of δE's
-        terms by the perturbation symbol each carries (``_partition_terms``); each bucket
-        is the sum of its terms.
+        terms by the perturbation symbol each carries
+        (``geomech.dynamics.vbl.partition_terms``); each bucket is the sum of its terms.
     raw_blocks
         ``{label: {printed symbol: coefficient}}``, the coefficient straight out of
         ``extract_linear_coeff``, before ``full_simplify`` and before the mass blocks are

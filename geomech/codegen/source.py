@@ -114,11 +114,14 @@ _ARGS = ("state", "u", "p", "a=None")
 def to_source(expr: Expr, layout: StateLayout, target: str = "numpy", *, name: str = "f") -> str:
     """Python source of ``def name(state, u, p, a=None)`` returning the value of *expr*.
 
-    ``state``, ``u``, ``a`` and ``p`` follow *layout* (``StateLayout``); ``a``, the
-    stacked accelerations, is needed only when *expr* holds an acceleration (an equation of
-    ``compute_eom``). The source is preceded by ``_PARAMS``, the parameter names, and uses
-    the helpers ``_arr``, ``_vec``, ``_mat``, ``_hat``, ``_vee``, ``_check_params`` that
-    ``generate_module`` emits (``lambdify`` provides them). A vector is returned as a
+    ``state``, ``u``, ``a`` and ``p`` follow *layout* (``StateLayout``). ``a``, the
+    stacked accelerations, is required only when *expr* holds an acceleration (an equation
+    of ``compute_eom``), and ``u`` only when it holds an input; a required argument given
+    as ``None`` raises ``ValueError``, an unused one may be ``None``. ``None`` never means
+    zero here. The source is preceded by ``_PARAMS``, the parameter names, and uses the
+    helpers ``_arr``, ``_scalar``, ``_vec``, ``_mat``, ``_hat``, ``_vee``, ``_cross``
+    (NumPy) and ``_check_params`` that ``generate_module`` emits (``lambdify`` provides
+    them). A vector is returned as a
     ``(3,)`` array, a matrix as ``(3, 3)``.
 
     Raises ``ValueError`` naming the symbol for a leaf that is not in the layout, a

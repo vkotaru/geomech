@@ -9,14 +9,24 @@ Node                   NumPy                                       Note
 ``MMMul``              ``A @ B``
 ``VVMul``              inner ``a @ b``, outer ``np.outer(a, b)``   by ``is_row_vector``
 ``Dot``                ``a @ b``
-``Cross``              ``np.cross(a, b)``
+``Cross``              ``_cross(a, b)``                            helper, component-wise
 ``Hat`` / ``Vee``      ``_hat(v)`` / ``_vee(M)``                   helpers emitted once
 ``Transpose``          ``M.T``; of a vector, the vector itself
 zero / identity        ``0.0``, ``np.zeros(3)``, ``np.zeros((3, 3))``, ``np.eye(3)``
+±inf / nan literal     ``np.inf``, ``-np.inf``, ``np.nan``
 =====================  ==========================================  =========================
+
+Argument helpers of the generated code: ``_arr`` converts ``state``, ``a`` and ``u`` and
+raises ``ValueError`` for a wrong size or for ``None`` (a function converts only the
+arrays its expressions use, so ``u=None`` is accepted by a function without inputs);
+``_scalar``, ``_vec`` and ``_mat`` convert the parameter values. ``_cross`` is the
+component-wise cross product of two 3-vectors: ``np.cross`` gives the same values but
+costs about 10 µs per call on 3-vectors.
 """
 
 from __future__ import annotations
+
+import math
 
 from geomech.codegen.emitter import MUL, Code, pystr
 from geomech.codegen.layout import Slot
@@ -26,10 +36,19 @@ __all__ = ["NumpyTarget"]
 
 _HELPERS = """
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -48,6 +67,12 @@ def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
 
 
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
+
+
 def _check_params(p, names):
     p = {} if p is None else p
     missing = [k for k in names if k not in p]
@@ -64,7 +89,12 @@ def _number(value) -> str:
         value = int(value)
     if isinstance(value, int):
         return repr(value)
-    return repr(float(value))
+    value = float(value)
+    if math.isnan(value):
+        return "np.nan"
+    if math.isinf(value):
+        return "np.inf" if value > 0 else "-np.inf"
+    return repr(value)
 
 
 class NumpyTarget:
@@ -90,8 +120,10 @@ class NumpyTarget:
 
     def unpack(self, slot: Slot) -> str:
         if slot.array == "p":
-            conv = {(): "", (3,): "_vec", (3, 3): "_mat"}[slot.shape]
-            return f"{conv}(p[{pystr(slot.key)}])" if conv else f"p[{pystr(slot.key)}]"
+            key = pystr(slot.key)
+            if slot.shape == ():
+                return f"_scalar(p[{key}], {key})"
+            return f"{'_vec' if slot.shape == (3,) else '_mat'}(p[{key}])"
         if slot.shape == ():
             return f"{slot.array}[{slot.start}]"
         if slot.shape == (3, 3):
@@ -113,7 +145,7 @@ class NumpyTarget:
         return Code(f"np.outer({a.text}, {b.text})", atomic=True)
 
     def cross(self, a: Code, b: Code) -> Code:
-        return Code(f"np.cross({a.text}, {b.text})", atomic=True)
+        return Code(f"_cross({a.text}, {b.text})", atomic=True)
 
     def call(self, fn: str, a: Code) -> Code:
         return Code(f"{fn}({a.text})", atomic=True)

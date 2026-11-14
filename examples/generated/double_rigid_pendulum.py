@@ -159,10 +159,19 @@ _PARAMS = (
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -179,6 +188,12 @@ def _hat(v):
 
 def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
+
+
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
 
 
 def _check_params(p, names):
@@ -207,8 +222,8 @@ def mass(state, p):
     rho_1 = _vec(p["\\rho_1"])
     rho_2 = _vec(p["\\rho_2"])
     l_1 = _vec(p["l_1"])
-    m1 = p["m1"]
-    m2 = p["m2"]
+    m1 = _scalar(p["m1"], "m1")
+    m2 = _scalar(p["m2"], "m2")
     _t0 = _hat(rho_1)
     _t1 = _hat(l_1)
     _t2 = _hat(rho_2)
@@ -233,37 +248,37 @@ def bias(state, p):
     rho_1 = _vec(p["\\rho_1"])
     rho_2 = _vec(p["\\rho_2"])
     e3 = _vec(p["e3"])
-    g = p["g"]
+    g = _scalar(p["g"], "g")
     l_1 = _vec(p["l_1"])
-    m1 = p["m1"]
-    m2 = p["m2"]
-    _t0 = np.cross(Omega_R1, J1 @ Omega_R1) * -1
-    _t1 = np.cross(Omega_R1, np.cross(rho_1, np.cross(Omega_R1, rho_1))) * (m1 * -1)
-    _t2 = np.cross(Omega_R1, l_1)
+    m1 = _scalar(p["m1"], "m1")
+    m2 = _scalar(p["m2"], "m2")
+    _t0 = _cross(Omega_R1, J1 @ Omega_R1) * -1
+    _t1 = _cross(Omega_R1, _cross(rho_1, _cross(Omega_R1, rho_1))) * (m1 * -1)
+    _t2 = _cross(Omega_R1, l_1)
     _t3 = R1.T
-    _t4 = np.cross(Omega_R2, rho_2)
+    _t4 = _cross(Omega_R2, rho_2)
     _t5 = _t3 @ (R2 @ _t4)
-    _t6 = np.cross(l_1, np.cross(Omega_R1, _t5)) * m2
-    _t7 = _t3 @ (R2 @ np.cross(Omega_R2, _t4))
+    _t6 = _cross(l_1, _cross(Omega_R1, _t5)) * m2
+    _t7 = _t3 @ (R2 @ _cross(Omega_R2, _t4))
     _t8 = m2 * -1
-    _t9 = np.cross(Omega_R1, np.cross(l_1, _t2)) * _t8
-    _t10 = np.cross(Omega_R1, np.cross(l_1, _t5)) * _t8
+    _t9 = _cross(Omega_R1, _cross(l_1, _t2)) * _t8
+    _t10 = _cross(Omega_R1, _cross(l_1, _t5)) * _t8
     _t11 = _t3 @ e3
-    _t12 = np.cross(rho_1, _t11) * (m1 * g * -1)
+    _t12 = _cross(rho_1, _t11) * (m1 * g * -1)
     _t13 = m2 * g * -1
-    _t14 = _t0 + _t1 + np.cross(_t2, _t5) * m2 + _t6 + np.cross(l_1, _t7) * _t8
-    _t15 = np.cross(Omega_R2, J2 @ Omega_R2) * -1
+    _t14 = _t0 + _t1 + _cross(_t2, _t5) * m2 + _t6 + _cross(l_1, _t7) * _t8 + _t9
+    _t15 = _cross(Omega_R2, J2 @ Omega_R2) * -1
     _t16 = R2.T
     _t17 = _t16 @ (R1 @ _t2)
-    _t18 = np.cross(rho_2, np.cross(Omega_R2, _t17)) * m2
-    _t19 = _t16 @ (R1 @ np.cross(Omega_R1, _t2))
-    _t20 = np.cross(Omega_R2, np.cross(rho_2, _t17)) * _t8
-    _t21 = np.cross(Omega_R2, np.cross(rho_2, _t4)) * _t8
-    _t22 = np.cross(rho_2, _t16 @ e3) * _t13
-    _t23 = _t15 + np.cross(_t4, _t17) * m2 + _t18 + np.cross(rho_2, _t19) * _t8
+    _t18 = _cross(rho_2, _cross(Omega_R2, _t17)) * m2
+    _t19 = _t16 @ (R1 @ _cross(Omega_R1, _t2))
+    _t20 = _cross(Omega_R2, _cross(rho_2, _t17)) * _t8
+    _t21 = _cross(Omega_R2, _cross(rho_2, _t4)) * _t8
+    _t22 = _cross(rho_2, _t16 @ e3) * _t13
+    _t23 = _t15 + _cross(_t4, _t17) * m2 + _t18 + _cross(rho_2, _t19) * _t8 + _t20
     out = np.zeros(6)
-    out[0:3] = _t14 + _t9 + _t10 + _t12 + np.cross(l_1, _t11) * _t13
-    out[3:6] = _t23 + _t20 + _t21 + _t22
+    out[0:3] = _t14 + _t10 + _t12 + _cross(l_1, _t11) * _t13
+    out[3:6] = _t23 + _t21 + _t22
     return out
 
 
@@ -304,24 +319,24 @@ def energy(state, p):
     rho_1 = _vec(p["\\rho_1"])
     rho_2 = _vec(p["\\rho_2"])
     e3 = _vec(p["e3"])
-    g = p["g"]
+    g = _scalar(p["g"], "g")
     l_1 = _vec(p["l_1"])
-    m1 = p["m1"]
-    m2 = p["m2"]
-    _t0 = np.cross(Omega_R1, rho_1)
-    _t1 = np.cross(rho_1, _t0) @ Omega_R1
-    _t2 = np.cross(Omega_R1, l_1)
-    _t3 = m2 * (np.cross(l_1, _t2) @ Omega_R1)
-    _t4 = np.cross(Omega_R2, rho_2)
+    m1 = _scalar(p["m1"], "m1")
+    m2 = _scalar(p["m2"], "m2")
+    _t0 = _cross(Omega_R1, rho_1)
+    _t1 = m1 * (_cross(rho_1, _t0) @ Omega_R1)
+    _t2 = _cross(Omega_R1, l_1)
+    _t3 = m2 * (_cross(l_1, _t2) @ Omega_R1)
+    _t4 = _cross(Omega_R2, rho_2)
     _t5 = R2 @ _t4
-    _t6 = np.cross(l_1, R1.T @ _t5) @ Omega_R1
+    _t6 = _cross(l_1, R1.T @ _t5) @ Omega_R1
     _t7 = R1 @ _t2
-    _t8 = np.cross(rho_2, R2.T @ _t7) @ Omega_R2
-    _t9 = np.cross(rho_2, _t4) @ Omega_R2
+    _t8 = _cross(rho_2, R2.T @ _t7) @ Omega_R2
+    _t9 = m2 * (_cross(rho_2, _t4) @ Omega_R2)
     _t10 = R1 @ _t0
     _t11 = m2 * g
-    _t12 = J1 @ Omega_R1 @ Omega_R1 * 0.5 + m1 * _t1 + _t3 + m2 * _t6
-    _t13 = _t12 + J2 @ Omega_R2 @ Omega_R2 * 0.5 + m2 * _t8 + m2 * _t9
+    _t12 = J1 @ Omega_R1 @ Omega_R1 * 0.5 + _t1 + _t3 + m2 * _t6
+    _t13 = _t12 + J2 @ Omega_R2 @ Omega_R2 * 0.5 + m2 * _t8 + _t9
     _t14 = _t13 + _t10 @ _t10 * m1 * -0.5 + _t7 @ _t7 * m2 * -0.5
     _t15 = _t14 + _t7 @ _t5 * m2 * -1 + _t5 @ _t5 * m2 * -0.5
     _t16 = _t15 + m1 * g * (R1 @ rho_1 @ e3) + _t11 * (R1 @ l_1 @ e3)

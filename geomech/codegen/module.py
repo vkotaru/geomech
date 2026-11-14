@@ -12,7 +12,8 @@ so that ``mass @ a + bias + input_matrix @ u = 0``. ``compute_eom`` output gives
 ``residual(state, a, u, p)`` (the stacked equations ``E``) and ``kinematics``; a
 ``LinearizedSystem`` gives ``M_lin``, ``A_lin``, ``B_lin`` of ``(state, a, u, p)`` with the
 row and column order of ``LinearizedSystem.rows/dstates/states/inputs`` (recorded in
-``LINEARIZATION``). With ``lagrangian=L`` the module also has ``energy(state, p)``.
+``LINEARIZATION``); they must follow the layout's variables and inputs, see
+``generate_module``. With ``lagrangian=L`` the module also has ``energy(state, p)``.
 Equations are ordered like the configuration variables of the layout.
 """
 
@@ -28,7 +29,7 @@ from geomech.codegen.source import function_source, get_target, namespace, pylit
 from geomech.core.base.expressions import S2, SO3, Expr
 from geomech.core.base.types import ExprType
 from geomech.dynamics.standard_form import StandardFormEquation
-from geomech.dynamics.vbl import LinearizedSystem
+from geomech.dynamics.vbl import LinearizedSystem, perturbation_variables
 
 __all__ = ["generate_module", "load_module", "module_source"]
 
@@ -199,7 +200,46 @@ def _eom(eom: dict, layout: StateLayout, tgt) -> list[str]:
 _ALL = frozenset({"configuration", "velocity", "acceleration", "input", "param"})
 
 
+_SAME_LAYOUT = (
+    "; build the StateLayout with the SystemVariables and the inputs (same order) passed to"
+    " linearize and to_standard_form, and generate both modules from that one StateLayout"
+)
+
+
+def _names(symbols) -> str:
+    return "[" + ", ".join(f"'{s}'" for s in symbols) + "]"
+
+
+def _check_linearization_order(lin: LinearizedSystem, layout: StateLayout) -> None:
+    """Raise ``ValueError`` unless the rows, states and inputs of *lin* follow *layout*.
+
+    ``B_lin`` has its columns in ``lin.inputs`` order and every block its rows and states
+    in the ``SystemVariables`` order given to ``linearize``, while ``u`` and ``state``
+    follow the layout: a different order would silently pair a column with the wrong
+    input or state (a controller designed on it acts on the wrong channels)."""
+    cfg_vars, cfg_perts, vel_perts = perturbation_variables(layout.variables)
+    lin_vars = [r[len("kin:") :] for r in lin.rows if r.startswith("kin:")]
+    lay_vars = [str(v) for v in cfg_vars]
+    rows = ["kin:" + k for k in lay_vars] + [_variation_key(v) for v in cfg_vars]
+    states = [str(s) for s in cfg_perts + vel_perts]
+    if list(lin.rows) != rows or [str(s) for s in lin.states] != states:
+        raise ValueError(
+            f"generate_module: the linearization's configuration variables {_names(lin_vars)}"
+            f" (rows {_names(lin.rows)}) are not the layout's variables {_names(lay_vars)}"
+            f" in that order (rows {_names(rows)})" + _SAME_LAYOUT
+        )
+    lin_inputs = [str(u) for u in lin.inputs]
+    expected = [str(u.delta()) for u in layout.inputs]
+    if lin_inputs != expected:
+        raise ValueError(
+            f"generate_module: the linearization's inputs {_names(lin_inputs)} are not the"
+            f" variations of the layout's inputs {_names(layout.inputs)} in that order"
+            f" (expected {_names(expected)})" + _SAME_LAYOUT
+        )
+
+
 def _linearized(lin: LinearizedSystem, layout: StateLayout, tgt) -> list[str]:
+    _check_linearization_order(lin, layout)
     row_spans = _spans(_size(lin.row_types[r]) for r in lin.rows)
     out = []
     for name, blocks, cols, doc in (
@@ -317,7 +357,10 @@ def generate_module(
     Args:
         system: the dict returned by ``compute_eom``, the ``dict[str,
             StandardFormEquation]`` of ``to_standard_form``, or a ``LinearizedSystem``.
-        layout: the ``StateLayout`` of the system (variables, inputs, params).
+        layout: the ``StateLayout`` of the system (variables, inputs, params). Generate
+            the standard-form and the linearization module of one system from the same
+            layout, built with the ``SystemVariables`` and ``inputs`` (same order) passed
+            to ``to_standard_form`` and ``linearize``.
         path: the ``.py`` file to write (``None``: only return the source).
         target: ``"numpy"`` (default) or ``"casadi"`` (the module imports ``casadi``).
         lagrangian: if given, the module also defines ``energy(state, p)``, the total
@@ -331,6 +374,13 @@ def generate_module(
     only on the tangent plane, and its mass block may be singular (``Hat(q) Hat(q) m l²``)
     or already full rank (``−m l² I``); the module does not solve for the accelerations:
     ``geomech.simulation.accelerations`` does, with the tangency constraint ``q·ω̇ = 0``.
+
+    Raises:
+        TypeError: *system* is none of the three kinds.
+        ValueError: equations that do not match the layout's variables, a block of the
+            wrong shape, or a ``LinearizedSystem`` whose variables (rows and states) or
+            inputs are not those of the layout in the same order (``B_lin`` would
+            otherwise pair its columns with the wrong entries of ``u``).
     """
     src = module_source(system, layout, target, lagrangian=lagrangian, description=description)
     if path is not None:

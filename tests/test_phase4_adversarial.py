@@ -647,6 +647,50 @@ def _duplicate_input_standard_form():
     to_standard_form(eom, variables, inputs=[f, f])
 
 
+def _set_of_inputs_standard_form():
+    eom, variables, f = _falling_mass()
+    to_standard_form(eom, variables, inputs={f, Vector("M")})
+
+
+def _input_printed_like_the_velocity():
+    eom, variables, f = _falling_mass()
+    x = variables.vectors[0]
+    to_standard_form(eom, variables, inputs=[f, Vector(str(x.t_diff()))])
+
+
+def _mass_with_a_rate_param():
+    """``L = ½ m ẋ·ẋ + (x·e₁) l̇`` with ``l`` a param: the equation holds ``d/dt(l)``."""
+    m, x, f, l = Scalar("m", attr=["Constant"]), Vector("x"), Vector("f"), Scalar("l")
+    e1 = Vector("e1", attr=["Constant"])
+    L = Scalar("0.5", value=0.5) * m * Dot(x.t_diff(), x.t_diff()) + Dot(x, e1) * l.t_diff()
+    variables = SystemVariables(vectors=[x])
+    return compute_eom(L, Dot(x.delta(), f), variables, params=[l]), variables, f, l
+
+
+def _input_printed_like_a_node():
+    eom, variables, f, l = _mass_with_a_rate_param()
+    to_standard_form(eom, variables, inputs=[f, Scalar(str(l.t_diff()))])
+
+
+def _param_with_a_rate_as_input():
+    eom, variables, f, l = _mass_with_a_rate_param()
+    to_standard_form(eom, variables, inputs=[f, l])
+
+
+def _input_of_another_size():
+    eom, variables, _ = _falling_mass()
+    to_standard_form(eom, variables, inputs=[Vector("f", size=(6,))])
+
+
+def _input_named_like_a_numeric_leaf():
+    m, x, f, k = Scalar("m", attr=["Constant"]), Vector("x"), Vector("f"), Scalar("k", value=2.0)
+    half = Scalar("0.5", value=0.5)
+    L = half * m * Dot(x.t_diff(), x.t_diff()) - half * k * Dot(x, x)
+    variables = SystemVariables(vectors=[x])
+    eom = compute_eom(L, Dot(x.delta(), f), variables)
+    to_standard_form(eom, variables, inputs=[f, Scalar("k")])
+
+
 def _single_input_linearize():
     eom, variables, f = _falling_mass()
     linearize(eom, variables, f)
@@ -662,6 +706,65 @@ def _param_named_like_a_constant():
     m, l, x = Scalar("m", attr=["Constant"]), Scalar("l", attr=["Constant"]), Vector("x")
     L = Scalar("0.5", value=0.5) * m * l * l * Dot(x.t_diff(), x.t_diff())
     compute_eom(L, None, SystemVariables(vectors=[x]), params=[Scalar("l")])
+
+
+# --- code generation and simulation: one StateLayout for both modules (final review R1-R3)
+
+
+def _two_inputs():
+    """A point mass on R³ with a force ``f`` and a scalar thrust ``T`` along ``e3``."""
+    m, e3 = Scalar("m", attr=["Constant"]), Vector("e3", attr=["Constant"])
+    x, f, T = Vector("x"), Vector("f"), Scalar("T")
+    L = Dot(x.t_diff(), x.t_diff()) * m * 0.5
+    dW = Dot(x.delta(), f) + Dot(x.delta(), e3) * T
+    V = SystemVariables(vectors=[x])
+    return L, dW, V, compute_eom(L, dW, V), f, T
+
+
+def _lin_inputs_in_another_order():
+    from geomech.codegen import StateLayout, generate_module
+
+    _, _, V, eom, f, T = _two_inputs()
+    generate_module(linearize(eom, V, [T, f]), StateLayout(V, [f, T], []))
+
+
+def _lin_variables_in_another_order():
+    from geomech.codegen import StateLayout, generate_module
+
+    m = Scalar("m", attr=["Constant"])
+    x, y = Vector("x"), Vector("y")
+    L = (Dot(x.t_diff(), x.t_diff()) + Dot(y.t_diff(), y.t_diff())) * m * 0.5
+    eom = compute_eom(L, None, SystemVariables(vectors=[x, y]))
+    lin = linearize(eom, SystemVariables(vectors=[y, x]))
+    generate_module(lin, StateLayout(SystemVariables(vectors=[x, y]), [], [m]))
+
+
+def _lqr_plant_with_another_layout():
+    import numpy as np
+
+    from geomech.codegen import StateLayout, generate_module, load_module
+    from geomech.simulation import lqr
+
+    _, _, V, eom, f, T = _two_inputs()
+    params = [Vector("e3", attr=["Constant"]), Scalar("m", attr=["Constant"])]
+    lin = load_module(generate_module(linearize(eom, V, [f, T]), StateLayout(V, [f, T], params)))
+    sf = to_standard_form(eom, V, [T, f])
+    plant = load_module(generate_module(sf, StateLayout(V, [T, f], params)))
+    lqr(lin, np.zeros(6), np.zeros(4), {"m": 1.0, "e3": [0, 0, 1]}, 1.0, 1.0, module=plant)
+
+
+def _variation_vector_as_param():
+    from geomech.codegen import StateLayout
+
+    q = S2("q")
+    StateLayout(SystemVariables(vectors=[q]), [], [q.get_variation_vector()])
+
+
+def _collect_params_of_a_string():
+    from geomech.codegen import collect_params
+
+    L, _, V, _, f, T = _two_inputs()
+    collect_params([L, "dW"], V, [f, T])
 
 
 TRIGGERS = {
@@ -810,6 +913,20 @@ TRIGGERS = {
     # the input checks shared by to_standard_form and linearize (check_inputs)
     "a `Constant` input (`inputs=[g]`, `g` `Constant` in `L`)": _constant_input_standard_form,
     "an input listed twice (`inputs=[f, f]`)": _duplicate_input_standard_form,
+    "a set (or dict) of inputs, `inputs={f, M}`": _set_of_inputs_standard_form,
+    "an input printed like a velocity (`Vector(str(x.t_diff()))`)": (
+        _input_printed_like_the_velocity
+    ),
+    "an input printed like an operation node of the equations (`Scalar(str(l.t_diff()))`,"
+    " `l` a param)": _input_printed_like_a_node,
+    "a param of `compute_eom` whose rate is in the equations given as an input"
+    " (`inputs=[f, l]`)": _param_with_a_rate_as_input,
+    'an input of another size than its leaf (`Vector("f", size=(6,))`)': _input_of_another_size,
+    'an input named like a named numeric leaf (`Scalar("k")`, `L` holds'
+    ' `Scalar("k", value=2.0)`)': _input_named_like_a_numeric_leaf,
+    "not the `compute_eom` dict, `to_standard_form([], V)`": lambda: to_standard_form(
+        [], SystemVariables(vectors=[Vector("x")])
+    ),
     "`ξ`, `Ω` or `η` as an input": lambda: linearize(
         compute_eom(_rigid_body_ke(), None, SystemVariables(matrices=[SO3("R")])),
         SystemVariables(matrices=[SO3("R")]),
@@ -828,6 +945,20 @@ TRIGGERS = {
         )
     ),
     "one input instead of a list, `linearize(eom, V, f)`": _single_input_linearize,
+    # code generation and simulation
+    "a linearization with other inputs than the layout (`linearize(eom, V, [T, f])`,"
+    " `StateLayout(V, [f, T])`)": _lin_inputs_in_another_order,
+    "a linearization with another variable order than the layout"
+    " (`SystemVariables(vectors=[y, x])` for `linearize`, `[x, y]` for the layout)": (
+        _lin_variables_in_another_order
+    ),
+    "`lqr(lin_module, ..., module=plant)` with modules of two layouts": (
+        _lqr_plant_with_another_layout
+    ),
+    "a variation vector as a parameter (`collect_params` leaves them out)": (
+        _variation_vector_as_param
+    ),
+    "something without symbols in `collect_params`": _collect_params_of_a_string,
 }
 
 

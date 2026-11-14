@@ -23,11 +23,24 @@ def _is_ca(x):
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     if not _is_ca(x):
         x = ca.DM(np.asarray(x, dtype=float).reshape(-1, 1))
     if x.numel() != n:
         raise ValueError(f"{name} must have {n} entries, got {x.numel()}")
     return ca.reshape(x, n, 1)
+
+
+def _scalar(x, name):
+    if _is_ca(x):
+        if x.numel() != 1:
+            raise ValueError(f"parameter {name!r} is a scalar, got {x.numel()} entries")
+        return ca.reshape(x, 1, 1)
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -90,6 +103,8 @@ class CasadiTarget(NumpyTarget):
             "np.zeros((3, 3))": "ca.DM.zeros(3, 3)",
             "np.eye(3)": "ca.DM.eye(3)",
             "np.zeros(3)": "ca.DM.zeros(3, 1)",
+            "np.inf": "ca.inf",
+            "-np.inf": "-ca.inf",
         }.get(code, code)
         return Code(code, atomic=True)
 

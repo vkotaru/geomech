@@ -53,7 +53,9 @@ sf = to_standard_form(eom, variables, [M])
 lin = linearize(eom, variables, [M])
 
 # --- 3. Generated code -----------------------------------------------------------------
-params = collect_params([L] + [eq for _, eq in eom.values()], variables, [M])
+# one layout, built with the variables and inputs of to_standard_form and linearize, serves
+# both modules; collect_params lists the constants (here of L and dW)
+params = collect_params([L, dW], variables, [M])
 layout = StateLayout(variables, [M], params)
 plant = load_module(module_source(sf, layout, lagrangian=L), "pendulum")
 plant_lin = load_module(module_source(lin, layout), "pendulum_lin")
@@ -68,8 +70,9 @@ p = {
 
 # --- 4. LQR about the inverted equilibrium ---------------------------------------------
 R_eq = np.diag([1.0, -1.0, -1.0])  # a half turn about e1: R_eq ρ points up
-x_eq = np.r_[R_eq.reshape(9), np.zeros(3)]
-ctrl = lqr(plant_lin, x_eq, np.zeros(3), p, Q=np.r_[[100.0] * 3, [10.0] * 3], R=1.0)
+x_eq = layout.pack(R=R_eq)  # Omega_R defaults to zero
+# module=plant checks that (x_eq, u_eq) is an equilibrium of the nonlinear equations
+ctrl = lqr(plant_lin, x_eq, np.zeros(3), p, Q=np.r_[[100.0] * 3, [10.0] * 3], R=1.0, module=plant)
 print("reduced state :", ctrl.labels)
 print("gain K        :\n", np.array2string(ctrl.K, precision=3, suppress_small=True))
 eig = ctrl.closed_loop_eigenvalues
@@ -80,7 +83,7 @@ rng = np.random.default_rng(0)
 axis = rng.normal(size=3)
 axis /= np.linalg.norm(axis)
 R0 = R_eq @ expm_so3(np.deg2rad(20.0) * axis)
-x0 = np.r_[R0.reshape(9), np.zeros(3)]
+x0 = layout.pack(R=R0, Omega_R=np.zeros(3))
 
 open_loop = simulate(plant, x0, 1.0, p)
 traj = simulate(plant, x0, 5.0, p, u=ctrl)

@@ -31,7 +31,8 @@ P_SPHERICAL = SETUPS["spherical_pendulum_s2"][0]
 def pendulum_controller():
     x_eq = np.r_[R_UP.reshape(9), np.zeros(3)]
     Q = np.r_[[100.0] * 3, [10.0] * 3]
-    return lqr(linearized_module("rigid_pendulum_pivot"), x_eq, np.zeros(3), P_PENDULUM, Q, 1.0)
+    lin, std = linearized_module("rigid_pendulum_pivot"), standard_module("rigid_pendulum_pivot")
+    return lqr(lin, x_eq, np.zeros(3), P_PENDULUM, Q, 1.0, module=std)
 
 
 def test_inverted_pendulum_open_loop_is_unstable():
@@ -68,7 +69,8 @@ def _tilt(x):
 def spherical_controller():
     x_eq = np.r_[E3, np.zeros(3)]
     Q = np.r_[[10.0] * 2, [1.0] * 2]
-    return lqr(linearized_module("spherical_pendulum_s2"), x_eq, np.zeros(3), P_SPHERICAL, Q, 1.0)
+    lin, std = linearized_module("spherical_pendulum_s2"), standard_module("spherical_pendulum_s2")
+    return lqr(lin, x_eq, np.zeros(3), P_SPHERICAL, Q, 1.0, module=std)
 
 
 def test_inverted_spherical_pendulum_stabilised():
@@ -122,7 +124,7 @@ def test_quadrotor_with_load_singular_s2_block_reduced_and_stabilised():
     lin = linearized_module("quadrotor_with_load")
     M = lin.M_lin(x_eq, np.zeros(9), u_eq, p)
     assert np.linalg.matrix_rank(M) == 17  # Hat(q) Hat(q) m l² on the ω̇ columns
-    ctrl = lqr(lin, x_eq, u_eq, p, Q=100.0, R=1.0)
+    ctrl = lqr(lin, x_eq, u_eq, p, Q=100.0, R=1.0, module=standard_module("quadrotor_with_load"))
     assert ctrl.K.shape == (4, 16)
     assert np.max(ctrl.closed_loop_eigenvalues.real) < 0
     x0 = x_eq.copy()
@@ -158,3 +160,37 @@ def test_lqr_argument_errors():
         lqr(lin, x_eq, 0.0, P_SPHERICAL, 1.0, 1.0)
     with pytest.raises(TypeError, match="no M_lin\\(\\); generate it from linearize"):
         lqr(standard_module("spherical_pendulum_s2"), x_eq, np.zeros(3), P_SPHERICAL, 1.0, 1.0)
+
+
+def test_lqr_checks_the_equilibrium_with_the_standard_form_module():
+    """A point 30° from upright is not an equilibrium: with ``module=`` ``lqr`` refuses
+    it and reports the accelerations there; without it, it warns that nothing was
+    checked; a moving point and a module of another system are refused too."""
+    lin, std = linearized_module("rigid_pendulum_pivot"), standard_module("rigid_pendulum_pivot")
+    x_bad = np.r_[(R_UP @ expm_so3(np.deg2rad(30.0) * np.array([1.0, 0, 0]))).reshape(9), 0, 0, 0]
+    with pytest.raises(ValueError, match=r"not an equilibrium.*accelerations.*\[ 2\.46"):
+        lqr(lin, x_bad, np.zeros(3), P_PENDULUM, 1.0, 1.0, module=std)
+    with pytest.warns(UserWarning, match="not checked to be an equilibrium"):
+        lqr(lin, x_bad, np.zeros(3), P_PENDULUM, 1.0, 1.0)
+    moving = np.r_[R_UP.reshape(9), 0.0, 0.1, 0.0]
+    with pytest.raises(ValueError, match="velocities must be zero"):
+        lqr(lin, moving, np.zeros(3), P_PENDULUM, 1.0, 1.0, module=std)
+    up = np.r_[R_UP.reshape(9), 0.0, 0.0, 0.0]
+    with pytest.raises(ValueError, match="does not have the layout of lin_module"):
+        lqr(
+            lin,
+            up,
+            np.zeros(3),
+            P_PENDULUM,
+            1.0,
+            1.0,
+            module=standard_module("spherical_pendulum_s2"),
+        )
+    # hover of the quadrotor with load: an equilibrium only with the weight compensated
+    p = SETUPS["quadrotor_with_load"][0]
+    x_eq = np.r_[np.zeros(3), -E3, np.eye(3).reshape(9), np.zeros(9)]
+    hover = np.r_[(p["m_Q"] + p["m_L"]) * p["g"], 0.0, 0.0, 0.0]
+    lin_q, std_q = linearized_module("quadrotor_with_load"), standard_module("quadrotor_with_load")
+    lqr(lin_q, x_eq, hover, p, 1.0, 1.0, module=std_q)
+    with pytest.raises(ValueError, match="not an equilibrium"):
+        lqr(lin_q, x_eq, 1.01 * hover, p, 1.0, 1.0, module=std_q)
