@@ -98,7 +98,6 @@ from geomech.utils.errors import (
     ExpressionMismatchError,
     NonLinearError,
     SizeMismatchError,
-    UndefinedCaseError,
 )
 
 DOCUMENTED_ERRORS = (
@@ -106,7 +105,6 @@ DOCUMENTED_ERRORS = (
     SizeMismatchError,
     AlgebraicError,
     NonLinearError,
-    UndefinedCaseError,
 )
 # Raised on purpose by the engine but not part of utils/errors.py
 SEMI_DOCUMENTED_ERRORS = (NotImplementedError, ValueError)
@@ -1196,9 +1194,11 @@ def fuzz_collect(n_cases, seed):
         # Transposition cannot expose it; collect must raise AlgebraicError (a documented
         # error), never recurse.
         def _col(v):  # VVMul(v, wᵀ) needs a column vector on the left
-            while isinstance(v, Transpose):
-                v = v.expr
-            return v
+            from geomech.core.operations.geometry import is_row_vector
+
+            # a row (Transpose(c), s·cᵀ, cᵀM, ...) transposed is a column; Transpose(Transpose)
+            # collapses at construction, so this never builds a double transpose
+            return Transpose(v) if is_row_vector(v) else v
 
         matrix_factor_builders = [
             lambda: Dot(MVMul(Hat(vec), gen.vector(d)), gen.vector(d)),

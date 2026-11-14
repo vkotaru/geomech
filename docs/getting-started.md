@@ -84,8 +84,16 @@ Dot(x, y)      # dot product
 Cross(x, y)    # cross product
 Hat(x)         # hat map (R^3 -> so(3))
 Vee(M)         # vee map (so(3) -> R^3)
-Transpose(x)   # transpose
+Transpose(x)   # transpose (x.T() is the same; Transpose(Transpose(x)) is x)
+R.T() * x      # a transposed matrix multiplies like a matrix: R^T x
+x.T() * y      # row times column: the inner product x^T y; x * y.T() is the outer product
+x.T() * K * x  # a row times a matrix is a row: the quadratic form x^T K x
+# (in a potential or in dW; in a kinetic energy write Dot(v, K * v): integration by parts handles Dot only)
+2 * x, a + 1, 1 - a, -x, x / 2   # numbers on either side (a number adds only to a scalar); / divides by a number only
 ```
+
+A mistyped operand raises `ExpressionMismatchError` naming both operands, e.g.
+`Dot cannot combine SCALAR 'm' and VECTOR 'x'`.
 
 **Calculus**:
 
@@ -101,4 +109,14 @@ x.delta()        # variation (delta)
 expand(expr)        # distribute products over sums
 simplify(expr)      # pull scalars, apply identities, eliminate zeros
 full_simplify(expr) # expand + simplify until convergence
+```
+
+**Printing** -- `str(expr)` is the internal form and the equality key; for reading:
+
+```python
+to_latex(expr)      # LaTeX, parenthesised where juxtaposition would be ambiguous
+print_eom(eqs)      # one LaTeX integral equation per variable (via to_latex)
+repr(expr)          # compact: v:x vector, M:J matrix, S2:q, SO3:R; trailing * = constant;
+                    # products joined by ·, e.g. m*·g*·<v:e3*, v:x>
+print_tree(expr)    # one node per line with every leaf's flags (style="topdown" for a sketch)
 ```
