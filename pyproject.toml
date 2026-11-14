@@ -26,7 +26,7 @@ dev = [
     "scipy",
 ]
 casadi = [
-    "casadi==3.8.2",
+    "casadi>=3.6,<4",
 ]
 sim = [
     "scipy",

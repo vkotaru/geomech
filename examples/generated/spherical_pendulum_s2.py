@@ -88,10 +88,19 @@ _PARAMS = ("e3", "g", "l", "m")
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -108,6 +117,12 @@ def _hat(v):
 
 def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
+
+
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
 
 
 def _check_params(p, names):
@@ -128,8 +143,8 @@ def layout():
 def mass(state, p):
     """Mass matrix M(state): blocks M[a_j] per equation (M = -physical inertia)."""
     _check_params(p, _PARAMS)
-    l = p["l"]
-    m = p["m"]
+    l = _scalar(p["l"], "l")
+    m = _scalar(p["m"], "m")
     out = np.zeros((3, 3))
     out[0:3, 0:3] = np.eye(3) * (m * l * l * -1)
     return out
@@ -141,11 +156,11 @@ def bias(state, p):
     state = _arr(state, 6, "state")
     q = state[0:3]
     e3 = _vec(p["e3"])
-    g = p["g"]
-    l = p["l"]
-    m = p["m"]
+    g = _scalar(p["g"], "g")
+    l = _scalar(p["l"], "l")
+    m = _scalar(p["m"], "m")
     out = np.zeros(3)
-    out[0:3] = np.cross(q, e3) * (m * g * l * -1)
+    out[0:3] = _cross(q, e3) * (m * g * l * -1)
     return out
 
 
@@ -163,7 +178,7 @@ def kinematics(state):
     q = state[0:3]
     omega_q = state[3:6]
     out = np.zeros(3)
-    out[0:3] = np.cross(omega_q, q)
+    out[0:3] = _cross(omega_q, q)
     return out
 
 
@@ -174,8 +189,8 @@ def energy(state, p):
     q = state[0:3]
     omega_q = state[3:6]
     e3 = _vec(p["e3"])
-    g = p["g"]
-    l = p["l"]
-    m = p["m"]
+    g = _scalar(p["g"], "g")
+    l = _scalar(p["l"], "l")
+    m = _scalar(p["m"], "m")
     _t0 = m * l * l * (omega_q @ omega_q)
     return _t0 * 0.5 + m * g * l * (q @ e3)

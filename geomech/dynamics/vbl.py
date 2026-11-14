@@ -235,29 +235,32 @@ def linearize(
     Raises
     ------
     TypeError
-        Invalid ``variables`` or ``inputs`` (not plain ``Scalar``/``Vector`` leaves),
+        Invalid ``variables`` or ``inputs`` (not plain ``Scalar``/``Vector`` leaves, or a
+        ``set``/``dict``, whose order would be that of the columns of ``B``),
         a non-``SO3`` matrix configuration, or an equation whose type differs from
         that of its variation vector (a scalar equation under a vector key).
     ValueError
         Constant or duplicate inputs (the input checks are ``check_inputs``, shared with
         ``to_standard_form``), an input that is also a configuration variable
         or a tangent vector (``Ω``, ``ω``) whose variation is already a state, an input
-        printed like a different leaf of the equations (a constant ``g`` of ``L`` given
-        as ``Scalar("g")``, or another class, ``attr`` or size), or
+        printed like a velocity, an acceleration or a different node of the equations
+        (a constant ``g`` of ``L`` given as ``Scalar("g")``, another class, ``attr`` or
+        size, or an operation node such as ``d/dt(l)``), or
         ``eom`` keys that do not match ``variables``. A stray variation symbol in an
         equation also surfaces as the engine's ``ValueError`` (δ of a variation is
         not representable).
     AlgebraicError
-        A term of δE carries no perturbation symbol, more than one (a nonlinear or
-        incompletely distributed term), or one only inside a non-canonical calculus
-        node, or a coefficient could not be factored.
+        An input whose rate occurs in the equations (a param of ``compute_eom`` given as
+        an input, ``check_inputs``). A term of δE carries no perturbation symbol, more
+        than one (a nonlinear or incompletely distributed term), or one only inside a
+        non-canonical calculus node, or a coefficient could not be factored.
     """
     if trace is not None:
         trace._reset()
     stage = "validation"
     try:
         check_variables(variables, caller="linearize")
-        cfg_vars, cfg_perts, vel_perts = _perturbation_variables(variables)
+        cfg_vars, cfg_perts, vel_perts = perturbation_variables(variables)
         _check_eom(eom, variables)
         param_names = _param_names(params)
         debug = debug_enabled()
@@ -388,7 +391,7 @@ def _dynamic_row(
         record(f"dE[{label}]", dE)
     if _is_zero_block(dE):
         return
-    buckets = _partition_terms(dE, priority, label, param_names)
+    buckets = partition_terms(dE, priority, label, param_names)
 
     # Route by position in ``priority`` (identity), never by printed name.
     for index, terms in enumerate(buckets):
@@ -464,8 +467,11 @@ def _check_eom(eom, variables):
             )
 
 
-def _perturbation_variables(variables):
-    """Configuration variables with their configuration and velocity perturbations."""
+def perturbation_variables(variables):
+    """``(cfg_vars, cfg_perts, vel_perts)``: the configuration variables of *variables* in
+    ``SystemVariables`` order (scalars, vectors, matrices) with their configuration and
+    velocity perturbation symbols (see the module docstring). This is the column order of
+    ``LinearizedSystem.states``; ``geomech.codegen`` uses it to match a layout."""
     cfg_vars, cfg_perts, vel_perts = [], [], []
     for s in variables.scalars:
         cfg_vars.append(s)
@@ -547,7 +553,7 @@ def _no_perturbation_hint(term, param_names):
     return " Is an input missing from `inputs`, or a symbol missing the 'Constant' attribute?"
 
 
-def _partition_terms(dE, priority, label, param_names=frozenset()):
+def partition_terms(dE, priority, label, param_names=frozenset()):
     """Assign every additive term of *dE* to exactly one perturbation symbol.
 
     Returns one list of terms per entry of *priority* (same order). A term that
@@ -641,3 +647,8 @@ def _zero_block(row_type, col_type):
 
 def _is_zero_block(expr) -> bool:
     return bool(getattr(expr, "is_zero", False))
+
+
+# Former private names, kept for existing imports.
+_perturbation_variables = perturbation_variables
+_partition_terms = partition_terms

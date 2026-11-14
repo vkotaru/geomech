@@ -1,7 +1,7 @@
 """``examples/generated/`` (spec verification item 3) and the dependency rules.
 
 - Regenerating the modules of the nine VBL systems reproduces the checked-in files byte
-  for byte (CI also runs ``scripts/regenerate_generated.py`` and ``git diff --exit-code``).
+  for byte (CI also runs ``scripts/regenerate_generated.py --check``).
 - Each file imports and runs with ``geomech`` blocked: only ``numpy`` is needed.
 - The files are ruff-clean (format and lint), when ruff is available.
 - ``import geomech`` and ``import geomech.codegen`` import neither scipy nor casadi, and

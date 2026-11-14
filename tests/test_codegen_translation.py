@@ -121,7 +121,7 @@ def test_common_subexpressions_computed_once():
     shared = Cross(x, MVMul(A, b))
     expr = Dot(shared, shared) + Dot(shared, c)
     src = to_source(expr, LAYOUT)
-    assert src.count("np.cross(") == 1
+    assert src.count("_cross(") == 1
     assert src.count("A @ b") == 1
 
 

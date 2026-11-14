@@ -229,7 +229,14 @@ with the caller's name in front.
 | a term bilinear in two accelerations | `NonLinearError: to_standard_form: in equation '\delta{x1}', the coefficient of '\frac{d}{dt}(\frac{d}{dt}(x1))' still contains the acceleration '\frac{d}{dt}(\frac{d}{dt}(x2))' in '\frac{d}{dt}(\frac{d}{dt}(x2))*m'; the equation is not linear in the accelerations` |
 | an input named like a constant of `L` (`inputs=[Scalar("g")]`, `g` `Constant` in `L`) | `ValueError: to_standard_form: input 'g' has the name of the constant 'g' in the equations; a symbol is either a constant parameter or an input (rename one, or drop attr=['Constant'] if 'g' is an input)` |
 | a `Constant` input (`inputs=[g]`, `g` `Constant` in `L`) | `ValueError: to_standard_form: input 'g' is constant: its variation vanishes, so it cannot be an input` |
-| an input listed twice (`inputs=[f, f]`) | `ValueError: to_standard_form: input 'f' is listed more than once` |
+| an input listed twice (`inputs=[f, f]`) | `ValueError: to_standard_form: input 'f' is listed more than once (an entry that prints like 'f' is the same symbol)` |
+| a set (or dict) of inputs, `inputs={f, M}` | `TypeError: to_standard_form: inputs must be an ordered sequence (list or tuple), got set; a set has no order, so the columns of B would depend on the hash seed` |
+| an input printed like a velocity (`Vector(str(x.t_diff()))`) | `ValueError: to_standard_form: input '\frac{d}{dt}(x)' prints like the velocity '\frac{d}{dt}(x)' of the configuration variable 'x'; leaves are matched by printed name, so the two would be confused (rename the input)` |
+| an input printed like an operation node of the equations (`Scalar(str(l.t_diff()))`, `l` a param) | `ValueError: to_standard_form: input '\frac{d}{dt}(l)' has the printed name of the TimeDerivative node '\frac{d}{dt}(l)' in the equations, not of a leaf; leaves are matched by printed name, so the two would be confused (rename the input)` |
+| a param of `compute_eom` whose rate is in the equations given as an input (`inputs=[f, l]`) | `AlgebraicError: to_standard_form: input 'l' occurs in the equations inside the calculus operator '\frac{d}{dt}(l)'; an input enters the equations as itself, not through its rate (is 'l' a prescribed parameter of compute_eom(..., params=[...])? It can be an input only if its rate does not occur)` |
+| an input of another size than its leaf (`Vector("f", size=(6,))`) | `ValueError: to_standard_form: input 'f' (Vector of size (6,)) has the name of the Vector of size (3,) 'f' in the equations, a different symbol; leaves are matched by printed name, so the two would be confused (rename one, or build the input with the class, attr and size it has in the equations)` |
+| an input named like a named numeric leaf (`Scalar("k")`, `L` holds `Scalar("k", value=2.0)`) | `ValueError: to_standard_form: input 'k' has the name of the constant 'k' in the equations; a symbol is either a constant parameter or an input (rename one, or drop value= from the leaf 'k' if it is an input)` |
+| not the `compute_eom` dict, `to_standard_form([], V)` | `TypeError: to_standard_form: eom must be the dict returned by compute_eom, got <class 'list'>` |
 
 ### `linearize`
 
@@ -247,6 +254,22 @@ with the caller's name in front.
 | an input that is not a plain leaf (`ẋ`, `F + u`, a `Matrix`, an `S2`/`SO3` point) | `TypeError: linearize: input '\frac{d}{dt}(x)' must be a Scalar or Vector leaf, got TimeDerivative` |
 | one input instead of a list, `linearize(eom, V, f)` | `TypeError: linearize: inputs must be a sequence of Scalar/Vector leaves, got Vector 'f'; write inputs=[f]` |
 | not the `compute_eom` dict | `TypeError: linearize: eom must be the dict returned by compute_eom, got <class 'list'>` |
+
+### Code generation and simulation
+
+Generate the standard-form and the linearization module of a system from one
+`StateLayout`, built with the `SystemVariables` and the `inputs` (same order) passed to
+`to_standard_form` and `linearize` ([Code generation](codegen.md#the-generated-module)).
+The first three rows are the checks that keep a controller from acting on the wrong
+inputs or states.
+
+| Mistake | Message |
+|---|---|
+| a linearization with other inputs than the layout (`linearize(eom, V, [T, f])`, `StateLayout(V, [f, T])`) | `ValueError: generate_module: the linearization's inputs ['\delta{T}', '\delta{f}'] are not the variations of the layout's inputs ['f', 'T'] in that order (expected ['\delta{f}', '\delta{T}']); build the StateLayout with the SystemVariables and the inputs (same order) passed to linearize and to_standard_form, and generate both modules from that one StateLayout` |
+| a linearization with another variable order than the layout (`SystemVariables(vectors=[y, x])` for `linearize`, `[x, y]` for the layout) | `ValueError: generate_module: the linearization's configuration variables ['y', 'x'] (rows ['kin:y', 'kin:x', '\delta{x}', '\delta{y}']) are not the layout's variables ['x', 'y'] in that order (rows ['kin:x', 'kin:y', '\delta{x}', '\delta{y}']); build the StateLayout with the SystemVariables and the inputs (same order) passed to linearize and to_standard_form, and generate both modules from that one StateLayout` |
+| `lqr(lin_module, ..., module=plant)` with modules of two layouts | `ValueError: lqr: module does not have the layout of lin_module: lin_module has the variables ['x'] and inputs ['f', 'T'], module has the variables ['x'] and inputs ['T', 'f']; build one StateLayout with the SystemVariables and the inputs (same order) passed to to_standard_form and linearize, and generate both modules from it` |
+| a variation vector as a parameter (`collect_params` leaves them out) | `ValueError: StateLayout: parameter '\xi_{q}' is a tangent or variation vector of a configuration variable; it is part of the state or of the perturbation state, not a parameter (a variation in δW belongs to the derivation, not to the generated code)` |
+| something without symbols in `collect_params` | `TypeError: collect_params: cannot find symbols in str 'dW'; pass the expressions of the system ([L, dW], or [L] plus the equations), the dict of compute_eom or of to_standard_form, a LinearizedSystem, or an iterable of these` |
 
 ### Engine functions called directly
 

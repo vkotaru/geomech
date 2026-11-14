@@ -20,7 +20,8 @@ __all__ = ["accelerations", "check_state", "Model", "model_of"]
 #: Tolerance of ``check_state``: |q| = 1, q·ω = 0, RᵀR = I and det R = 1.
 STATE_TOL = 1e-9
 
-#: ``accelerations`` raises above this condition number of the (projected) mass system.
+#: ``accelerations`` raises above this condition number of the (projected, scaled and
+#: row-equilibrated) mass system.
 MAX_COND = 1e12
 
 
@@ -79,12 +80,28 @@ class Model:
         return x
 
     def as_input(self, u, what="u") -> np.ndarray:
+        """*u* as a flat float array of ``n_inputs`` finite entries (``None``: zeros).
+
+        A scalar is accepted for a single input; an array of any other dimension than 1
+        raises ``ValueError`` rather than being flattened (a ``(2, 2)`` array for four
+        inputs is almost certainly a mistake). Non-finite entries raise ``ValueError``
+        naming them."""
         if u is None:
             return np.zeros(self.n_inputs)
-        u = np.asarray(u, dtype=float).reshape(-1)
-        if u.size != self.n_inputs:
-            raise ValueError(f"{what} must have {self.n_inputs} entries, got {u.size}")
-        return u
+        arr = np.asarray(u, dtype=float)
+        if arr.ndim > 1:
+            raise ValueError(
+                f"{what} must be a 1-D array of {self.n_inputs} entries, got shape {arr.shape}"
+            )
+        arr = arr.reshape(-1)
+        if arr.size != self.n_inputs:
+            raise ValueError(f"{what} must have {self.n_inputs} entries, got {arr.size}")
+        if not np.all(np.isfinite(arr)):
+            raise ValueError(
+                f"{what} has non-finite entries at {np.flatnonzero(~np.isfinite(arr)).tolist()}:"
+                f" {np.array2string(arr, precision=6)}"
+            )
+        return arr
 
     def require(self, *names: str) -> Model:
         """Raise ``TypeError`` unless the module defines every function in *names*."""
@@ -120,6 +137,11 @@ def solve_accelerations(
 ) -> np.ndarray:
     """The tangent-plane solve of ``accelerations`` on already validated arrays.
 
+    Each S² row block becomes ``P_q · row`` plus ``s q qᵀ`` on its own ``ω̇`` column,
+    where ``s = ‖P_q D‖_F / √2`` and ``D`` is that row's diagonal mass block. Every row
+    of the system is then divided by its largest entry (row equilibration) before the
+    solve and before the condition number is taken; see ``accelerations``.
+
     A failed or non-finite solve always raises; with *check*, so does a condition number
     above ``MAX_COND`` (one SVD, so the integrators check only the initial state)."""
     mod = model.module
@@ -128,10 +150,19 @@ def solve_accelerations(
     for var in model.s2:
         q = state[var.cfg]
         rows = var.acc  # equations are ordered like the variables, so rows = a-slice
-        P = np.eye(3) - np.outer(q, q)
+        qq = np.outer(q, q)
+        P = np.eye(3) - qq
         A[rows] = P @ A[rows]
-        A[rows, var.acc] += np.outer(q, q)
+        # the tangent-plane inertia of this point: m l² for both -m l² I and
+        # Hat(q) Hat(q) m l², whose projections are both -m l² P (‖P‖_F = √2)
+        s = np.sqrt(np.sum(A[rows, var.acc] ** 2) / 2.0)
+        A[rows, var.acc] += s * qq
         b[rows] = P @ b[rows]
+    scale = np.abs(A).max(1)
+    if not scale.all():
+        scale[scale == 0] = 1.0  # a zero row stays zero: singular, and reported as such
+    A /= scale[:, None]
+    b /= scale
     try:
         a = np.linalg.solve(A, b)
     except np.linalg.LinAlgError:
@@ -143,7 +174,8 @@ def solve_accelerations(
         if bad or not cond <= MAX_COND:
             what = "is singular" if not cond <= MAX_COND else "gives non-finite accelerations"
             raise np.linalg.LinAlgError(
-                f"accelerations: the mass system {what} (condition number {cond:.3g})"
+                f"accelerations: the mass system {what} (condition number {cond:.3g},"
+                " after row equilibration)"
                 f" at state {np.array2string(state, precision=6, max_line_width=1000)}"
             )
     assert a is not None
@@ -159,11 +191,22 @@ def accelerations(
     only on the tangent plane of its point ``q`` (``docs/conventions.md``), and its
     acceleration ``ω̇`` satisfies ``q · ω̇ = 0`` (from ``d/dt (q · ω) = 0`` with
     ``q̇ · ω = (ω × q) · ω = 0``). So each S² row block is replaced by ``P_q · row`` plus
-    ``q qᵀ`` on its own ``ω̇`` column, with right-hand side ``−P_q (bias + G u)``,
+    a multiple of ``q qᵀ`` on its own ``ω̇`` column, with right-hand side ``−P_q (bias + G u)``,
     ``P_q = I − q qᵀ``; the couplings of that row to the other accelerations are
-    projected too. The resulting square system is solved with ``np.linalg.solve``. This
-    works whether the derived S² mass block is singular (``Hat(q) Hat(q) m l²``) or
-    already full rank (``−m l² I``, when the engine used ``q · ω̇ = 0`` itself).
+    projected too. This works whether the derived S² mass block is singular
+    (``Hat(q) Hat(q) m l²``) or already full rank (``−m l² I``, when the engine used
+    ``q · ω̇ = 0`` itself).
+
+    Scaling, so that the result does not depend on the units: the stabiliser is
+    ``s q qᵀ`` with ``s = ‖P_q D‖_F / √2``, ``D`` the row's own diagonal mass block.
+    Both forms of ``D`` project to ``−m l² P_q`` and ``‖P_q‖_F = √2``, so ``s = m l²``:
+    the normal direction gets the same magnitude as the two tangent directions (for an
+    anisotropic tangent inertia, the root mean square of the two). Then every row of the
+    system and of the right-hand side is divided by its largest entry (row
+    equilibration), and the system is solved with ``np.linalg.solve``. The condition
+    number is taken on the equilibrated matrix, so a light link (``m₂/m₁ = 1e-9``) or a
+    large one (1 t on a 100 km tether, SI units) is solved to round-off and accepted,
+    while a kinetic energy that is degenerate for every parameter value still raises.
 
     Args:
         module: a module from ``generate_module`` of a ``to_standard_form`` result.
@@ -175,9 +218,11 @@ def accelerations(
         The flat accelerations, ordered like ``LAYOUT["acceleration"]``.
 
     Raises:
-        np.linalg.LinAlgError: the system is singular, i.e. its condition number exceeds
-            ``MAX_COND`` (1e12); the message gives the condition number and the state.
-            Examples: a zero mass, a singular inertia, a degenerate kinetic energy.
+        np.linalg.LinAlgError: the system is singular, i.e. its condition number after
+            row equilibration exceeds ``MAX_COND`` (1e12); the message gives the
+            condition number and the state. Examples: a zero mass, a singular
+            inertia, a degenerate kinetic energy.
+        ValueError: *u* has the wrong shape or non-finite entries.
     """
     model = model_of(module).require("mass", "bias", "input_matrix")
     x, u = model.as_state(state), model.as_input(u)

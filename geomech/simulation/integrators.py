@@ -78,7 +78,10 @@ class Trajectory:
                     "Trajectory.energy: the module has no energy(); generate it with"
                     " generate_module(..., lagrangian=L) or pass energy_function(L, layout)"
                 )
-        return np.array([float(fn(x, self.p)) for x in self.state])
+        # The generated functions take one state at a time; at about 20 µs per state
+        # (double rigid pendulum) this loop is a few percent of the simulation that
+        # produced the states, so it is not vectorised.
+        return np.fromiter((float(fn(x, self.p)) for x in self.state), float, len(self.state))
 
     def max_drift(self) -> float:
         """The largest constraint violation over the trajectory (0 without S²/SO(3))."""
@@ -123,11 +126,15 @@ def _name(model: Model, key: str) -> str:
 
 
 def project_state(model: Model, state: np.ndarray) -> np.ndarray:
-    """*state* with each S² point normalised and each SO(3) point replaced by its polar
-    factor (the nearest rotation, ``U Vᵀ`` of the SVD)."""
+    """*state* projected onto the state manifold: each S² point normalised and its
+    velocity made tangent (``ω ← ω − (q·ω) q``), each SO(3) point replaced by its polar
+    factor (the nearest rotation, ``U Vᵀ`` of the SVD). A projected state passes
+    ``check_state``, so it can start another ``simulate``."""
     x = np.array(state, dtype=float)
     for var in model.s2:
-        x[var.cfg] /= np.linalg.norm(x[var.cfg])
+        q = x[var.cfg] / np.linalg.norm(x[var.cfg])
+        x[var.cfg] = q
+        x[var.vel] -= (q @ x[var.vel]) * q
     for var in model.so3:
         U, _, Vt = np.linalg.svd(x[var.cfg].reshape(3, 3))
         R = U @ Vt
@@ -150,7 +157,17 @@ def _input_function(model: Model, u) -> Callable[[float, np.ndarray], np.ndarray
     if callable(u):
 
         def ufun(t, x):
-            return model.as_input(u(t, x), "u(t, state)")
+            val = u(t, x)
+            if val is None:
+                raise TypeError(
+                    f"simulate: u(t, state) returned None at t = {t:.6g} (a controller"
+                    " missing its return statement?); return the inputs, or pass u=None"
+                    " for zero inputs"
+                )
+            try:
+                return model.as_input(val, "u(t, state)")
+            except ValueError as exc:
+                raise ValueError(f"{exc} (at t = {t:.6g})") from None
 
         return ufun
     const = model.as_input(u)
@@ -170,6 +187,7 @@ def simulate(
     atol: float = 1e-12,
     ivp_method: str = "DOP853",
     tol: float = STATE_TOL,
+    output_every: int = 1,
 ) -> Trajectory:
     """Integrate a generated standard-form model from *x0* over *t_span*.
 
@@ -182,8 +200,12 @@ def simulate(
             else ``ValueError`` naming the slot.
         t_span: ``(t0, tf)``, or ``tf`` for ``(0, tf)``.
         p: the parameters, keyed by printed symbol.
-        u: ``None`` (zero inputs), a constant array, or a callable ``u(t, state)``
-            returning the inputs (e.g. an ``LQRController``).
+        u: ``None`` (zero inputs), a constant 1-D array, or a callable ``u(t, state)``
+            returning the inputs (e.g. an ``LQRController``). The inputs must be finite;
+            a callable that returns ``None`` raises ``TypeError``. A callable is
+            evaluated at the RKMK4 stage states and, with ``"solve_ivp"``, at trial
+            steps that may be rejected and at times that are not monotone: it should be
+            a pure function of ``(t, state)``.
         method: ``"rkmk4"`` (fixed step, default) or ``"solve_ivp"``.
         dt: the step of ``"rkmk4"`` (shortened so that it divides ``tf − t0``) and the
             output spacing of ``"solve_ivp"``.
@@ -191,9 +213,12 @@ def simulate(
         atol: passed to ``scipy.integrate.solve_ivp``.
         ivp_method: the ``solve_ivp`` method (``"DOP853"``, ``"RK45"``, …).
         tol: the tolerance of the *x0* check.
+        output_every: store every ``output_every``-th step of the ``dt`` grid (and
+            always the last), to thin long runs; the integration itself is unchanged.
 
     The accelerations come from ``geomech.simulation.accelerations`` (the S² rows solved
-    on the tangent plane). See ``docs/simulation.md``.
+    on the tangent plane). The stored states are on the manifold (``project_state``), so
+    ``traj.state[-1]`` is a valid *x0* for the next segment. See ``docs/simulation.md``.
     """
     if method not in _METHODS:
         raise ValueError(f"simulate: method must be one of {_METHODS}, got {method!r}")
@@ -202,18 +227,26 @@ def simulate(
     t0, tf = _span(t_span)
     if not (dt > 0 and np.isfinite(dt)):
         raise ValueError(f"simulate: dt must be positive, got {dt}")
+    if isinstance(output_every, bool) or not isinstance(output_every, (int, np.integer)):
+        raise ValueError(f"simulate: output_every must be a positive int, got {output_every!r}")
+    if output_every < 1:
+        raise ValueError(f"simulate: output_every must be a positive int, got {output_every}")
     n_steps = max(1, int(np.ceil((tf - t0) / dt - 1e-9)))
+    keep = np.unique(np.r_[np.arange(0, n_steps + 1, int(output_every)), n_steps])
     ufun = _input_function(model, u)
     p = dict(p or {})
     solve_accelerations(model, x0, ufun(t0, x0), p, check=True)  # singular system: raise now
     if method == "rkmk4":
-        t, states = _rkmk4(model, x0, t0, tf, n_steps, p, ufun)
+        t, states = _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep)
         drift = constraint_drift(model, states)
         info = {"n_steps": n_steps, "dt": (tf - t0) / n_steps, "nfev": 4 * n_steps}
     else:
-        t, raw, info = _solve_ivp(model, x0, t0, tf, n_steps, p, ufun, rtol, atol, ivp_method)
+        t, raw, info = _solve_ivp(
+            model, x0, t0, tf, n_steps, p, ufun, rtol, atol, ivp_method, keep
+        )
         drift = constraint_drift(model, raw)
         states = np.array([project_state(model, x) for x in raw])
+    info["output_every"] = int(output_every)
     return Trajectory(t, states, drift, method, p, module, info)
 
 
@@ -224,6 +257,8 @@ def _span(t_span) -> tuple[float, float]:
         if len(t_span) != 2:
             raise ValueError(f"simulate: t_span must be (t0, tf) or tf, got {t_span!r}")
         t0, tf = float(t_span[0]), float(t_span[1])
+    if not (np.isfinite(t0) and np.isfinite(tf)):
+        raise ValueError(f"simulate: t_span must be finite, got ({t0}, {tf})")
     if not tf > t0:
         raise ValueError(f"simulate: t_span must have tf > t0, got ({t0}, {tf})")
     return t0, tf
@@ -318,7 +353,7 @@ def _lin(*terms):
     return tuple(sum(c * U[k] for c, U in terms) for k in range(3))
 
 
-def _rkmk4(model, x0, t0, tf, n_steps, p, ufun):
+def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep):
     """Runge–Kutta–Munthe-Kaas with the classical RK4 tableau (Munthe-Kaas 1999).
 
     With ``y = exp(U)·y_n``, the curve ``U(t)`` in the Lie algebra solves
@@ -336,13 +371,23 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun):
     Lubich, Wanner, *Geometric Numerical Integration*, §IV.8.2). On the vector-space
     slots every bracket vanishes and the step is classical RK4. ``q`` and ``R`` are only
     ever multiplied by rotation matrices, so their constraints hold to round-off.
+
+    ``ω`` is a vector slot, translated while ``q`` is rotated, so ``q·ω`` would drift at
+    the truncation error. After each step ``ω ← ω − (q·ω) q``: a change of the size of
+    the local error, so the order is still 4, and ``q·ω`` stays at round-off.
+
+    Only the steps in *keep* (sorted indices into ``0..n_steps``) are stored.
     """
     lie = _LieRK(model)
     h = (tf - t0) / n_steps
     t = t0 + h * np.arange(n_steps + 1)
     t[-1] = tf
-    out = np.empty((n_steps + 1, model.n_state))
+    out = np.empty((keep.size, model.n_state))
     out[0] = x = x0
+    store = np.zeros(n_steps + 1, dtype=bool)
+    store[keep] = True
+    k = 1
+    s2 = [(v.cfg, v.vel) for v in model.s2]
     zero = (np.zeros(lie.m + model.n_accel), np.zeros((len(model.s2), 3)))
     zero += (np.zeros((len(model.so3), 3)),)
     for n in range(n_steps):
@@ -354,8 +399,14 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun):
         K3 = lie.dexpinv(U3, lie.generator(tn + 0.5 * h, lie.act(U3, x), p, ufun), h)
         K4 = lie.dexpinv(K3, lie.generator(tn + h, lie.act(K3, x), p, ufun), h)
         U = _lin((1 / 6, K1), (1 / 3, K2), (1 / 3, K3), (1 / 6, K4))
-        out[n + 1] = x = lie.act(U, x)
-    return t, out
+        x = lie.act(U, x)
+        for cfg, vel in s2:  # keep ω tangent (see above)
+            q = x[cfg]
+            x[vel] -= (q @ x[vel]) * q
+        if store[n + 1]:
+            out[k] = x
+            k += 1
+    return t[keep], out
 
 
 # ---------------------------------------------------------------------------
@@ -363,7 +414,7 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun):
 # ---------------------------------------------------------------------------
 
 
-def _solve_ivp(model, x0, t0, tf, n_steps, p, ufun, rtol, atol, ivp_method):
+def _solve_ivp(model, x0, t0, tf, n_steps, p, ufun, rtol, atol, ivp_method, keep):
     try:
         from scipy.integrate import solve_ivp
     except ImportError as exc:  # pragma: no cover - depends on the environment
@@ -375,7 +426,7 @@ def _solve_ivp(model, x0, t0, tf, n_steps, p, ufun, rtol, atol, ivp_method):
     def rhs(t, y):
         return np.concatenate([kin(y), solve_accelerations(model, y, ufun(t, y), p)])
 
-    t_eval = np.linspace(t0, tf, n_steps + 1)
+    t_eval = np.linspace(t0, tf, n_steps + 1)[keep]
     sol = solve_ivp(rhs, (t0, tf), x0, method=ivp_method, t_eval=t_eval, rtol=rtol, atol=atol)
     if not sol.success:
         raise RuntimeError(f"simulate: solve_ivp failed: {sol.message}")

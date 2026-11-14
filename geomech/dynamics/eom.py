@@ -12,9 +12,22 @@ separate_variations(expr, variation_vectors)
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from collections.abc import Set as AbstractSet
 from typing import Sequence
 
-from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Expr, Matrix, Scalar, Vector, Zero
+from geomech.core.base.expressions import (
+    S2,
+    SO3,
+    TS2,
+    TSO3,
+    Expr,
+    Matrix,
+    Scalar,
+    Vector,
+    Zero,
+    is_number_literal,
+)
 from geomech.core.base.types import ExprType
 from geomech.core.math.extract import extract_linear_coeff
 from geomech.core.math.ibp import _integrate_by_parts
@@ -146,17 +159,103 @@ def check_variables(variables: SystemVariables, caller: str = "compute_eom") -> 
 
 
 def _symbol_key(leaf):
-    """What makes two leaves of one printed name the same symbol: class, flags, size."""
+    """What makes two leaves of one printed name the same symbol: class, flags, size.
+
+    The leaf constructors store ``size`` as a tuple of ints (``size=[3]`` and ``size=3``
+    are ``(3,)``), so two spellings of one size compare equal.
+    """
     return type(leaf), getattr(leaf, "flags", None), getattr(leaf, "size", None)
 
 
-def _describe_leaf(leaf):
-    """``constant Scalar`` / ``Vector`` / ``Vector with attr=['UnitNorm']`` for a message."""
+def _describe_leaf(leaf, with_size=False):
+    """``constant Scalar`` / ``Vector`` / ``Vector with attr=['UnitNorm']`` for a message.
+
+    With *with_size*, the size is appended (``Vector of size (6,)``): used when two leaves
+    differ in size, so that the message says what differs.
+    """
     kind = type(leaf).__name__
     if leaf.is_constant or leaf.is_numeric:
-        return f"constant {kind}"
-    attr = getattr(leaf, "attr", None)
-    return f"{kind} with attr={list(attr)}" if attr else kind
+        text = f"constant {kind}"
+    else:
+        attr = getattr(leaf, "attr", None)
+        text = f"{kind} with attr={list(attr)}" if attr else kind
+    if with_size:
+        text += f" of size {getattr(leaf, 'size', None)}"
+    return text
+
+
+def _printed_nodes(exprs: Sequence[object], max_len: int) -> dict[str, list]:
+    """``{printed name: nodes}`` of the nodes of *exprs* printed in at most *max_len*
+    characters, leaves and operations alike.
+
+    One walk. Under each name, leaves are kept once per ``_symbol_key`` and an operation
+    node (``d/dt(x)``, ``Dot(a,b)``) once, so a declared leaf can be compared with every
+    node it prints like. The printed form of an operation concatenates those of its
+    operands, so the sum of their lengths bounds its own from below: an operation whose
+    bound exceeds *max_len* (the longest declared name) cannot print like a declared
+    symbol and is not printed, which keeps the walk linear in the size of the tree.
+    """
+    nodes: dict[str, list] = {}
+
+    def walk(node) -> int:  # a lower bound of len(str(node))
+        children = getattr(node, "nodes", None)
+        if children:
+            bound = sum([walk(child) for child in children])
+            if bound > max_len:
+                return bound
+            name = str(node)
+            same_name = nodes.setdefault(name, [])
+            if not any(getattr(other, "nodes", None) for other in same_name):
+                same_name.append(node)
+            return len(name)
+        name = str(node)
+        same_name = nodes.setdefault(name, [])
+        if all(
+            getattr(other, "nodes", None) or _symbol_key(node) != _symbol_key(other)
+            for other in same_name
+        ):
+            same_name.append(node)
+        return len(name)
+
+    for expr in exprs:
+        walk(expr)
+    return nodes
+
+
+def _clash_against(symbols, nodes, caller, role, what, where):
+    """``check_symbol_clash`` on the output of ``_printed_nodes``."""
+    for sym in symbols:
+        name = str(sym)
+        for node in nodes.get(name, ()):
+            if getattr(node, "nodes", None):
+                raise ValueError(
+                    f"{caller}: {role} '{name}' has the printed name of the"
+                    f" {type(node).__name__} node '{name}' in {where}, not of a leaf; leaves"
+                    " are matched by printed name, so the two would be confused (rename the"
+                    f" {role})"
+                )
+            if _symbol_key(node) == _symbol_key(sym):
+                continue
+            if (node.is_constant or node.is_numeric) and type(node) is type(sym):
+                if node.is_constant:
+                    hint = f"rename one, or drop attr=['Constant'] if '{name}' is {what}"
+                elif is_number_literal(node):
+                    hint = f"rename the {role}: '{name}' is a number literal"
+                else:
+                    hint = f"rename one, or drop value= from the leaf '{name}' if it is {what}"
+                raise ValueError(
+                    f"{caller}: {role} '{name}' has the name of the constant '{name}' in"
+                    f" {where}; a symbol is either a constant parameter or {what} ({hint})"
+                )
+            sizes_differ = type(node) is type(sym) and node.size != sym.size
+            fix = "class, attr and size" if sizes_differ else "class and attr"
+            raise ValueError(
+                f"{caller}: {role} '{name}' ({_describe_leaf(sym, sizes_differ)}) has the name"
+                f" of the {_describe_leaf(node, sizes_differ)} '{name}' in {where}, a"
+                " different symbol; leaves are matched by printed name, so the two would be"
+                f" confused (rename one, or build the {role} with the {fix} it has in"
+                f" {where})"
+            )
 
 
 def check_symbol_clash(
@@ -167,46 +266,23 @@ def check_symbol_clash(
     what: str = "an input",
     where: str = "the equations",
 ) -> None:
-    """Reject a declared symbol printed like a *different* leaf of *exprs*.
+    """Reject a declared symbol printed like a *different* node of *exprs*.
 
     *symbols* are the inputs of ``to_standard_form``/``linearize`` or the ``params`` of
     ``compute_eom``; *exprs* the equations (or the Lagrangian and the virtual work). The
     engine identifies a leaf by its printed name, so a declared ``Scalar("g")`` would be
     matched against, or silently miss, a constant ``Scalar("g", attr=['Constant'])`` in
     the equations. A declared symbol whose printed name equals that of a leaf of another
-    class, other flags (``Constant``, ``UnitNorm``, ...) or another size raises
-    ``ValueError`` naming both; the same symbol (the normal case) passes. *role*, *what*
-    and *where* word the message (``params entry``, ``a prescribed parameter``, ``the
-    Lagrangian or the virtual work``).
+    class, other flags (``Constant``, ``UnitNorm``, ...) or another size, or that of an
+    operation node (a ``Vector`` named ``\\frac{d}{dt}(x)`` against the node ``d/dt(x)``),
+    raises ``ValueError`` naming both; the same symbol (the normal case) passes. The hint
+    names what to change: ``attr=['Constant']`` or ``value=`` against a constant, the
+    sizes when they are all that differs. *role*, *what* and *where* word the message
+    (``params entry``, ``a prescribed parameter``, ``the Lagrangian or the virtual work``).
     """
-    leaves: dict[str, list] = {}
-    stack = list(exprs)
-    while stack:
-        node = stack.pop()
-        children = getattr(node, "nodes", None)
-        if children:
-            stack.extend(children)
-            continue
-        same_name = leaves.setdefault(str(node), [])
-        if all(_symbol_key(node) != _symbol_key(other) for other in same_name):
-            same_name.append(node)
-    for sym in symbols:
-        name = str(sym)
-        for leaf in leaves.get(name, ()):
-            if _symbol_key(leaf) == _symbol_key(sym):
-                continue
-            if (leaf.is_constant or leaf.is_numeric) and type(leaf) is type(sym):
-                raise ValueError(
-                    f"{caller}: {role} '{name}' has the name of the constant '{name}' in"
-                    f" {where}; a symbol is either a constant parameter or {what} (rename"
-                    f" one, or drop attr=['Constant'] if '{name}' is {what})"
-                )
-            raise ValueError(
-                f"{caller}: {role} '{name}' ({_describe_leaf(sym)}) has the name of the"
-                f" {_describe_leaf(leaf)} '{name}' in {where}, a different symbol;"
-                " leaves are matched by printed name, so the two would be confused (rename"
-                f" one, or build the {role} with the class and attr it has in {where})"
-            )
+    symbols = list(symbols)
+    max_len = max((len(str(sym)) for sym in symbols), default=0)
+    _clash_against(symbols, _printed_nodes(exprs, max_len), caller, role, what, where)
 
 
 def _input_state_symbols(variables: SystemVariables) -> set[str]:
@@ -231,6 +307,22 @@ def _input_state_symbols(variables: SystemVariables) -> set[str]:
     return {str(x) for x in states} | {str(x.t_diff()) for x in states}
 
 
+def _kinematic_names(variables: SystemVariables) -> dict[str, tuple[str, Expr]]:
+    """``{printed velocity or acceleration: (kind, variable)}`` of every configuration
+    variable: ``ẋ``/``ẍ`` (``ṡ``/``s̈``), ``ω_q``/``ω̇_q`` on S², ``Ω_R``/``Ω̇_R`` on SO(3)."""
+    names = {}
+    for var in [*variables.scalars, *variables.vectors, *variables.matrices]:
+        if isinstance(var, (S2, SO3)):
+            vel = var.get_tangent_vector()
+        elif isinstance(var, (Scalar, Vector)):
+            vel = var.t_diff()
+        else:
+            continue
+        names[str(vel)] = ("velocity", var)
+        names[str(vel.t_diff())] = ("acceleration", var)
+    return names
+
+
 def check_inputs(
     inputs: Sequence[Expr] | None,
     variables: SystemVariables,
@@ -239,15 +331,22 @@ def check_inputs(
 ) -> list[Expr]:
     """Validate the ``inputs`` of ``to_standard_form``/``linearize``; return them as a list.
 
-    ``None`` means no inputs. *inputs* must be a sequence of leaves, not one leaf
-    (``TypeError``). Each input must be a plain non-manifold ``Scalar`` or ``Vector`` leaf
-    (``TypeError`` for an ``S2``/``SO3`` point, a ``Matrix`` or an expression such as
-    ``d/dt(x)`` or ``F + u``), and is rejected with ``ValueError`` if it is a tangent or
-    variation vector (``ω``, ``ξ``, ``Ω``, ``η``), constant (``attr=['Constant']``, a
-    number, zero), a configuration variable, a symbol whose variation prints like a
-    perturbation state (a plain ``Vector`` named like ``Ω``), listed twice, or printed
-    like a different leaf of *exprs* (``check_symbol_clash``). Messages start with
-    *caller*. Both functions call this, so they accept and reject the same inputs.
+    ``None`` means no inputs. *inputs* must be an ordered sequence of leaves (a list,
+    tuple or generator), not one leaf, nor a ``set`` or a ``dict`` (``TypeError``): the
+    order is the order of the columns of ``B`` and of the codegen ``u`` vector. Each
+    input must be a plain non-manifold ``Scalar`` or ``Vector`` leaf (``TypeError`` for
+    an ``S2``/``SO3`` point, a ``Matrix`` or an expression such as ``d/dt(x)`` or
+    ``F + u``), and is rejected with ``ValueError`` if it is a tangent or variation
+    vector (``ω``, ``ξ``, ``Ω``, ``η``), constant (``attr=['Constant']``, a number,
+    zero), a configuration variable, printed like the velocity or acceleration of one
+    (``Vector("\\frac{d}{dt}(x)")``), a symbol whose variation prints like a perturbation
+    state (a plain ``Vector`` named like ``Ω``), listed twice, or printed like a
+    different node of *exprs* (``check_symbol_clash``: another leaf, or an operation
+    node). An input whose time derivative occurs in *exprs* (a prescribed param of
+    ``compute_eom`` given as an input, ``l`` with ``l̇`` in the equations) raises
+    ``AlgebraicError``: neither function can take a coefficient of ``u̇``. Messages start
+    with *caller*. ``to_standard_form``, ``linearize`` and ``StateLayout`` (with no
+    *exprs*) call this, so they accept and reject the same inputs.
     """
     if inputs is None:
         return []
@@ -257,15 +356,28 @@ def check_inputs(
             f"{caller}: inputs must be a sequence of Scalar/Vector leaves, got"
             f" {type(inputs).__name__} {str(inputs)!r}{hint}"
         )
+    container = inputs
     inputs = list(inputs)
-    config = {str(v) for v in variables.scalars + variables.vectors + variables.matrices}
-    states = _input_state_symbols(variables)
-    seen = set()
     for u in inputs:
         if not isinstance(u, (Scalar, Vector)) or isinstance(u, S2):
             raise TypeError(
                 f"{caller}: input '{u}' must be a Scalar or Vector leaf, got {type(u).__name__}"
             )
+    if isinstance(container, (AbstractSet, Mapping)):
+        why = (
+            "a mapping is iterated by its keys (pass a list of the inputs)"
+            if isinstance(container, Mapping)
+            else "a set has no order, so the columns of B would depend on the hash seed"
+        )
+        raise TypeError(
+            f"{caller}: inputs must be an ordered sequence (list or tuple), got"
+            f" {type(container).__name__}; {why}"
+        )
+    config = {str(v) for v in variables.scalars + variables.vectors + variables.matrices}
+    kinematic = _kinematic_names(variables)
+    states = _input_state_symbols(variables)
+    seen = set()
+    for u in inputs:
         if isinstance(u, (TS2, TSO3)):
             raise ValueError(
                 f"{caller}: input '{u}' is a tangent or variation vector of a configuration"
@@ -276,7 +388,8 @@ def check_inputs(
                 f"{caller}: input '{u}' is constant: its variation vanishes,"
                 " so it cannot be an input"
             )
-        if str(u) in config:
+        name = str(u)
+        if name in config:
             raise ValueError(f"{caller}: input '{u}' is also a configuration variable")
         if str(u.delta()) in states:
             raise ValueError(
@@ -284,10 +397,32 @@ def check_inputs(
                 f" perturbation state (is '{u}' a tangent vector of a configuration"
                 " variable?)"
             )
-        if str(u) in seen:
-            raise ValueError(f"{caller}: input '{u}' is listed more than once")
-        seen.add(str(u))
-    check_symbol_clash(inputs, exprs, caller)
+        if name in kinematic:
+            kind, var = kinematic[name]
+            raise ValueError(
+                f"{caller}: input '{u}' prints like the {kind} '{name}' of the configuration"
+                f" variable '{var}'; leaves are matched by printed name, so the two would be"
+                " confused (rename the input)"
+            )
+        if name in seen:
+            raise ValueError(
+                f"{caller}: input '{u}' is listed more than once (an entry that prints like"
+                f" '{u}' is the same symbol)"
+            )
+        seen.add(name)
+    # an input clashes with a node printed like it; its rate d/dt(u) is the longest
+    # name looked up, so nodes printed longer than every rate are not printed at all
+    rates = [str(TimeDerivative(u)) for u in inputs]
+    nodes = _printed_nodes(exprs, max((len(r) for r in rates), default=0))
+    _clash_against(inputs, nodes, caller, "input", "an input", "the equations")
+    for u, rate in zip(inputs, rates):
+        if any(isinstance(n, TimeDerivative) for n in nodes.get(rate, ())):
+            raise AlgebraicError(
+                f"{caller}: input '{u}' occurs in the equations inside the calculus operator"
+                f" '{rate}'; an input enters the equations as itself, not through its rate"
+                f" (is '{u}' a prescribed parameter of compute_eom(..., params=[...])? It can"
+                " be an input only if its rate does not occur)"
+            )
     return inputs
 
 

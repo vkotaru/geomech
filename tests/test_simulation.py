@@ -309,6 +309,60 @@ def test_solve_ivp_output_is_projected_and_drift_reported():
     assert tr.info["nfev"] > 0 and tr.info["ivp_method"] == "DOP853"
 
 
+def test_input_shape_none_and_non_finite_errors():
+    p, x = SETUPS["quadrotor_with_load"]
+    mod = standard_module("quadrotor_with_load")
+    with pytest.raises(
+        ValueError, match=r"u must be a 1-D array of 4 entries, got shape \(2, 2\)"
+    ):
+        simulate(mod, x, 0.01, p, u=np.full((2, 2), 5.0))
+    with pytest.raises(ValueError, match=r"u has non-finite entries at \[1\]"):
+        simulate(mod, x, 0.01, p, u=[20.0, np.inf, 0.0, 0.0])
+    with pytest.raises(TypeError, match=r"returned None at t = 0\b"):
+        simulate(mod, x, 0.01, p, u=lambda t, s: None)
+
+    def late_nan(t, s):  # finite at t0, NaN later: still an input error, with the time
+        return np.r_[20.0, 0.0, 0.0, np.nan if t > 0.004 else 0.0]
+
+    with pytest.raises(
+        ValueError, match=r"u\(t, state\) has non-finite entries at \[3\].*t = 0\.00"
+    ):
+        simulate(mod, x, 0.01, p, u=late_nan)
+    with pytest.raises(ValueError, match="t_span must be finite"):
+        simulate(mod, x, (0.0, np.nan), p)
+    with pytest.raises(ValueError, match="output_every must be a positive int"):
+        simulate(mod, x, 0.01, p, output_every=0)
+
+
+@pytest.mark.parametrize("method", ["rkmk4", "solve_ivp"])
+def test_final_state_restarts_a_simulation(method):
+    """The stored states are on TS² (q·ω projected out), so a trajectory can be continued
+    from its last state; with RKMK4 q·ω stays at round-off."""
+    p, x0 = SETUPS["quadrotor_with_load"]
+    mod = standard_module("quadrotor_with_load")
+    tr = simulate(mod, x0, 3.0, p, u=[20.0, 0.1, 0.0, 0.0], method=method, rtol=1e-6, dt=0.02)
+    q, w = tr["q"], tr["omega_q"]
+    assert np.max(np.abs(np.einsum("ij,ij->i", q, w))) < 1e-14
+    if method == "rkmk4":
+        assert tr.constraint_drift["q.omega_q"].max() < 1e-14
+    else:  # the raw solution drifts, the projected one does not
+        assert tr.constraint_drift["q.omega_q"].max() > 1e-12
+    check_state(mod, tr.state[-1], tol=1e-12)
+    simulate(mod, tr.state[-1], (3.0, 3.1), p, method=method, rtol=1e-6)
+
+
+@pytest.mark.parametrize("method", ["rkmk4", "solve_ivp"])
+def test_output_every_thins_the_stored_steps(method):
+    p, x0 = SETUPS["spherical_pendulum_s2"]
+    mod = standard_module("spherical_pendulum_s2")
+    full = simulate(mod, x0, 1.0, p, method=method, dt=0.01)
+    thin = simulate(mod, x0, 1.0, p, method=method, dt=0.01, output_every=30)
+    assert thin.info["output_every"] == 30
+    np.testing.assert_array_equal(thin.t, full.t[[0, 30, 60, 90, 100]])
+    np.testing.assert_allclose(thin.state, full.state[[0, 30, 60, 90, 100]], atol=1e-12)
+    assert thin.constraint_drift["|q|-1"].shape == (5,)
+
+
 def test_solve_ivp_without_scipy_has_install_hint(monkeypatch):
     p, x0 = SETUPS["spring_mass_r"]
     monkeypatch.setitem(sys.modules, "scipy.integrate", None)

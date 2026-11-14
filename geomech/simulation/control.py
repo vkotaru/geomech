@@ -26,6 +26,7 @@ scipy (``scipy.linalg.solve_continuous_are``) is imported only when ``lqr`` is c
 from __future__ import annotations
 
 import re
+import warnings
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -33,7 +34,13 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from geomech.numeric import log_so3
-from geomech.simulation.model import STATE_TOL, Model, check_state, model_of
+from geomech.simulation.model import (
+    STATE_TOL,
+    Model,
+    check_state,
+    model_of,
+    solve_accelerations,
+)
 
 __all__ = ["lqr", "LQRController", "tangent_basis"]
 
@@ -130,6 +137,8 @@ def lqr(
     *,
     a_eq: ArrayLike | None = None,
     tol: float = STATE_TOL,
+    module: Any = None,
+    eq_tol: float = 1e-8,
 ) -> LQRController:
     """The continuous-time LQR gain of a generated linearization about an equilibrium.
 
@@ -158,6 +167,31 @@ def lqr(
         R: the weight of the input, in the same forms.
         a_eq: the accelerations at ``x_eq`` (zeros by default).
         tol: the tolerance of the ``x_eq`` check.
+        module: the generated standard-form module of the same system
+            (``generate_module`` of ``to_standard_form``, with the same layout: the same
+            variables, velocities and inputs in the same order, checked). When
+            given, ``(x_eq, u_eq)`` is checked to be an equilibrium, see below. When
+            omitted, it is not checked and a ``UserWarning`` says so.
+        eq_tol: the relative tolerance of the equilibrium check.
+
+    The gain is only meaningful about an equilibrium: the linearization is evaluated at
+    ``(x_eq, a_eq, u_eq)`` and the S² reduction assumes ``ω_eq = 0``. At a point that is
+    not an equilibrium ``lqr`` still returns a gain with stable closed-loop eigenvalues,
+    but the nonlinear loop settles somewhere else. With *module*, ``lqr`` therefore
+    requires every velocity of ``x_eq`` to be zero (to *tol*) and the equation residual
+    ``r = mass·a_eq + bias + G u_eq`` (S² rows projected on the tangent plane) to satisfy
+    ``‖r‖∞ ≤ eq_tol · scale``, with ``scale`` the largest of ``‖bias‖∞``,
+    ``‖G u_eq‖∞`` and ``‖A_lin T‖∞`` (the force per unit perturbation, which is nonzero
+    at an equilibrium held by a potential even when the bias itself is zero there).
+    Otherwise it raises ``ValueError`` with the residual and the accelerations
+    ``accelerations(module, x_eq, u_eq, p)``.
+
+    Raises:
+        ValueError: bad arguments; a ``LINEARIZATION`` whose variables or inputs are not
+            those of its ``LAYOUT`` in the same order; *module* with another layout than
+            *lin_module* (the message names both variable and input orders); or
+            ``(x_eq, u_eq)`` is not an equilibrium of *module*.
+        np.linalg.LinAlgError: the reduced ``M_lin`` is singular.
     """
     try:
         from scipy.linalg import solve_continuous_are
@@ -170,6 +204,8 @@ def lqr(
     x_eq = check_state(lin_module, x_eq, tol=tol, what="x_eq")
     u_eq = model.as_input(u_eq, "u_eq")
     a_eq = np.zeros(model.n_accel) if a_eq is None else np.asarray(a_eq, float).reshape(-1)
+    if module is not None:
+        _check_same_layout(model, model_of(module).require("mass", "bias", "input_matrix"))
 
     T, bases, labels = _reduction(model, lin, x_eq)
     M = lin_module.M_lin(x_eq, a_eq, u_eq, p)
@@ -187,19 +223,112 @@ def lqr(
     n = T.shape[1]
     Qm = _weight(Q, n, "Q")
     Rm = _weight(R, model.n_inputs, "R")
+    if module is None:
+        warnings.warn(
+            "lqr: (x_eq, u_eq) is not checked to be an equilibrium; pass module=<the"
+            " standard-form module> to check it (a gain about a non-equilibrium point"
+            " stabilises the loop somewhere else)",
+            UserWarning,
+            stacklevel=2,
+        )
+    else:
+        _check_equilibrium(model, module, x_eq, u_eq, a_eq, p, tol, eq_tol, A @ T)
     P = solve_continuous_are(Abar, Bbar, Qm, Rm)
     K = np.linalg.solve(Rm, Bbar.T @ P)
     return LQRController(K, P, Abar, Bbar, T, x_eq, u_eq, labels, model, bases)
 
 
+def _names(symbols) -> str:
+    return "[" + ", ".join(f"'{s}'" for s in symbols) + "]"
+
+
+def _layout_order(layout: dict) -> tuple[list[str], list[str]]:
+    """The configuration variables and the inputs of a ``LAYOUT``, in order."""
+    return (
+        [c["symbol"] for c in layout["configuration"]],
+        [u["symbol"] for u in layout["inputs"]],
+    )
+
+
+def _check_same_layout(lin_model: Model, model: Model) -> None:
+    """Raise ``ValueError`` unless the two modules have the same layout (variables,
+    velocities, inputs and slices; the parameters may differ)."""
+    keys = (
+        "n_state",
+        "n_config",
+        "n_accel",
+        "n_inputs",
+        "configuration",
+        "velocity",
+        "acceleration",
+        "inputs",
+    )
+    a, b = lin_model.layout, model.layout
+    if all(a.get(k) == b.get(k) for k in keys):
+        return
+    (lv, lu), (mv, mu) = _layout_order(a), _layout_order(b)
+    raise ValueError(
+        "lqr: module does not have the layout of lin_module: lin_module has the variables"
+        f" {_names(lv)} and inputs {_names(lu)}, module has the variables {_names(mv)} and"
+        f" inputs {_names(mu)}; build one"
+        " StateLayout with the SystemVariables and the inputs (same order) passed to"
+        " to_standard_form and linearize, and generate both modules from it"
+    )
+
+
+def _check_equilibrium(lin_model, module, x_eq, u_eq, a_eq, p, tol, eq_tol, AT) -> None:
+    """Raise ``ValueError`` unless ``(x_eq, u_eq)`` is an equilibrium of *module* (see
+    ``lqr``)."""
+    model = model_of(module).require("mass", "bias", "input_matrix")
+    vel = x_eq[model.n_config :]
+    if np.max(np.abs(vel), initial=0.0) > tol:
+        raise ValueError(
+            "lqr: x_eq is not an equilibrium: its velocities must be zero, got"
+            f" {np.array2string(vel, precision=6)}"
+        )
+    mod = module
+    bias = mod.bias(x_eq, p)
+    Gu = mod.input_matrix(x_eq, p) @ u_eq
+    r = mod.mass(x_eq, p) @ a_eq + bias + Gu
+    for var in model.s2:
+        q = x_eq[var.cfg]
+        r[var.acc] -= (q @ r[var.acc]) * q
+    scale = max(np.max(np.abs(bias), initial=0.0), np.max(np.abs(Gu), initial=0.0))
+    scale = max(scale, np.max(np.abs(AT), initial=0.0))
+    res = float(np.max(np.abs(r), initial=0.0))
+    if not res <= eq_tol * scale:
+        a = solve_accelerations(model, x_eq, u_eq, p, check=True)
+        raise ValueError(
+            f"lqr: (x_eq, u_eq) is not an equilibrium of module: the equation residual is"
+            f" {res:.3g} (relative {res / scale if scale > 0 else np.inf:.3g} > eq_tol ="
+            f" {eq_tol:g}) and accelerations(module, x_eq, u_eq, p) ="
+            f" {np.array2string(a, precision=6)}, not a_eq"
+        )
+
+
 def _reduction(model: Model, lin: dict, x_eq: np.ndarray):
-    """``T``, the S² bases and the reduced labels; checks the LINEARIZATION order."""
+    """``T``, the S² bases and the reduced labels; checks the LINEARIZATION order.
+
+    The rows, states and inputs of ``LINEARIZATION`` are matched to the layout by symbol
+    (the kinematic row ``kin:<variable>`` of each variable, ``δu`` of each input), not
+    only by position."""
     nv = len(model.variables)
     states = lin["states"]
     if len(states) != 2 * nv or [r["slice"] for r in lin["rows"]] != [s["slice"] for s in states]:
         raise ValueError(
             "lqr: LINEARIZATION does not have one configuration and one velocity"
             " perturbation per variable with matching row blocks"
+        )
+    lay_vars, lay_inputs = _layout_order(model.layout)
+    lin_vars = [r["label"][len("kin:") :] for r in lin["rows"][:nv]]
+    lin_inputs = [u["symbol"] for u in lin["inputs"]]
+    if lin_vars != lay_vars or lin_inputs != ["\\delta{" + u + "}" for u in lay_inputs]:
+        raise ValueError(
+            f"lqr: the LINEARIZATION of lin_module has the variables {_names(lin_vars)} and"
+            f" inputs {_names(lin_inputs)}, but its LAYOUT has the variables"
+            f" {_names(lay_vars)} and inputs {_names(lay_inputs)}; regenerate it with a"
+            " StateLayout built from the SystemVariables and the inputs (same order) passed"
+            " to linearize"
         )
     n_full = states[-1]["slice"][1]
     bases = {v.key: tangent_basis(x_eq[v.cfg]) for v in model.s2}
