@@ -444,8 +444,8 @@ class TestExactPins:
         eom = compute_eom(L, x.delta() * (f - c * v), var)
         lin = linearize(eom, var, [f])
         row = str(x.delta())
-        assert str(lin.A[row][str(x.delta().t_diff())]) == "c(-1)"
-        assert str(lin.A[row][str(x.delta())]) == "k(-1)"
+        assert str(lin.A[row][str(x.delta().t_diff())]) == "c*(-1)"
+        assert str(lin.A[row][str(x.delta())]) == "k*(-1)"
         assert str(lin.M[row][str(x.delta().t_diff().t_diff())]) == "m"
         assert str(lin.B[row][str(f.delta())]) == "1"
 
@@ -458,9 +458,9 @@ class TestExactPins:
         eom = compute_eom(HALF * m * Dot(v, v), Dot(x.delta(), F - v * c), var)
         lin = linearize(eom, var, [F])
         row = str(x.delta())
-        assert str(lin.A[row][str(x.delta().t_diff())]) == "Ic(-1)"
+        assert str(lin.A[row][str(x.delta().t_diff())]) == "I*c*(-1)"
         assert lin.A[row][str(x.delta())].is_zero
-        assert str(lin.M[row][str(x.delta().t_diff().t_diff())]) == "Im"
+        assert str(lin.M[row][str(x.delta().t_diff().t_diff())]) == "I*m"
 
     def test_cubic_input_block(self):
         """E = −m ẍ + F (F·F): B[δF] = (F·F) I + 2 F Fᵀ."""

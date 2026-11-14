@@ -103,8 +103,8 @@ class TestReprComposites:
         R = SO3("R")
         J = Matrix("J", attr=["Constant"])
         Om = R.get_tangent_vector()
-        assert str(Dot(Om, J * Om)) == "Dot(\\Omega_{R},J\\Omega_{R})"
-        assert str(Transpose(R) * Vector("x")) == "(R)'x"
+        assert str(Dot(Om, J * Om)) == "Dot(\\Omega_{R},J*\\Omega_{R})"
+        assert str(Transpose(R) * Vector("x")) == "(R)'*x"
 
 
 class TestPrintTree:

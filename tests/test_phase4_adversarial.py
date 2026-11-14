@@ -353,7 +353,10 @@ def test_set_trace_does_not_duplicate_lines_under_basic_config():
 
 
 def _mutated(node, index, child):
-    node.nodes[index] = child
+    # nodes are frozen (phase 5b, D3): bypass to build the malformed tree
+    nodes = list(node.nodes)
+    nodes[index] = child
+    object.__setattr__(node, "nodes", tuple(nodes))
     return node
 
 
@@ -396,7 +399,7 @@ def test_check_tree_flags_variation_over_a_manifold_point_and_deep_path():
     q = S2("q")
     node = TimeDerivative.__new__(TimeDerivative)
     node.__dict__.update(TimeDerivative(Vector("z")).__dict__)
-    node.nodes = [q]
+    object.__setattr__(node, "nodes", (q,))  # frozen node: bypass to build the bad tree
     tree = Scalar("m") * Dot(Vector("a"), Cross(Vector("b"), node))
     with pytest.raises(InvariantError, match=r"manifold point 'q' .* at root\.R\.R\.R:"):
         check_tree(tree)

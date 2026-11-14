@@ -1,72 +1,64 @@
-from geomech.core.base.expressions import Matrix, Scalar, Vector, getVectors
-from geomech.core.operations.addition import Add, VAdd
-from geomech.core.operations.geometry import Cross, Dot
+"""The shared structural helpers of ``geomech.core.transformations.utils``.
+
+``is_leaf`` and ``has_nested_add`` were unused by the engine and are deleted (fix plan
+5.5); their tests are replaced by tests of the helpers that took over the duplicated code
+(``addends``, ``sum_of``, ``flatten_mul``).
+"""
+
+from geomech.core.base.expressions import (
+    Matrix,
+    Scalar,
+    Zero,
+    ZeroMatrix,
+    ZeroVector,
+    getVectors,
+)
+from geomech.core.base.types import ExprType
+from geomech.core.operations.addition import Add, MAdd, VAdd
+from geomech.core.operations.geometry import Dot
 from geomech.core.operations.multiplication import Mul
-from geomech.core.transformations.utils import has_nested_add, is_leaf
+from geomech.core.transformations.utils import addends, flatten_mul, sum_of
 
 
-class TestIsLeaf:
-    def test_scalar_is_leaf(self):
-        """Scalar('a') is a leaf — no children."""
-        assert is_leaf(Scalar("a"))
-
-    def test_vector_is_leaf(self):
-        """Vector('x') is a leaf — no children."""
-        assert is_leaf(Vector("x"))
-
-    def test_matrix_is_leaf(self):
-        """Matrix('M') is a leaf — no children."""
-        assert is_leaf(Matrix("M"))
-
-    def test_add_is_not_leaf(self):
-        """Add(a, b) is n-ary — not a leaf."""
-        a, b = Scalar("a"), Scalar("b")
-        assert not is_leaf(Add(a, b))
-
-    def test_mul_is_not_leaf(self):
-        """Mul(a, b) is binary — not a leaf."""
-        a, b = Scalar("a"), Scalar("b")
-        assert not is_leaf(Mul(a, b))
-
-    def test_dot_is_not_leaf(self):
-        """Dot(x, y) is binary — not a leaf."""
-        x, y = getVectors(["x", "y"])
-        assert not is_leaf(Dot(x, y))
-
-
-class TestHasNestedAdd:
-    def test_add_returns_true(self):
-        """Top-level Add is itself an addition."""
-        a, b = Scalar("a"), Scalar("b")
-        assert has_nested_add(Add(a, b))
-
-    def test_vadd_returns_true(self):
-        """Top-level VAdd is itself an addition."""
-        x, y = getVectors(["x", "y"])
-        assert has_nested_add(VAdd(x, y))
-
-    def test_leaf_returns_false(self):
-        """Leaf scalar has no nested structure."""
-        assert not has_nested_add(Scalar("a"))
-
-    def test_mul_without_add_returns_false(self):
-        """Mul(a, b) with leaf operands — no addition nested."""
-        a, b = Scalar("a"), Scalar("b")
-        assert not has_nested_add(Mul(a, b))
-
-    def test_mul_with_nested_add(self):
-        """(a + b) * c — Add is nested inside Mul."""
+class TestAddends:
+    def test_scalar_sum(self):
         a, b, c = Scalar("a"), Scalar("b"), Scalar("c")
-        expr = Mul(Add(a, b), c)
-        assert has_nested_add(expr)
+        assert addends(Add(a, b, c)) == [a, b, c]
 
-    def test_dot_with_nested_vadd(self):
-        """dot(x + y, z) — VAdd is nested inside Dot."""
-        x, y, z = getVectors(["x", "y", "z"])
-        expr = Dot(VAdd(x, y), z)
-        assert has_nested_add(expr)
-
-    def test_cross_without_add_returns_false(self):
-        """cross(x, y) with leaf operands — no addition nested."""
+    def test_vector_and_matrix_sums(self):
         x, y = getVectors(["x", "y"])
-        assert not has_nested_add(Cross(x, y))
+        A, B = Matrix("A"), Matrix("B")
+        assert addends(VAdd(x, y)) == [x, y]
+        assert addends(MAdd(A, B)) == [A, B]
+
+    def test_non_sum_is_one_addend(self):
+        a, b = Scalar("a"), Scalar("b")
+        assert addends(Mul(a, b)) == [Mul(a, b)]
+
+
+class TestSumOf:
+    def test_round_trip(self):
+        a, b = Scalar("a"), Scalar("b")
+        x, y = getVectors(["x", "y"])
+        assert str(sum_of(addends(Add(a, b)), ExprType.SCALAR)) == str(Add(a, b))
+        assert str(sum_of(addends(VAdd(x, y)), ExprType.VECTOR)) == str(VAdd(x, y))
+
+    def test_empty_is_typed_zero(self):
+        assert sum_of([], ExprType.SCALAR) is Zero
+        assert sum_of([], ExprType.VECTOR) is ZeroVector
+        assert sum_of([], ExprType.MATRIX) is ZeroMatrix
+
+    def test_single_term_is_returned_as_is(self):
+        x, y = getVectors(["x", "y"])
+        d = Dot(x, y)
+        assert sum_of([d], ExprType.SCALAR) is d
+
+
+class TestFlattenMul:
+    def test_left_to_right(self):
+        a, b, c, d = (Scalar(n) for n in "abcd")
+        assert flatten_mul(Mul(Mul(a, b), Mul(c, d))) == [a, b, c, d]
+
+    def test_non_mul(self):
+        a = Scalar("a")
+        assert flatten_mul(a) == [a]

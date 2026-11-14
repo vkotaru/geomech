@@ -162,8 +162,10 @@ def test_like_terms_keep_noncommutative_order(name):
 
 
 def test_commutative_merges_are_made():
-    assert str(full_simplify(Add(Mul(Mul(x, Number(2)), y), Mul(Mul(x, y), Number(3))))) == "xy(5)"
-    assert str(full_simplify(Add(Mul(Dot(a, b), m), Mul(m, Dot(b, a))))) == "Dot(a,b)m(2)"
+    assert (
+        str(full_simplify(Add(Mul(Mul(x, Number(2)), y), Mul(Mul(x, y), Number(3))))) == "x*y*(5)"
+    )
+    assert str(full_simplify(Add(Mul(Dot(a, b), m), Mul(m, Dot(b, a))))) == "Dot(a,b)*m*(2)"
     e = VAdd(SVMul(Cross(a, b), Mul(m, x)), SVMul(SVMul(Cross(a, b), x), Mul(m, Number(-1))))
     assert str(full_simplify(e)) == "0v"
 
@@ -356,10 +358,10 @@ def test_d1_named_scalars_stay_symbolic_in_every_pass():
 
 def test_d1_equal_values_do_not_merge_but_equal_names_do():
     p, r = _sc("p", value=2), _sc("r", value=2)
-    assert str(full_simplify(p * x + r * x)) == "(px+rx)"
-    assert str(full_simplify(p - r)) == "(p+r(-1))"
+    assert str(full_simplify(p * x + r * x)) == "(p*x+r*x)"
+    assert str(full_simplify(p - r)) == "(p+r*(-1))"
     assert str(full_simplify(p * x - x * p)) == "0"
-    assert str(full_simplify(p * x + x * Number(2))) == "(px+x(2))"
+    assert str(full_simplify(p * x + x * Number(2))) == "(p*x+x*(2))"
     # evaluate uses the values
     assert evaluate(full_simplify(p * x + r * x), {"x": 1.5}) == pytest.approx(6.0)
     assert evaluate(full_simplify(p - r)) == pytest.approx(0.0)
@@ -374,16 +376,16 @@ def test_d1_named_value_in_pipeline_standard_form_and_linearization():
     var = SystemVariables(vectors=[q])
     eom = compute_eom(L, Dot(xi, f), var)
     eq = eom[str(xi)][1]
-    assert str(eq) == "(\\frac{d}{dt}(\\omega_{q})mll(-1)+Cross(q,e3)mgl(-1)+f)"
+    assert str(eq) == "(\\frac{d}{dt}(\\omega_{q})*m*l*l*(-1)+Cross(q,e3)*m*g*l*(-1)+f)"
     assert check_eom(L, Dot(xi, f), var, eom, inputs=[f]) < 1e-6
     sf = to_standard_form(eom, var, [f])[str(xi)]
     (Mblock,) = sf.M.values()
-    assert str(Mblock) == "Imll(-1)" and str(sf.f) == "Cross(q,e3)mgl(-1)"
+    assert str(Mblock) == "I*m*l*l*(-1)" and str(sf.f) == "Cross(q,e3)*m*g*l*(-1)"
     assert "m" in to_latex(eq) and "g" in to_latex(eq)
     lin = linearize(eom, var, [f])
     assert finite_difference_check(lin, eom, var, [f]) < 1e-6
     blocks = [str(bl) for row in lin.A.values() for bl in row.values()]
-    assert any("mgl" in s for s in blocks)
+    assert any("m*g*l" in s for s in blocks)
 
 
 # ---------------------------------------------------------------------------
@@ -393,10 +395,10 @@ def test_d1_named_value_in_pipeline_standard_form_and_linearization():
 
 def test_minus_one_forms():
     n_sym = Scalar("(-1)")  # a symbol named "(-1)", no value: not a literal
-    assert str(full_simplify(x * Number(-1.0))) == str(full_simplify(x * Number(-1))) == "x(-1)"
+    assert str(full_simplify(x * Number(-1.0))) == str(full_simplify(x * Number(-1))) == "x*(-1)"
     # the symbol is not folded with the literal and not dropped
     out = full_simplify(x * n_sym * Number(-1))
-    assert str(out) == "x(-1)(-1)"
+    assert str(out) == "x*(-1)*(-1)"
     assert repr(x * n_sym) == "x·(-1)"  # printed as a name, not as a minus sign
 
 
@@ -597,7 +599,7 @@ def test_like_terms_merge_in_pipeline():
     L, dW, var, _ = sys_s_like_terms_scaled()
     eom = compute_eom(L, dW, var)
     (eq,) = [e for _, e in eom.values()]
-    assert str(eq) == "(\\frac{d}{dt}(\\omega_{q})(-1)+Cross(\\omega_{q},Cross(a,b))km(-4)+f)"
+    assert str(eq) == "(\\frac{d}{dt}(\\omega_{q})*(-1)+Cross(\\omega_{q},Cross(a,b))*k*m*(-4)+f)"
 
 
 # ---------------------------------------------------------------------------
@@ -672,7 +674,7 @@ def test_huge_integer_literal_is_a_literal_and_folds_exactly():
 
     assert is_number_literal(Number(10**400))
     assert not is_number_literal(Scalar("m", value=10**400))
-    assert str(full_simplify(Number(10**400) * x * Number(10**400))) == f"x({10**800})"
+    assert str(full_simplify(Number(10**400) * x * Number(10**400))) == f"x*({10**800})"
 
 
 def test_repr_of_named_constant_with_value_keeps_marker():

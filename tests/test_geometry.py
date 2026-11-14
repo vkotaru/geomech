@@ -34,7 +34,7 @@ class TestVariationConstruction:
     def test_nodes(self):
         a = Scalar("a")
         d = Variation(a)
-        assert d.nodes == [a]
+        assert d.nodes == (a,)
 
     def test_arity(self):
         x = Vector("x")

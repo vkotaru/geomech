@@ -127,7 +127,7 @@ def test_set_trace_logs_each_firing(tracing, caplog):
     q, om, scalar, vector = _s2_expression()
     with caplog.at_level(logging.DEBUG, logger="geomech.rules"):
         assert str(full_simplify(scalar)) == "Dot(a,\\omega_{q})"
-        assert str(full_simplify(vector)) == "\\omega_{q}m"
+        assert str(full_simplify(vector)) == "\\omega_{q}*m"
     messages = [r.getMessage() for r in caplog.records if r.name == "geomech.rules"]
     assert "vector.dot_tangent_orthogonal: <v:\\omega_{q}, S2:q> ==> 0" in messages
     assert (

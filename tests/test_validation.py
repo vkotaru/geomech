@@ -429,7 +429,7 @@ class TestTangentParentByName:
         om = q1.get_tangent_vector()
         assert str(full_simplify(Cross(q2, Cross(om, q2)))) == str(om)
         # (ω × q) × q = −ω
-        assert str(full_simplify(Cross(Cross(om, q2), q2))) == str(om) + "(-1)"
+        assert str(full_simplify(Cross(Cross(om, q2), q2))) == str(om) + "*(-1)"
 
     def test_a_different_point_is_not_reduced(self):
         q, p = S2("q"), S2("p")
@@ -543,8 +543,8 @@ class TestCalculusOfManifoldLeaf:
         q, R = S2("q"), SO3("R")
         assert str(q.t_diff()) == "Cross(\\omega_{q},q)"
         assert str(q.delta()) == "Cross(\\xi_{q},q)"
-        assert str(R.t_diff()) == "RHat(\\Omega_{R})"
-        assert str(R.delta()) == "RHat(\\eta_{R})"
+        assert str(R.t_diff()) == "R*Hat(\\Omega_{R})"
+        assert str(R.delta()) == "R*Hat(\\eta_{R})"
 
     def test_plain_leaves_and_tangent_vectors_unaffected(self):
         x, q = Vector("x"), S2("q")

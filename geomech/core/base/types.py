@@ -28,8 +28,29 @@ VALID_ATTRS = frozenset(
 )
 
 
-@dataclass
+#: ``attr`` string → the flags it sets.
+_ATTR_FLAGS = {
+    "Constant": ("is_constant",),
+    "Zero": ("is_zero", "is_constant"),
+    "Ones": ("is_ones", "is_constant"),
+    "Identity": ("is_identity", "is_constant"),
+    "UnitNorm": ("is_unit_norm",),
+    "SymmetricMatrix": ("is_symmetric",),
+    "SkewSymmetricMatrix": ("is_skew_symmetric",),
+    "OrthogonalMatrix": ("is_orthogonal",),
+    "Manifold": ("is_manifold",),
+    "TangentVector": (),  # marker only; no rule reads it
+}
+
+
+@dataclass(frozen=True)
 class ExprFlags:
+    """The structural facts the rewrite rules key on, fixed when a leaf is built.
+
+    Frozen: a leaf's flags never change after construction (``dataclasses.replace`` makes
+    a modified copy).
+    """
+
     is_constant: bool = False
     is_zero: bool = False
     is_ones: bool = False
@@ -56,42 +77,20 @@ class ExprFlags:
             )
         if not attrs:
             return cls()
-        flags = cls()
+        values = {}
         for a in attrs:
-            match a:
-                case "Constant":
-                    flags.is_constant = True
-                case "Zero":
-                    flags.is_zero = True
-                    flags.is_constant = True
-                case "Ones":
-                    flags.is_ones = True
-                    flags.is_constant = True
-                case "Identity":
-                    flags.is_identity = True
-                    flags.is_constant = True
-                case "UnitNorm":
-                    flags.is_unit_norm = True
-                case "SymmetricMatrix":
-                    flags.is_symmetric = True
-                case "SkewSymmetricMatrix":
-                    flags.is_skew_symmetric = True
-                case "OrthogonalMatrix":
-                    flags.is_orthogonal = True
-                case "Manifold":
-                    flags.is_manifold = True
-                case "TangentVector":
-                    pass  # marker only; no rule reads it
-                case _:
-                    where = f" for symbol '{name}'" if name is not None else ""
-                    raise ValueError(
-                        f"attr: unknown attribute {a!r}{where}; valid attributes are"
-                        f" {sorted(VALID_ATTRS)}"
-                    )
-        return flags
+            if not isinstance(a, str) or a not in _ATTR_FLAGS:
+                where = f" for symbol '{name}'" if name is not None else ""
+                raise ValueError(
+                    f"attr: unknown attribute {a!r}{where}; valid attributes are"
+                    f" {sorted(VALID_ATTRS)}"
+                )
+            for flag in _ATTR_FLAGS[a]:
+                values[flag] = True
+        return cls(**values)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ManifoldInfo:
     tangent_vector_name: str
     variation_vector_name: str

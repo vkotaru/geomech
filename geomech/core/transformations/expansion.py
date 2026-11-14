@@ -1,7 +1,7 @@
 """Distribute multiplication over addition (expand products).
 
 Bottom-up traversal: expand children first, then distribute at the
-current node.  Single pass — no has_nested_add predicate needed.
+current node.  Single pass.
 
 Distribution rules (name, identity; none needs a hypothesis: they are bilinearity of
 each product and linearity of Hat). A rule fires only when an operand is a sum.
@@ -43,7 +43,7 @@ from geomech.core.transformations.utils import calculus_node
 from geomech.utils.trace import rule
 
 
-def _distribute(l, r, op_cls, sum_cls, l_sum_cls, r_sum_cls, name=None, expr=None):
+def _distribute(l, r, op_cls, sum_cls, l_sum_cls, r_sum_cls, name: str = "", expr=None):
     """Distribute *op_cls* over addition on either or both sides.
 
     l, r        — already-expanded left and right children

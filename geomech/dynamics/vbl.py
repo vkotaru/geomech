@@ -79,7 +79,9 @@ dropped or set to zero.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Sequence
 
+from geomech.core.base.constants import negate
 from geomech.core.base.expressions import (
     S2,
     SO3,
@@ -95,17 +97,19 @@ from geomech.core.base.expressions import (
     ZeroVector,
 )
 from geomech.core.base.types import ExprType
-from geomech.core.math.extract import _has_algebraic, _same, extract_linear_coeff
-from geomech.core.operations.addition import Add, MAdd, VAdd
+from geomech.core.math.extract import extract_linear_coeff, has_algebraic, same_node
+from geomech.core.operations.addition import MAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
 from geomech.core.operations.geometry import Hat, Transpose
-from geomech.core.operations.multiplication import MMMul, Mul, SMMul, VVMul
+from geomech.core.operations.multiplication import MMMul, SMMul, VVMul
 from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.simplification import full_simplify
-from geomech.dynamics.eom import _check_variables
+from geomech.core.transformations.utils import addends, sum_of
+from geomech.dynamics.eom import check_variables
 from geomech.dynamics.variables import SystemVariables
 from geomech.utils.errors import AlgebraicError
-from geomech.utils.trace import debug_enabled, stage_recorder
+from geomech.utils.invariants import check_tree
+from geomech.utils.trace import LinearizationTrace, debug_enabled, stage_recorder
 
 # ---------------------------------------------------------------------------
 # Result container
@@ -198,7 +202,12 @@ def _failed_row_stage(trace, stage):
 
 
 def linearize(
-    eom, variables: SystemVariables, inputs=None, params=(), *, trace=None
+    eom: dict[str, tuple[Expr, Expr]],
+    variables: SystemVariables,
+    inputs: Sequence[Expr] | None = None,
+    params: Sequence[Expr] = (),
+    *,
+    trace: LinearizationTrace | None = None,
 ) -> LinearizedSystem:
     """Linearize the equations of motion along an arbitrary trajectory.
 
@@ -248,14 +257,12 @@ def linearize(
         trace._reset()
     stage = "validation"
     try:
-        _check_variables(variables, caller="linearize")
+        check_variables(variables, caller="linearize")
         cfg_vars, cfg_perts, vel_perts = _perturbation_variables(variables)
         _check_eom(eom, variables)
         param_names = _param_names(params)
         debug = debug_enabled()
         if debug:
-            from geomech.utils.invariants import check_tree
-
             for _, eq in eom.values():
                 check_tree(eq)
         record = stage_recorder(trace, "linearize")
@@ -269,36 +276,19 @@ def linearize(
         for sym in states + dstates + input_perts:
             col_types[str(sym)] = sym.type
 
-        rows, row_types = [], {}
-        M, A, B = {}, {}, {}
+        rows: list[str] = []
+        row_types: dict[str, ExprType] = {}
+        M: dict[str, dict[str, Expr]] = {}
+        A: dict[str, dict[str, Expr]] = {}
+        B: dict[str, dict[str, Expr]] = {}
+        blocks = _Blocks(rows, row_types, M, A, B, dstates, states, input_perts)
 
-        # ---- kinematic rows -------------------------------------------------
         for i, var in enumerate(cfg_vars):
-            label = "kin:" + str(var)
-            cfg, vel = cfg_perts[i], vel_perts[i]
-            row_type = cfg.type
-            rows.append(label)
-            row_types[label] = row_type
-            M[label] = {str(d): _zero_block(row_type, d.type) for d in dstates}
-            A[label] = {str(s): _zero_block(row_type, s.type) for s in states}
-            B[label] = {str(u): _zero_block(row_type, u.type) for u in input_perts}
+            _kinematic_row(blocks, var, cfg_perts[i], vel_perts[i], dstates[i])
 
-            M[label][str(dstates[i])] = One if row_type == ExprType.SCALAR else IdentityMatrix
-            if isinstance(var, S2):
-                omega = var.get_tangent_vector()
-                qqT = VVMul(var, Transpose(var))
-                A[label][str(cfg)] = MMMul(qqT, Hat(omega))
-                A[label][str(vel)] = MAdd(IdentityMatrix, SMMul(qqT, -1))
-            elif isinstance(var, SO3):
-                A[label][str(cfg)] = SMMul(Hat(var.get_tangent_vector()), -1)
-                A[label][str(vel)] = IdentityMatrix
-            else:
-                A[label][str(vel)] = One if row_type == ExprType.SCALAR else IdentityMatrix
-
-        # ---- dynamic rows ---------------------------------------------------
         # Priority order for assigning a term to its perturbation symbol: the most
         # deeply wrapped symbols first, so that a term in d/dt(δv) is never tested
-        # for δv (which would raise inside _has_algebraic).
+        # for δv (which would raise inside has_algebraic).
         priority = dvel_perts + vel_perts + cfg_perts + input_perts
         all_perts = priority + [d for d in dstates[: len(cfg_perts)]]
         n_mass = len(dvel_perts)
@@ -306,49 +296,19 @@ def linearize(
 
         for label, (var_vec, eq) in eom.items():
             stage = f"row[{label}]"
-            row_type = var_vec.type
-            rows.append(label)
-            row_types[label] = row_type
-            M[label] = {str(d): _zero_block(row_type, d.type) for d in dstates}
-            A[label] = {str(s): _zero_block(row_type, s.type) for s in states}
-            B[label] = {str(u): _zero_block(row_type, u.type) for u in input_perts}
-
-            dE = expand(full_simplify(eq.delta()))
-            if record is not None:
-                record(f"dE[{label}]", dE)
-            if _is_zero_block(dE):
-                continue
-            buckets = _partition_terms(dE, priority, label, param_names)
-
-            # Route by position in ``priority`` (identity), never by printed name.
-            for index, terms in enumerate(buckets):
-                if not terms:
-                    continue
-                sym = priority[index]
-                part = _combine(terms, row_type)
-                key = str(sym)
-                if record is not None:
-                    record(f"bucket[{label}][{key}]", part)
-                raw = extract_linear_coeff(part, sym)
-                if record is not None:
-                    record(f"raw[{label}][{key}]", raw)
-                coeff = full_simplify(raw)
-                _check_coefficient_free(coeff, all_perts, part, label)
-                is_mass = index < n_mass
-                if is_mass:
-                    coeff = full_simplify(_negate(coeff))
-                if row_type == ExprType.SCALAR and sym.type == ExprType.VECTOR:
-                    coeff = Transpose(coeff)
-                if record is not None:
-                    record(f"block[{label}][{key}]", coeff)
-                if debug:
-                    check_tree(coeff)
-                if is_mass:
-                    M[label][key] = coeff
-                elif index < n_state:
-                    A[label][key] = coeff
-                else:
-                    B[label][key] = coeff
+            _dynamic_row(
+                blocks,
+                label,
+                var_vec,
+                eq,
+                priority,
+                all_perts,
+                n_mass,
+                n_state,
+                param_names,
+                record,
+                debug,
+            )
 
         return LinearizedSystem(
             rows=rows,
@@ -365,6 +325,101 @@ def linearize(
         if trace is not None:
             trace._fail(_failed_row_stage(trace, stage), err)
         raise
+
+
+# ---------------------------------------------------------------------------
+# Rows
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class _Blocks:
+    """The blocks under construction: row labels and types, ``M``/``A``/``B`` by row, and
+    the column symbols (``dstates`` for ``M``, ``states`` for ``A``, ``inputs`` for ``B``)."""
+
+    rows: list
+    row_types: dict
+    M: dict
+    A: dict
+    B: dict
+    dstates: list
+    states: list
+    inputs: list
+
+    def add_row(self, label, row_type):
+        """Append the row *label* with every block zero."""
+        self.rows.append(label)
+        self.row_types[label] = row_type
+        self.M[label] = {str(d): _zero_block(row_type, d.type) for d in self.dstates}
+        self.A[label] = {str(s): _zero_block(row_type, s.type) for s in self.states}
+        self.B[label] = {str(u): _zero_block(row_type, u.type) for u in self.inputs}
+
+
+def _kinematic_row(blocks, var, cfg, vel, dcfg):
+    """The kinematic row of the configuration variable *var*: ``δẋ = δv`` for a scalar or
+    vector, ``ξ̇ = (q qᵀ) ω̂ ξ + (I − q qᵀ) δω`` on S², ``η̇ = −Ω̂ η + δΩ`` on SO(3)."""
+    label = "kin:" + str(var)
+    row_type = cfg.type
+    blocks.add_row(label, row_type)
+    A = blocks.A[label]
+    blocks.M[label][str(dcfg)] = One if row_type == ExprType.SCALAR else IdentityMatrix
+    if isinstance(var, S2):
+        omega = var.get_tangent_vector()
+        qqT = VVMul(var, Transpose(var))
+        A[str(cfg)] = MMMul(qqT, Hat(omega))
+        A[str(vel)] = MAdd(IdentityMatrix, SMMul(qqT, -1))
+    elif isinstance(var, SO3):
+        A[str(cfg)] = SMMul(Hat(var.get_tangent_vector()), -1)
+        A[str(vel)] = IdentityMatrix
+    else:
+        A[str(vel)] = One if row_type == ExprType.SCALAR else IdentityMatrix
+
+
+def _dynamic_row(
+    blocks, label, var_vec, eq, priority, all_perts, n_mass, n_state, param_names, record, debug
+):
+    """The row of the equation *eq* (key *label*): δE partitioned by perturbation symbol,
+    one coefficient per symbol. Symbols ``priority[:n_mass]`` go to ``M`` (negated),
+    up to ``n_state`` to ``A``, the rest (input variations) to ``B``."""
+    row_type = var_vec.type
+    blocks.add_row(label, row_type)
+
+    dE = expand(full_simplify(eq.delta()))
+    if record is not None:
+        record(f"dE[{label}]", dE)
+    if _is_zero_block(dE):
+        return
+    buckets = _partition_terms(dE, priority, label, param_names)
+
+    # Route by position in ``priority`` (identity), never by printed name.
+    for index, terms in enumerate(buckets):
+        if not terms:
+            continue
+        sym = priority[index]
+        part = sum_of(terms, row_type)
+        key = str(sym)
+        if record is not None:
+            record(f"bucket[{label}][{key}]", part)
+        raw = extract_linear_coeff(part, sym)
+        if record is not None:
+            record(f"raw[{label}][{key}]", raw)
+        coeff = full_simplify(raw)
+        _check_coefficient_free(coeff, all_perts, part, label)
+        is_mass = index < n_mass
+        if is_mass:
+            coeff = full_simplify(negate(coeff))
+        if row_type == ExprType.SCALAR and sym.type == ExprType.VECTOR:
+            coeff = Transpose(coeff)
+        if record is not None:
+            record(f"block[{label}][{key}]", coeff)
+        if debug:
+            check_tree(coeff)
+        if is_mass:
+            blocks.M[label][key] = coeff
+        elif index < n_state:
+            blocks.A[label][key] = coeff
+        else:
+            blocks.B[label][key] = coeff
 
 
 # ---------------------------------------------------------------------------
@@ -481,20 +536,6 @@ def _perturbation_variables(variables):
 # ---------------------------------------------------------------------------
 
 
-def _flatten_addends(expr):
-    if isinstance(expr, (Add, VAdd, MAdd)):
-        return list(expr.nodes)
-    return [expr]
-
-
-def _combine(terms, row_type):
-    if len(terms) == 1:
-        return terms[0]
-    if row_type == ExprType.SCALAR:
-        return Add(*terms)
-    return VAdd(*terms)
-
-
 def _param_names(params):
     """Printed names of the declared prescribed parameters (``params`` of compute_eom)."""
     if isinstance(params, (Expr, str)) or not hasattr(params, "__iter__"):
@@ -556,13 +597,13 @@ def _partition_terms(dE, priority, label, param_names=frozenset()):
     fully distributed by ``expand`` and would be extracted wrongly.
     """
     buckets = [[] for _ in priority]
-    for term in _flatten_addends(dE):
+    for term in addends(dE):
         if _is_zero_block(term):
             continue
         owner = None
         for index, sym in enumerate(priority):
             try:
-                found = _has_algebraic(term, sym)
+                found = has_algebraic(term, sym)
             except AlgebraicError as err:
                 raise AlgebraicError(
                     f"linearize: in row '{label}', the term '{term}' of the variation"
@@ -598,9 +639,9 @@ def _occurs_outside(term, sym, owner):
     that contains *sym* counts as an occurrence (such a term has no linear
     coefficient either way).
     """
-    if _same(term, owner):
+    if same_node(term, owner):
         return False
-    if _same(term, sym):
+    if same_node(term, sym):
         return True
     if isinstance(term, (TimeDerivative, TimeIntegral, Variation)):
         return term.has(sym)
@@ -611,7 +652,7 @@ def _check_coefficient_free(coeff, all_perts, part, label):
     """A block must not depend on any perturbation symbol."""
     for other in all_perts:
         try:
-            leftover = _has_algebraic(coeff, other)
+            leftover = has_algebraic(coeff, other)
             inner = None
         except AlgebraicError as err:
             leftover, inner = True, err
@@ -621,18 +662,6 @@ def _check_coefficient_free(coeff, all_perts, part, label):
                 f"linearize: in row '{label}', the coefficient '{coeff}' extracted from"
                 f" '{part}' still contains the perturbation '{other}'{detail}"
             ) from inner
-
-
-def _negate(expr):
-    match getattr(expr, "type", None):
-        case ExprType.SCALAR:
-            return Mul(expr, -1)
-        case ExprType.VECTOR:
-            return expr * -1
-        case ExprType.MATRIX:
-            return SMMul(expr, -1)
-        case _:
-            raise TypeError(f"linearize: cannot negate '{expr}'")
 
 
 def _zero_block(row_type, col_type):

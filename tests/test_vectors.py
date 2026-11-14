@@ -157,7 +157,8 @@ class TestVectorOperations:
     def test_delta_constant(self):
         e3 = Vector("e3", attr=["Constant"])
         d = e3.delta()
-        assert str(d) == "0"
+        # phase 5b: the zero leaf of the type, ZeroVector (printed 0v; was a vector "0")
+        assert str(d) == "0v"
         assert d.is_constant
 
     def test_diff_variable(self):

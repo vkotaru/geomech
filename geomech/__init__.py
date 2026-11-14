@@ -69,7 +69,6 @@ from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.manifold_rules import apply_manifold_rules
 from geomech.core.transformations.pulling import pull
 from geomech.core.transformations.simplification import full_simplify, simplify
-from geomech.core.transformations.utils import has_nested_add, is_leaf
 from geomech.core.transformations.vector_identities import vector_rules
 
 # --- Layer 5: dynamics pipeline ---

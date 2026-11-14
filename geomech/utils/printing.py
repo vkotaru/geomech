@@ -9,8 +9,17 @@ from __future__ import annotations
 
 import logging
 import os
+import re
+import shutil
 import subprocess
 import tempfile
+
+import numpy as np
+
+# The node classes are imported inside the functions below, not here: importing
+# geomech.core.base.expressions loads geomech.utils.errors, whose package __init__ loads this
+# module before any node class exists (expressions -> utils -> printing -> operations ->
+# expressions would be a cycle).
 
 logger = logging.getLogger("geomech")
 
@@ -25,7 +34,7 @@ def _eom_line(var_vec, eqn):
     return "\\int " + to_latex(var_vec) + " \\cdot \\left(" + rhs + "\\right) \\, dt = 0"
 
 
-def print_eom(eqns):
+def print_eom(eqns: dict) -> None:
     """Print equations of motion as LaTeX integral equations (via ``to_latex``).
 
     *eqns* is the dict returned by ``compute_eom``:
@@ -40,7 +49,7 @@ def print_eom(eqns):
 # ---------------------------------------------------------------------------
 
 
-def print_tree(expr, indent=0, label="", style="indent"):
+def print_tree(expr, indent: int = 0, label: str = "", style: str = "indent") -> None:
     """Print the expression tree structure for debugging.
 
     Each node shows its class name; each leaf shows its name, value and the flags the
@@ -69,7 +78,7 @@ def print_tree(expr, indent=0, label="", style="indent"):
     print(f"expr: {repr(expr)}")
 
 
-def tree_str(expr, indent=0, label="", style="topdown"):
+def tree_str(expr, indent: int = 0, label: str = "", style: str = "topdown") -> str:
     """Return the expression tree as a string (without printing).
 
     The default here stays ``'topdown'`` (the compact form); ``print_tree`` defaults to
@@ -131,7 +140,7 @@ def _paren_negative(s):
     return f"({s})" if s.startswith("-") else s
 
 
-def repr_str(expr):
+def repr_str(expr) -> str:
     """Return a human-readable string for the expression (used by ``__repr__``).
 
     Leaves carry their type and constness: ``m`` (scalar), ``v:x`` (vector), ``M:J``
@@ -464,8 +473,6 @@ def _leaf_detail(expr, points=None):
 def _is_default_value(value):
     """Check if a value is the default (array of None)."""
     try:
-        import numpy as np
-
         if isinstance(value, np.ndarray) and all(v is None for v in value.flat):
             return True
     except (ImportError, TypeError):
@@ -631,7 +638,7 @@ def _operand(e, needs_parens, inside=False):
     return _signed_factor(s, inside)
 
 
-def to_latex(expr):
+def to_latex(expr) -> str:
     r"""Convert an expression tree to a LaTeX string.
 
     Returns a string suitable for use with IPython.display.Math() or inside a LaTeX
@@ -641,119 +648,165 @@ def to_latex(expr):
     ``\left(R a\right)^T``), a ``Dot`` multiplied by anything is wrapped
     (``\left(b \cdot c\right) a``), and the numeric coefficient of a product is printed
     once, first (``-\frac{1}{2} m v``). Sums are always wrapped.
+
+    One function per node class (``_latex_sum``, ``_latex_scaled``, ...), picked from
+    ``_latex_handlers()`` by the class of *expr*; a leaf is ``_latex_leaf``.
     """
-    from geomech.core.operations.addition import Add, MAdd, VAdd
-    from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-    from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
-    from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul, VVMul
-
     nodes = getattr(expr, "nodes", None)
-
-    # Leaf
     if nodes is None or len(nodes) == 0:
-        name = getattr(expr, "name", None)
-        if name is not None:
-            val = _numeric_value(expr)
-            if val is not None:
-                body = _format_number(abs(val))
-                return "-" + body if val < 0 else body
-            return name
+        return _latex_leaf(expr)
+    handler = _latex_handlers().get(type(expr))
+    if handler is None:
+        return str(expr)
+    return handler(expr)
+
+
+_LATEX_HANDLERS: dict = {}
+
+
+def _latex_handlers():
+    """``{node class: LaTeX function}``, built on first use (the node classes cannot be
+    imported when this module loads; see the note at the top).
+
+    ``to_latex`` looks a handler up by the exact class, not along the MRO: a subclass of a
+    node class is not dispatched and prints as its ``str``. No such subclass exists; one
+    added later needs its own entry here (pinned in test_phase5b_structure.py).
+    """
+    if not _LATEX_HANDLERS:
+        from geomech.core.operations.addition import Add, MAdd, VAdd
+        from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
+        from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
+        from geomech.core.operations.multiplication import (
+            MMMul,
+            Mul,
+            MVMul,
+            SMMul,
+            SVMul,
+            VVMul,
+        )
+
+        _LATEX_HANDLERS.update(
+            {
+                Add: _latex_sum,
+                VAdd: _latex_sum,
+                MAdd: _latex_sum,
+                Mul: lambda e: _product_latex([e]),
+                SVMul: _latex_scaled,
+                SMMul: _latex_scaled,
+                MVMul: _latex_product,
+                MMMul: _latex_product,
+                VVMul: _latex_product,
+                Dot: _latex_dot,
+                Cross: _latex_cross,
+                Hat: lambda e: f"\\widehat{{{to_latex(e.expr)}}}",
+                Vee: lambda e: f"\\left({to_latex(e.expr)}\\right)^\\vee",
+                Transpose: _latex_transpose,
+                TimeDerivative: _latex_time_derivative,
+                Variation: _latex_variation,
+                TimeIntegral: lambda e: f"\\int {to_latex(e.expr)} \\, dt",
+            }
+        )
+    return _LATEX_HANDLERS
+
+
+def _latex_leaf(expr):
+    r"""A leaf: its name, or a numeric literal formatted (``\frac{1}{2}``, ``-2``)."""
+    name = getattr(expr, "name", None)
+    if name is None:
         return "?"
+    val = _numeric_value(expr)
+    if val is not None:
+        body = _format_number(abs(val))
+        return "-" + body if val < 0 else body
+    return name
 
-    # N-ary addition
-    if isinstance(expr, (Add, VAdd, MAdd)):
-        parts = []
-        for i, child in enumerate(nodes):
-            s = to_latex(child)
-            if i > 0 and not s.startswith("-"):
-                parts.append(" + ")
-            elif i > 0:
-                parts.append(" ")
-            parts.append(s)
-        return _wrap("".join(parts))
 
-    # Scalar * Scalar: one coefficient first, then the symbols
-    if isinstance(expr, Mul):
-        return _product_latex([expr])
+def _latex_sum(expr):
+    """``Add``/``VAdd``/``MAdd``: addends joined by ``+`` (a signed addend keeps its sign)."""
+    parts = []
+    for i, child in enumerate(expr.nodes):
+        s = to_latex(child)
+        if i > 0 and not s.startswith("-"):
+            parts.append(" + ")
+        elif i > 0:
+            parts.append(" ")
+        parts.append(s)
+    return _wrap("".join(parts))
 
-    # Scalar multiples of a vector/matrix: flatten the chain, coefficient first
-    if isinstance(expr, (SVMul, SMMul)):
-        scalars = []
-        base = expr
-        while isinstance(base, type(expr)):
+
+def _latex_scaled(expr):
+    """``SVMul``/``SMMul``: the scalar chain flattened, coefficient first, then the base."""
+    from geomech.core.operations.geometry import Cross
+
+    scalars = []
+    base = expr
+    while isinstance(base, type(expr)):
+        scalars.append(base.right)
+        base = base.left
+    base_str = to_latex(base)
+    neg, coeff, symbolic = _coefficient([f for s in scalars for f in _scalar_factors(s)])
+    if (coeff or symbolic) and isinstance(base, Cross):
+        base_str = _wrap(base_str)  # m (a × b), not m a × b
+    return _product_latex(scalars, base_str)
+
+
+def _latex_product(expr):
+    """``MVMul``/``MMMul``/``VVMul``: juxtaposition (associative: no parentheses needed)."""
+    left = _operand(expr.left, _needs_parens_in_product)
+    right = _operand(expr.right, _needs_parens_in_product, inside=True)
+    return f"{left} {right}"
+
+
+def _latex_dot(expr):
+    right = _signed_factor(to_latex(expr.right), True)
+    return f"{to_latex(expr.left)} \\cdot {right}"
+
+
+def _latex_cross(expr):
+    left = _operand(expr.left, _needs_parens_in_cross)
+    right = _operand(expr.right, _needs_parens_in_cross, inside=True)
+    return f"{left} \\times {right}"
+
+
+def _latex_transpose(expr):
+    r"""``x^T`` for an atom, ``\left(...\right)^T`` for anything composite; a scaled
+    operand keeps its coefficient outside (``(s v)^T = s v^T``)."""
+    from geomech.core.operations.geometry import Transpose
+    from geomech.core.operations.multiplication import SMMul, SVMul
+
+    if isinstance(expr.expr, (SVMul, SMMul)):
+        scalars, base = [], expr.expr
+        while isinstance(base, (SVMul, SMMul)):
             scalars.append(base.right)
             base = base.left
-        base_str = to_latex(base)
-        neg, coeff, symbolic = _coefficient([f for s in scalars for f in _scalar_factors(s)])
-        if (coeff or symbolic) and isinstance(base, Cross):
-            base_str = _wrap(base_str)  # m (a × b), not m a × b
-        return _product_latex(scalars, base_str)
-
-    # Matrix/vector products (associative: nested products need no parentheses)
-    if isinstance(expr, (MVMul, MMMul, VVMul)):
-        left = _operand(expr.left, _needs_parens_in_product)
-        right = _operand(expr.right, _needs_parens_in_product, inside=True)
-        return f"{left} {right}"
-
-    # Dot product
-    if isinstance(expr, Dot):
-        right = _signed_factor(to_latex(expr.right), True)
-        return f"{to_latex(expr.left)} \\cdot {right}"
-
-    # Cross product
-    if isinstance(expr, Cross):
-        left = _operand(expr.left, _needs_parens_in_cross)
-        right = _operand(expr.right, _needs_parens_in_cross, inside=True)
-        return f"{left} \\times {right}"
-
-    # Hat (skew-symmetric)
-    if isinstance(expr, Hat):
-        return f"\\widehat{{{to_latex(expr.expr)}}}"
-
-    # Vee
-    if isinstance(expr, Vee):
-        return f"\\left({to_latex(expr.expr)}\\right)^\\vee"
-
-    # Transpose: x^T for an atom, \left(...\right)^T for anything composite
-    if isinstance(expr, Transpose):
-        if isinstance(expr.expr, (SVMul, SMMul)):
-            # (s v)^T = s v^T: keep the coefficient outside the transpose
-            scalars, base = [], expr.expr
-            while isinstance(base, (SVMul, SMMul)):
-                scalars.append(base.right)
-                base = base.left
-            return _product_latex(scalars, to_latex(Transpose(base)))
-        inner = to_latex(expr.expr)
-        if _is_transpose_atom(expr.expr) and not inner.startswith("-"):
-            return f"{inner}^T"
-        return f"{_wrap(inner)}^T"
-
-    # Time derivative: \dot / \ddot of a leaf, d/dt(...) of a composite
-    if isinstance(expr, TimeDerivative):
-        inner = expr.expr
-        if isinstance(inner, TimeDerivative) and not getattr(inner.expr, "nodes", None):
-            return f"\\ddot{{{to_latex(inner.expr)}}}"
-        if not getattr(inner, "nodes", None) or (
-            isinstance(inner, Variation) and not getattr(inner.expr, "nodes", None)
-        ):
-            return f"\\dot{{{to_latex(inner)}}}"
-        return f"\\frac{{d}}{{dt}}{_wrap(to_latex(inner))}"
-
-    # Variation
-    if isinstance(expr, Variation):
-        if getattr(expr.expr, "nodes", None):
-            return f"\\delta{_wrap(to_latex(expr.expr))}"
-        return f"\\delta {to_latex(expr.expr)}"
-
-    # Time integral
-    if isinstance(expr, TimeIntegral):
-        return f"\\int {to_latex(expr.expr)} \\, dt"
-
-    # Fallback
-    return str(expr)
+        return _product_latex(scalars, to_latex(Transpose(base)))
+    inner = to_latex(expr.expr)
+    if _is_transpose_atom(expr.expr) and not inner.startswith("-"):
+        return f"{inner}^T"
+    return f"{_wrap(inner)}^T"
 
 
-def display_latex(expr):
+def _latex_time_derivative(expr):
+    r"""``\dot``/``\ddot`` of a leaf (or of the variation of a leaf), else ``d/dt(...)``."""
+    from geomech.core.operations.calculus import TimeDerivative, Variation
+
+    inner = expr.expr
+    if isinstance(inner, TimeDerivative) and not getattr(inner.expr, "nodes", None):
+        return f"\\ddot{{{to_latex(inner.expr)}}}"
+    if not getattr(inner, "nodes", None) or (
+        isinstance(inner, Variation) and not getattr(inner.expr, "nodes", None)
+    ):
+        return f"\\dot{{{to_latex(inner)}}}"
+    return f"\\frac{{d}}{{dt}}{_wrap(to_latex(inner))}"
+
+
+def _latex_variation(expr):
+    if getattr(expr.expr, "nodes", None):
+        return f"\\delta{_wrap(to_latex(expr.expr))}"
+    return f"\\delta {to_latex(expr.expr)}"
+
+
+def display_latex(expr) -> None:
     """Display an expression as rendered LaTeX in a Jupyter notebook."""
     from IPython.display import Math, display
 
@@ -785,7 +838,7 @@ def _strip_outer_parens(s):
     return s[len(open_tok) : -len(close_tok)]
 
 
-def display_eom(eqns):
+def display_eom(eqns: dict) -> None:
     """Display equations of motion as rendered LaTeX in a Jupyter notebook."""
     from IPython.display import Math, display
 
@@ -798,10 +851,9 @@ def _latex_str_key(s):
     """Convert a raw str key (from EOM dicts) to cleaner LaTeX.
 
     Handles patterns like \\frac{d}{dt}(\\frac{d}{dt}(x)) → \\ddot{x}
-    and \\frac{d}{dt}(\\omega_{q}) → \\dot{\\omega_{q}}.
+    and \\frac{d}{dt}(\\omega_{q}) → \\dot{\\omega_{q}}; the product separator of a key
+    (``R*e3*f``) becomes a space, a LaTeX star (``u^*``) is kept.
     """
-    import re
-
     # ddot: \frac{d}{dt}(\frac{d}{dt}(X)) → \ddot{X}
     m = re.match(r"^\\frac\{d\}\{dt\}\(\\frac\{d\}\{dt\}\((.+)\)\)$", s)
     if m:
@@ -810,10 +862,14 @@ def _latex_str_key(s):
     m = re.match(r"^\\frac\{d\}\{dt\}\((.+)\)$", s)
     if m:
         return f"\\dot{{{m.group(1)}}}"
-    return s
+    # a product key (an input such as R*e3*f): LaTeX juxtaposes the factors. A leaf name
+    # cannot contain the separator, so in a key built by the engine every '*' is one; a
+    # '*' that ends the string or follows '^', '_' or '{' cannot sit between two factors
+    # (no factor prints empty or ends with those), so it is LaTeX and is kept (x^*)
+    return re.sub(r"(?<![\^_{])\*(?!$)", " ", s)
 
 
-def display_standard_form(sf):
+def display_standard_form(sf: dict) -> None:
     """Display standard form as M*ddq + G*u + f = 0 in a Jupyter notebook."""
     from IPython.display import Math, display
 
@@ -827,10 +883,11 @@ def display_standard_form(sf):
         # G * input terms
         for inp, coeff in eq.G.items():
             g_str = to_latex(coeff)
+            inp_str = _latex_str_key(inp)
             if g_str in ("I", "1"):
-                parts.append(inp)
+                parts.append(inp_str)
             else:
-                parts.append(f"{g_str} {inp}")
+                parts.append(f"{g_str} {inp_str}")
         # f term
         f_str = to_latex(eq.f)
         if f_str not in ("0v", "0"):
@@ -855,7 +912,7 @@ def display_standard_form(sf):
 # ---------------------------------------------------------------------------
 
 
-def eom_to_latex(eqns):
+def eom_to_latex(eqns: dict) -> str:
     """Return a complete LaTeX document string for the EOM dict (equations via ``to_latex``)."""
     lines = [
         r"\documentclass[12pt]{article}",
@@ -872,7 +929,7 @@ def eom_to_latex(eqns):
     return "\n".join(lines)
 
 
-def render_eom(eqns, output="eom.pdf", open_pdf=True):
+def render_eom(eqns: dict, output: str = "eom.pdf", open_pdf: bool = True) -> str | None:
     """Compile EOM to PDF via pdflatex.
 
     Parameters
@@ -909,8 +966,6 @@ def render_eom(eqns, output="eom.pdf", open_pdf=True):
                 result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout,
             )
             return None
-
-        import shutil
 
         shutil.copy2(pdf_tmp, output)
 

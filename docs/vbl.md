@@ -111,11 +111,11 @@ LinearizedSystem: M d/dt(dx) = A dx + B du
   inputs : [\delta{M}]
   row kin:R
     M[\frac{d}{dt}(\eta_{R})] = I
-    A[\eta_{R}] = Hat(\Omega_{R})(-1)
+    A[\eta_{R}] = Hat(\Omega_{R})*(-1)
     A[\delta{\Omega_{R}}] = I
   row \eta_{R}
     M[\frac{d}{dt}(\delta{\Omega_{R}})] = J
-    A[\delta{\Omega_{R}}] = (Hat(J\Omega_{R})+Hat(\Omega_{R})J(-1))
+    A[\delta{\Omega_{R}}] = (Hat(J*\Omega_{R})+Hat(\Omega_{R})*J*(-1))
     B[\delta{M}] = I
 ```
 
@@ -155,8 +155,8 @@ zero constants. The shape of a block follows from the row and column types,
 | scalar equation | 1×3 `Transpose(Vector)` | `Scalar` expression |
 
 For example, in the quadrotor with thrust `f: Scalar` and moment `M: Vector`, the
-translational row has `B[δf] = Re3` (3×1) and `A[η] = RHat(e3)f(-1)` (3×3), and the
-elastic spherical pendulum's scalar row has the 1×3 block `A[δω] = (ω m l (2))'`.
+translational row has `B[δf] = R*e3` (3×1) and `A[η] = R*Hat(e3)*f*(-1)` (3×3), and the
+elastic spherical pendulum's scalar row has the 1×3 block `A[δω] = (ω*m*l*(2))'`.
 
 `str(lin)` lists the non-zero blocks row by row; `to_latex(block)` renders any block.
 

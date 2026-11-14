@@ -612,7 +612,7 @@ class TestScalarFromScalar:
 
         m = Scalar("m", attr=["Constant"])
         result = _scalar_from_scalar(Mul(m, a), a)
-        assert str(result) == "m1"  # Mul(m, One)
+        assert str(result) == "m*1"  # Mul(m, One)
 
     def test_mul_right(self, scalars):
         """a from a*b → b."""
@@ -620,7 +620,7 @@ class TestScalarFromScalar:
         from geomech.core.math.extract import _scalar_from_scalar
 
         result = _scalar_from_scalar(Mul(a, b), a)
-        assert str(result) == "1b"
+        assert str(result) == "1*b"
 
     def test_add(self, scalars):
         """a from (a + b) → 1 (only the a term)."""
@@ -847,7 +847,7 @@ class TestMatrixFromMatrix:
 
         s = Scalar("s")
         result = _matrix_from_matrix(SMMul(N, s), N)
-        assert str(result) == "Is"
+        assert str(result) == "I*s"
 
 
 # ===========================================================================
