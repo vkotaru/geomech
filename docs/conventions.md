@@ -150,7 +150,13 @@ non-calculus operand; hashing uses `str`. `expr.has(x)` uses the same `==`. Henc
   `to_standard_form` accepts them; `linearize` does not yet.
 - **inputs**: The forces and torques passed to `to_standard_form`/`linearize` (`inputs=[f, M]`):
   `G` (standard form) and `B` (linearization) are their coefficients. For `compute_eom`
-  they are ordinary non-constant symbols in `δW`.
+  they are ordinary non-constant symbols in `δW`. An input must be the same symbol as its
+  leaf in the equations (class, `attr`, size): `Scalar("g")` against a constant
+  `Scalar("g", attr=["Constant"])` raises `ValueError`, as does a param of `compute_eom`.
+  Both functions accept and reject the same inputs (`check_inputs`): a list (or tuple,
+  generator) of distinct non-constant `Scalar`/`Vector` leaves that are neither a
+  configuration variable nor a tangent or variation vector (`ω`, `ξ`, `Ω`, `η`);
+  `inputs=None` means none.
 - **constant**: A leaf with `attr=["Constant"]` (or a number): its variation and derivative vanish.
   A symbol that is neither a configuration variable, a param nor a constant makes
   `compute_eom` raise ([Troubleshooting](troubleshooting.md)).

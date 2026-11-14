@@ -216,6 +216,27 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   notebooks for the rigid pendulum, spherical pendulum, quadrotor and quadrotor with payload.
 
 ### Changed
+- `to_standard_form` validates `inputs` like `linearize`: both call the new
+  `geomech.dynamics.eom.check_inputs`, so they accept and reject the same inputs with the
+  same message after the caller's name. Before, `to_standard_form` only ran the name-clash
+  check: `inputs=[Scalar("g", attr=["Constant"])]` returned a `G[g]` block, a duplicate
+  input was merged, `ξ`/`η` or a `Matrix`, an `S2` point or `F + u` returned an empty or
+  wrong `G` entry, and a configuration variable or `ω`/`Ω` failed later with an engine
+  error. Each now raises the `linearize` error (`TypeError` for a non-leaf, `ValueError`
+  otherwise). A generator of inputs is no longer consumed before the extraction (it gave
+  an empty `G`), and one leaf passed instead of a list (`inputs=f`) raises `TypeError`
+  "inputs must be a sequence of Scalar/Vector leaves" in both functions.
+- An input printed like a different leaf of the equations raises `ValueError` naming both
+  (formerly item 1 of `specs/follow-ups.md`). With `L = ½ m ẋ·ẋ − m g e₃·x` and `g` `Constant`,
+  `linearize(eom, V, [f, Scalar("g")])` used to return a zero `B[δg]` column (the
+  constant has no variation) while `to_standard_form(eom, V, inputs=[Scalar("g")])`
+  matched it by name and returned `G[g] = −m e₃`; both now raise "input 'g' has the name
+  of the constant 'g' in the equations; a symbol is either a constant parameter or an
+  input". The same holds for a different class (`Scalar("F")` against `Vector("F")`),
+  other flags or another size, and for `compute_eom(..., params=[...])` against a leaf of
+  `L` or `δW` (a declared param named like a constant had no effect). An input that is
+  the same symbol as its leaf in the equations is unchanged. The check is
+  `geomech.dynamics.eom.check_symbol_clash`.
 - Products print a `*` between their factors (phase 5b, decision D2 (a)): `Mul`
   (`m*l`), `SVMul` (`x*m`), `SMMul` (`J*(2)`), `MVMul` (`J*\Omega`), `MMMul` (`R*J`),
   `VVMul` (`(a)'*b`). Every pinned equation string changes form; each changed output was
