@@ -38,6 +38,11 @@ This release changed derived equations and the public surface. In short:
 
 
 ### Added
+- Release workflow `.github/workflows/publish.yml`: pushing a tag `v*` that matches the
+  package version builds the sdist and wheel, checks them, uploads them to PyPI through
+  trusted publishing (environment `release`) and creates a GitHub release. Package
+  metadata (readme, license, authors, keywords, classifiers) for PyPI; README links are
+  absolute so they work on PyPI.
 - 3-D visualizer and HTML report, `geomech.viz` (`specs/viz-and-skill.md`,
   `docs/visualization.md`):
   - `Scene(layout, params=None)` with `RigidBody(R, origin, shape, offset, axes)`,
