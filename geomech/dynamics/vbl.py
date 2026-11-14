@@ -85,13 +85,9 @@ from geomech.core.base.constants import negate
 from geomech.core.base.expressions import (
     S2,
     SO3,
-    TS2,
-    TSO3,
     Expr,
     IdentityMatrix,
     One,
-    Scalar,
-    Vector,
     Zero,
     ZeroMatrix,
     ZeroVector,
@@ -105,7 +101,7 @@ from geomech.core.operations.multiplication import MMMul, SMMul, VVMul
 from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.simplification import full_simplify
 from geomech.core.transformations.utils import addends, sum_of
-from geomech.dynamics.eom import check_variables
+from geomech.dynamics.eom import check_inputs, check_variables
 from geomech.dynamics.variables import SystemVariables
 from geomech.utils.errors import AlgebraicError
 from geomech.utils.invariants import check_tree
@@ -243,8 +239,11 @@ def linearize(
         a non-``SO3`` matrix configuration, or an equation whose type differs from
         that of its variation vector (a scalar equation under a vector key).
     ValueError
-        Constant or duplicate inputs, an input that is also a configuration variable
-        or a tangent vector (``Ω``, ``ω``) whose variation is already a state, or
+        Constant or duplicate inputs (the input checks are ``check_inputs``, shared with
+        ``to_standard_form``), an input that is also a configuration variable
+        or a tangent vector (``Ω``, ``ω``) whose variation is already a state, an input
+        printed like a different leaf of the equations (a constant ``g`` of ``L`` given
+        as ``Scalar("g")``, or another class, ``attr`` or size), or
         ``eom`` keys that do not match ``variables``. A stray variation symbol in an
         equation also surfaces as the engine's ``ValueError`` (δ of a variation is
         not representable).
@@ -268,7 +267,7 @@ def linearize(
         record = stage_recorder(trace, "linearize")
         states = cfg_perts + vel_perts
         dstates = [s.t_diff() for s in states]
-        inputs = _check_inputs(inputs, variables, states + dstates)
+        inputs = check_inputs(inputs, variables, [eq for _, eq in eom.values()], "linearize")
         input_perts = [u.delta() for u in inputs]
         dvel_perts = dstates[len(cfg_perts) :]
 
@@ -425,45 +424,6 @@ def _dynamic_row(
 # ---------------------------------------------------------------------------
 # Validation
 # ---------------------------------------------------------------------------
-
-
-def _check_inputs(inputs, variables, state_symbols):
-    """Inputs must be distinct, non-constant ``Scalar``/``Vector`` leaves that are neither
-    configuration variables nor tangent vectors, and whose variation is not already a
-    state or d/dt-of-state symbol."""
-    if inputs is None:
-        return []
-    inputs = list(inputs)
-    config = {str(v) for v in variables.scalars + variables.vectors + variables.matrices}
-    states = {str(s) for s in state_symbols}
-    seen = set()
-    for u in inputs:
-        if not isinstance(u, (Scalar, Vector)) or isinstance(u, S2):
-            raise TypeError(
-                f"linearize: input '{u}' must be a Scalar or Vector leaf, got {type(u).__name__}"
-            )
-        if isinstance(u, (TS2, TSO3)):
-            raise ValueError(
-                f"linearize: input '{u}' is a tangent or variation vector of a configuration"
-                " variable; its variation is part of the perturbation state, not an input"
-            )
-        if u.is_constant or u.is_numeric or u.is_zero:
-            raise ValueError(
-                f"linearize: input '{u}' is constant: its variation vanishes,"
-                " so it cannot be an input"
-            )
-        if str(u) in config:
-            raise ValueError(f"linearize: input '{u}' is also a configuration variable")
-        if str(u.delta()) in states:
-            raise ValueError(
-                f"linearize: the variation '{u.delta()}' of input '{u}' is already a"
-                f" perturbation state (is '{u}' a tangent vector of a configuration"
-                " variable?)"
-            )
-        if str(u) in seen:
-            raise ValueError(f"linearize: input '{u}' is listed more than once")
-        seen.add(str(u))
-    return inputs
 
 
 def _check_eom(eom, variables):

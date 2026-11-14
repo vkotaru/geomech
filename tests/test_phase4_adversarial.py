@@ -610,6 +610,60 @@ def _matrix_factor():
     compute_eom(L, None, SystemVariables(matrices=[R]))
 
 
+def _falling_mass():
+    """``L = ½ m ẋ·ẋ − m g e₃·x`` with ``g`` constant and the force ``f`` in δW."""
+    m, g = Scalar("m", attr=["Constant"]), Scalar("g", attr=["Constant"])
+    e3, x, f = Vector("e3", attr=["Constant"]), Vector("x"), Vector("f")
+    L = Scalar("0.5", value=0.5) * m * Dot(x.t_diff(), x.t_diff()) - m * g * Dot(e3, x)
+    variables = SystemVariables(vectors=[x])
+    return compute_eom(L, Dot(x.delta(), f), variables), variables, f
+
+
+def _input_named_like_a_constant_linearize():
+    eom, variables, f = _falling_mass()
+    linearize(eom, variables, [f, Scalar("g")])
+
+
+def _input_named_like_a_constant_standard_form():
+    eom, variables, _ = _falling_mass()
+    to_standard_form(eom, variables, inputs=[Scalar("g")])
+
+
+def _input_of_another_class():
+    m, x = Scalar("m", attr=["Constant"]), Vector("x")
+    variables = SystemVariables(vectors=[x])
+    L = Scalar("0.5", value=0.5) * m * Dot(x.t_diff(), x.t_diff())
+    eom = compute_eom(L, Dot(x.delta(), Vector("F", attr=["Constant"])), variables)
+    linearize(eom, variables, [Scalar("F")])
+
+
+def _constant_input_standard_form():
+    eom, variables, _ = _falling_mass()
+    to_standard_form(eom, variables, inputs=[Scalar("g", attr=["Constant"])])
+
+
+def _duplicate_input_standard_form():
+    eom, variables, f = _falling_mass()
+    to_standard_form(eom, variables, inputs=[f, f])
+
+
+def _single_input_linearize():
+    eom, variables, f = _falling_mass()
+    linearize(eom, variables, f)
+
+
+def _rigid_body_ke():
+    R = SO3("R")
+    J = Matrix("J", attr=["Constant", "SymmetricMatrix"])
+    return Dot(R.get_tangent_vector(), J * R.get_tangent_vector()) * 0.5
+
+
+def _param_named_like_a_constant():
+    m, l, x = Scalar("m", attr=["Constant"]), Scalar("l", attr=["Constant"]), Vector("x")
+    L = Scalar("0.5", value=0.5) * m * l * l * Dot(x.t_diff(), x.t_diff())
+    compute_eom(L, None, SystemVariables(vectors=[x]), params=[Scalar("l")])
+
+
 TRIGGERS = {
     "`Dot(m, x)`": lambda: Dot(_syms()[0], _syms()[3]),
     "`m + x`": lambda: _syms()[0] + _syms()[3],
@@ -742,6 +796,38 @@ TRIGGERS = {
     "`x.T() + y`": lambda: check_tree(Vector("x").T() + Vector("y")),
     '`TS2("w")`': lambda: check_tree(TS2("w")),
     '`Scalar("(-1)")`': lambda: check_tree(Scalar("(-1)")),
+    # an input or param printed like a different leaf of the equations
+    'an input named like a constant, `linearize(eom, V, [f, Scalar("g")])`, `g` `Constant`'
+    " in `L`": _input_named_like_a_constant_linearize,
+    'an input named like a constant of `L` (`inputs=[Scalar("g")]`, `g` `Constant` in `L`)': (
+        _input_named_like_a_constant_standard_form
+    ),
+    'an input of another class than its leaf (`Scalar("F")`, the equations hold the constant'
+    ' `Vector("F")`)': _input_of_another_class,
+    'a param named like a constant of `L` (`params=[Scalar("l")]`, `l` `Constant` in `L`)': (
+        _param_named_like_a_constant
+    ),
+    # the input checks shared by to_standard_form and linearize (check_inputs)
+    "a `Constant` input (`inputs=[g]`, `g` `Constant` in `L`)": _constant_input_standard_form,
+    "an input listed twice (`inputs=[f, f]`)": _duplicate_input_standard_form,
+    "`ξ`, `Ω` or `η` as an input": lambda: linearize(
+        compute_eom(_rigid_body_ke(), None, SystemVariables(matrices=[SO3("R")])),
+        SystemVariables(matrices=[SO3("R")]),
+        [SO3("R").get_variation_vector()],
+    ),
+    "a plain `Vector` printed like `Ω` as an input": lambda: linearize(
+        compute_eom(_rigid_body_ke(), None, SystemVariables(matrices=[SO3("R")])),
+        SystemVariables(matrices=[SO3("R")]),
+        [Vector(str(SO3("R").get_tangent_vector()))],
+    ),
+    "an input that is not a plain leaf (`ẋ`, `F + u`, a `Matrix`, an `S2`/`SO3` point)": (
+        lambda: linearize(
+            compute_eom(_ke(Vector("x")), None, SystemVariables(vectors=[Vector("x")])),
+            SystemVariables(vectors=[Vector("x")]),
+            [Vector("x").t_diff()],
+        )
+    ),
+    "one input instead of a list, `linearize(eom, V, f)`": _single_input_linearize,
 }
 
 

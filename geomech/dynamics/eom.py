@@ -145,6 +145,152 @@ def check_variables(variables: SystemVariables, caller: str = "compute_eom") -> 
             seen_variations[variation] = name
 
 
+def _symbol_key(leaf):
+    """What makes two leaves of one printed name the same symbol: class, flags, size."""
+    return type(leaf), getattr(leaf, "flags", None), getattr(leaf, "size", None)
+
+
+def _describe_leaf(leaf):
+    """``constant Scalar`` / ``Vector`` / ``Vector with attr=['UnitNorm']`` for a message."""
+    kind = type(leaf).__name__
+    if leaf.is_constant or leaf.is_numeric:
+        return f"constant {kind}"
+    attr = getattr(leaf, "attr", None)
+    return f"{kind} with attr={list(attr)}" if attr else kind
+
+
+def check_symbol_clash(
+    symbols: Sequence[Expr],
+    exprs: Sequence[object],
+    caller: str,
+    role: str = "input",
+    what: str = "an input",
+    where: str = "the equations",
+) -> None:
+    """Reject a declared symbol printed like a *different* leaf of *exprs*.
+
+    *symbols* are the inputs of ``to_standard_form``/``linearize`` or the ``params`` of
+    ``compute_eom``; *exprs* the equations (or the Lagrangian and the virtual work). The
+    engine identifies a leaf by its printed name, so a declared ``Scalar("g")`` would be
+    matched against, or silently miss, a constant ``Scalar("g", attr=['Constant'])`` in
+    the equations. A declared symbol whose printed name equals that of a leaf of another
+    class, other flags (``Constant``, ``UnitNorm``, ...) or another size raises
+    ``ValueError`` naming both; the same symbol (the normal case) passes. *role*, *what*
+    and *where* word the message (``params entry``, ``a prescribed parameter``, ``the
+    Lagrangian or the virtual work``).
+    """
+    leaves: dict[str, list] = {}
+    stack = list(exprs)
+    while stack:
+        node = stack.pop()
+        children = getattr(node, "nodes", None)
+        if children:
+            stack.extend(children)
+            continue
+        same_name = leaves.setdefault(str(node), [])
+        if all(_symbol_key(node) != _symbol_key(other) for other in same_name):
+            same_name.append(node)
+    for sym in symbols:
+        name = str(sym)
+        for leaf in leaves.get(name, ()):
+            if _symbol_key(leaf) == _symbol_key(sym):
+                continue
+            if (leaf.is_constant or leaf.is_numeric) and type(leaf) is type(sym):
+                raise ValueError(
+                    f"{caller}: {role} '{name}' has the name of the constant '{name}' in"
+                    f" {where}; a symbol is either a constant parameter or {what} (rename"
+                    f" one, or drop attr=['Constant'] if '{name}' is {what})"
+                )
+            raise ValueError(
+                f"{caller}: {role} '{name}' ({_describe_leaf(sym)}) has the name of the"
+                f" {_describe_leaf(leaf)} '{name}' in {where}, a different symbol;"
+                " leaves are matched by printed name, so the two would be confused (rename"
+                f" one, or build the {role} with the class and attr it has in {where})"
+            )
+
+
+def _input_state_symbols(variables: SystemVariables) -> set[str]:
+    """Printed perturbation states of *variables* and their time derivatives.
+
+    The configuration perturbations (``δx``, ``δs``, ``ξ_q``, ``η_R``), the velocity
+    perturbations (``δẋ``, ``δṡ``, ``δω_q``, ``δΩ_R``) and the d/dt of each: the columns
+    of ``linearize`` other than the input variations. A general ``Matrix`` (rejected by
+    ``check_variables``) contributes nothing.
+    """
+    states: list[Expr] = []
+    for s in variables.scalars:
+        states += [s.delta(), s.t_diff().delta()]
+    for v in variables.vectors:
+        if isinstance(v, S2):
+            states += [v.get_variation_vector(), Variation(v.get_tangent_vector())]
+        else:
+            states += [v.delta(), v.t_diff().delta()]
+    for m in variables.matrices:
+        if isinstance(m, SO3):
+            states += [m.get_variation_vector(), Variation(m.get_tangent_vector())]
+    return {str(x) for x in states} | {str(x.t_diff()) for x in states}
+
+
+def check_inputs(
+    inputs: Sequence[Expr] | None,
+    variables: SystemVariables,
+    exprs: Sequence[object],
+    caller: str,
+) -> list[Expr]:
+    """Validate the ``inputs`` of ``to_standard_form``/``linearize``; return them as a list.
+
+    ``None`` means no inputs. *inputs* must be a sequence of leaves, not one leaf
+    (``TypeError``). Each input must be a plain non-manifold ``Scalar`` or ``Vector`` leaf
+    (``TypeError`` for an ``S2``/``SO3`` point, a ``Matrix`` or an expression such as
+    ``d/dt(x)`` or ``F + u``), and is rejected with ``ValueError`` if it is a tangent or
+    variation vector (``ω``, ``ξ``, ``Ω``, ``η``), constant (``attr=['Constant']``, a
+    number, zero), a configuration variable, a symbol whose variation prints like a
+    perturbation state (a plain ``Vector`` named like ``Ω``), listed twice, or printed
+    like a different leaf of *exprs* (``check_symbol_clash``). Messages start with
+    *caller*. Both functions call this, so they accept and reject the same inputs.
+    """
+    if inputs is None:
+        return []
+    if isinstance(inputs, (Expr, str)) or not hasattr(inputs, "__iter__"):
+        hint = f"; write inputs=[{inputs}]" if isinstance(inputs, Expr) else ""
+        raise TypeError(
+            f"{caller}: inputs must be a sequence of Scalar/Vector leaves, got"
+            f" {type(inputs).__name__} {str(inputs)!r}{hint}"
+        )
+    inputs = list(inputs)
+    config = {str(v) for v in variables.scalars + variables.vectors + variables.matrices}
+    states = _input_state_symbols(variables)
+    seen = set()
+    for u in inputs:
+        if not isinstance(u, (Scalar, Vector)) or isinstance(u, S2):
+            raise TypeError(
+                f"{caller}: input '{u}' must be a Scalar or Vector leaf, got {type(u).__name__}"
+            )
+        if isinstance(u, (TS2, TSO3)):
+            raise ValueError(
+                f"{caller}: input '{u}' is a tangent or variation vector of a configuration"
+                " variable; its variation is part of the perturbation state, not an input"
+            )
+        if u.is_constant or u.is_numeric or u.is_zero:
+            raise ValueError(
+                f"{caller}: input '{u}' is constant: its variation vanishes,"
+                " so it cannot be an input"
+            )
+        if str(u) in config:
+            raise ValueError(f"{caller}: input '{u}' is also a configuration variable")
+        if str(u.delta()) in states:
+            raise ValueError(
+                f"{caller}: the variation '{u.delta()}' of input '{u}' is already a"
+                f" perturbation state (is '{u}' a tangent vector of a configuration"
+                " variable?)"
+            )
+        if str(u) in seen:
+            raise ValueError(f"{caller}: input '{u}' is listed more than once")
+        seen.add(str(u))
+    check_symbol_clash(inputs, exprs, caller)
+    return inputs
+
+
 def _check_scalar_input(label, obj):
     """``lagrangian``/``inf_work`` must be scalar expression trees."""
     if not isinstance(obj, Expr):
@@ -388,7 +534,10 @@ def compute_eom(
     free and is dropped). A variation symbol that survives extraction and belongs to none
     of these (``δx`` of an unlisted ``x``, ``ξ``/``δω`` of an unlisted ``S2`` point, …)
     raises ``ValueError`` naming it: before, such terms were dropped silently and the
-    system lost a degree of freedom. ``numeric.check_eom`` takes the same ``params``.
+    system lost a degree of freedom. ``numeric.check_eom`` takes the same ``params``. A
+    param printed like a different leaf of ``lagrangian`` or ``inf_work`` (a constant
+    ``l`` of ``L`` declared as ``Scalar("l")``) raises ``ValueError``: it would have no
+    effect.
     ``to_standard_form`` accepts the result (a param's rate stays in ``f``, the param
     itself in ``M``); ``linearize`` does not support prescribed parameters yet and raises
     ``AlgebraicError`` on the ``δl`` term.
@@ -398,6 +547,8 @@ def compute_eom(
     stage = "validation"
     try:
         check_variables(variables)
+        if not isinstance(params, (Expr, str)) and hasattr(params, "__iter__"):
+            params = list(params)  # a generator is read twice (here and the clash check)
         param_names = _check_params(params, variables)
         if isinstance(inf_work, bool):
             raise TypeError(
@@ -408,6 +559,14 @@ def compute_eom(
             inf_work = Zero
         _check_scalar_input("lagrangian", lagrangian)
         _check_scalar_input("inf_work", inf_work)
+        check_symbol_clash(
+            params,
+            [lagrangian, inf_work],
+            "compute_eom",
+            role="params entry",
+            what="a prescribed parameter",
+            where="the Lagrangian or the virtual work",
+        )
 
         # gather variation vectors and their time derivatives
         variation_vectors = []
