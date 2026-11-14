@@ -1,0 +1,3966 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Symbolic computation of dynamics on smooth manifolds">
+      
+      
+      
+        <link rel="canonical" href="https://vkotaru.github.io/geomech/troubleshooting/">
+      
+      
+        <link rel="prev" href="../conventions/">
+      
+      
+        <link rel="next" href="../vbl/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Troubleshooting - geomech</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#troubleshooting" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="geomech" class="md-header__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            geomech
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Troubleshooting
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../pipeline/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  The Pipeline, Stage by Stage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../conventions/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Conventions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../vbl/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Variation-Based Linearization
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../codegen/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Code Generation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../simulation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Simulation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../visualization/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Visualization and Reports
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../numeric-verification/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Verifying an Equation Numerically
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../manifold-implementation-notes/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Manifold Rules: Derivation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/geomech/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="geomech" class="md-nav__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    geomech
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Pipeline, Stage by Stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-equation-looks-wrong-and-nothing-was-raised" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The equation looks wrong and nothing was raised
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-equation-is-wrong-and-no-row-matches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The equation is wrong and no row matches
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#history-silent-bugs-fixed-in-earlier-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History: silent bugs fixed in earlier versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-algebraicerrors-about-a-calculus-operator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The AlgebraicErrors about a calculus operator
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typed-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typed errors
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Typed errors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#building-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building expressions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compute_eom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compute_eom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_standard_form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_standard_form
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linearize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        linearize
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-generation-and-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code generation and simulation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#engine-functions-called-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engine functions called directly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check_tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation-Based Linearization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../codegen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization and Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../numeric-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying an Equation Numerically
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../manifold-implementation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifold Rules: Derivation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geomech
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1" id="__nav_13_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    geomech
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/codegen/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    codegen
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_1" id="__nav_13_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    codegen
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/casadi_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    casadi_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    emitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/energy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    energy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/numpy_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numpy_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    core
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2" id="__nav_13_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/base/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    base
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_1" id="__nav_13_1_2_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    base
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/base/constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/base/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/base/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/math/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    math
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_2" id="__nav_13_1_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    math
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/math/collecting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    collecting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/math/extract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    extract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/math/ibp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ibp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/operations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_3" id="__nav_13_1_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    addition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/calculus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    calculus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/geometry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geometry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/mixins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mixins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/multiplication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    multiplication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/transformations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    transformations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_4" id="__nav_13_1_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    transformations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/expansion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expansion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/manifold_rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    manifold_rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/pulling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pulling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/simplification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simplification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/vector_identities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vector_identities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/dynamics/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dynamics
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_3" id="__nav_13_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    dynamics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/dynamics/eom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    eom
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/dynamics/standard_form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    standard_form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/dynamics/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/dynamics/vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vbl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/numeric/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numeric
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/simulation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simulation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_5" id="__nav_13_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    simulation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/simulation/control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/simulation/integrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    integrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/simulation/model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_6" id="__nav_13_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/utils/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/utils/invariants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/utils/printing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    printing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/utils/trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    trace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/viz/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    viz
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_7" id="__nav_13_1_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    viz
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/viz/latex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    latex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/viz/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/viz/scene/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-equation-looks-wrong-and-nothing-was-raised" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The equation looks wrong and nothing was raised
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-equation-is-wrong-and-no-row-matches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The equation is wrong and no row matches
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#history-silent-bugs-fixed-in-earlier-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History: silent bugs fixed in earlier versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-algebraicerrors-about-a-calculus-operator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The AlgebraicErrors about a calculus operator
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typed-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typed errors
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Typed errors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#building-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building expressions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compute_eom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compute_eom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_standard_form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_standard_form
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linearize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        linearize
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-generation-and-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code generation and simulation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#engine-functions-called-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engine functions called directly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check_tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
+<p>Three kinds of trouble: the equation is wrong (or looks odd) and nothing was raised; a
+typed error was raised; or you want to see what the engine did. The tools are listed at
+the end.</p>
+<h2 id="the-equation-looks-wrong-and-nothing-was-raised">The equation looks wrong and nothing was raised<a class="headerlink" href="#the-equation-looks-wrong-and-nothing-was-raised" title="Permanent link">&para;</a></h2>
+<p>These can happen with the current version. Bugs that used to give a plausible wrong
+equation silently, and are fixed, are listed separately under
+<a href="#history-silent-bugs-fixed-in-earlier-versions">History</a> so that an old notebook or an
+old result can be recognised; they are not suspects for a wrong equation today.</p>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A <code>δm</code>/<code>ṁ</code> term, or a <code>ValueError</code> "δS still contains the variation symbols '\delta{m}'"</td>
+<td><code>m</code> is not <code>Constant</code></td>
+<td><code>Scalar("m", attr=["Constant"])</code>; attribute names are case-sensitive</td>
+</tr>
+<tr>
+<td><code>q × (ω̇ × q)</code> stays in an S² equation</td>
+<td><code>ω̇ ⊥ q</code> holds on the sphere but is never assumed: the tangency test sees <code>ω</code>, <code>ξ</code> and <code>Cross(·, q)</code> only, not a <code>d/dt</code> (<code>vector_rules</code> reaches every node, so <code>ω·q</code> and <code>q × (ω × q)</code> are reduced wherever they sit)</td>
+<td>correct but unreduced; <code>to_standard_form</code> reads it as the projection <code>(I − qqᵀ) ω̇</code></td>
+</tr>
+<tr>
+<td>Partially simplified output, with a <code>RuntimeWarning</code> "no confirmed fixed point after N passes"</td>
+<td><code>full_simplify</code> stopped at <code>max_iter</code></td>
+<td>raise <code>max_iter</code>, or look at the expression in the warning</td>
+</tr>
+<tr>
+<td>Two different inertias print the same and are merged</td>
+<td>Two leaves with the same name are the same symbol (<code>str</code> is the identity): <code>J2 = Matrix("J1")</code></td>
+<td>give every symbol its own name; <code>print_tree</code> shows the names</td>
+</tr>
+<tr>
+<td>On S², <code>to_standard_form</code>'s 3×3 solve leaves the sphere</td>
+<td><code>E</code> is meaningful on the tangent plane only</td>
+<td>solve <code>(I − qqᵀ)(M ω̇ + f + G u) = 0</code> with <code>ω̇ ⊥ q</code> (<a href="../conventions/">Conventions</a>)</td>
+</tr>
+<tr>
+<td><code>M</code> is negative</td>
+<td><code>E = −(Euler–Lagrange)</code>, so <code>M = −(physical inertia)</code></td>
+<td>by convention (<a href="../conventions/">Conventions</a>)</td>
+</tr>
+<tr>
+<td>A wrong sign, a term missing, an extra term, and no row here matches</td>
+<td>an engine rule that rewrites a term wrongly</td>
+<td><a href="#the-equation-is-wrong-and-no-row-matches">the recipe below</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-equation-is-wrong-and-no-row-matches">The equation is wrong and no row matches<a class="headerlink" href="#the-equation-is-wrong-and-no-row-matches" title="Permanent link">&para;</a></h2>
+<p>First confirm it numerically: <code>check_eom(L, dW, variables, eom)</code> compares the equation
+with a finite-difference Euler–Lagrange residual computed without the library's rules
+(<a href="../numeric-verification/">Verifying an Equation Numerically</a>); a relative error far
+above <code>1e-5</code> means a wrong term. Then localise it in three steps.</p>
+<ol>
+<li><strong>Bisect with <code>summary()</code>.</strong> Keep only the terms of <code>L</code> (and <code>dW</code>) that the wrong
+   term can come from, run <code>compute_eom(..., trace=tr)</code> with <code>tr = EOMTrace()</code>, and read
+   <code>tr.summary()</code> against the formulas of <a href="../pipeline/">Pipeline</a>: the first stage that
+   disagrees (a substitution that is not <code>ξ̇ − 2 ω × ξ</code>, a symbol that disappears, a
+   node count that drops sharply) is the stage to suspect. <code>tr.ibp[t]["collect"]</code>,
+   <code>["integrate"]</code> and <code>["simplify"]</code> split integration by parts per target.</li>
+<li><strong>Run the engine fuzzer.</strong> From the repository root, <code>python
+   scripts/engine_fuzz.py --quick</code> applies every rewrite (expand, pull,
+   vector_rules, simplify, collect, the manifold rules, the product rules) to thousands
+   of random trees and compares input and output numerically. A rule that changes a
+   value is reported as a <code>[wrong-value]</code> finding with a shrunk counterexample naming
+   the transformation (<code>manifold_rules[full delta]</code>, <code>collect[target occurs once]</code>,
+   <code>vector_rules: z_v Dot(q, ω_p) → z_v 0</code>); a correct engine has none. No hand
+   derivation is needed.</li>
+<li><strong>Rerun the suspect stage under <code>set_trace</code>.</strong> <code>geomech.set_trace(True)</code>, then call
+   the stage on the previous stage of the trace by hand, for example
+   <code>full_simplify(tr["manifold_rules"])</code> or <code>collect(tr["ibp.prepare"], target)</code>. Each
+   line is <code>rule name: before ==&gt; after</code>; the module docstring lists every rule with
+   its identity and the hypothesis it needs, so a line that is false on sight, or a
+   rule that fired without its hypothesis, is the bug.</li>
+</ol>
+<h2 id="history-silent-bugs-fixed-in-earlier-versions">History: silent bugs fixed in earlier versions<a class="headerlink" href="#history-silent-bugs-fixed-in-earlier-versions" title="Permanent link">&para;</a></h2>
+<p>These used to give a plausible wrong equation (or a wrong print) without an error. They
+are fixed: each now raises or derives correctly. They are listed so that an old notebook
+or an old result can be recognised; for a wrong equation with the current version, use
+<a href="#the-equation-is-wrong-and-no-row-matches">the recipe above</a> instead.</p>
+<table>
+<thead>
+<tr>
+<th>Old symptom</th>
+<th>Old cause</th>
+<th>Now</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A <code>δm</code> term although <code>attr=["constant"]</code> was given</td>
+<td>a typo in <code>attr</code> was ignored</td>
+<td><code>ValueError: attr: unknown attribute</code></td>
+</tr>
+<tr>
+<td>A variable had no equation, its terms were missing from the others</td>
+<td>it was not listed in <code>SystemVariables</code> and its terms were dropped</td>
+<td><code>ValueError</code> naming <code>δy</code></td>
+</tr>
+<tr>
+<td><code>−ḟ</code> where <code>f</code> was expected</td>
+<td><code>δW</code> written with the variation of the velocity, <code>Dot(x.t_diff().delta(), f)</code></td>
+<td><code>ValueError</code></td>
+</tr>
+<tr>
+<td><code>ω·q</code> or <code>q × (ω × q)</code> stayed with two <code>S2("q")</code> objects</td>
+<td>the tangent rules compared objects</td>
+<td>compared by name</td>
+</tr>
+<tr>
+<td>Gyroscopic terms on S² at half strength (<code>ω × c</code> instead of <code>2 ω × c</code>)</td>
+<td>S² rule <code>δω = ξ̇ − ω × ξ</code></td>
+<td><code>ξ̇ − 2 ω × ξ</code>; re-derive (pendulum-type systems are unchanged)</td>
+</tr>
+<tr>
+<td>A wrong SO(3) equation with <code>(M v)·(b × c)</code> terms; missing cross-inertia <code>M₁[Ω̇₂]</code> of a double rigid pendulum</td>
+<td><code>collect</code> used a false identity and could not separate <code>Dot(R₁a, R₂b)</code></td>
+<td>re-derive</td>
+</tr>
+<tr>
+<td>Coriolis / rate-of-inertia terms (<code>−2 m l l̇ ω</code>, <code>J̇ Ω</code>) missing</td>
+<td>integration by parts dropped <code>d/dt</code> of a non-constant scalar prefactor</td>
+<td>re-derive</td>
+</tr>
+<tr>
+<td><code>Hat(Vee(I))</code> simplified to <code>I</code></td>
+<td><code>Hat(Vee(X)) = X</code> was applied to any <code>X</code></td>
+<td>skew-symmetric <code>X</code> only</td>
+</tr>
+<tr>
+<td>A coefficient of <code>0</code> for a term that holds the variable (<code>M·Hat(v)</code>)</td>
+<td><code>extract_linear_coeff</code> returned a silent zero</td>
+<td><code>AlgebraicError</code> "no left matrix coefficient"</td>
+</tr>
+<tr>
+<td>One equation for two variables; duplicate rows in <code>linearize</code></td>
+<td>the same printed name listed twice</td>
+<td><code>ValueError</code> "is listed more than once"</td>
+</tr>
+<tr>
+<td>The equation <code>(ω m + f)</code></td>
+<td>a tangent vector listed as a configuration variable</td>
+<td><code>TypeError</code></td>
+</tr>
+<tr>
+<td>An entry like <code>x + y</code> or <code>q.t_diff()</code> in <code>SystemVariables</code> gave an unrelated stray-symbol error</td>
+<td>composite entries were accepted</td>
+<td><code>TypeError</code> "is a VAdd expression, not a single symbol"</td>
+</tr>
+<tr>
+<td><code>(0)x</code> in a result, <code>is_zero</code> false</td>
+<td><code>Number(0) * x</code> was not flagged zero</td>
+<td>flagged zero</td>
+</tr>
+<tr>
+<td>Two different products printed alike and compared equal (<code>Mul(ab, c)</code> and <code>Mul(a, bc)</code> both <code>abc</code>; <code>Variation(Scalar("x")) == Variation(Vector("x"))</code>)</td>
+<td>products printed their factors with no separator, and <code>==</code> compared the printed form only</td>
+<td>products print <code>*</code> (<code>ab*c</code>, <code>a*bc</code>), and a calculus node also compares its operand's class (phase 5b)</td>
+</tr>
+<tr>
+<td><code>x(5.55e-17)</code></td>
+<td>float roundoff of a cancelled like term</td>
+<td>sums within <code>1e-12</code> of the largest coefficient are dropped (<a href="../conventions/">Conventions</a>)</td>
+</tr>
+<tr>
+<td>A substitution silently not applied under an unusual node</td>
+<td><code>apply_manifold_rules</code> returned the old node when it could not rebuild one</td>
+<td><code>TypeError</code></td>
+</tr>
+<tr>
+<td>Partially simplified output without a word</td>
+<td><code>full_simplify</code> stopped at <code>max_iter</code> silently</td>
+<td><code>RuntimeWarning</code> "no confirmed fixed point after N passes"</td>
+</tr>
+<tr>
+<td><code>x * True</code> behaved like <code>x * 1</code></td>
+<td><code>bool</code> was taken as a number</td>
+<td><code>TypeError</code></td>
+</tr>
+<tr>
+<td>Two leaves built from one <code>attr</code> list shared flags</td>
+<td>the list was aliased</td>
+<td>copied</td>
+</tr>
+<tr>
+<td>A parameter named like <code>\omega_{q}</code> merged with ω</td>
+<td>reserved printed names were accepted</td>
+<td><code>ValueError</code> "has the printed name of the tangent vector"</td>
+</tr>
+<tr>
+<td><code>to_standard_form</code> gave <code>G[g] = −m e₃</code> and <code>linearize</code> a zero <code>B[δg]</code> column for an input <code>Scalar("g")</code> while <code>L</code> held the constant <code>g</code></td>
+<td>inputs were matched to leaves by printed name only, so a constant parameter counted as an input in one function and not in the other</td>
+<td><code>ValueError</code> "has the name of the constant 'g' in the equations"</td>
+</tr>
+<tr>
+<td><code>Transpose(v) * s</code> printed as <code>s v^T^T</code> and was treated as a row</td>
+<td>it built the double transpose <code>Transpose(SVMul(Transpose(v), s))</code>, a column</td>
+<td>the row <code>Transpose(SVMul(v, s))</code></td>
+</tr>
+<tr>
+<td><code>ExpressionMismatchError</code> from <code>expand</code>/<code>simplify</code> on a legal tree with rows (<code>(a + (bᵀK)ᵀ) cᵀ</code>), or a row turned into a column</td>
+<td><code>Transpose(Transpose(x))</code> was kept, and orientation was read from "is a <code>Transpose</code> node", so the row encoding was lost under <code>expand</code></td>
+<td><code>Transpose(Transpose(x))</code> is <code>x</code> at construction; orientation is <code>is_row_vector</code></td>
+</tr>
+<tr>
+<td>A correct equation printed as a wrong one: <code>a × b × c</code> (which product first?), <code>(b·c) a</code> printed as <code>b·c a</code>, a coefficient after its symbols</td>
+<td><code>to_latex</code> ignored precedence; <code>print_eom</code>/<code>render_eom</code> used <code>str</code></td>
+<td><code>to_latex</code> parenthesises <code>Cross</code>/<code>VAdd</code>/<code>MVMul</code> operands and prints <code>(b·c)\,a</code>; the printers use <code>to_latex</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-algebraicerrors-about-a-calculus-operator">The <code>AlgebraicError</code>s about a calculus operator<a class="headerlink" href="#the-algebraicerrors-about-a-calculus-operator" title="Permanent link">&para;</a></h2>
+<p>All three end with the engine text "appears only inside the calculus operator … such a term
+has no linear coefficient", but they have unrelated causes; the first sentence tells them
+apart. <code>compute_eom</code> decides between the first and the third by the order of the
+surviving derivative and by looking for an acceleration in <code>L</code>, before it says anything
+about <code>collect</code>.</p>
+<p><strong>1. A <code>d/dt</code> of a variation vector survived integration by parts</strong> (from
+<code>compute_eom</code>). The derivative is of first order and <code>L</code> holds no acceleration, but
+<code>collect</code> could not bring its term into the shape <code>Dot(d/dt(η), f)</code> (for a scalar
+variable: a direct factor <code>d/dt(δs) g</code> of a product), so the IBP pass did not integrate
+it, and the coefficient of <code>η</code> cannot be read off:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>AlgebraicError: compute_eom: while extracting the equation for '\eta_{R}': the time
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>derivative '\frac{d}{dt}(\eta_{R})' of the variation vector '\eta_{R}' survived integration
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>by parts in the term 'Dot(w,Vee(Hat(\frac{d}{dt}(\eta_{R}))*A))'
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>of δS; collect could not expose it as the left operand of a Dot (Dot(\frac{d}{dt}(\eta_{R}), f)),
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>so the term was not integrated by parts and has no coefficient. Inspect the term with
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>print_tree(term, style='indent'), or run compute_eom(..., trace=EOMTrace()) and look at the
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>stage 'ibp.collect[\frac{d}{dt}(\eta_{R})]'. (engine: extract_linear_coeff: '\eta_{R}' appears
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>only inside the calculus operator '\frac{d}{dt}(\eta_{R})' (a higher order derivative, a
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>variation or an integral of the query); such a term has no linear coefficient)
+</code></pre></div>
+<p>Fix: rewrite the term so the velocity sits in a vector operand (<code>Dot(w, Vee(Hat(Ω) A))</code>
+above: express the <code>Vee</code> explicitly, or use an equivalent <code>Dot</code>/<code>Cross</code> form). A row
+form <code>v.T() * A * w</code> in a kinetic energy is handled (<code>collect</code> turns an inner product
+holding the target into a <code>Dot</code>); if one still survives, the message adds "write it as
+Dot(v, A * w)".</p>
+<p><strong>2. A jerk</strong> (from <code>to_standard_form</code>): an acceleration appears only under a further
+time derivative, so the equation is not second order:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>AlgebraicError: to_standard_form: in equation '\delta{xs}', term
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>'\frac{d}{dt}(\frac{d}{dt}(\frac{d}{dt}(xs)))': the acceleration
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>'\frac{d}{dt}(\frac{d}{dt}(xs))' occurs only inside
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>'\frac{d}{dt}(\frac{d}{dt}(\frac{d}{dt}(xs)))', a third or higher time derivative of the
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>configuration (a jerk): the equation is not second order, so it has no standard form
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>M a + f + G u = 0 (engine: extract_linear_coeff: '\frac{d}{dt}(\frac{d}{dt}(xs))' appears
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>only inside the calculus operator '\frac{d}{dt}(\frac{d}{dt}(\frac{d}{dt}(xs)))' (a higher
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>order derivative, a variation or an integral of the query); such a term has no linear
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>coefficient)
+</code></pre></div>
+<p>Fix: a jerk comes from a virtual work that holds a third time derivative of the
+configuration; <code>compute_eom</code> output is fine, only the standard form does not exist.</p>
+<p><strong>3. A Lagrangian in accelerations</strong> (from <code>compute_eom</code>): <code>L</code> holds <code>ẍ</code> (or <code>ω̇</code>, <code>Ω̇</code>),
+so δL holds <code>d/dt(d/dt(δx))</code>. Integration by parts runs once per variation vector,
+against its first derivative, so the second derivative survives. For <code>L = ½ ẍ·ẍ</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>AlgebraicError: compute_eom: while extracting the equation for '\delta{x}': the Lagrangian
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>depends on accelerations (L contains '\frac{d}{dt}(\frac{d}{dt}(x))'); higher-order
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Lagrangians are not supported. Integration by parts runs once per variation vector, against
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>its first time derivative '\frac{d}{dt}(\delta{x})', so the term
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>'Dot(\frac{d}{dt}(\frac{d}{dt}(\delta{x})),\frac{d}{dt}(\frac{d}{dt}(x)))' of δS keeps
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>'\frac{d}{dt}(\frac{d}{dt}(\delta{x}))' and has no coefficient. Write L in the configuration
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>variables and their velocities only; run compute_eom(..., trace=EOMTrace()) and look at the
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>stage 'dL' to see where the acceleration enters. (engine: extract_linear_coeff: '\delta{x}'
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>appears only inside the calculus operator '\frac{d}{dt}(\frac{d}{dt}(\delta{x}))' (a higher
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>order derivative, a variation or an integral of the query); such a term has no linear
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>coefficient)
+</code></pre></div>
+<p>Fix: higher-order Lagrangians are not supported; write <code>L</code> in the configuration
+variables and their velocities.</p>
+<h2 id="typed-errors">Typed errors<a class="headerlink" href="#typed-errors" title="Permanent link">&para;</a></h2>
+<p>Exact messages, produced by the code as of this version (the quoted symbols are the
+ones of the example). Every message starts with the function or node that raised it.</p>
+<h3 id="building-expressions">Building expressions<a class="headerlink" href="#building-expressions" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dot(m, x)</code></td>
+<td><code>ExpressionMismatchError: Dot cannot combine SCALAR 'm' and VECTOR 'x'</code></td>
+</tr>
+<tr>
+<td><code>m + x</code></td>
+<td><code>ExpressionMismatchError: Add cannot combine SCALAR 'm' and VECTOR 'x'</code></td>
+</tr>
+<tr>
+<td><code>x - m</code></td>
+<td><code>ExpressionMismatchError: Sub cannot combine VECTOR 'x' and SCALAR 'm'</code></td>
+</tr>
+<tr>
+<td><code>x * J</code></td>
+<td><code>ExpressionMismatchError: MVMul: a column vector times a matrix is not defined: 'x' * 'J'; write M * v for the column M v, or v.T() * M for the row vᵀ M</code></td>
+</tr>
+<tr>
+<td><code>J * x.T()</code></td>
+<td><code>ExpressionMismatchError: MVMul: a matrix times a row vector is not defined: 'J' * '(x)''; a matrix multiplies a column vector (M * v), and a row vector multiplies a matrix from the left (v.T() * M)</code></td>
+</tr>
+<tr>
+<td><code>x.T() * y.T()</code></td>
+<td><code>ExpressionMismatchError: VVMul: two row vectors cannot be multiplied: '(x)'' * '(y)''; write a.T() * b for the inner product aᵀb or a * b.T() for the outer product a bᵀ</code></td>
+</tr>
+<tr>
+<td><code>x * y</code></td>
+<td><code>ExpressionMismatchError: VVMul: two column vectors cannot be multiplied: 'x' * 'y'; write Dot(a, b) or a.T() * b for the inner product, a * b.T() for the outer product, or Cross(a, b)</code></td>
+</tr>
+<tr>
+<td><code>Hat(m)</code></td>
+<td><code>ExpressionMismatchError: Hat expects a VECTOR, got SCALAR 'm'</code></td>
+</tr>
+<tr>
+<td><code>Vee(x)</code></td>
+<td><code>ExpressionMismatchError: Vee expects a MATRIX, got VECTOR 'x'</code></td>
+</tr>
+<tr>
+<td><code>Vector("a", size=(2,)) + x</code></td>
+<td><code>SizeMismatchError: VAdd size mismatch: expected (2,), got (3,)</code></td>
+</tr>
+<tr>
+<td><code>m * "x"</code></td>
+<td><code>TypeError: cannot apply '*' to Scalar 'm' and str 'x'; operands must be geomech expressions or numbers (int, float)</code></td>
+</tr>
+<tr>
+<td><code>m * True</code></td>
+<td><code>TypeError: cannot apply '*' to Scalar 'm': got bool True; a bool is not a number here, write 1 or 0</code></td>
+</tr>
+<tr>
+<td><code>x / m</code></td>
+<td><code>TypeError: cannot divide Vector 'x' by the expression Scalar 'm'; only division by a number is supported. For a symbolic divisor declare its inverse as a symbol, e.g. Scalar('1/m', attr=['Constant'])</code></td>
+</tr>
+<tr>
+<td><code>1 / m</code></td>
+<td><code>TypeError: cannot divide 1 by the expression Scalar 'm'; only division by a number is supported. For a symbolic divisor declare its inverse as a symbol, e.g. Scalar('1/m', attr=['Constant'])</code></td>
+</tr>
+<tr>
+<td><code>x / 0</code></td>
+<td><code>ZeroDivisionError: cannot divide Vector 'x' by zero</code></td>
+</tr>
+<tr>
+<td><code>Number([1])</code></td>
+<td><code>TypeError: Number expects int, float, or str, got list</code></td>
+</tr>
+<tr>
+<td><code>Scalar("m", attr=["constant"])</code></td>
+<td><code>ValueError: attr: unknown attribute 'constant' for symbol 'm'; valid attributes are ['Constant', 'Identity', 'Manifold', 'Ones', 'OrthogonalMatrix', 'SkewSymmetricMatrix', 'SymmetricMatrix', 'TangentVector', 'UnitNorm', 'Zero']</code></td>
+</tr>
+<tr>
+<td><code>Scalar("m", attr="Constant")</code></td>
+<td><code>TypeError: attr must be a list of strings, got str 'Constant' for symbol 'm'; write attr=['Constant']</code></td>
+</tr>
+<tr>
+<td><code>Transpose()</code></td>
+<td><code>TypeError: Transpose: Transpose() needs an operand; write Transpose(expr)</code></td>
+</tr>
+<tr>
+<td><code>Add()</code></td>
+<td><code>TypeError: Add() needs at least one operand; use the zero leaf of the type for an empty sum</code></td>
+</tr>
+<tr>
+<td><code>x.delta().delta()</code></td>
+<td><code>ValueError: Cannot take variation of a variation: δ(δ(x)). Second-order variations vanish in Hamilton's principle.</code></td>
+</tr>
+<tr>
+<td><code>xi.delta()</code></td>
+<td><code>ValueError: Cannot take variation of variation vector \xi_{q}. The variation vector is already an infinitesimal perturbation.</code></td>
+</tr>
+<tr>
+<td><code>TimeDerivative(q)</code></td>
+<td><code>ValueError: TimeDerivative: TimeDerivative(q) is not represented in the tree for the manifold point 'q'; use q.t_diff(), which returns the kinematic expression ω × q</code></td>
+</tr>
+<tr>
+<td><code>Variation(R)</code></td>
+<td><code>ValueError: Variation: Variation(R) is not represented in the tree for the manifold point 'R'; use R.delta(), which returns the kinematic expression R·Hat(η)</code></td>
+</tr>
+<tr>
+<td><code>m.t_integrate()</code>, <code>m</code> constant</td>
+<td><code>AlgebraicError: t_integrate: cannot integrate the constant scalar 'm' in time: ∫ m dt = m·t, and the tree has no time symbol. Only terms that are time derivatives (d/dt(x)) integrate to an expression</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="compute_eom"><code>compute_eom</code><a class="headerlink" href="#compute_eom" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SystemVariables(scalars=[x])</code>, <code>x</code> a Vector</td>
+<td><code>TypeError: compute_eom: SystemVariables.scalars entry 'x' has type ExprType.VECTOR, expected ExprType.SCALAR</code></td>
+</tr>
+<tr>
+<td><code>SystemVariables(vectors=x)</code></td>
+<td><code>TypeError: SystemVariables.vectors must be a list of configuration variables, got Vector 'x'; write vectors=[x]</code></td>
+</tr>
+<tr>
+<td>a <code>Constant</code> variable</td>
+<td><code>ValueError: compute_eom: SystemVariables.vectors entry 'e3' is constant: its variation vanishes, so it cannot be a configuration variable</code></td>
+</tr>
+<tr>
+<td><code>ω</code> listed as a variable</td>
+<td><code>TypeError: compute_eom: SystemVariables.vectors entry '\omega_{q}' is a tangent or variation vector, not a configuration variable; list the manifold point 'q' instead</code></td>
+</tr>
+<tr>
+<td><code>ẋ</code> listed</td>
+<td><code>TypeError: compute_eom: SystemVariables.vectors entry '\frac{d}{dt}(x)' is a TimeDerivative node, not a configuration variable; list the underlying variable 'x' instead</code></td>
+</tr>
+<tr>
+<td><code>x + y</code> listed</td>
+<td><code>TypeError: compute_eom: SystemVariables.vectors entry '(x+y)' is a VAdd expression, not a single symbol; a configuration variable is one Scalar, Vector, S2 or SO3 leaf (list the symbols it is built from instead)</code></td>
+</tr>
+<tr>
+<td>a plain <code>Matrix</code> in <code>matrices</code></td>
+<td><code>TypeError: compute_eom: SystemVariables.matrices entry 'A' is a general Matrix; only SO3 rotation matrices are supported as matrix configuration variables</code></td>
+</tr>
+<tr>
+<td>a name listed twice</td>
+<td><code>ValueError: compute_eom: SystemVariables: the name 'x' is listed more than once (twice in SystemVariables.vectors); configuration variables must be distinct symbols</code></td>
+</tr>
+<tr>
+<td>a variable named like <code>ω_q</code></td>
+<td><code>ValueError: compute_eom: SystemVariables.vectors entry '\omega_{q}' has the printed name of the tangent vector of 'q'; configuration variables must be distinct symbols (rename it)</code></td>
+</tr>
+<tr>
+<td><code>SystemVariables()</code></td>
+<td><code>ValueError: compute_eom: no configuration variables listed in SystemVariables; a system with no degree of freedom has no equation of motion</code> — only for an <code>L</code> without variables (a constant): the check runs after the stray-symbol check, so <code>L = ½ m ẋ·ẋ</code> with <code>SystemVariables()</code> gives the stray-symbol message of the row "<code>y</code> used but not listed" for <code>'\delta{x}'</code></td>
+</tr>
+<tr>
+<td>a vector Lagrangian</td>
+<td><code>TypeError: compute_eom: lagrangian must be a scalar expression, got a VECTOR expression '\frac{d}{dt}(x)'</code></td>
+</tr>
+<tr>
+<td><code>inf_work=True</code></td>
+<td><code>TypeError: compute_eom: inf_work must be a scalar expression, None or 0, got bool True</code></td>
+</tr>
+<tr>
+<td><code>y</code> used but not listed (or <code>mm</code> not <code>Constant</code>)</td>
+<td><code>ValueError: compute_eom: δS still contains the variation symbols '\delta{y}' of the symbols 'y', which are neither entries of SystemVariables nor declared in params; for each symbol, list it in SystemVariables, declare it in params=..., or mark it 'Constant'</code></td>
+</tr>
+<tr>
+<td><code>Dot(x.t_diff().delta(), f)</code> in δW</td>
+<td><code>ValueError: compute_eom: inf_work contains '\frac{d}{dt}(\delta{x})', the time derivative of the variation vector '\delta{x}'; virtual work must be linear in the variations themselves, not their time derivatives (write Dot(x.delta(), f), not Dot(x.t_diff().delta(), f))</code></td>
+</tr>
+<tr>
+<td>a hand-built <code>Variation(x.t_diff())</code></td>
+<td><code>ValueError: compute_eom: δS still contains the variation symbols '\delta{\frac{d}{dt}(x)}' of the symbols 'x', which are neither entries of SystemVariables nor declared in params; '\delta{\frac{d}{dt}(x)}' is the variation of a time derivative, which the engine never builds: write the variation of the configuration variable itself, x.delta() (the variation of the velocity is x.t_diff().delta(), built as d/dt of the variation, and is not allowed in inf_work)</code></td>
+</tr>
+<tr>
+<td><code>params=l</code></td>
+<td><code>TypeError: compute_eom: params must be a sequence of leaves, got Scalar 'l'; write params=[l]</code></td>
+</tr>
+<tr>
+<td>a <code>Constant</code> param</td>
+<td><code>ValueError: compute_eom: params entry 'm' is constant; a prescribed parameter varies in time (drop it from params or remove the 'Constant' attribute)</code></td>
+</tr>
+<tr>
+<td>a param that is a variable</td>
+<td><code>ValueError: compute_eom: params entry 'x' is also a configuration variable (SystemVariables.vectors); a symbol is either prescribed or a degree of freedom</code></td>
+</tr>
+<tr>
+<td>a param named like a constant of <code>L</code> (<code>params=[Scalar("l")]</code>, <code>l</code> <code>Constant</code> in <code>L</code>)</td>
+<td><code>ValueError: compute_eom: params entry 'l' has the name of the constant 'l' in the Lagrangian or the virtual work; a symbol is either a constant parameter or a prescribed parameter (rename one, or drop attr=['Constant'] if 'l' is a prescribed parameter)</code></td>
+</tr>
+<tr>
+<td>a velocity inside a matrix factor, <code>a·((Ω cᵀ) b)</code></td>
+<td><code>AlgebraicError: compute_eom: while integrating by parts (stage ibp, targets \frac{d}{dt}(\eta_{R})): collect: the target '\frac{d}{dt}(\eta_{R})' occurs inside the matrix factor '\frac{d}{dt}(\eta_{R})*(c2)'' of the term 'Dot(\frac{d}{dt}(\eta_{R})*(c2)'*c3,c1)'; transposition exposes a target only in the vector operand ((M f(v))·w = f(v)·(Mᵀ w)), so this term cannot be integrated by parts</code> — write it as <code>(a·Ω)(c·b)</code></td>
+</tr>
+<tr>
+<td>an acceleration in <code>L</code> (<code>½ ẍ·ẍ</code>)</td>
+<td>see <a href="#the-algebraicerrors-about-a-calculus-operator">the AlgebraicErrors about a calculus operator</a></td>
+</tr>
+<tr>
+<td>a <code>d/dt(η)</code> survived IBP</td>
+<td>see <a href="#the-algebraicerrors-about-a-calculus-operator">the AlgebraicErrors about a calculus operator</a></td>
+</tr>
+<tr>
+<td>a term quadratic in a variation</td>
+<td><code>NonLinearError: compute_eom: while extracting the equation for '\delta{x}' from δS (extraction, after the stage 'expand'): _vector_from_scalar: nonlinear — '\delta{x}' appears in both sides of VVMul in '(\delta{x})'*\delta{x}'</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="to_standard_form"><code>to_standard_form</code><a class="headerlink" href="#to_standard_form" title="Permanent link">&para;</a></h3>
+<p><code>to_standard_form</code> and <code>linearize</code> validate <code>inputs</code> with the same function
+(<code>geomech.dynamics.eom.check_inputs</code>): every input row of either table is raised by both,
+with the caller's name in front.</p>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a jerk</td>
+<td>see <a href="#the-algebraicerrors-about-a-calculus-operator">the AlgebraicErrors about a calculus operator</a></td>
+</tr>
+<tr>
+<td>a term bilinear in two accelerations</td>
+<td><code>NonLinearError: to_standard_form: in equation '\delta{x1}', the coefficient of '\frac{d}{dt}(\frac{d}{dt}(x1))' still contains the acceleration '\frac{d}{dt}(\frac{d}{dt}(x2))' in '\frac{d}{dt}(\frac{d}{dt}(x2))*m'; the equation is not linear in the accelerations</code></td>
+</tr>
+<tr>
+<td>an input named like a constant of <code>L</code> (<code>inputs=[Scalar("g")]</code>, <code>g</code> <code>Constant</code> in <code>L</code>)</td>
+<td><code>ValueError: to_standard_form: input 'g' has the name of the constant 'g' in the equations; a symbol is either a constant parameter or an input (rename one, or drop attr=['Constant'] if 'g' is an input)</code></td>
+</tr>
+<tr>
+<td>a <code>Constant</code> input (<code>inputs=[g]</code>, <code>g</code> <code>Constant</code> in <code>L</code>)</td>
+<td><code>ValueError: to_standard_form: input 'g' is constant: its variation vanishes, so it cannot be an input</code></td>
+</tr>
+<tr>
+<td>an input listed twice (<code>inputs=[f, f]</code>)</td>
+<td><code>ValueError: to_standard_form: input 'f' is listed more than once (an entry that prints like 'f' is the same symbol)</code></td>
+</tr>
+<tr>
+<td>a set (or dict) of inputs, <code>inputs={f, M}</code></td>
+<td><code>TypeError: to_standard_form: inputs must be an ordered sequence (list or tuple), got set; a set has no order, so the columns of B would depend on the hash seed</code></td>
+</tr>
+<tr>
+<td>an input printed like a velocity (<code>Vector(str(x.t_diff()))</code>)</td>
+<td><code>ValueError: to_standard_form: input '\frac{d}{dt}(x)' prints like the velocity '\frac{d}{dt}(x)' of the configuration variable 'x'; leaves are matched by printed name, so the two would be confused (rename the input)</code></td>
+</tr>
+<tr>
+<td>an input printed like an operation node of the equations (<code>Scalar(str(l.t_diff()))</code>, <code>l</code> a param)</td>
+<td><code>ValueError: to_standard_form: input '\frac{d}{dt}(l)' has the printed name of the TimeDerivative node '\frac{d}{dt}(l)' in the equations, not of a leaf; leaves are matched by printed name, so the two would be confused (rename the input)</code></td>
+</tr>
+<tr>
+<td>a param of <code>compute_eom</code> whose rate is in the equations given as an input (<code>inputs=[f, l]</code>)</td>
+<td><code>AlgebraicError: to_standard_form: input 'l' occurs in the equations inside the calculus operator '\frac{d}{dt}(l)'; an input enters the equations as itself, not through its rate (is 'l' a prescribed parameter of compute_eom(..., params=[...])? It can be an input only if its rate does not occur)</code></td>
+</tr>
+<tr>
+<td>an input of another size than its leaf (<code>Vector("f", size=(6,))</code>)</td>
+<td><code>ValueError: to_standard_form: input 'f' (Vector of size (6,)) has the name of the Vector of size (3,) 'f' in the equations, a different symbol; leaves are matched by printed name, so the two would be confused (rename one, or build the input with the class, attr and size it has in the equations)</code></td>
+</tr>
+<tr>
+<td>an input named like a named numeric leaf (<code>Scalar("k")</code>, <code>L</code> holds <code>Scalar("k", value=2.0)</code>)</td>
+<td><code>ValueError: to_standard_form: input 'k' has the name of the constant 'k' in the equations; a symbol is either a constant parameter or an input (rename one, or drop value= from the leaf 'k' if it is an input)</code></td>
+</tr>
+<tr>
+<td>not the <code>compute_eom</code> dict, <code>to_standard_form([], V)</code></td>
+<td><code>TypeError: to_standard_form: eom must be the dict returned by compute_eom, got &lt;class 'list'&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="linearize"><code>linearize</code><a class="headerlink" href="#linearize" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>an input missing from <code>inputs</code> (or a symbol missing <code>Constant</code>)</td>
+<td><code>AlgebraicError: linearize: in row '\delta{x}', the term '\delta{f}' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries '\delta{f}' (of 'f'), which is neither a configuration, velocity nor input variation. If the symbol is an input, list it in</code>inputs<code>; if it is a constant, give it attr=['Constant']; if it is a prescribed parameter (compute_eom(..., params=[...])), linearize does not support prescribed parameters yet (pass params=[...] to linearize to have it say so).</code></td>
+</tr>
+<tr>
+<td>equations with a prescribed param, <code>linearize(..., params=[l])</code></td>
+<td><code>AlgebraicError: linearize: in row '\xi_{q}', the term '\frac{d}{dt}(\omega_{q})*m*\delta{l}*l*(-2)' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries the variation of the prescribed parameter(s) 'l' declared in params: linearize does not support prescribed parameters yet (the variation of a prescribed parameter vanishes along the reference, but its rate does not in general).</code></td>
+</tr>
+<tr>
+<td>other <code>SystemVariables</code> than for <code>compute_eom</code></td>
+<td><code>ValueError: linearize: eom keys ['\\delta{x}'] do not match the variation vectors ['\\xi_{q}'] of the given SystemVariables</code></td>
+</tr>
+<tr>
+<td>an input that is a variable</td>
+<td><code>ValueError: linearize: input 'x' is also a configuration variable</code></td>
+</tr>
+<tr>
+<td>an input named like a constant, <code>linearize(eom, V, [f, Scalar("g")])</code>, <code>g</code> <code>Constant</code> in <code>L</code></td>
+<td><code>ValueError: linearize: input 'g' has the name of the constant 'g' in the equations; a symbol is either a constant parameter or an input (rename one, or drop attr=['Constant'] if 'g' is an input)</code></td>
+</tr>
+<tr>
+<td>an input of another class than its leaf (<code>Scalar("F")</code>, the equations hold the constant <code>Vector("F")</code>)</td>
+<td><code>ValueError: linearize: input 'F' (Scalar) has the name of the constant Vector 'F' in the equations, a different symbol; leaves are matched by printed name, so the two would be confused (rename one, or build the input with the class and attr it has in the equations)</code></td>
+</tr>
+<tr>
+<td><code>ω</code> as an input</td>
+<td><code>ValueError: linearize: input '\omega_{q}' is a tangent or variation vector of a configuration variable; its variation is part of the perturbation state, not an input</code></td>
+</tr>
+<tr>
+<td><code>ξ</code>, <code>Ω</code> or <code>η</code> as an input</td>
+<td><code>ValueError: linearize: input '\eta_{R}' is a tangent or variation vector of a configuration variable; its variation is part of the perturbation state, not an input</code></td>
+</tr>
+<tr>
+<td>a plain <code>Vector</code> printed like <code>Ω</code> as an input</td>
+<td><code>ValueError: linearize: the variation '\delta{\Omega_{R}}' of input '\Omega_{R}' is already a perturbation state (is '\Omega_{R}' a tangent vector of a configuration variable?)</code></td>
+</tr>
+<tr>
+<td>an input that is not a plain leaf (<code>ẋ</code>, <code>F + u</code>, a <code>Matrix</code>, an <code>S2</code>/<code>SO3</code> point)</td>
+<td><code>TypeError: linearize: input '\frac{d}{dt}(x)' must be a Scalar or Vector leaf, got TimeDerivative</code></td>
+</tr>
+<tr>
+<td>one input instead of a list, <code>linearize(eom, V, f)</code></td>
+<td><code>TypeError: linearize: inputs must be a sequence of Scalar/Vector leaves, got Vector 'f'; write inputs=[f]</code></td>
+</tr>
+<tr>
+<td>not the <code>compute_eom</code> dict</td>
+<td><code>TypeError: linearize: eom must be the dict returned by compute_eom, got &lt;class 'list'&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="code-generation-and-simulation">Code generation and simulation<a class="headerlink" href="#code-generation-and-simulation" title="Permanent link">&para;</a></h3>
+<p>Generate the standard-form and the linearization module of a system from one
+<code>StateLayout</code>, built with the <code>SystemVariables</code> and the <code>inputs</code> (same order) passed to
+<code>to_standard_form</code> and <code>linearize</code> (<a href="../codegen/#the-generated-module">Code generation</a>).
+The first three rows are the checks that keep a controller from acting on the wrong
+inputs or states.</p>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a linearization with other inputs than the layout (<code>linearize(eom, V, [T, f])</code>, <code>StateLayout(V, [f, T])</code>)</td>
+<td><code>ValueError: generate_module: the linearization's inputs ['\delta{T}', '\delta{f}'] are not the variations of the layout's inputs ['f', 'T'] in that order (expected ['\delta{f}', '\delta{T}']); build the StateLayout with the SystemVariables and the inputs (same order) passed to linearize and to_standard_form, and generate both modules from that one StateLayout</code></td>
+</tr>
+<tr>
+<td>a linearization with another variable order than the layout (<code>SystemVariables(vectors=[y, x])</code> for <code>linearize</code>, <code>[x, y]</code> for the layout)</td>
+<td><code>ValueError: generate_module: the linearization's configuration variables ['y', 'x'] (rows ['kin:y', 'kin:x', '\delta{x}', '\delta{y}']) are not the layout's variables ['x', 'y'] in that order (rows ['kin:x', 'kin:y', '\delta{x}', '\delta{y}']); build the StateLayout with the SystemVariables and the inputs (same order) passed to linearize and to_standard_form, and generate both modules from that one StateLayout</code></td>
+</tr>
+<tr>
+<td><code>lqr(lin_module, ..., module=plant)</code> with modules of two layouts</td>
+<td><code>ValueError: lqr: module does not have the layout of lin_module: lin_module has the variables ['x'] and inputs ['f', 'T'], module has the variables ['x'] and inputs ['T', 'f']; build one StateLayout with the SystemVariables and the inputs (same order) passed to to_standard_form and linearize, and generate both modules from it</code></td>
+</tr>
+<tr>
+<td>a variation vector as a parameter (<code>collect_params</code> leaves them out)</td>
+<td><code>ValueError: StateLayout: parameter '\xi_{q}' is a tangent or variation vector of a configuration variable; it is part of the state or of the perturbation state, not a parameter (a variation in δW belongs to the derivation, not to the generated code)</code></td>
+</tr>
+<tr>
+<td>something without symbols in <code>collect_params</code></td>
+<td><code>TypeError: collect_params: cannot find symbols in str 'dW'; pass the expressions of the system ([L, dW], or [L] plus the equations), the dict of compute_eom or of to_standard_form, a LinearizedSystem, or an iterable of these</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="engine-functions-called-directly">Engine functions called directly<a class="headerlink" href="#engine-functions-called-directly" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Call</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>extract_linear_coeff(a*a, a)</code></td>
+<td><code>NonLinearError: _scalar_from_scalar: nonlinear — 'a' appears in both sides of Mul in 'a*a'</code></td>
+</tr>
+<tr>
+<td><code>extract_linear_coeff(x * x.T(), x)</code></td>
+<td><code>AlgebraicError: Cannot extract vector query 'x' from outer product 'x*(x)'': rank-1 matrix does not factor as C * q</code></td>
+</tr>
+<tr>
+<td><code>extract_linear_coeff(Dot(ẋ, f), x)</code></td>
+<td><code>AlgebraicError: extract_linear_coeff: 'x' appears only inside the calculus operator '\frac{d}{dt}(x)' (a higher order derivative, a variation or an integral of the query); such a term has no linear coefficient</code></td>
+</tr>
+<tr>
+<td><code>extract_linear_coeff(Hat(x), x)</code></td>
+<td><code>AlgebraicError: _vector_from_matrix: 'Hat(x)' is linear in 'x' but has no left matrix coefficient (the map is a 3-tensor, not C * query)</code></td>
+</tr>
+<tr>
+<td><code>collect(x, x)</code></td>
+<td><code>TypeError: collect: expected a scalar expression, got Vector 'x' of type VECTOR</code></td>
+</tr>
+<tr>
+<td><code>full_simplify(expr, max_iter=1)</code> at the cap</td>
+<td><code>RuntimeWarning: full_simplify: no confirmed fixed point after 1 passes (the last pass still changed the expression, so no fixed point after 1 passes was confirmed by an unchanged pass); result may be unsimplified: &lt;repr&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="check_tree"><code>check_tree</code><a class="headerlink" href="#check_tree" title="Permanent link">&para;</a></h3>
+<p><code>check_tree(expr)</code> raises <code>InvariantError</code> naming the invariant, the path from the root
+(<code>L</code>/<code>R</code> for binary nodes, the index for sums, <code>x</code> for a unary operand) and the subtree:</p>
+<table>
+<thead>
+<tr>
+<th>Tree</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Add([Add(m, g), k])</code> (a list is not flattened)</td>
+<td><code>InvariantError: check_tree: Add nested directly in a Add at root.0: Add '(m+g)'</code></td>
+</tr>
+<tr>
+<td><code>Dot(x.T(), y)</code></td>
+<td><code>InvariantError: check_tree: Dot operand is a row vector; Dot takes columns (use the column, or VVMul for rowᵀ·column) at root.L: Transpose '(x)''</code></td>
+</tr>
+<tr>
+<td><code>x.T() + y</code></td>
+<td><code>InvariantError: check_tree: VAdd mixes row and column vectors at root: VAdd '((x)'+y)'</code></td>
+</tr>
+<tr>
+<td><code>TS2("w")</code></td>
+<td><code>InvariantError: check_tree: TS2 leaf has no S2 point (.S2 is None) at root: TS2 'w'</code></td>
+</tr>
+<tr>
+<td><code>Scalar("(-1)")</code></td>
+<td><code>InvariantError: check_tree: Scalar is printed like a number but has no value; it would be treated as a symbol (use Number(...) for a numeric constant) at root: Scalar '(-1)'</code></td>
+</tr>
+</tbody>
+</table>
+<p>The full list of invariants is in the docstring of <code>geomech/utils/invariants.py</code>.</p>
+<h2 id="tools">Tools<a class="headerlink" href="#tools" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>compute_eom(..., trace=EOMTrace())</code></strong> keeps every stage (also after an exception:
+  <code>tr.failed_at</code> then names the stage that raised, and <code>tr.summary()</code> starts with
+  <code>FAILED at &lt;stage&gt;: &lt;exception&gt;</code>); <code>tr.summary()</code>, <code>tr.show("simplify")</code>. A trace is
+  cleared when a pipeline starts, so reusing one object keeps only the last run.
+  <code>linearize(..., trace=LinearizationTrace())</code> keeps δE, the term buckets, the raw and
+  the final blocks per row. See <a href="../pipeline/#seeing-the-stages">Pipeline</a>.</li>
+<li><strong><code>GEOMECH_DEBUG=1</code></strong> (environment variable, read at import): one <code>DEBUG</code> line per
+  pipeline stage on the <code>geomech</code> logger (stage, node count, start of the <code>repr</code>) and
+  <code>check_tree</code> on the inputs and outputs of <code>compute_eom</code>, <code>to_standard_form</code> and
+  <code>linearize</code>. In a notebook, <code>logging.basicConfig(level=logging.DEBUG)</code> gives the same
+  lines without the checks (call it before <code>set_trace(True)</code>; <code>geomech</code> adds its own
+  <code>stderr</code> handler only when no handler is configured, so each line prints once).</li>
+<li><strong><code>GEOMECH_TRACE=1</code></strong> or <strong><code>geomech.set_trace(True)</code></strong>: every firing of a named rewrite
+  rule, <code>name: before ==&gt; after</code>, on the <code>geomech.rules</code> logger. The rule names, with the
+  hypothesis each needs, are in the docstrings of the transformation modules
+  (<a href="../pipeline/#which-rule-fired">Pipeline</a>).</li>
+<li><strong><code>print_tree(expr)</code></strong> (default <code>style="indent"</code>): one node per line with class names,
+  <code>L</code>/<code>R</code>/index labels, every flag of each leaf and, for a tangent or variation vector, its
+  manifold point (<code>of=S2 'q'</code>); two different points with one name are numbered <code>#1</code>,
+  <code>#2</code>. <code>repr(expr)</code> marks constants with <code>*</code> and the leaf kind (<code>v:x</code>, <code>M:J</code>, <code>S2:q</code>).</li>
+<li><strong><code>check_tree(expr)</code></strong>: the structural invariants of a hand-built or mutated tree.</li>
+<li><strong><code>check_eom(L, dW, variables, eom)</code></strong> / <strong><code>assert_eom</code></strong>: compare a derived equation
+  with a finite-difference Euler–Lagrange residual computed without the library's rules
+  (<a href="../numeric-verification/">Verifying an Equation Numerically</a>). A wrong term shows up as
+  a relative error far above <code>1e-5</code>.</li>
+<li><strong><code>scripts/engine_fuzz.py --quick</code></strong>: checks every rewrite numerically
+  on random trees; a <code>[wrong-value]</code> finding names the transformation and a minimal
+  counterexample (step 2 of <a href="#the-equation-is-wrong-and-no-row-matches">the recipe</a>).</li>
+<li>The modules are importable for breakpoints and patches under names distinct from their
+  functions: <code>import geomech.core.transformations.simplification as m</code> gives the module
+  (<code>expansion</code>, <code>pulling</code>, <code>vector_identities</code>, <code>simplification</code>,
+  <code>geomech.core.math.collecting</code>), while <code>from geomech.core.transformations import
+  simplify</code> gives the function.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

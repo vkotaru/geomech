@@ -1,0 +1,3416 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Symbolic computation of dynamics on smooth manifolds">
+      
+      
+      
+        <link rel="canonical" href="https://vkotaru.github.io/geomech/codegen/">
+      
+      
+        <link rel="prev" href="../vbl/">
+      
+      
+        <link rel="next" href="../simulation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Code Generation - geomech</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#code-generation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="geomech" class="md-header__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            geomech
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Code Generation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../pipeline/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  The Pipeline, Stage by Stage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../conventions/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Conventions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../vbl/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Variation-Based Linearization
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Code Generation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../simulation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Simulation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../visualization/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Visualization and Reports
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../numeric-verification/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Verifying an Equation Numerically
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../manifold-implementation-notes/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Manifold Rules: Derivation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/geomech/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="geomech" class="md-nav__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    geomech
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Pipeline, Stage by Stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation-Based Linearization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Generation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-state-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The state layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-generated-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The generated module
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-example-the-spherical-pendulum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worked example: the spherical pendulum
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#translation-and-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Translation and conventions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Translation and conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-s2-mass-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The S² mass block
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#total-energy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Total energy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization and Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../numeric-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying an Equation Numerically
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../manifold-implementation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifold Rules: Derivation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geomech
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1" id="__nav_13_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    geomech
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/codegen/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    codegen
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_1" id="__nav_13_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    codegen
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/casadi_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    casadi_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    emitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/energy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    energy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/numpy_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numpy_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/codegen/source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    core
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2" id="__nav_13_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/base/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    base
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_1" id="__nav_13_1_2_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    base
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/base/constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/base/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/base/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/math/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    math
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_2" id="__nav_13_1_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    math
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/math/collecting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    collecting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/math/extract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    extract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/math/ibp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ibp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/operations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_3" id="__nav_13_1_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    addition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/calculus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    calculus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/geometry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geometry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/mixins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mixins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/operations/multiplication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    multiplication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/core/transformations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    transformations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_4" id="__nav_13_1_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    transformations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/expansion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expansion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/manifold_rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    manifold_rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/pulling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pulling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/simplification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simplification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/core/transformations/vector_identities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vector_identities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/dynamics/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dynamics
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_3" id="__nav_13_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    dynamics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/dynamics/eom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    eom
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/dynamics/standard_form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    standard_form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/dynamics/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/dynamics/vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vbl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/numeric/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numeric
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/simulation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simulation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_5" id="__nav_13_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    simulation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/simulation/control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/simulation/integrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    integrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/simulation/model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_6" id="__nav_13_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/utils/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/utils/invariants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/utils/printing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    printing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/utils/trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    trace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/geomech/viz/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    viz
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_7" id="__nav_13_1_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    viz
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/viz/latex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    latex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/viz/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/geomech/viz/scene/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-state-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The state layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-generated-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The generated module
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-example-the-spherical-pendulum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worked example: the spherical pendulum
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#translation-and-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Translation and conventions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Translation and conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-s2-mass-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The S² mass block
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#total-energy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Total energy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="code-generation">Code generation<a class="headerlink" href="#code-generation" title="Permanent link">&para;</a></h1>
+<p><code>geomech.codegen</code> turns the symbolic output of the pipeline into plain numeric functions:
+the blocks of <code>to_standard_form</code>, the equations of <code>compute_eom</code>, the blocks of
+<code>linearize</code> and the total energy of a Lagrangian. Every generated function goes through
+one code path, and the test suite checks it against <code>geomech.numeric.evaluate</code> on every
+pinned system.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">geomech.codegen</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateLayout</span><span class="p">,</span> <span class="n">to_source</span><span class="p">,</span> <span class="n">lambdify</span><span class="p">,</span> <span class="n">generate_module</span><span class="p">,</span> <span class="n">energy_function</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">layout</span> <span class="o">=</span> <span class="n">StateLayout</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">M</span><span class="p">],</span> <span class="n">params</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">e3</span><span class="p">])</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">src</span> <span class="o">=</span> <span class="n">to_source</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>                 <span class="c1"># one expression -&gt; Python source</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">fn</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>                   <span class="c1"># -&gt; fn(state, u, p, a=None)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">generate_module</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="s2">"model.py"</span><span class="p">)</span>   <span class="c1"># writes a module, returns its source</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">E</span> <span class="o">=</span> <span class="n">energy_function</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>                <span class="c1"># -&gt; E(state, p)</span>
+</code></pre></div>
+<p>Two targets:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Dependency</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"numpy"</code> (default)</td>
+<td><code>numpy</code> only</td>
+<td>simulation (<code>scipy.integrate.solve_ivp</code>), tests, examples</td>
+</tr>
+<tr>
+<td><code>"casadi"</code></td>
+<td>extra <code>geomech[casadi]</code></td>
+<td>optimal control, automatic derivatives; the generated module imports <code>casadi</code>, <code>geomech</code> does not</td>
+</tr>
+</tbody>
+</table>
+<p>A generated module needs only <code>numpy</code> (or <code>casadi</code> and <code>numpy</code>), not <code>geomech</code>.</p>
+<h2 id="the-state-layout">The state layout<a class="headerlink" href="#the-state-layout" title="Permanent link">&para;</a></h2>
+<p><code>StateLayout(variables, inputs=(), params=())</code> is the single source of truth for how the
+symbols map to arrays, and is embedded in every generated module as <code>LAYOUT</code> (plain data,
+<code>StateLayout.to_dict()</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Configuration slot</th>
+<th>Velocity slot</th>
+<th>Acceleration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>s: Scalar</code> (<span class="arithmatex">\(\mathbb{R}\)</span>)</td>
+<td><code>s</code> (1)</td>
+<td><code>ṡ</code> (1)</td>
+<td><code>s̈</code></td>
+</tr>
+<tr>
+<td><code>x: Vector</code> (<span class="arithmatex">\(\mathbb{R}^3\)</span>)</td>
+<td><code>x</code> (3)</td>
+<td><code>ẋ</code> (3)</td>
+<td><code>ẍ</code></td>
+</tr>
+<tr>
+<td><code>q: S2</code></td>
+<td><code>q</code> (3, unit)</td>
+<td><code>ω</code> (3, <span class="arithmatex">\(\perp q\)</span>)</td>
+<td><code>ω̇</code></td>
+</tr>
+<tr>
+<td><code>R: SO3</code></td>
+<td><code>R</code> (9, row-major)</td>
+<td><code>Ω</code> (3)</td>
+<td><code>Ω̇</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>state</code> holds every configuration slot in variable order (the <code>SystemVariables</code> order:
+  scalars, vectors, matrices), then every velocity slot in the same order.
+  <code>layout.slices[str(symbol)]</code> is the slice of a configuration or velocity symbol;
+  <code>layout.accel_slices</code> and <code>layout.input_slices</code> those of <code>a</code> and <code>u</code>.</li>
+<li><code>a</code> stacks the accelerations in variable order; it is an argument only of the functions
+  whose expressions contain an acceleration (<code>compute_eom</code> equations, linearization blocks).</li>
+<li><code>u</code> stacks the inputs in the order given (a scalar takes 1 entry, a vector 3).</li>
+<li><strong>Required arguments.</strong> A generated function converts (and so requires) only the arrays
+  its expressions use: <code>a</code> when they contain an acceleration, <code>u</code> when they contain an
+  input. Passing <code>None</code> for a required array raises <code>ValueError</code>
+  (<code>u must have 1 entries, got None (u is required here)</code>), and so does a wrong size.
+  A function whose expressions have no input accepts <code>u=None</code>, which is always the case
+  for a system without inputs; likewise <code>a=None</code> (the default of <code>lambdify</code>) without
+  accelerations. The generated code never reads <code>None</code> as zero input. That shorthand
+  belongs to <code>geomech.simulation</code> (<code>accelerations(module, state, u=None, p)</code>,
+  <code>simulate(..., u=None)</code>), whose functions document <code>None</code> as zero input; <code>mass</code>,
+  <code>bias</code>, <code>input_matrix</code> and <code>energy</code> take no <code>u</code> at all.</li>
+<li><code>p</code> is a <code>dict</code> keyed by <code>str(symbol)</code> of every parameter: for a scalar a Python or
+  NumPy scalar, or a 0-d or single-element array or sequence (converted to a float; more
+  entries raise <code>ValueError</code> naming the parameter); any array of 3 or 3×3 entries for a
+  vector or matrix. A missing key raises <code>KeyError</code>, an extra one <code>ValueError</code>, both
+  naming the key. Numeric literals (<code>0.5</code>, <code>(-1)</code>) and the
+  zero and identity constants are inlined, never parameters. A <em>named</em> scalar with a value
+  (<code>Scalar("m", value=2)</code>) is a symbol, so it is a parameter.</li>
+<li><code>collect_params(system, variables, inputs)</code> lists the symbols that the variables and
+  inputs do not cover (sorted by name): the <code>params</code> to pass. Pass what the system is made
+  of: <code>[L, dW]</code> (the usual call), <code>[L]</code> plus the equations, the dict of <code>compute_eom</code> or
+  of <code>to_standard_form</code>, a <code>LinearizedSystem</code>, one expression, or a list of these. The
+  tangent and variation vectors of the variables (<code>ω</code>, <code>ξ</code>, <code>Ω</code>, <code>η</code>, which <code>dW</code> and
+  <code>compute_eom</code> hold) are left out, and <code>StateLayout</code> rejects them as parameters.
+  Anything it cannot walk (a number, a string, an object without symbols) raises
+  <code>TypeError</code> instead of giving <code>[]</code>.</li>
+<li><code>layout.pack(**slots)</code> builds a flat <code>state</code> from named slot values and
+  <code>layout.unpack(state)</code> splits one (or a <code>(N, n_state)</code> array such as
+  <code>Trajectory.state</code>) into a dict. The names are the slot identifiers below (<code>x_L</code>, <code>q</code>,
+  <code>R</code>, <code>x_L_dot</code>, <code>omega_q</code>, <code>Omega_R</code>); <code>pack</code> also takes a dict keyed by those names or
+  by the printed symbols. Every configuration slot is required, a velocity left out is
+  zero, <code>R</code> is a 3×3 matrix or its 9 row-major entries. <code>pack</code> does not project onto the
+  manifold; <code>simulate</code> and <code>lqr</code> check the state. Velocity names follow the variable's
+  name, indices included: <code>x_dot</code>, <code>omega_q1</code> for <code>S2("q1")</code>, <code>Omega_R2</code> for
+  <code>SO3("R2")</code>; <code>layout.slot_names()</code> lists every key in state order.</li>
+</ul>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">x_eq</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">x_L</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">R</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>   <span class="c1"># at rest</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">layout</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">state</span><span class="p">)[</span><span class="s2">"q"</span><span class="p">]</span>                                    <span class="c1"># (N, 3)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">layout</span><span class="o">.</span><span class="n">slot_names</span><span class="p">()</span>          <span class="c1"># ['x_L', 'q', 'R', 'x_L_dot', 'omega_q', 'Omega_R']</span>
+</code></pre></div>
+- <code>layout.state_from_env(env)</code>, <code>accel_from_env</code>, <code>inputs_from_env</code>, <code>params_from_env</code>
+  convert an <code>Evaluator</code> env (printed-name keys, <code>(3, 1)</code> columns) to the flat arrays, and
+  <code>env_from_arrays(state, a, u, p)</code> converts back.
+- Each slot also has a Python identifier for the generated code (<code>\omega_{q}</code> → <code>omega_q</code>,
+  <code>ω̇</code> → <code>omega_q_dot</code>, <code>ẋ</code> → <code>x_dot</code>, <code>ẍ</code> → <code>x_ddot</code>).</p>
+<p>Generation checks every leaf: it must be a configuration, velocity, acceleration, input or
+parameter of the layout, a numeric literal, or a zero or identity constant. A stray leaf,
+a <code>TimeDerivative</code> of a non-leaf, a <code>Variation</code> or a time integral raises <code>ValueError</code>
+naming it. Two layout symbols that print alike raise at construction.</p>
+<h2 id="the-generated-module">The generated module<a class="headerlink" href="#the-generated-module" title="Permanent link">&para;</a></h2>
+<p>For a standard-form system (<code>to_standard_form</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">LAYOUT</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span>                              <span class="c1"># StateLayout.to_dict()</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">mass</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>         <span class="o">-&gt;</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n_a</span><span class="p">)</span>      <span class="c1"># block matrix of M[a_j] per equation</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">bias</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>         <span class="o">-&gt;</span> <span class="p">(</span><span class="n">n</span><span class="p">,)</span>          <span class="c1"># stacked f</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">input_matrix</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n_u</span><span class="p">)</span>      <span class="c1"># block matrix of G[u_k]</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">kinematics</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>      <span class="o">-&gt;</span> <span class="p">(</span><span class="n">n_config</span><span class="p">,)</span>   <span class="c1"># ṡ, ẋ, ω × q, R hat(Ω) row-major</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">energy</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>                        <span class="c1"># with generate_module(..., lagrangian=L)</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">layout</span><span class="p">()</span>                                <span class="c1"># a copy of LAYOUT</span>
+</code></pre></div>
+<p>so that the equations read <code>mass @ a + bias + input_matrix @ u = 0</code>. Equations (block
+rows) are in the order of the configuration variables; a scalar equation takes one row and
+a vector equation three. For <code>compute_eom</code> output the module has
+<code>residual(state, a, u, p)</code> (the stacked equations <code>E</code>) and <code>kinematics</code>. For a
+<code>LinearizedSystem</code> it has <code>M_lin</code>, <code>A_lin</code>, <code>B_lin</code>, each <code>(state, a, u, p)</code>, with the rows
+of <code>LinearizedSystem.rows</code> and the columns of <code>dstates</code>, <code>states</code> and <code>inputs</code>; the slices
+are recorded in <code>LINEARIZATION</code>.</p>
+<p><strong>One layout for everything.</strong> Generate the standard-form and the linearization module
+from the same <code>StateLayout</code>, built with the same <code>SystemVariables</code> and the same <code>inputs</code>
+list (same order) as <code>to_standard_form</code> and <code>linearize</code>. The columns of <code>input_matrix</code>
+follow the layout's inputs and those of <code>B_lin</code> follow <code>lin.inputs</code>; with a different
+order the two would pair a column with a different entry of <code>u</code>, and a controller
+designed on <code>B_lin</code> would act on the wrong channels. <code>generate_module</code> therefore raises
+<code>ValueError</code> when the variables (rows and states) or inputs of a <code>LinearizedSystem</code> are
+not those of the layout in the same order, naming both orders, and
+<code>lqr(..., module=...)</code> checks that the two modules have the same <code>LAYOUT</code> (see
+<a href="../troubleshooting/#code-generation-and-simulation">Troubleshooting</a>).</p>
+<p><code>examples/generated/</code> holds the modules of the nine systems of <code>tests/vbl_systems.py</code>
+(<code>&lt;name&gt;.py</code> from the standard form with <code>energy</code>, <code>&lt;name&gt;_lin.py</code> from <code>linearize</code>).
+<code>python scripts/regenerate_generated.py</code> rewrites them (and deletes the files of systems
+no longer listed); <code>--check</code> writes nothing and exits 1 when a module is out of date or
+missing, when a stale file is left over, or when a generated file is not tracked by git.
+CI runs <code>--check</code>.</p>
+<h2 id="worked-example-the-spherical-pendulum">Worked example: the spherical pendulum<a class="headerlink" href="#worked-example-the-spherical-pendulum" title="Permanent link">&para;</a></h2>
+<p>Lee et al. Eq. 5.14, <span class="arithmatex">\(L = \tfrac12 m l^2\,\omega\cdot\omega - m g l\, q\cdot e_3\)</span> and
+<span class="arithmatex">\(\delta W = \xi\cdot f\)</span>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">geomech</span><span class="w"> </span><span class="kn">import</span> <span class="n">S2</span><span class="p">,</span> <span class="n">Dot</span><span class="p">,</span> <span class="n">Scalar</span><span class="p">,</span> <span class="n">SystemVariables</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">compute_eom</span><span class="p">,</span> <span class="n">getScalars</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">geomech</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_standard_form</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">geomech.codegen</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateLayout</span><span class="p">,</span> <span class="n">generate_module</span><span class="p">,</span> <span class="n">load_module</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">m</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">getScalars</span><span class="p">(</span><span class="s2">"m g l"</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">[</span><span class="s2">"Constant"</span><span class="p">])</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">e3</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="s2">"e3"</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">[</span><span class="s2">"Constant"</span><span class="p">])</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">q</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">S2</span><span class="p">(</span><span class="s2">"q"</span><span class="p">),</span> <span class="n">Vector</span><span class="p">(</span><span class="s2">"f"</span><span class="p">)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">omega</span><span class="p">,</span> <span class="n">xi</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">get_tangent_vector</span><span class="p">(),</span> <span class="n">q</span><span class="o">.</span><span class="n">get_variation_vector</span><span class="p">()</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">half</span> <span class="o">=</span> <span class="n">Scalar</span><span class="p">(</span><span class="s2">"0.5"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">[</span><span class="s2">"Constant"</span><span class="p">])</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="n">L</span> <span class="o">=</span> <span class="n">half</span> <span class="o">*</span> <span class="n">m</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="n">Dot</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span> <span class="o">-</span> <span class="n">m</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="n">Dot</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">e3</span><span class="p">)</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">variables</span> <span class="o">=</span> <span class="n">SystemVariables</span><span class="p">(</span><span class="n">vectors</span><span class="o">=</span><span class="p">[</span><span class="n">q</span><span class="p">])</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="n">eom</span> <span class="o">=</span> <span class="n">compute_eom</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">Dot</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">f</span><span class="p">),</span> <span class="n">variables</span><span class="p">)</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="n">sf</span> <span class="o">=</span> <span class="n">to_standard_form</span><span class="p">(</span><span class="n">eom</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="p">])</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="n">layout</span> <span class="o">=</span> <span class="n">StateLayout</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="p">],</span> <span class="n">params</span><span class="o">=</span><span class="p">[</span><span class="n">e3</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">m</span><span class="p">])</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="n">src</span> <span class="o">=</span> <span class="n">generate_module</span><span class="p">(</span><span class="n">sf</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="s2">"spherical_pendulum.py"</span><span class="p">,</span> <span class="n">lagrangian</span><span class="o">=</span><span class="n">L</span><span class="p">)</span>
+</code></pre></div>
+<p><code>state</code> is <code>[q (3), ω (3)]</code>, <code>a</code> is <code>[ω̇ (3)]</code>, <code>u</code> is <code>[f (3)]</code>. The generated functions
+(from <code>examples/generated/spherical_pendulum_s2.py</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">mass</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="sd">"""Mass matrix M(state): blocks M[a_j] per equation (M = -physical inertia)."""</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">_check_params</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">_PARAMS</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">l</span> <span class="o">=</span> <span class="n">_scalar</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"l"</span><span class="p">],</span> <span class="s2">"l"</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">m</span> <span class="o">=</span> <span class="n">_scalar</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"m"</span><span class="p">],</span> <span class="s2">"m"</span><span class="p">)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="k">return</span> <span class="n">out</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">bias</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="sd">"""Bias f(state): the terms of each equation free of accelerations and inputs."""</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="n">_check_params</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">_PARAMS</span><span class="p">)</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">state</span> <span class="o">=</span> <span class="n">_arr</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">)</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="n">q</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="n">e3</span> <span class="o">=</span> <span class="n">_vec</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"e3"</span><span class="p">])</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    <span class="n">g</span> <span class="o">=</span> <span class="n">_scalar</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"g"</span><span class="p">],</span> <span class="s2">"g"</span><span class="p">)</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    <span class="n">l</span> <span class="o">=</span> <span class="n">_scalar</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"l"</span><span class="p">],</span> <span class="s2">"l"</span><span class="p">)</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    <span class="n">m</span> <span class="o">=</span> <span class="n">_scalar</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"m"</span><span class="p">],</span> <span class="s2">"m"</span><span class="p">)</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">_cross</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">e3</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    <span class="k">return</span> <span class="n">out</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="k">def</span><span class="w"> </span><span class="nf">energy</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">    </span><span class="sd">"""Total energy E = sum((dL/dv) . v) - L at the state."""</span>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    <span class="o">...</span>
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    <span class="n">_t0</span> <span class="o">=</span> <span class="n">m</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="p">(</span><span class="n">omega_q</span> <span class="o">@</span> <span class="n">omega_q</span><span class="p">)</span>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    <span class="k">return</span> <span class="n">_t0</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">+</span> <span class="n">m</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="p">(</span><span class="n">q</span> <span class="o">@</span> <span class="n">e3</span><span class="p">)</span>
+</code></pre></div>
+<p>Used directly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">mod</span> <span class="o">=</span> <span class="n">load_module</span><span class="p">(</span><span class="s2">"spherical_pendulum.py"</span><span class="p">)</span>   <span class="c1"># or: import spherical_pendulum as mod</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">p</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"e3"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">"g"</span><span class="p">:</span> <span class="mf">9.81</span><span class="p">,</span> <span class="s2">"l"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"m"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">q0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">0.3</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)])</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">q0</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>          <span class="c1"># ω ⊥ q</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">M</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span> <span class="n">mod</span><span class="o">.</span><span class="n">bias</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">mod</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>                                     <span class="c1"># ½ m l² |ω|² + m g l q·e₃</span>
+</code></pre></div>
+<h2 id="translation-and-conventions">Translation and conventions<a class="headerlink" href="#translation-and-conventions" title="Permanent link">&para;</a></h2>
+<p>Each node class maps to one construct; vectors are <code>(3,)</code> arrays and matrices <code>(3, 3)</code>
+(CasADi: <code>3×1</code> columns and <code>3×3</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>NumPy</th>
+<th>CasADi</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Add</code>/<code>VAdd</code>/<code>MAdd</code></td>
+<td><code>a + b + …</code></td>
+<td>same</td>
+<td></td>
+</tr>
+<tr>
+<td><code>Mul</code>/<code>SVMul</code>/<code>SMMul</code></td>
+<td><code>a * s</code></td>
+<td>same</td>
+<td>scalar times anything</td>
+</tr>
+<tr>
+<td><code>MVMul</code></td>
+<td><code>M @ v</code></td>
+<td><code>ca.mtimes(M, v)</code></td>
+<td>a row <code>vᵀM</code> is generated as <code>Mᵀv</code></td>
+</tr>
+<tr>
+<td><code>MMMul</code></td>
+<td><code>A @ B</code></td>
+<td><code>ca.mtimes(A, B)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>VVMul</code></td>
+<td>inner <code>a @ b</code>, outer <code>np.outer(a, b)</code></td>
+<td><code>ca.dot</code>, <code>ca.mtimes(a, b.T)</code></td>
+<td>by <code>is_row_vector</code></td>
+</tr>
+<tr>
+<td><code>Dot</code></td>
+<td><code>a @ b</code></td>
+<td><code>ca.dot(a, b)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Cross</code></td>
+<td><code>_cross(a, b)</code></td>
+<td><code>ca.cross(a, b)</code></td>
+<td>NumPy: component-wise helper, same values as <code>np.cross</code> at a fraction of its per-call cost</td>
+</tr>
+<tr>
+<td><code>Hat</code> / <code>Vee</code></td>
+<td><code>_hat(v)</code> / <code>_vee(M)</code></td>
+<td>same</td>
+<td>helpers emitted once per module</td>
+</tr>
+<tr>
+<td><code>Transpose</code></td>
+<td><code>M.T</code>; of a vector, the vector</td>
+<td>same</td>
+<td></td>
+</tr>
+<tr>
+<td><code>TimeDerivative</code> of a leaf</td>
+<td>its velocity or acceleration slot</td>
+<td>same</td>
+<td>anything else raises</td>
+</tr>
+<tr>
+<td>zero / identity</td>
+<td><code>0.0</code>, <code>np.zeros(3)</code>, <code>np.zeros((3, 3))</code>, <code>np.eye(3)</code></td>
+<td><code>ca.DM.zeros</code>, <code>ca.DM.eye(3)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>±inf</code> / <code>nan</code> literal</td>
+<td><code>np.inf</code>, <code>-np.inf</code>, <code>np.nan</code></td>
+<td><code>ca.inf</code>, <code>-ca.inf</code>, <code>np.nan</code></td>
+<td>inlined, never a parameter</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Rows.</strong> There is one vector type; a row (<code>is_row_vector</code>) is generated as the same
+  3-vector as its column, and the structure only decides between the inner and the outer
+  product of a <code>VVMul</code> and the side of a row <code>MVMul</code>. A scalar equation's block for a
+  vector acceleration (or input, or linearization column) fills a 1×3 block of the matrix.</li>
+<li><strong>Common subexpressions.</strong> A subtree that occurs more than once is computed once into a
+  local <code>_tN</code>; long expressions are split into locals so that every line is short.
+  Nothing else is simplified. Subtrees are compared structurally (a leaf by its <code>str</code>,
+  the engine's identity; an operation by its class and operands), with the identity of
+  each node object computed once per function, so generation time is linear in the
+  number of node objects, also for trees that reuse a subtree many times.</li>
+<li><strong>Signs.</strong> Those of <a href="../conventions/">Conventions</a>: <code>M</code> is −(physical inertia) in the
+  standard form (<code>mass</code> of a point mass is <code>−m I</code>), and the linearization blocks have the
+  positive inertia (<code>M δẋ = A δx + B δu</code>).</li>
+<li><strong>Values.</strong> The CasADi functions take NumPy arrays or CasADi expressions (<code>SX</code>, <code>MX</code>,
+  <code>DM</code>) for <code>state</code>, <code>a</code>, <code>u</code> and the values of <code>p</code> and return CasADi objects, so
+  <code>ca.Function</code> and <code>ca.jacobian</code> apply to them directly.</li>
+</ul>
+<h3 id="the-s2-mass-block">The S² mass block<a class="headerlink" href="#the-s2-mass-block" title="Permanent link">&para;</a></h3>
+<p>An S² equation is meaningful only on the tangent plane, <code>(I − qqᵀ) E = 0</code>
+(<a href="../conventions/#s2-equations-live-on-the-tangent-plane">Conventions</a>), and the module
+returns the blocks as derived, not projected. Depending on the Lagrangian the S² mass
+block is singular (rank 2: <code>Hat(q) Hat(q) m_Q l²</code> in the quadrotor with a suspended load)
+or full rank (<code>−m l² I</code> for the spherical pendulum, where the engine already used
+<code>q · ω̇ = 0</code>). Either way the unprojected 3×3 solve is not the equation of motion: the
+generated module does <strong>not</strong> solve for the accelerations. Replace each S² block row by
+<code>P_q · row</code> (with <code>P_q = I − qqᵀ</code>) plus a multiple <code>s q qᵀ</code> on its own <code>ω̇</code> column (<code>s</code> =
+the tangent inertia, see <a href="../simulation/#accelerations-and-the-s2-solve">Simulation</a>) and
+its right-hand
+side by <code>−P_q (bias + G u)</code>; the system is then square and full rank and its solution
+satisfies <code>q · ω̇ = 0</code>. <code>geomech.simulation.accelerations</code> does exactly this
+(<a href="../simulation/#accelerations-and-the-s2-solve">Simulation</a>).</p>
+<h2 id="total-energy">Total energy<a class="headerlink" href="#total-energy" title="Permanent link">&para;</a></h2>
+<p><code>energy_function(L, layout)</code> returns <code>E(state, p) = Σ (∂L/∂v)·v − L</code> over the velocities
+<code>ṡ</code>, <code>ẋ</code>, <code>ω</code>, <code>Ω</code>, generated through the same code path (<code>energy_expr</code> gives the
+expression, <code>momenta</code> the <code>∂L/∂v</code>). <code>∂L/∂v</code> is derived with the engine: the first
+variation <code>δL</code> is expanded, its terms are split by perturbation symbol as <code>linearize</code>
+does, and <code>extract_linear_coeff</code> gives the coefficient of each velocity perturbation
+(<code>d/dt(δs)</code>, <code>d/dt(δx)</code>, <code>δω</code>, <code>δΩ</code>). <code>Σ (∂L/∂v)·v</code> is the derivative of <code>L(q, λv)</code> at
+<code>λ = 1</code>, which does not depend on the velocity coordinates as long as they are linear in
+the rates (<code>q̇ = ω × q</code>, <code>Ṙ = R Ω̂</code>), so <code>E = L₂ − L₀</code> is the energy of Lee et al. The
+tests compare <code>∂L/∂v</code> with a finite difference of the generated Lagrangian, <code>E</code> with a
+finite difference in <code>λ</code>, and check <code>dE/dt = 0</code> along the unforced dynamics of the nine
+systems of <code>tests/vbl_systems.py</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,4025 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Symbolic computation of dynamics on smooth manifolds">
+      
+      
+      
+        <link rel="canonical" href="https://vkotaru.github.io/geomech/reference/geomech/utils/printing/">
+      
+      
+        <link rel="prev" href="../invariants/">
+      
+      
+        <link rel="next" href="../trace/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>printing - geomech</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#geomech.utils.printing" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="geomech" class="md-header__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            geomech
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              printing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../pipeline/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  The Pipeline, Stage by Stage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../conventions/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Conventions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../vbl/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Variation-Based Linearization
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../codegen/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Code Generation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../simulation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Simulation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../visualization/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Visualization and Reports
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../numeric-verification/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Verifying an Equation Numerically
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../manifold-implementation-notes/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Manifold Rules: Derivation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="geomech" class="md-nav__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    geomech
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Pipeline, Stage by Stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation-Based Linearization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../codegen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization and Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../numeric-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying an Equation Numerically
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../manifold-implementation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifold Rules: Derivation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geomech
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1" id="__nav_13_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    geomech
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../codegen/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    codegen
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_1" id="__nav_13_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    codegen
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/casadi_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    casadi_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    emitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/energy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    energy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/numpy_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numpy_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    core
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2" id="__nav_13_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../core/base/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    base
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_1" id="__nav_13_1_2_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    base
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/base/constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/base/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/base/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../core/math/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    math
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_2" id="__nav_13_1_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    math
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/math/collecting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    collecting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/math/extract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    extract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/math/ibp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ibp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../core/operations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_3" id="__nav_13_1_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/operations/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    addition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/operations/calculus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    calculus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/operations/geometry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geometry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/operations/mixins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mixins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/operations/multiplication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    multiplication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../core/transformations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    transformations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_4" id="__nav_13_1_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    transformations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/transformations/expansion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expansion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/transformations/manifold_rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    manifold_rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/transformations/pulling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pulling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/transformations/simplification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simplification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/transformations/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/transformations/vector_identities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vector_identities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../dynamics/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dynamics
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_3" id="__nav_13_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    dynamics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dynamics/eom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    eom
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dynamics/standard_form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    standard_form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dynamics/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dynamics/vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vbl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../numeric/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numeric
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../simulation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simulation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_5" id="__nav_13_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    simulation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/integrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    integrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_6" id="__nav_13_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../invariants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    printing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    printing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.display_eom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_eom
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.display_latex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_latex
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.display_standard_form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_standard_form
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.eom_to_latex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;eom_to_latex
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.print_eom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;print_eom
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.print_tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;print_tree
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" print_tree">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.utils.printing.print_tree--parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.render_eom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;render_eom
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" render_eom">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.utils.printing.render_eom--parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.repr_str" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;repr_str
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.to_latex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;to_latex
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.tree_str" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;tree_str
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    trace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../viz/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    viz
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_7" id="__nav_13_1_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    viz
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../viz/latex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    latex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../viz/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../viz/scene/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.display_eom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_eom
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.display_latex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_latex
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.display_standard_form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;display_standard_form
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.eom_to_latex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;eom_to_latex
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.print_eom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;print_eom
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.print_tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;print_tree
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" print_tree">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.utils.printing.print_tree--parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.render_eom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;render_eom
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" render_eom">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.utils.printing.render_eom--parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.repr_str" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;repr_str
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.to_latex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;to_latex
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.utils.printing.tree_str" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;tree_str
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h1 id="geomech.utils.printing" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>printing</code>
+
+
+<a href="#geomech.utils.printing" class="headerlink" title="Permanent link">&para;</a></h1>
+
+    <div class="doc doc-contents first">
+
+        <p>Printing utilities for expressions and equations of motion.</p>
+<p>print_eom(eqns)     — display the EOM dict as LaTeX equations
+print_tree(expr)    — display the expression tree structure for debugging
+render_eom(eqns)    — compile EOM to PDF via pdflatex</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.display_eom" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">display_eom</span><span class="p">(</span><span class="n">eqns</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.display_eom" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Display equations of motion as rendered LaTeX in a Jupyter notebook.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.display_eom--source--__codelineno-0-864">864</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_eom--source--__codelineno-0-865">865</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_eom--source--__codelineno-0-866">866</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_eom--source--__codelineno-0-867">867</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_eom--source--__codelineno-0-868">868</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_eom--source--__codelineno-0-869">869</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_eom--source--__codelineno-0-870">870</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.display_eom--source--__codelineno-0-864" name="geomech.utils.printing.display_eom--source--__codelineno-0-864"></a><span class="k">def</span><span class="w"> </span><span class="nf">display_eom</span><span class="p">(</span><span class="n">eqns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.utils.printing.display_eom--source--__codelineno-0-865" name="geomech.utils.printing.display_eom--source--__codelineno-0-865"></a><span class="w">    </span><span class="sd">"""Display equations of motion as rendered LaTeX in a Jupyter notebook."""</span>
+<a id="geomech.utils.printing.display_eom--source--__codelineno-0-866" name="geomech.utils.printing.display_eom--source--__codelineno-0-866"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Math</span><span class="p">,</span> <span class="n">display</span>
+<a id="geomech.utils.printing.display_eom--source--__codelineno-0-867" name="geomech.utils.printing.display_eom--source--__codelineno-0-867"></a>
+<a id="geomech.utils.printing.display_eom--source--__codelineno-0-868" name="geomech.utils.printing.display_eom--source--__codelineno-0-868"></a>    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">var_vec</span><span class="p">,</span> <span class="n">eqn</span><span class="p">)</span> <span class="ow">in</span> <span class="n">eqns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="geomech.utils.printing.display_eom--source--__codelineno-0-869" name="geomech.utils.printing.display_eom--source--__codelineno-0-869"></a>        <span class="n">latex_str</span> <span class="o">=</span> <span class="n">_strip_outer_parens</span><span class="p">(</span><span class="n">to_latex</span><span class="p">(</span><span class="n">eqn</span><span class="p">))</span> <span class="o">+</span> <span class="s2">" = 0"</span>
+<a id="geomech.utils.printing.display_eom--source--__codelineno-0-870" name="geomech.utils.printing.display_eom--source--__codelineno-0-870"></a>        <span class="n">display</span><span class="p">(</span><span class="n">Math</span><span class="p">(</span><span class="n">latex_str</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.display_latex" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">display_latex</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.display_latex" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Display an expression as rendered LaTeX in a Jupyter notebook.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.display_latex--source--__codelineno-0-832">832</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_latex--source--__codelineno-0-833">833</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_latex--source--__codelineno-0-834">834</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_latex--source--__codelineno-0-835">835</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_latex--source--__codelineno-0-836">836</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.display_latex--source--__codelineno-0-832" name="geomech.utils.printing.display_latex--source--__codelineno-0-832"></a><span class="k">def</span><span class="w"> </span><span class="nf">display_latex</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.utils.printing.display_latex--source--__codelineno-0-833" name="geomech.utils.printing.display_latex--source--__codelineno-0-833"></a><span class="w">    </span><span class="sd">"""Display an expression as rendered LaTeX in a Jupyter notebook."""</span>
+<a id="geomech.utils.printing.display_latex--source--__codelineno-0-834" name="geomech.utils.printing.display_latex--source--__codelineno-0-834"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Math</span><span class="p">,</span> <span class="n">display</span>
+<a id="geomech.utils.printing.display_latex--source--__codelineno-0-835" name="geomech.utils.printing.display_latex--source--__codelineno-0-835"></a>
+<a id="geomech.utils.printing.display_latex--source--__codelineno-0-836" name="geomech.utils.printing.display_latex--source--__codelineno-0-836"></a>    <span class="n">display</span><span class="p">(</span><span class="n">Math</span><span class="p">(</span><span class="n">to_latex</span><span class="p">(</span><span class="n">expr</span><span class="p">)))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.display_standard_form" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">display_standard_form</span><span class="p">(</span><span class="n">sf</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.display_standard_form" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Display standard form as M<em>ddq + G</em>u + f = 0 in a Jupyter notebook.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-895">895</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-896">896</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-897">897</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-898">898</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-899">899</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-900">900</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-901">901</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-902">902</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-903">903</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-904">904</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-905">905</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-906">906</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-907">907</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-908">908</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-909">909</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-910">910</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-911">911</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-912">912</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-913">913</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-914">914</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-915">915</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-916">916</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-917">917</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-918">918</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-919">919</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-920">920</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-921">921</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-922">922</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-923">923</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-924">924</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-925">925</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-926">926</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-927">927</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-928">928</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-929">929</a></span>
+<span class="normal"><a href="#geomech.utils.printing.display_standard_form--source--__codelineno-0-930">930</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-895" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-895"></a><span class="k">def</span><span class="w"> </span><span class="nf">display_standard_form</span><span class="p">(</span><span class="n">sf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-896" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-896"></a><span class="w">    </span><span class="sd">"""Display standard form as M*ddq + G*u + f = 0 in a Jupyter notebook."""</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-897" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-897"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Math</span><span class="p">,</span> <span class="n">display</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-898" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-898"></a>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-899" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-899"></a>    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">sf</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-900" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-900"></a>        <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-901" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-901"></a>        <span class="c1"># M * accel terms</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-902" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-902"></a>        <span class="k">for</span> <span class="n">accel</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">M</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-903" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-903"></a>            <span class="n">coeff_str</span> <span class="o">=</span> <span class="n">to_latex</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-904" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-904"></a>            <span class="n">accel_str</span> <span class="o">=</span> <span class="n">_latex_str_key</span><span class="p">(</span><span class="n">accel</span><span class="p">)</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-905" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-905"></a>            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">coeff_str</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">accel_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-906" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-906"></a>        <span class="c1"># G * input terms</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-907" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-907"></a>        <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-908" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-908"></a>            <span class="n">g_str</span> <span class="o">=</span> <span class="n">to_latex</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-909" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-909"></a>            <span class="n">inp_str</span> <span class="o">=</span> <span class="n">_latex_str_key</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-910" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-910"></a>            <span class="k">if</span> <span class="n">g_str</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"I"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">):</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-911" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-911"></a>                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inp_str</span><span class="p">)</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-912" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-912"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-913" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-913"></a>                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">g_str</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">inp_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-914" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-914"></a>        <span class="c1"># f term</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-915" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-915"></a>        <span class="n">f_str</span> <span class="o">=</span> <span class="n">to_latex</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-916" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-916"></a>        <span class="k">if</span> <span class="n">f_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"0v"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">):</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-917" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-917"></a>            <span class="c1"># f is one more summand of the equation: drop its own outer parentheses</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-918" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-918"></a>            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_strip_outer_parens</span><span class="p">(</span><span class="n">f_str</span><span class="p">))</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-919" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-919"></a>        <span class="c1"># Join with sign-aware concatenation</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-920" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-920"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-921" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-921"></a>            <span class="n">equation</span> <span class="o">=</span> <span class="s2">"0 = 0"</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-922" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-922"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-923" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-923"></a>            <span class="n">result</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-924" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-924"></a>            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-925" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-925"></a>                <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-926" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-926"></a>                    <span class="n">result</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-927" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-927"></a>                <span class="k">else</span><span class="p">:</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-928" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-928"></a>                    <span class="n">result</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">" + </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-929" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-929"></a>            <span class="n">equation</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="s2">" = 0"</span>
+<a id="geomech.utils.printing.display_standard_form--source--__codelineno-0-930" name="geomech.utils.printing.display_standard_form--source--__codelineno-0-930"></a>        <span class="n">display</span><span class="p">(</span><span class="n">Math</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_latex_str_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="se">\\</span><span class="s2">quad </span><span class="si">{</span><span class="n">equation</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.eom_to_latex" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">eom_to_latex</span><span class="p">(</span><span class="n">eqns</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.eom_to_latex" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return a complete LaTeX document string for the EOM dict (equations via <code>to_latex</code>).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-938">938</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-939">939</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-940">940</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-941">941</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-942">942</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-943">943</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-944">944</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-945">945</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-946">946</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-947">947</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-948">948</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-949">949</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-950">950</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-951">951</a></span>
+<span class="normal"><a href="#geomech.utils.printing.eom_to_latex--source--__codelineno-0-952">952</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-938" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-938"></a><span class="k">def</span><span class="w"> </span><span class="nf">eom_to_latex</span><span class="p">(</span><span class="n">eqns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-939" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-939"></a><span class="w">    </span><span class="sd">"""Return a complete LaTeX document string for the EOM dict (equations via ``to_latex``)."""</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-940" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-940"></a>    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-941" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-941"></a>        <span class="sa">r</span><span class="s2">"\documentclass[12pt]</span><span class="si">{article}</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-942" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-942"></a>        <span class="sa">r</span><span class="s2">"\usepackage{amsmath,amssymb}"</span><span class="p">,</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-943" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-943"></a>        <span class="sa">r</span><span class="s2">"\usepackage[margin=1in]</span><span class="si">{geometry}</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-944" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-944"></a>        <span class="sa">r</span><span class="s2">"\begin</span><span class="si">{document}</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-945" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-945"></a>        <span class="sa">r</span><span class="s2">"\section*{Equations of Motion}"</span><span class="p">,</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-946" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-946"></a>    <span class="p">]</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-947" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-947"></a>    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">var_vec</span><span class="p">,</span> <span class="n">eqn</span><span class="p">)</span> <span class="ow">in</span> <span class="n">eqns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-948" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-948"></a>        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\begin</span><span class="si">{equation}</span><span class="s2">"</span><span class="p">)</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-949" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-949"></a>        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_eom_line</span><span class="p">(</span><span class="n">var_vec</span><span class="p">,</span> <span class="n">eqn</span><span class="p">))</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-950" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-950"></a>        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\end</span><span class="si">{equation}</span><span class="s2">"</span><span class="p">)</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-951" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-951"></a>    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\end</span><span class="si">{document}</span><span class="s2">"</span><span class="p">)</span>
+<a id="geomech.utils.printing.eom_to_latex--source--__codelineno-0-952" name="geomech.utils.printing.eom_to_latex--source--__codelineno-0-952"></a>    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.print_eom" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">print_eom</span><span class="p">(</span><span class="n">eqns</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.print_eom" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Print equations of motion as LaTeX integral equations (via <code>to_latex</code>).</p>
+<p><em>eqns</em> is the dict returned by <code>compute_eom</code>:
+    {str(variation_vector): (variation_vector, equation)}</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.print_eom--source--__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_eom--source--__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_eom--source--__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_eom--source--__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_eom--source--__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_eom--source--__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_eom--source--__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_eom--source--__codelineno-0-46">46</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.print_eom--source--__codelineno-0-39" name="geomech.utils.printing.print_eom--source--__codelineno-0-39"></a><span class="k">def</span><span class="w"> </span><span class="nf">print_eom</span><span class="p">(</span><span class="n">eqns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.utils.printing.print_eom--source--__codelineno-0-40" name="geomech.utils.printing.print_eom--source--__codelineno-0-40"></a><span class="w">    </span><span class="sd">"""Print equations of motion as LaTeX integral equations (via ``to_latex``).</span>
+<a id="geomech.utils.printing.print_eom--source--__codelineno-0-41" name="geomech.utils.printing.print_eom--source--__codelineno-0-41"></a>
+<a id="geomech.utils.printing.print_eom--source--__codelineno-0-42" name="geomech.utils.printing.print_eom--source--__codelineno-0-42"></a><span class="sd">    *eqns* is the dict returned by ``compute_eom``:</span>
+<a id="geomech.utils.printing.print_eom--source--__codelineno-0-43" name="geomech.utils.printing.print_eom--source--__codelineno-0-43"></a><span class="sd">        {str(variation_vector): (variation_vector, equation)}</span>
+<a id="geomech.utils.printing.print_eom--source--__codelineno-0-44" name="geomech.utils.printing.print_eom--source--__codelineno-0-44"></a><span class="sd">    """</span>
+<a id="geomech.utils.printing.print_eom--source--__codelineno-0-45" name="geomech.utils.printing.print_eom--source--__codelineno-0-45"></a>    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">var_vec</span><span class="p">,</span> <span class="n">eqn</span><span class="p">)</span> <span class="ow">in</span> <span class="n">eqns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="geomech.utils.printing.print_eom--source--__codelineno-0-46" name="geomech.utils.printing.print_eom--source--__codelineno-0-46"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">_eom_line</span><span class="p">(</span><span class="n">var_vec</span><span class="p">,</span> <span class="n">eqn</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.print_tree" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">print_tree</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">'indent'</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.print_tree" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Print the expression tree structure for debugging.</p>
+<p>Each node shows its class name; each leaf shows its name, value and the flags the
+engine keys on (constant, zero, unit-norm, symmetric, skew-symmetric, orthogonal,
+identity, numeric, manifold) and, for a tangent or variation vector, its manifold
+point (<code>of=S2 'q'</code>). When two different point objects with the same name occur in
+the tree, each is numbered in order of first appearance (<code>of=S2 'q' #1</code>,
+<code>S2('q' #2, ...)</code>), so they are told apart without printing memory addresses.
+The last line is the <code>repr</code> of the expression.</p>
+<h4 id="geomech.utils.printing.print_tree--parameters">Parameters<a class="headerlink" href="#geomech.utils.printing.print_tree--parameters" title="Permanent link">&para;</a></h4>
+<p>style : str
+    'indent' (default) — one node per line, children indented below their parent.
+    'topdown' — compact graphical top-down tree with / and \ branches; readable
+    for small expressions only.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#geomech.utils.printing.print_tree--source--__codelineno-0-80">80</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.print_tree--source--__codelineno-0-54" name="geomech.utils.printing.print_tree--source--__codelineno-0-54"></a><span class="k">def</span><span class="w"> </span><span class="nf">print_tree</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"indent"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-55" name="geomech.utils.printing.print_tree--source--__codelineno-0-55"></a><span class="w">    </span><span class="sd">"""Print the expression tree structure for debugging.</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-56" name="geomech.utils.printing.print_tree--source--__codelineno-0-56"></a>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-57" name="geomech.utils.printing.print_tree--source--__codelineno-0-57"></a><span class="sd">    Each node shows its class name; each leaf shows its name, value and the flags the</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-58" name="geomech.utils.printing.print_tree--source--__codelineno-0-58"></a><span class="sd">    engine keys on (constant, zero, unit-norm, symmetric, skew-symmetric, orthogonal,</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-59" name="geomech.utils.printing.print_tree--source--__codelineno-0-59"></a><span class="sd">    identity, numeric, manifold) and, for a tangent or variation vector, its manifold</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-60" name="geomech.utils.printing.print_tree--source--__codelineno-0-60"></a><span class="sd">    point (``of=S2 'q'``). When two different point objects with the same name occur in</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-61" name="geomech.utils.printing.print_tree--source--__codelineno-0-61"></a><span class="sd">    the tree, each is numbered in order of first appearance (``of=S2 'q' #1``,</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-62" name="geomech.utils.printing.print_tree--source--__codelineno-0-62"></a><span class="sd">    ``S2('q' #2, ...)``), so they are told apart without printing memory addresses.</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-63" name="geomech.utils.printing.print_tree--source--__codelineno-0-63"></a><span class="sd">    The last line is the ``repr`` of the expression.</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-64" name="geomech.utils.printing.print_tree--source--__codelineno-0-64"></a>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-65" name="geomech.utils.printing.print_tree--source--__codelineno-0-65"></a><span class="sd">    Parameters</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-66" name="geomech.utils.printing.print_tree--source--__codelineno-0-66"></a><span class="sd">    ----------</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-67" name="geomech.utils.printing.print_tree--source--__codelineno-0-67"></a><span class="sd">    style : str</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-68" name="geomech.utils.printing.print_tree--source--__codelineno-0-68"></a><span class="sd">        'indent' (default) — one node per line, children indented below their parent.</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-69" name="geomech.utils.printing.print_tree--source--__codelineno-0-69"></a><span class="sd">        'topdown' — compact graphical top-down tree with / and \\ branches; readable</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-70" name="geomech.utils.printing.print_tree--source--__codelineno-0-70"></a><span class="sd">        for small expressions only.</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-71" name="geomech.utils.printing.print_tree--source--__codelineno-0-71"></a><span class="sd">    """</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-72" name="geomech.utils.printing.print_tree--source--__codelineno-0-72"></a>    <span class="k">if</span> <span class="n">style</span> <span class="o">==</span> <span class="s2">"topdown"</span><span class="p">:</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-73" name="geomech.utils.printing.print_tree--source--__codelineno-0-73"></a>        <span class="n">lines</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_render_topdown</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-74" name="geomech.utils.printing.print_tree--source--__codelineno-0-74"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-75" name="geomech.utils.printing.print_tree--source--__codelineno-0-75"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-76" name="geomech.utils.printing.print_tree--source--__codelineno-0-76"></a>        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-77" name="geomech.utils.printing.print_tree--source--__codelineno-0-77"></a>        <span class="n">_build_tree</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">_point_labels</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-78" name="geomech.utils.printing.print_tree--source--__codelineno-0-78"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-79" name="geomech.utils.printing.print_tree--source--__codelineno-0-79"></a>    <span class="nb">print</span><span class="p">()</span>
+<a id="geomech.utils.printing.print_tree--source--__codelineno-0-80" name="geomech.utils.printing.print_tree--source--__codelineno-0-80"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"expr: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.render_eom" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">render_eom</span><span class="p">(</span><span class="n">eqns</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s1">'eom.pdf'</span><span class="p">,</span> <span class="n">open_pdf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.render_eom" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compile EOM to PDF via pdflatex.</p>
+<h4 id="geomech.utils.printing.render_eom--parameters">Parameters<a class="headerlink" href="#geomech.utils.printing.render_eom--parameters" title="Permanent link">&para;</a></h4>
+<p>eqns : dict
+    The dict returned by <code>compute_eom</code>.
+output : str
+    Output PDF path (default: <code>eom.pdf</code> in current directory).
+open_pdf : bool
+    If True, open the PDF after compilation (macOS <code>open</code>).</p>
+<p>Returns the PDF path, or <code>None</code> when <code>pdflatex</code> fails; the failure (with the end
+of the <code>pdflatex</code> log) is a <code>WARNING</code> on the <code>geomech</code> logger, the success an
+<code>INFO</code> line.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-955">955</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-956">956</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-957">957</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-958">958</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-959">959</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-960">960</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-961">961</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-962">962</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-963">963</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-964">964</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-965">965</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-966">966</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-967">967</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-968">968</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-969">969</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-970">970</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-971">971</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-972">972</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-973">973</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-974">974</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-975">975</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-976">976</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-977">977</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-978">978</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-979">979</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-980">980</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-981">981</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-982">982</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-983">983</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-984">984</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-985">985</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-986">986</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-987">987</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-988">988</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-989">989</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-990">990</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-991">991</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-992">992</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-993">993</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-994">994</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-995">995</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-996">996</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-997">997</a></span>
+<span class="normal"><a href="#geomech.utils.printing.render_eom--source--__codelineno-0-998">998</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.render_eom--source--__codelineno-0-955" name="geomech.utils.printing.render_eom--source--__codelineno-0-955"></a><span class="k">def</span><span class="w"> </span><span class="nf">render_eom</span><span class="p">(</span><span class="n">eqns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eom.pdf"</span><span class="p">,</span> <span class="n">open_pdf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-956" name="geomech.utils.printing.render_eom--source--__codelineno-0-956"></a><span class="w">    </span><span class="sd">"""Compile EOM to PDF via pdflatex.</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-957" name="geomech.utils.printing.render_eom--source--__codelineno-0-957"></a>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-958" name="geomech.utils.printing.render_eom--source--__codelineno-0-958"></a><span class="sd">    Parameters</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-959" name="geomech.utils.printing.render_eom--source--__codelineno-0-959"></a><span class="sd">    ----------</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-960" name="geomech.utils.printing.render_eom--source--__codelineno-0-960"></a><span class="sd">    eqns : dict</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-961" name="geomech.utils.printing.render_eom--source--__codelineno-0-961"></a><span class="sd">        The dict returned by ``compute_eom``.</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-962" name="geomech.utils.printing.render_eom--source--__codelineno-0-962"></a><span class="sd">    output : str</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-963" name="geomech.utils.printing.render_eom--source--__codelineno-0-963"></a><span class="sd">        Output PDF path (default: ``eom.pdf`` in current directory).</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-964" name="geomech.utils.printing.render_eom--source--__codelineno-0-964"></a><span class="sd">    open_pdf : bool</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-965" name="geomech.utils.printing.render_eom--source--__codelineno-0-965"></a><span class="sd">        If True, open the PDF after compilation (macOS ``open``).</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-966" name="geomech.utils.printing.render_eom--source--__codelineno-0-966"></a>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-967" name="geomech.utils.printing.render_eom--source--__codelineno-0-967"></a><span class="sd">    Returns the PDF path, or ``None`` when ``pdflatex`` fails; the failure (with the end</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-968" name="geomech.utils.printing.render_eom--source--__codelineno-0-968"></a><span class="sd">    of the ``pdflatex`` log) is a ``WARNING`` on the ``geomech`` logger, the success an</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-969" name="geomech.utils.printing.render_eom--source--__codelineno-0-969"></a><span class="sd">    ``INFO`` line.</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-970" name="geomech.utils.printing.render_eom--source--__codelineno-0-970"></a><span class="sd">    """</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-971" name="geomech.utils.printing.render_eom--source--__codelineno-0-971"></a>    <span class="n">tex_src</span> <span class="o">=</span> <span class="n">eom_to_latex</span><span class="p">(</span><span class="n">eqns</span><span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-972" name="geomech.utils.printing.render_eom--source--__codelineno-0-972"></a>    <span class="n">output</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-973" name="geomech.utils.printing.render_eom--source--__codelineno-0-973"></a>    <span class="n">pdf_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">output</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-974" name="geomech.utils.printing.render_eom--source--__codelineno-0-974"></a>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-975" name="geomech.utils.printing.render_eom--source--__codelineno-0-975"></a>    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-976" name="geomech.utils.printing.render_eom--source--__codelineno-0-976"></a>        <span class="n">tex_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">pdf_name</span> <span class="o">+</span> <span class="s2">".tex"</span><span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-977" name="geomech.utils.printing.render_eom--source--__codelineno-0-977"></a>        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tex_path</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-978" name="geomech.utils.printing.render_eom--source--__codelineno-0-978"></a>            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tex_src</span><span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-979" name="geomech.utils.printing.render_eom--source--__codelineno-0-979"></a>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-980" name="geomech.utils.printing.render_eom--source--__codelineno-0-980"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-981" name="geomech.utils.printing.render_eom--source--__codelineno-0-981"></a>            <span class="p">[</span><span class="s2">"pdflatex"</span><span class="p">,</span> <span class="s2">"-interaction=nonstopmode"</span><span class="p">,</span> <span class="s2">"-output-directory"</span><span class="p">,</span> <span class="n">tmpdir</span><span class="p">,</span> <span class="n">tex_path</span><span class="p">],</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-982" name="geomech.utils.printing.render_eom--source--__codelineno-0-982"></a>            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-983" name="geomech.utils.printing.render_eom--source--__codelineno-0-983"></a>            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-984" name="geomech.utils.printing.render_eom--source--__codelineno-0-984"></a>        <span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-985" name="geomech.utils.printing.render_eom--source--__codelineno-0-985"></a>        <span class="n">pdf_tmp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">pdf_name</span> <span class="o">+</span> <span class="s2">".pdf"</span><span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-986" name="geomech.utils.printing.render_eom--source--__codelineno-0-986"></a>        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">pdf_tmp</span><span class="p">):</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-987" name="geomech.utils.printing.render_eom--source--__codelineno-0-987"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-988" name="geomech.utils.printing.render_eom--source--__codelineno-0-988"></a>                <span class="s2">"render_eom: pdflatex failed:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-989" name="geomech.utils.printing.render_eom--source--__codelineno-0-989"></a>                <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">[</span><span class="o">-</span><span class="mi">2000</span><span class="p">:]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2000</span> <span class="k">else</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-990" name="geomech.utils.printing.render_eom--source--__codelineno-0-990"></a>            <span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-991" name="geomech.utils.printing.render_eom--source--__codelineno-0-991"></a>            <span class="k">return</span> <span class="kc">None</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-992" name="geomech.utils.printing.render_eom--source--__codelineno-0-992"></a>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-993" name="geomech.utils.printing.render_eom--source--__codelineno-0-993"></a>        <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">pdf_tmp</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-994" name="geomech.utils.printing.render_eom--source--__codelineno-0-994"></a>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-995" name="geomech.utils.printing.render_eom--source--__codelineno-0-995"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"render_eom: PDF written to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-996" name="geomech.utils.printing.render_eom--source--__codelineno-0-996"></a>    <span class="k">if</span> <span class="n">open_pdf</span><span class="p">:</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-997" name="geomech.utils.printing.render_eom--source--__codelineno-0-997"></a>        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">"open"</span><span class="p">,</span> <span class="n">output</span><span class="p">])</span>
+<a id="geomech.utils.printing.render_eom--source--__codelineno-0-998" name="geomech.utils.printing.render_eom--source--__codelineno-0-998"></a>    <span class="k">return</span> <span class="n">output</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.repr_str" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.repr_str" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return a human-readable string for the expression (used by <code>__repr__</code>).</p>
+<p>Leaves carry their type and constness: <code>m</code> (scalar), <code>v:x</code> (vector), <code>M:J</code>
+(matrix), <code>S2:q</code>, <code>SO3:R</code>, and a trailing <code>*</code> marks a constant (<code>M:J*</code>,
+<code>g*</code>); numbers print bare (<code>(2)</code>). Products are joined with <code>·</code>, so the <code>*</code>
+is never a multiplication: <code>m*·g*·&lt;v:e3*, v:x&gt;</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-146">146</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-148">148</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-149">149</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-150">150</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-151">151</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-152">152</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-153">153</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-161">161</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-162">162</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-163">163</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-164">164</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-165">165</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-166">166</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-167">167</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-178">178</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-179">179</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-216">216</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-222">222</a></span>
+<span class="normal"><a href="#geomech.utils.printing.repr_str--source--__codelineno-0-223">223</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.repr_str--source--__codelineno-0-145" name="geomech.utils.printing.repr_str--source--__codelineno-0-145"></a><span class="k">def</span><span class="w"> </span><span class="nf">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-146" name="geomech.utils.printing.repr_str--source--__codelineno-0-146"></a><span class="w">    </span><span class="sd">"""Return a human-readable string for the expression (used by ``__repr__``).</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-147" name="geomech.utils.printing.repr_str--source--__codelineno-0-147"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-148" name="geomech.utils.printing.repr_str--source--__codelineno-0-148"></a><span class="sd">    Leaves carry their type and constness: ``m`` (scalar), ``v:x`` (vector), ``M:J``</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-149" name="geomech.utils.printing.repr_str--source--__codelineno-0-149"></a><span class="sd">    (matrix), ``S2:q``, ``SO3:R``, and a trailing ``*`` marks a constant (``M:J*``,</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-150" name="geomech.utils.printing.repr_str--source--__codelineno-0-150"></a><span class="sd">    ``g*``); numbers print bare (``(2)``). Products are joined with ``·``, so the ``*``</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-151" name="geomech.utils.printing.repr_str--source--__codelineno-0-151"></a><span class="sd">    is never a multiplication: ``m*·g*·&lt;v:e3*, v:x&gt;``.</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-152" name="geomech.utils.printing.repr_str--source--__codelineno-0-152"></a><span class="sd">    """</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-153" name="geomech.utils.printing.repr_str--source--__codelineno-0-153"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">geomech.core.operations.addition</span><span class="w"> </span><span class="kn">import</span> <span class="n">Add</span><span class="p">,</span> <span class="n">MAdd</span><span class="p">,</span> <span class="n">VAdd</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-154" name="geomech.utils.printing.repr_str--source--__codelineno-0-154"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">geomech.core.operations.calculus</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeDerivative</span><span class="p">,</span> <span class="n">TimeIntegral</span><span class="p">,</span> <span class="n">Variation</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-155" name="geomech.utils.printing.repr_str--source--__codelineno-0-155"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">geomech.core.operations.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Cross</span><span class="p">,</span> <span class="n">Dot</span><span class="p">,</span> <span class="n">Hat</span><span class="p">,</span> <span class="n">Transpose</span><span class="p">,</span> <span class="n">Vee</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-156" name="geomech.utils.printing.repr_str--source--__codelineno-0-156"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">geomech.core.operations.multiplication</span><span class="w"> </span><span class="kn">import</span> <span class="n">MMMul</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">MVMul</span><span class="p">,</span> <span class="n">SMMul</span><span class="p">,</span> <span class="n">SVMul</span><span class="p">,</span> <span class="n">VVMul</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-157" name="geomech.utils.printing.repr_str--source--__codelineno-0-157"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-158" name="geomech.utils.printing.repr_str--source--__codelineno-0-158"></a>    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">"nodes"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-159" name="geomech.utils.printing.repr_str--source--__codelineno-0-159"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-160" name="geomech.utils.printing.repr_str--source--__codelineno-0-160"></a>    <span class="c1"># Leaf</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-161" name="geomech.utils.printing.repr_str--source--__codelineno-0-161"></a>    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-162" name="geomech.utils.printing.repr_str--source--__codelineno-0-162"></a>        <span class="k">return</span> <span class="n">_repr_leaf</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-163" name="geomech.utils.printing.repr_str--source--__codelineno-0-163"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-164" name="geomech.utils.printing.repr_str--source--__codelineno-0-164"></a>    <span class="c1"># N-ary addition</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-165" name="geomech.utils.printing.repr_str--source--__codelineno-0-165"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Add</span><span class="p">,</span> <span class="n">VAdd</span><span class="p">,</span> <span class="n">MAdd</span><span class="p">)):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-166" name="geomech.utils.printing.repr_str--source--__codelineno-0-166"></a>        <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-167" name="geomech.utils.printing.repr_str--source--__codelineno-0-167"></a>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-168" name="geomech.utils.printing.repr_str--source--__codelineno-0-168"></a>            <span class="n">s</span> <span class="o">=</span> <span class="n">repr_str</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-169" name="geomech.utils.printing.repr_str--source--__codelineno-0-169"></a>            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-170" name="geomech.utils.printing.repr_str--source--__codelineno-0-170"></a>                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" + "</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-171" name="geomech.utils.printing.repr_str--source--__codelineno-0-171"></a>            <span class="k">elif</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-172" name="geomech.utils.printing.repr_str--source--__codelineno-0-172"></a>                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" "</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-173" name="geomech.utils.printing.repr_str--source--__codelineno-0-173"></a>            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-174" name="geomech.utils.printing.repr_str--source--__codelineno-0-174"></a>        <span class="k">return</span> <span class="s2">"("</span> <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">+</span> <span class="s2">")"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-175" name="geomech.utils.printing.repr_str--source--__codelineno-0-175"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-176" name="geomech.utils.printing.repr_str--source--__codelineno-0-176"></a>    <span class="c1"># Binary multiplication — check for negative scalar factor</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-177" name="geomech.utils.printing.repr_str--source--__codelineno-0-177"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Mul</span><span class="p">,</span> <span class="n">SVMul</span><span class="p">,</span> <span class="n">SMMul</span><span class="p">,</span> <span class="n">MVMul</span><span class="p">,</span> <span class="n">MMMul</span><span class="p">,</span> <span class="n">VVMul</span><span class="p">)):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-178" name="geomech.utils.printing.repr_str--source--__codelineno-0-178"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">geomech.core.base.expressions</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_number_literal</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-179" name="geomech.utils.printing.repr_str--source--__codelineno-0-179"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-180" name="geomech.utils.printing.repr_str--source--__codelineno-0-180"></a>        <span class="n">left</span> <span class="o">=</span> <span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-181" name="geomech.utils.printing.repr_str--source--__codelineno-0-181"></a>        <span class="n">right</span> <span class="o">=</span> <span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-182" name="geomech.utils.printing.repr_str--source--__codelineno-0-182"></a>        <span class="c1"># A negated operand is parenthesised, so nested negations stay readable:</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-183" name="geomech.utils.printing.repr_str--source--__codelineno-0-183"></a>        <span class="c1"># -(-hat(ρ)), hat(ρ)·(-(-1)) instead of --hat(ρ), hat(ρ)·-(-1).</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-184" name="geomech.utils.printing.repr_str--source--__codelineno-0-184"></a>        <span class="c1"># Multiplying by the literal -1 prints as a minus sign (a named scalar with</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-185" name="geomech.utils.printing.repr_str--source--__codelineno-0-185"></a>        <span class="c1"># value -1 is a symbol and prints by name).</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-186" name="geomech.utils.printing.repr_str--source--__codelineno-0-186"></a>        <span class="k">if</span> <span class="n">is_number_literal</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-187" name="geomech.utils.printing.repr_str--source--__codelineno-0-187"></a>            <span class="k">return</span> <span class="sa">f</span><span class="s2">"-</span><span class="si">{</span><span class="n">_paren_negative</span><span class="p">(</span><span class="n">right</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-188" name="geomech.utils.printing.repr_str--source--__codelineno-0-188"></a>        <span class="k">if</span> <span class="n">is_number_literal</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-189" name="geomech.utils.printing.repr_str--source--__codelineno-0-189"></a>            <span class="k">return</span> <span class="sa">f</span><span class="s2">"-</span><span class="si">{</span><span class="n">_paren_negative</span><span class="p">(</span><span class="n">left</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-190" name="geomech.utils.printing.repr_str--source--__codelineno-0-190"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_paren_negative</span><span class="p">(</span><span class="n">left</span><span class="p">)</span><span class="si">}</span><span class="s2">·</span><span class="si">{</span><span class="n">_paren_negative</span><span class="p">(</span><span class="n">right</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-191" name="geomech.utils.printing.repr_str--source--__codelineno-0-191"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-192" name="geomech.utils.printing.repr_str--source--__codelineno-0-192"></a>    <span class="c1"># Dot, Cross</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-193" name="geomech.utils.printing.repr_str--source--__codelineno-0-193"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Dot</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-194" name="geomech.utils.printing.repr_str--source--__codelineno-0-194"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)</span><span class="si">}</span><span class="s2">&gt;"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-195" name="geomech.utils.printing.repr_str--source--__codelineno-0-195"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Cross</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-196" name="geomech.utils.printing.repr_str--source--__codelineno-0-196"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"cross(</span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-197" name="geomech.utils.printing.repr_str--source--__codelineno-0-197"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-198" name="geomech.utils.printing.repr_str--source--__codelineno-0-198"></a>    <span class="c1"># Hat, Vee, Transpose</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-199" name="geomech.utils.printing.repr_str--source--__codelineno-0-199"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Hat</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-200" name="geomech.utils.printing.repr_str--source--__codelineno-0-200"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"hat(</span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-201" name="geomech.utils.printing.repr_str--source--__codelineno-0-201"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Vee</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-202" name="geomech.utils.printing.repr_str--source--__codelineno-0-202"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"vee(</span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-203" name="geomech.utils.printing.repr_str--source--__codelineno-0-203"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Transpose</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-204" name="geomech.utils.printing.repr_str--source--__codelineno-0-204"></a>        <span class="n">inner</span> <span class="o">=</span> <span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-205" name="geomech.utils.printing.repr_str--source--__codelineno-0-205"></a>        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="s2">"nodes"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">inner</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"("</span><span class="p">,</span> <span class="s2">"&lt;"</span><span class="p">)):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-206" name="geomech.utils.printing.repr_str--source--__codelineno-0-206"></a>            <span class="n">inner</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">inner</span><span class="si">}</span><span class="s2">)"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-207" name="geomech.utils.printing.repr_str--source--__codelineno-0-207"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">inner</span><span class="si">}</span><span class="s2">'"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-208" name="geomech.utils.printing.repr_str--source--__codelineno-0-208"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-209" name="geomech.utils.printing.repr_str--source--__codelineno-0-209"></a>    <span class="c1"># Calculus</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-210" name="geomech.utils.printing.repr_str--source--__codelineno-0-210"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Variation</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-211" name="geomech.utils.printing.repr_str--source--__codelineno-0-211"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"δ(</span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-212" name="geomech.utils.printing.repr_str--source--__codelineno-0-212"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">TimeDerivative</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-213" name="geomech.utils.printing.repr_str--source--__codelineno-0-213"></a>        <span class="n">inner</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">expr</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-214" name="geomech.utils.printing.repr_str--source--__codelineno-0-214"></a>        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-215" name="geomech.utils.printing.repr_str--source--__codelineno-0-215"></a>        <span class="c1"># For simple leaf names, put a combining dot above: v:x → v:ẋ</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-216" name="geomech.utils.printing.repr_str--source--__codelineno-0-216"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="s2">"nodes"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">:</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-217" name="geomech.utils.printing.repr_str--source--__codelineno-0-217"></a>            <span class="k">return</span> <span class="n">_repr_leaf</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="n">decorate</span><span class="o">=</span><span class="s2">"</span><span class="se">\u0307</span><span class="s2">"</span><span class="p">)</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-218" name="geomech.utils.printing.repr_str--source--__codelineno-0-218"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"d/dt(</span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">inner</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-219" name="geomech.utils.printing.repr_str--source--__codelineno-0-219"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">TimeIntegral</span><span class="p">):</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-220" name="geomech.utils.printing.repr_str--source--__codelineno-0-220"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"∫(</span><span class="si">{</span><span class="n">repr_str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span><span class="si">}</span><span class="s2">)dt"</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-221" name="geomech.utils.printing.repr_str--source--__codelineno-0-221"></a>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-222" name="geomech.utils.printing.repr_str--source--__codelineno-0-222"></a>    <span class="c1"># Fallback</span>
+<a id="geomech.utils.printing.repr_str--source--__codelineno-0-223" name="geomech.utils.printing.repr_str--source--__codelineno-0-223"></a>    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.to_latex" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">to_latex</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.to_latex" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert an expression tree to a LaTeX string.</p>
+<p>Returns a string suitable for use with IPython.display.Math() or inside a LaTeX
+equation environment. The output is precedence-aware: composite operands of a cross
+product, of a matrix product and of a transpose are wrapped in <code>\left( \right)</code>
+(<code>a \times \left(b \times c\right)</code>, <code>R^T \left(a \times b\right)</code>,
+<code>\left(R a\right)^T</code>), a <code>Dot</code> multiplied by anything is wrapped
+(<code>\left(b \cdot c\right) a</code>), and the numeric coefficient of a product is printed
+once, first (<code>-\frac{1}{2} m v</code>). Sums are always wrapped.</p>
+<p>One function per node class (<code>_latex_sum</code>, <code>_latex_scaled</code>, ...), picked from
+<code>_latex_handlers()</code> by the class of <em>expr</em>; a leaf is <code>_latex_leaf</code>.</p>
+<p><em>names</em> maps the printed name of a leaf to the LaTeX to use for it (<code>{"J1": "J_1"}</code>,
+<code>geomech.viz.latex_names</code> builds one); it is applied to leaf names only, never to
+the assembled formula, and a leaf missing from it prints its own name. The default
+(<code>None</code>) prints every leaf by its name.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-648">648</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-649">649</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-650">650</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-651">651</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-652">652</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-653">653</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-654">654</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-655">655</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-656">656</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-657">657</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-658">658</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-659">659</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-660">660</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-661">661</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-662">662</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-663">663</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-664">664</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-665">665</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-666">666</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-667">667</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-668">668</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-669">669</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-670">670</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-671">671</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-672">672</a></span>
+<span class="normal"><a href="#geomech.utils.printing.to_latex--source--__codelineno-0-673">673</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.to_latex--source--__codelineno-0-648" name="geomech.utils.printing.to_latex--source--__codelineno-0-648"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_latex</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-649" name="geomech.utils.printing.to_latex--source--__codelineno-0-649"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""Convert an expression tree to a LaTeX string.</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-650" name="geomech.utils.printing.to_latex--source--__codelineno-0-650"></a>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-651" name="geomech.utils.printing.to_latex--source--__codelineno-0-651"></a><span class="sd">    Returns a string suitable for use with IPython.display.Math() or inside a LaTeX</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-652" name="geomech.utils.printing.to_latex--source--__codelineno-0-652"></a><span class="sd">    equation environment. The output is precedence-aware: composite operands of a cross</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-653" name="geomech.utils.printing.to_latex--source--__codelineno-0-653"></a><span class="sd">    product, of a matrix product and of a transpose are wrapped in ``\left( \right)``</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-654" name="geomech.utils.printing.to_latex--source--__codelineno-0-654"></a><span class="sd">    (``a \times \left(b \times c\right)``, ``R^T \left(a \times b\right)``,</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-655" name="geomech.utils.printing.to_latex--source--__codelineno-0-655"></a><span class="sd">    ``\left(R a\right)^T``), a ``Dot`` multiplied by anything is wrapped</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-656" name="geomech.utils.printing.to_latex--source--__codelineno-0-656"></a><span class="sd">    (``\left(b \cdot c\right) a``), and the numeric coefficient of a product is printed</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-657" name="geomech.utils.printing.to_latex--source--__codelineno-0-657"></a><span class="sd">    once, first (``-\frac{1}{2} m v``). Sums are always wrapped.</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-658" name="geomech.utils.printing.to_latex--source--__codelineno-0-658"></a>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-659" name="geomech.utils.printing.to_latex--source--__codelineno-0-659"></a><span class="sd">    One function per node class (``_latex_sum``, ``_latex_scaled``, ...), picked from</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-660" name="geomech.utils.printing.to_latex--source--__codelineno-0-660"></a><span class="sd">    ``_latex_handlers()`` by the class of *expr*; a leaf is ``_latex_leaf``.</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-661" name="geomech.utils.printing.to_latex--source--__codelineno-0-661"></a>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-662" name="geomech.utils.printing.to_latex--source--__codelineno-0-662"></a><span class="sd">    *names* maps the printed name of a leaf to the LaTeX to use for it (``{"J1": "J_1"}``,</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-663" name="geomech.utils.printing.to_latex--source--__codelineno-0-663"></a><span class="sd">    ``geomech.viz.latex_names`` builds one); it is applied to leaf names only, never to</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-664" name="geomech.utils.printing.to_latex--source--__codelineno-0-664"></a><span class="sd">    the assembled formula, and a leaf missing from it prints its own name. The default</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-665" name="geomech.utils.printing.to_latex--source--__codelineno-0-665"></a><span class="sd">    (``None``) prints every leaf by its name.</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-666" name="geomech.utils.printing.to_latex--source--__codelineno-0-666"></a><span class="sd">    """</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-667" name="geomech.utils.printing.to_latex--source--__codelineno-0-667"></a>    <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-668" name="geomech.utils.printing.to_latex--source--__codelineno-0-668"></a>        <span class="n">token</span> <span class="o">=</span> <span class="n">_LATEX_NAMES</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-669" name="geomech.utils.printing.to_latex--source--__codelineno-0-669"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-670" name="geomech.utils.printing.to_latex--source--__codelineno-0-670"></a>            <span class="k">return</span> <span class="n">_to_latex</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-671" name="geomech.utils.printing.to_latex--source--__codelineno-0-671"></a>        <span class="k">finally</span><span class="p">:</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-672" name="geomech.utils.printing.to_latex--source--__codelineno-0-672"></a>            <span class="n">_LATEX_NAMES</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+<a id="geomech.utils.printing.to_latex--source--__codelineno-0-673" name="geomech.utils.printing.to_latex--source--__codelineno-0-673"></a>    <span class="k">return</span> <span class="n">_to_latex</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.utils.printing.tree_str" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">tree_str</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">'topdown'</span><span class="p">)</span></code>
+
+<a href="#geomech.utils.printing.tree_str" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the expression tree as a string (without printing).</p>
+<p>The default here stays <code>'topdown'</code> (the compact form); <code>print_tree</code> defaults to
+<code>'indent'</code>, which shows every leaf's flags.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/utils/printing.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#geomech.utils.printing.tree_str--source--__codelineno-0-95">95</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.utils.printing.tree_str--source--__codelineno-0-83" name="geomech.utils.printing.tree_str--source--__codelineno-0-83"></a><span class="k">def</span><span class="w"> </span><span class="nf">tree_str</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"topdown"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-84" name="geomech.utils.printing.tree_str--source--__codelineno-0-84"></a><span class="w">    </span><span class="sd">"""Return the expression tree as a string (without printing).</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-85" name="geomech.utils.printing.tree_str--source--__codelineno-0-85"></a>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-86" name="geomech.utils.printing.tree_str--source--__codelineno-0-86"></a><span class="sd">    The default here stays ``'topdown'`` (the compact form); ``print_tree`` defaults to</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-87" name="geomech.utils.printing.tree_str--source--__codelineno-0-87"></a><span class="sd">    ``'indent'``, which shows every leaf's flags.</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-88" name="geomech.utils.printing.tree_str--source--__codelineno-0-88"></a><span class="sd">    """</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-89" name="geomech.utils.printing.tree_str--source--__codelineno-0-89"></a>    <span class="k">if</span> <span class="n">style</span> <span class="o">==</span> <span class="s2">"topdown"</span><span class="p">:</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-90" name="geomech.utils.printing.tree_str--source--__codelineno-0-90"></a>        <span class="n">lines</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_render_topdown</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-91" name="geomech.utils.printing.tree_str--source--__codelineno-0-91"></a>        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-92" name="geomech.utils.printing.tree_str--source--__codelineno-0-92"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-93" name="geomech.utils.printing.tree_str--source--__codelineno-0-93"></a>        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-94" name="geomech.utils.printing.tree_str--source--__codelineno-0-94"></a>        <span class="n">_build_tree</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">_point_labels</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+<a id="geomech.utils.printing.tree_str--source--__codelineno-0-95" name="geomech.utils.printing.tree_str--source--__codelineno-0-95"></a>        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "content.code.copy"], "search": "../../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,4718 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Symbolic computation of dynamics on smooth manifolds">
+      
+      
+      
+        <link rel="canonical" href="https://vkotaru.github.io/geomech/reference/geomech/core/operations/">
+      
+      
+        <link rel="prev" href="../math/ibp/">
+      
+      
+        <link rel="next" href="addition/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>operations - geomech</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#geomech.core.operations" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="geomech" class="md-header__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            geomech
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              operations
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../pipeline/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  The Pipeline, Stage by Stage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../conventions/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Conventions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../vbl/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Variation-Based Linearization
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../codegen/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Code Generation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../simulation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Simulation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../visualization/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Visualization and Reports
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../numeric-verification/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Verifying an Equation Numerically
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../manifold-implementation-notes/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Manifold Rules: Derivation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="geomech" class="md-nav__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    geomech
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Pipeline, Stage by Stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation-Based Linearization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../codegen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization and Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../numeric-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying an Equation Numerically
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../manifold-implementation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifold Rules: Derivation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geomech
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1" id="__nav_13_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    geomech
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../codegen/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    codegen
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_1" id="__nav_13_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    codegen
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/casadi_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    casadi_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    emitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/energy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    energy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/numpy_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numpy_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../codegen/source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    core
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2" id="__nav_13_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../base/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    base
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_1" id="__nav_13_1_2_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    base
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../base/constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../base/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../base/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../math/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    math
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_2" id="__nav_13_1_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    math
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/collecting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    collecting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/extract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    extract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/ibp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ibp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1_2_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_13_1_2_3" id="__nav_13_1_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    addition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="calculus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    calculus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="geometry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geometry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mixins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mixins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="multiplication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    multiplication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../transformations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    transformations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_4" id="__nav_13_1_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    transformations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformations/expansion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expansion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformations/manifold_rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    manifold_rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformations/pulling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pulling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformations/simplification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simplification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformations/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformations/vector_identities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vector_identities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../dynamics/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dynamics
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_3" id="__nav_13_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    dynamics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dynamics/eom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    eom
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dynamics/standard_form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    standard_form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dynamics/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dynamics/vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vbl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../numeric/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numeric
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../simulation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simulation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_5" id="__nav_13_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    simulation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/integrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    integrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../simulation/model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_6" id="__nav_13_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utils/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utils/invariants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utils/printing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    printing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utils/trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    trace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../viz/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    viz
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_7" id="__nav_13_1_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    viz
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../viz/latex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    latex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../viz/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../viz/scene/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.Add" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Add
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.Cross" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Cross
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.Dot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Dot
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.Hat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Hat
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Hat">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.operations.Hat.is_skew_symmetric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_skew_symmetric
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.MAdd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MAdd
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" MAdd">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.operations.MAdd.is_skew_symmetric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_skew_symmetric
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.MMMul" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MMMul
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.MVMul" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MVMul
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.Mul" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Mul
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.SMMul" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;SMMul
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" SMMul">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.operations.SMMul.is_skew_symmetric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_skew_symmetric
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.SVMul" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;SVMul
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.TimeDerivative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;TimeDerivative
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" TimeDerivative">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.operations.TimeDerivative.t_integrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;t_integrate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.TimeIntegral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;TimeIntegral
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" TimeIntegral">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.operations.TimeIntegral.t_diff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;t_diff
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.Transpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Transpose
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Transpose">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.operations.Transpose.is_skew_symmetric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_skew_symmetric
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.VAdd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;VAdd
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.VVMul" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;VVMul
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.Variation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Variation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Variation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.operations.Variation.t_diff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;t_diff
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.operations.Vee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Vee
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h1 id="geomech.core.operations" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>operations</code>
+
+
+<a href="#geomech.core.operations" class="headerlink" title="Permanent link">&para;</a></h1>
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.Add" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Add" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._NaryMixin">_NaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              ScalarExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.ScalarExpr)" href="../base/expressions/#geomech.core.base.expressions.ScalarExpr">ScalarExpr</a></code></p>
+
+
+
+        <p>Scalar addition (n-ary).</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/addition.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Add--source--__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#geomech.core.operations.Add--source--__codelineno-0-95">95</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Add--source--__codelineno-0-94" name="geomech.core.operations.Add--source--__codelineno-0-94"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<a id="geomech.core.operations.Add--source--__codelineno-0-95" name="geomech.core.operations.Add--source--__codelineno-0-95"></a>    <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_flatten_nodes</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.Cross" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Cross</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Cross" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BinaryMixin">_BinaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              VectorExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.VectorExpr)" href="../base/expressions/#geomech.core.base.expressions.VectorExpr">VectorExpr</a></code></p>
+
+
+
+        <p>Cross product of two 3-vectors → vector.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/geometry.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#geomech.core.operations.Cross--source--__codelineno-0-67">67</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Cross--source--__codelineno-0-58" name="geomech.core.operations.Cross--source--__codelineno-0-58"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-59" name="geomech.core.operations.Cross--source--__codelineno-0-59"></a>    <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-60" name="geomech.core.operations.Cross--source--__codelineno-0-60"></a>    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">:</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-61" name="geomech.core.operations.Cross--source--__codelineno-0-61"></a>        <span class="n">ls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-62" name="geomech.core.operations.Cross--source--__codelineno-0-62"></a>        <span class="n">rs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-63" name="geomech.core.operations.Cross--source--__codelineno-0-63"></a>        <span class="k">if</span> <span class="n">ls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ls</span> <span class="o">!=</span> <span class="n">rs</span><span class="p">:</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-64" name="geomech.core.operations.Cross--source--__codelineno-0-64"></a>            <span class="k">raise</span> <span class="n">SizeMismatchError</span><span class="p">(</span><span class="s2">"Cross"</span><span class="p">,</span> <span class="n">ls</span><span class="p">,</span> <span class="n">rs</span><span class="p">)</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-65" name="geomech.core.operations.Cross--source--__codelineno-0-65"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-66" name="geomech.core.operations.Cross--source--__codelineno-0-66"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.Cross--source--__codelineno-0-67" name="geomech.core.operations.Cross--source--__codelineno-0-67"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span><span class="s2">"Cross"</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.Dot" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Dot</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Dot" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BinaryMixin">_BinaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              ScalarExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.ScalarExpr)" href="../base/expressions/#geomech.core.base.expressions.ScalarExpr">ScalarExpr</a></code></p>
+
+
+
+        <p>Dot product of two vectors → scalar.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/geometry.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#geomech.core.operations.Dot--source--__codelineno-0-41">41</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Dot--source--__codelineno-0-32" name="geomech.core.operations.Dot--source--__codelineno-0-32"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-33" name="geomech.core.operations.Dot--source--__codelineno-0-33"></a>    <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-34" name="geomech.core.operations.Dot--source--__codelineno-0-34"></a>    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">:</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-35" name="geomech.core.operations.Dot--source--__codelineno-0-35"></a>        <span class="n">ls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-36" name="geomech.core.operations.Dot--source--__codelineno-0-36"></a>        <span class="n">rs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-37" name="geomech.core.operations.Dot--source--__codelineno-0-37"></a>        <span class="k">if</span> <span class="n">ls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ls</span> <span class="o">!=</span> <span class="n">rs</span><span class="p">:</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-38" name="geomech.core.operations.Dot--source--__codelineno-0-38"></a>            <span class="k">raise</span> <span class="n">SizeMismatchError</span><span class="p">(</span><span class="s2">"Dot"</span><span class="p">,</span> <span class="n">ls</span><span class="p">,</span> <span class="n">rs</span><span class="p">)</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-39" name="geomech.core.operations.Dot--source--__codelineno-0-39"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-40" name="geomech.core.operations.Dot--source--__codelineno-0-40"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.Dot--source--__codelineno-0-41" name="geomech.core.operations.Dot--source--__codelineno-0-41"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span><span class="s2">"Dot"</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.Hat" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Hat</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Hat" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._UnaryMixin">_UnaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              MatrixExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.MatrixExpr)" href="../base/expressions/#geomech.core.base.expressions.MatrixExpr">MatrixExpr</a></code></p>
+
+
+
+        <p>Hat map: R^3 → so(3).</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/geometry.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Hat--source--__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#geomech.core.operations.Hat--source--__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#geomech.core.operations.Hat--source--__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#geomech.core.operations.Hat--source--__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#geomech.core.operations.Hat--source--__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#geomech.core.operations.Hat--source--__codelineno-0-89">89</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Hat--source--__codelineno-0-84" name="geomech.core.operations.Hat--source--__codelineno-0-84"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+<a id="geomech.core.operations.Hat--source--__codelineno-0-85" name="geomech.core.operations.Hat--source--__codelineno-0-85"></a>    <span class="p">(</span><span class="n">expr</span><span class="p">,)</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="s2">"Hat"</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+<a id="geomech.core.operations.Hat--source--__codelineno-0-86" name="geomech.core.operations.Hat--source--__codelineno-0-86"></a>    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">:</span>
+<a id="geomech.core.operations.Hat--source--__codelineno-0-87" name="geomech.core.operations.Hat--source--__codelineno-0-87"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">expr</span><span class="p">,))</span>
+<a id="geomech.core.operations.Hat--source--__codelineno-0-88" name="geomech.core.operations.Hat--source--__codelineno-0-88"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.Hat--source--__codelineno-0-89" name="geomech.core.operations.Hat--source--__codelineno-0-89"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="o">.</span><span class="n">unary</span><span class="p">(</span><span class="s2">"Hat"</span><span class="p">,</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geomech.core.operations.Hat.is_skew_symmetric" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">is_skew_symmetric</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Hat.is_skew_symmetric" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Hat(v) is skew-symmetric for every v.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.MAdd" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">MAdd</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.MAdd" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._NaryMixin">_NaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              MatrixExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.MatrixExpr)" href="../base/expressions/#geomech.core.base.expressions.MatrixExpr">MatrixExpr</a></code></p>
+
+
+
+        <p>Matrix addition (n-ary).</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/addition.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.MAdd--source--__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#geomech.core.operations.MAdd--source--__codelineno-0-115">115</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.MAdd--source--__codelineno-0-114" name="geomech.core.operations.MAdd--source--__codelineno-0-114"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<a id="geomech.core.operations.MAdd--source--__codelineno-0-115" name="geomech.core.operations.MAdd--source--__codelineno-0-115"></a>    <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_flatten_nodes</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">MAdd</span><span class="p">,</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geomech.core.operations.MAdd.is_skew_symmetric" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">is_skew_symmetric</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#geomech.core.operations.MAdd.is_skew_symmetric" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>A sum of skew-symmetric matrices is skew-symmetric.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.MMMul" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">MMMul</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.MMMul" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BinaryMixin">_BinaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              MatrixExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.MatrixExpr)" href="../base/expressions/#geomech.core.base.expressions.MatrixExpr">MatrixExpr</a></code></p>
+
+
+
+        <p>Matrix-Matrix multiplication.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/multiplication.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.MMMul--source--__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#geomech.core.operations.MMMul--source--__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#geomech.core.operations.MMMul--source--__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#geomech.core.operations.MMMul--source--__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#geomech.core.operations.MMMul--source--__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#geomech.core.operations.MMMul--source--__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#geomech.core.operations.MMMul--source--__codelineno-0-215">215</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.MMMul--source--__codelineno-0-209" name="geomech.core.operations.MMMul--source--__codelineno-0-209"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.MMMul--source--__codelineno-0-210" name="geomech.core.operations.MMMul--source--__codelineno-0-210"></a>    <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="s2">"MMMul"</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.MMMul--source--__codelineno-0-211" name="geomech.core.operations.MMMul--source--__codelineno-0-211"></a>    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">:</span>
+<a id="geomech.core.operations.MMMul--source--__codelineno-0-212" name="geomech.core.operations.MMMul--source--__codelineno-0-212"></a>        <span class="n">_check_mul_sizes</span><span class="p">(</span><span class="s2">"MMMul"</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.MMMul--source--__codelineno-0-213" name="geomech.core.operations.MMMul--source--__codelineno-0-213"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.MMMul--source--__codelineno-0-214" name="geomech.core.operations.MMMul--source--__codelineno-0-214"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.MMMul--source--__codelineno-0-215" name="geomech.core.operations.MMMul--source--__codelineno-0-215"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span><span class="s2">"MMMul"</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.MVMul" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">MVMul</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.MVMul" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BinaryMixin">_BinaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              VectorExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.VectorExpr)" href="../base/expressions/#geomech.core.base.expressions.VectorExpr">VectorExpr</a></code></p>
+
+
+
+        <p>Matrix-Vector multiplication.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/multiplication.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-166">166</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-167">167</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-178">178</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-179">179</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#geomech.core.operations.MVMul--source--__codelineno-0-192">192</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.MVMul--source--__codelineno-0-166" name="geomech.core.operations.MVMul--source--__codelineno-0-166"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-167" name="geomech.core.operations.MVMul--source--__codelineno-0-167"></a>    <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="s2">"MVMul"</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-168" name="geomech.core.operations.MVMul--source--__codelineno-0-168"></a>    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">:</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-169" name="geomech.core.operations.MVMul--source--__codelineno-0-169"></a>        <span class="k">if</span> <span class="n">_is_row</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-170" name="geomech.core.operations.MVMul--source--__codelineno-0-170"></a>            <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-171" name="geomech.core.operations.MVMul--source--__codelineno-0-171"></a>                <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-172" name="geomech.core.operations.MVMul--source--__codelineno-0-172"></a>                    <span class="sa">f</span><span class="s2">"MVMul: a matrix times a row vector is not defined: </span><span class="si">{</span><span class="n">_q</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="si">}</span><span class="s2"> * </span><span class="si">{</span><span class="n">_q</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="si">}</span><span class="s2">;"</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-173" name="geomech.core.operations.MVMul--source--__codelineno-0-173"></a>                    <span class="s2">" a matrix multiplies a column vector (M * v), and a row vector"</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-174" name="geomech.core.operations.MVMul--source--__codelineno-0-174"></a>                    <span class="s2">" multiplies a matrix from the left (v.T() * M)"</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-175" name="geomech.core.operations.MVMul--source--__codelineno-0-175"></a>                <span class="p">)</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-176" name="geomech.core.operations.MVMul--source--__codelineno-0-176"></a>            <span class="p">)</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-177" name="geomech.core.operations.MVMul--source--__codelineno-0-177"></a>        <span class="n">_check_mul_sizes</span><span class="p">(</span><span class="s2">"MVMul"</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-178" name="geomech.core.operations.MVMul--source--__codelineno-0-178"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-179" name="geomech.core.operations.MVMul--source--__codelineno-0-179"></a>    <span class="k">elif</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">:</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-180" name="geomech.core.operations.MVMul--source--__codelineno-0-180"></a>        <span class="c1"># row vector times matrix: vᵀ M (a row)</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-181" name="geomech.core.operations.MVMul--source--__codelineno-0-181"></a>        <span class="k">if</span> <span class="n">_is_row</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-182" name="geomech.core.operations.MVMul--source--__codelineno-0-182"></a>            <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-183" name="geomech.core.operations.MVMul--source--__codelineno-0-183"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-184" name="geomech.core.operations.MVMul--source--__codelineno-0-184"></a>            <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-185" name="geomech.core.operations.MVMul--source--__codelineno-0-185"></a>                <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-186" name="geomech.core.operations.MVMul--source--__codelineno-0-186"></a>                    <span class="sa">f</span><span class="s2">"MVMul: a column vector times a matrix is not defined: </span><span class="si">{</span><span class="n">_q</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="si">}</span><span class="s2"> *"</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-187" name="geomech.core.operations.MVMul--source--__codelineno-0-187"></a>                    <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">_q</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="si">}</span><span class="s2">; write M * v for the column M v, or v.T() * M for the"</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-188" name="geomech.core.operations.MVMul--source--__codelineno-0-188"></a>                    <span class="s2">" row vᵀ M"</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-189" name="geomech.core.operations.MVMul--source--__codelineno-0-189"></a>                <span class="p">)</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-190" name="geomech.core.operations.MVMul--source--__codelineno-0-190"></a>            <span class="p">)</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-191" name="geomech.core.operations.MVMul--source--__codelineno-0-191"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.MVMul--source--__codelineno-0-192" name="geomech.core.operations.MVMul--source--__codelineno-0-192"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span><span class="s2">"MVMul"</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.Mul" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Mul</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Mul" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BinaryMixin">_BinaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              ScalarExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.ScalarExpr)" href="../base/expressions/#geomech.core.base.expressions.ScalarExpr">ScalarExpr</a></code></p>
+
+
+
+        <p>Scalar multiplication.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/multiplication.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Mul--source--__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#geomech.core.operations.Mul--source--__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#geomech.core.operations.Mul--source--__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#geomech.core.operations.Mul--source--__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#geomech.core.operations.Mul--source--__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#geomech.core.operations.Mul--source--__codelineno-0-92">92</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Mul--source--__codelineno-0-87" name="geomech.core.operations.Mul--source--__codelineno-0-87"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.Mul--source--__codelineno-0-88" name="geomech.core.operations.Mul--source--__codelineno-0-88"></a>    <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="geomech.core.operations.Mul--source--__codelineno-0-89" name="geomech.core.operations.Mul--source--__codelineno-0-89"></a>    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span><span class="p">:</span>
+<a id="geomech.core.operations.Mul--source--__codelineno-0-90" name="geomech.core.operations.Mul--source--__codelineno-0-90"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.Mul--source--__codelineno-0-91" name="geomech.core.operations.Mul--source--__codelineno-0-91"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.Mul--source--__codelineno-0-92" name="geomech.core.operations.Mul--source--__codelineno-0-92"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span><span class="s2">"Mul"</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.SMMul" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">SMMul</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.SMMul" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BinaryMixin">_BinaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              MatrixExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.MatrixExpr)" href="../base/expressions/#geomech.core.base.expressions.MatrixExpr">MatrixExpr</a></code></p>
+
+
+
+        <p>Scalar-Matrix multiplication.  Normalized: left=matrix, right=scalar.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/multiplication.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.SMMul--source--__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#geomech.core.operations.SMMul--source--__codelineno-0-134">134</a></span>
+<span class="normal"><a href="#geomech.core.operations.SMMul--source--__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#geomech.core.operations.SMMul--source--__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#geomech.core.operations.SMMul--source--__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#geomech.core.operations.SMMul--source--__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#geomech.core.operations.SMMul--source--__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#geomech.core.operations.SMMul--source--__codelineno-0-140">140</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.SMMul--source--__codelineno-0-133" name="geomech.core.operations.SMMul--source--__codelineno-0-133"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.SMMul--source--__codelineno-0-134" name="geomech.core.operations.SMMul--source--__codelineno-0-134"></a>    <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="geomech.core.operations.SMMul--source--__codelineno-0-135" name="geomech.core.operations.SMMul--source--__codelineno-0-135"></a>    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span><span class="p">:</span>
+<a id="geomech.core.operations.SMMul--source--__codelineno-0-136" name="geomech.core.operations.SMMul--source--__codelineno-0-136"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.SMMul--source--__codelineno-0-137" name="geomech.core.operations.SMMul--source--__codelineno-0-137"></a>    <span class="k">elif</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">:</span>
+<a id="geomech.core.operations.SMMul--source--__codelineno-0-138" name="geomech.core.operations.SMMul--source--__codelineno-0-138"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">l</span><span class="p">))</span>
+<a id="geomech.core.operations.SMMul--source--__codelineno-0-139" name="geomech.core.operations.SMMul--source--__codelineno-0-139"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.SMMul--source--__codelineno-0-140" name="geomech.core.operations.SMMul--source--__codelineno-0-140"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span><span class="s2">"SMMul"</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geomech.core.operations.SMMul.is_skew_symmetric" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">is_skew_symmetric</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#geomech.core.operations.SMMul.is_skew_symmetric" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>A scalar multiple of a skew-symmetric matrix is skew-symmetric.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.SVMul" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">SVMul</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.SVMul" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BinaryMixin">_BinaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              VectorExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.VectorExpr)" href="../base/expressions/#geomech.core.base.expressions.VectorExpr">VectorExpr</a></code></p>
+
+
+
+        <p>Scalar-Vector multiplication.  Normalized: left=vector, right=scalar.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/multiplication.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.SVMul--source--__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#geomech.core.operations.SVMul--source--__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#geomech.core.operations.SVMul--source--__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#geomech.core.operations.SVMul--source--__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#geomech.core.operations.SVMul--source--__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#geomech.core.operations.SVMul--source--__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#geomech.core.operations.SVMul--source--__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#geomech.core.operations.SVMul--source--__codelineno-0-116">116</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.SVMul--source--__codelineno-0-109" name="geomech.core.operations.SVMul--source--__codelineno-0-109"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.SVMul--source--__codelineno-0-110" name="geomech.core.operations.SVMul--source--__codelineno-0-110"></a>    <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="geomech.core.operations.SVMul--source--__codelineno-0-111" name="geomech.core.operations.SVMul--source--__codelineno-0-111"></a>    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span><span class="p">:</span>
+<a id="geomech.core.operations.SVMul--source--__codelineno-0-112" name="geomech.core.operations.SVMul--source--__codelineno-0-112"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.SVMul--source--__codelineno-0-113" name="geomech.core.operations.SVMul--source--__codelineno-0-113"></a>    <span class="k">elif</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">:</span>
+<a id="geomech.core.operations.SVMul--source--__codelineno-0-114" name="geomech.core.operations.SVMul--source--__codelineno-0-114"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">l</span><span class="p">))</span>
+<a id="geomech.core.operations.SVMul--source--__codelineno-0-115" name="geomech.core.operations.SVMul--source--__codelineno-0-115"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.SVMul--source--__codelineno-0-116" name="geomech.core.operations.SVMul--source--__codelineno-0-116"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span><span class="s2">"SVMul"</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.TimeDerivative" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">TimeDerivative</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.TimeDerivative" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._CalcUnaryMixin">_CalcUnaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              Expr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.Expr)" href="../base/expressions/#geomech.core.base.expressions.Expr">Expr</a></code></p>
+
+
+
+        <p>Time derivative d/dt{expr}.  Preserves the type of its inner expression.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/calculus.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.TimeDerivative--source--__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#geomech.core.operations.TimeDerivative--source--__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#geomech.core.operations.TimeDerivative--source--__codelineno-0-86">86</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.TimeDerivative--source--__codelineno-0-84" name="geomech.core.operations.TimeDerivative--source--__codelineno-0-84"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+<a id="geomech.core.operations.TimeDerivative--source--__codelineno-0-85" name="geomech.core.operations.TimeDerivative--source--__codelineno-0-85"></a>    <span class="n">_reject_manifold_leaf</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">"TimeDerivative"</span><span class="p">,</span> <span class="s2">"t_diff"</span><span class="p">,</span> <span class="s2">"ω × q"</span><span class="p">,</span> <span class="s2">"R·Hat(Ω)"</span><span class="p">)</span>
+<a id="geomech.core.operations.TimeDerivative--source--__codelineno-0-86" name="geomech.core.operations.TimeDerivative--source--__codelineno-0-86"></a>    <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">expr</span><span class="p">,))</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="geomech.core.operations.TimeDerivative.t_integrate" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">t_integrate</span><span class="p">()</span></code>
+
+<a href="#geomech.core.operations.TimeDerivative.t_integrate" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>∫(d/dt(x)) dt = x — cancellation.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/operations/calculus.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-93">93</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-91" name="geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-91"></a><span class="k">def</span><span class="w"> </span><span class="nf">t_integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-92" name="geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-92"></a><span class="w">    </span><span class="sd">"""∫(d/dt(x)) dt = x — cancellation."""</span>
+<a id="geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-93" name="geomech.core.operations.TimeDerivative.t_integrate--source--__codelineno-0-93"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.TimeIntegral" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">TimeIntegral</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.TimeIntegral" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._CalcUnaryMixin">_CalcUnaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              Expr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.Expr)" href="../base/expressions/#geomech.core.base.expressions.Expr">Expr</a></code></p>
+
+
+
+        <p>Time integral ∫{expr}dt.  Preserves the type of its inner expression.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/calculus.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.TimeIntegral--source--__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#geomech.core.operations.TimeIntegral--source--__codelineno-0-108">108</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.TimeIntegral--source--__codelineno-0-107" name="geomech.core.operations.TimeIntegral--source--__codelineno-0-107"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+<a id="geomech.core.operations.TimeIntegral--source--__codelineno-0-108" name="geomech.core.operations.TimeIntegral--source--__codelineno-0-108"></a>    <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">expr</span><span class="p">,))</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="geomech.core.operations.TimeIntegral.t_diff" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">t_diff</span><span class="p">()</span></code>
+
+<a href="#geomech.core.operations.TimeIntegral.t_diff" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>d/dt(∫x dt) = x — cancellation.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/operations/calculus.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-115">115</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-113" name="geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-113"></a><span class="k">def</span><span class="w"> </span><span class="nf">t_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-114" name="geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-114"></a><span class="w">    </span><span class="sd">"""d/dt(∫x dt) = x — cancellation."""</span>
+<a id="geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-115" name="geomech.core.operations.TimeIntegral.t_diff--source--__codelineno-0-115"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.Transpose" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Transpose</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Transpose" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BaseMixin">_BaseMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              Expr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.Expr)" href="../base/expressions/#geomech.core.base.expressions.Expr">Expr</a></code></p>
+
+
+
+        <p>Transpose operator.  Preserves the type of its inner expression.</p>
+<p><code>Transpose(Transpose(x))</code> is <code>x</code>: the constructor returns the inner operand
+instead of building a double transpose, so a transposed row vector is a column
+again and never reaches the engine as a <code>Transpose</code> node.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/geometry.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-146">146</a></span>
+<span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-148">148</a></span>
+<span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-149">149</a></span>
+<span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-150">150</a></span>
+<span class="normal"><a href="#geomech.core.operations.Transpose--source--__codelineno-0-151">151</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Transpose--source--__codelineno-0-143" name="geomech.core.operations.Transpose--source--__codelineno-0-143"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="geomech.core.operations.Transpose--source--__codelineno-0-144" name="geomech.core.operations.Transpose--source--__codelineno-0-144"></a>    <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.core.operations.Transpose--source--__codelineno-0-145" name="geomech.core.operations.Transpose--source--__codelineno-0-145"></a>        <span class="c1"># a childless Transpose had type None and leaked into the engine</span>
+<a id="geomech.core.operations.Transpose--source--__codelineno-0-146" name="geomech.core.operations.Transpose--source--__codelineno-0-146"></a>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Transpose: Transpose() needs an operand; write Transpose(expr)"</span><span class="p">)</span>
+<a id="geomech.core.operations.Transpose--source--__codelineno-0-147" name="geomech.core.operations.Transpose--source--__codelineno-0-147"></a>    <span class="n">_node_operands</span><span class="p">(</span><span class="s2">"Transpose"</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+<a id="geomech.core.operations.Transpose--source--__codelineno-0-148" name="geomech.core.operations.Transpose--source--__codelineno-0-148"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Transpose</span><span class="p">):</span>
+<a id="geomech.core.operations.Transpose--source--__codelineno-0-149" name="geomech.core.operations.Transpose--source--__codelineno-0-149"></a>        <span class="c1"># __new__ returned expr.expr, which is already built</span>
+<a id="geomech.core.operations.Transpose--source--__codelineno-0-150" name="geomech.core.operations.Transpose--source--__codelineno-0-150"></a>        <span class="k">return</span>
+<a id="geomech.core.operations.Transpose--source--__codelineno-0-151" name="geomech.core.operations.Transpose--source--__codelineno-0-151"></a>    <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">expr</span><span class="p">,))</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="geomech.core.operations.Transpose.is_skew_symmetric" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">is_skew_symmetric</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Transpose.is_skew_symmetric" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>The transpose of a skew-symmetric matrix (−X) is skew-symmetric.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.VAdd" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">VAdd</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.VAdd" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._NaryMixin">_NaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              VectorExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.VectorExpr)" href="../base/expressions/#geomech.core.base.expressions.VectorExpr">VectorExpr</a></code></p>
+
+
+
+        <p>Vector addition (n-ary).</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/addition.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.VAdd--source--__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#geomech.core.operations.VAdd--source--__codelineno-0-105">105</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.VAdd--source--__codelineno-0-104" name="geomech.core.operations.VAdd--source--__codelineno-0-104"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<a id="geomech.core.operations.VAdd--source--__codelineno-0-105" name="geomech.core.operations.VAdd--source--__codelineno-0-105"></a>    <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_flatten_nodes</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">VAdd</span><span class="p">,</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.VVMul" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">VVMul</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.VVMul" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._BinaryMixin">_BinaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              Expr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.Expr)" href="../base/expressions/#geomech.core.base.expressions.Expr">Expr</a></code></p>
+
+
+
+        <p>Vector-Vector multiplication.
+Result type depends on Transpose:
+  Transpose(v) * w  → scalar
+  v * Transpose(w)  → matrix</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/multiplication.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-237">237</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-238">238</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-239">239</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-240">240</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-241">241</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-242">242</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-243">243</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-244">244</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-245">245</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-246">246</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-247">247</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-248">248</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-249">249</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-250">250</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-251">251</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-252">252</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-253">253</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-254">254</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-255">255</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-256">256</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-257">257</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-258">258</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-259">259</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-260">260</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-261">261</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-262">262</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-263">263</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-264">264</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-265">265</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-266">266</a></span>
+<span class="normal"><a href="#geomech.core.operations.VVMul--source--__codelineno-0-267">267</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.VVMul--source--__codelineno-0-237" name="geomech.core.operations.VVMul--source--__codelineno-0-237"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-238" name="geomech.core.operations.VVMul--source--__codelineno-0-238"></a>    <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="s2">"VVMul"</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-239" name="geomech.core.operations.VVMul--source--__codelineno-0-239"></a>    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">VECTOR</span><span class="p">:</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-240" name="geomech.core.operations.VVMul--source--__codelineno-0-240"></a>        <span class="n">l_row</span><span class="p">,</span> <span class="n">r_row</span> <span class="o">=</span> <span class="n">_is_row</span><span class="p">(</span><span class="n">l</span><span class="p">),</span> <span class="n">_is_row</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-241" name="geomech.core.operations.VVMul--source--__codelineno-0-241"></a>        <span class="k">if</span> <span class="n">l_row</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">r_row</span><span class="p">:</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-242" name="geomech.core.operations.VVMul--source--__codelineno-0-242"></a>            <span class="c1"># v^T * w → scalar: sizes must match</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-243" name="geomech.core.operations.VVMul--source--__codelineno-0-243"></a>            <span class="n">_check_mul_sizes</span><span class="p">(</span><span class="s2">"VVMul"</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-244" name="geomech.core.operations.VVMul--source--__codelineno-0-244"></a>            <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-245" name="geomech.core.operations.VVMul--source--__codelineno-0-245"></a>            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_result_type"</span><span class="p">,</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span><span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-246" name="geomech.core.operations.VVMul--source--__codelineno-0-246"></a>        <span class="k">elif</span> <span class="ow">not</span> <span class="n">l_row</span> <span class="ow">and</span> <span class="n">r_row</span><span class="p">:</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-247" name="geomech.core.operations.VVMul--source--__codelineno-0-247"></a>            <span class="c1"># v * w^T → matrix (outer product): any sizes valid</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-248" name="geomech.core.operations.VVMul--source--__codelineno-0-248"></a>            <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-249" name="geomech.core.operations.VVMul--source--__codelineno-0-249"></a>            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_result_type"</span><span class="p">,</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-250" name="geomech.core.operations.VVMul--source--__codelineno-0-250"></a>        <span class="k">elif</span> <span class="n">l_row</span><span class="p">:</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-251" name="geomech.core.operations.VVMul--source--__codelineno-0-251"></a>            <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-252" name="geomech.core.operations.VVMul--source--__codelineno-0-252"></a>                <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-253" name="geomech.core.operations.VVMul--source--__codelineno-0-253"></a>                    <span class="sa">f</span><span class="s2">"VVMul: two row vectors cannot be multiplied: </span><span class="si">{</span><span class="n">_q</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="si">}</span><span class="s2"> * </span><span class="si">{</span><span class="n">_q</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="si">}</span><span class="s2">;"</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-254" name="geomech.core.operations.VVMul--source--__codelineno-0-254"></a>                    <span class="s2">" write a.T() * b for the inner product aᵀb or a * b.T() for the"</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-255" name="geomech.core.operations.VVMul--source--__codelineno-0-255"></a>                    <span class="s2">" outer product a bᵀ"</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-256" name="geomech.core.operations.VVMul--source--__codelineno-0-256"></a>                <span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-257" name="geomech.core.operations.VVMul--source--__codelineno-0-257"></a>            <span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-258" name="geomech.core.operations.VVMul--source--__codelineno-0-258"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-259" name="geomech.core.operations.VVMul--source--__codelineno-0-259"></a>            <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-260" name="geomech.core.operations.VVMul--source--__codelineno-0-260"></a>                <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-261" name="geomech.core.operations.VVMul--source--__codelineno-0-261"></a>                    <span class="sa">f</span><span class="s2">"VVMul: two column vectors cannot be multiplied: </span><span class="si">{</span><span class="n">_q</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="si">}</span><span class="s2"> * </span><span class="si">{</span><span class="n">_q</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="si">}</span><span class="s2">;"</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-262" name="geomech.core.operations.VVMul--source--__codelineno-0-262"></a>                    <span class="s2">" write Dot(a, b) or a.T() * b for the inner product, a * b.T() for"</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-263" name="geomech.core.operations.VVMul--source--__codelineno-0-263"></a>                    <span class="s2">" the outer product, or Cross(a, b)"</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-264" name="geomech.core.operations.VVMul--source--__codelineno-0-264"></a>                <span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-265" name="geomech.core.operations.VVMul--source--__codelineno-0-265"></a>            <span class="p">)</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-266" name="geomech.core.operations.VVMul--source--__codelineno-0-266"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.VVMul--source--__codelineno-0-267" name="geomech.core.operations.VVMul--source--__codelineno-0-267"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="p">(</span><span class="s2">"VVMul"</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.Variation" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Variation</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Variation" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._CalcUnaryMixin">_CalcUnaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              Expr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.Expr)" href="../base/expressions/#geomech.core.base.expressions.Expr">Expr</a></code></p>
+
+
+
+        <p>Variation operator δ{expr}.  Preserves the type of its inner expression.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/calculus.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation--source--__codelineno-0-58">58</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Variation--source--__codelineno-0-35" name="geomech.core.operations.Variation--source--__codelineno-0-35"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-36" name="geomech.core.operations.Variation--source--__codelineno-0-36"></a>    <span class="n">_reject_manifold_leaf</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">"Variation"</span><span class="p">,</span> <span class="s2">"delta"</span><span class="p">,</span> <span class="s2">"ξ × q"</span><span class="p">,</span> <span class="s2">"R·Hat(η)"</span><span class="p">)</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-37" name="geomech.core.operations.Variation--source--__codelineno-0-37"></a>    <span class="c1"># δ(δ(...)) is a second-order variation — vanishes in Hamilton's principle</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-38" name="geomech.core.operations.Variation--source--__codelineno-0-38"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Variation</span><span class="p">):</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-39" name="geomech.core.operations.Variation--source--__codelineno-0-39"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-40" name="geomech.core.operations.Variation--source--__codelineno-0-40"></a>            <span class="sa">f</span><span class="s2">"Cannot take variation of a variation: δ(δ(</span><span class="si">{</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="si">}</span><span class="s2">)). "</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-41" name="geomech.core.operations.Variation--source--__codelineno-0-41"></a>            <span class="sa">f</span><span class="s2">"Second-order variations vanish in Hamilton's principle."</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-42" name="geomech.core.operations.Variation--source--__codelineno-0-42"></a>        <span class="p">)</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-43" name="geomech.core.operations.Variation--source--__codelineno-0-43"></a>    <span class="c1"># δ(ξ) or δ(η) where ξ/η are already variation vectors is nonsensical</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-44" name="geomech.core.operations.Variation--source--__codelineno-0-44"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">TS2</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">S2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-45" name="geomech.core.operations.Variation--source--__codelineno-0-45"></a>        <span class="n">var_name</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">S2</span><span class="o">.</span><span class="n">manifold_info</span><span class="o">.</span><span class="n">variation_vector_name</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-46" name="geomech.core.operations.Variation--source--__codelineno-0-46"></a>        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">var_name</span><span class="p">:</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-47" name="geomech.core.operations.Variation--source--__codelineno-0-47"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-48" name="geomech.core.operations.Variation--source--__codelineno-0-48"></a>                <span class="sa">f</span><span class="s2">"Cannot take variation of variation vector </span><span class="si">{</span><span class="n">expr</span><span class="si">}</span><span class="s2">. "</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-49" name="geomech.core.operations.Variation--source--__codelineno-0-49"></a>                <span class="sa">f</span><span class="s2">"The variation vector is already an infinitesimal perturbation."</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-50" name="geomech.core.operations.Variation--source--__codelineno-0-50"></a>            <span class="p">)</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-51" name="geomech.core.operations.Variation--source--__codelineno-0-51"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">TSO3</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">SO3</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-52" name="geomech.core.operations.Variation--source--__codelineno-0-52"></a>        <span class="n">var_name</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">manifold_info</span><span class="o">.</span><span class="n">variation_vector_name</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-53" name="geomech.core.operations.Variation--source--__codelineno-0-53"></a>        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">var_name</span><span class="p">:</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-54" name="geomech.core.operations.Variation--source--__codelineno-0-54"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-55" name="geomech.core.operations.Variation--source--__codelineno-0-55"></a>                <span class="sa">f</span><span class="s2">"Cannot take variation of variation vector </span><span class="si">{</span><span class="n">expr</span><span class="si">}</span><span class="s2">. "</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-56" name="geomech.core.operations.Variation--source--__codelineno-0-56"></a>                <span class="sa">f</span><span class="s2">"The variation vector is already an infinitesimal perturbation."</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-57" name="geomech.core.operations.Variation--source--__codelineno-0-57"></a>            <span class="p">)</span>
+<a id="geomech.core.operations.Variation--source--__codelineno-0-58" name="geomech.core.operations.Variation--source--__codelineno-0-58"></a>    <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">expr</span><span class="p">,))</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="geomech.core.operations.Variation.t_diff" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">t_diff</span><span class="p">()</span></code>
+
+<a href="#geomech.core.operations.Variation.t_diff" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>d/dt(δx) — put TimeDerivative on the outside.</p>
+<p>δ and d/dt commute, but the expression tree produces
+TimeDerivative(Variation(x)) when taking the variation of d/dt(x).
+This override ensures the IBP target matches that structure.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/operations/calculus.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Variation.t_diff--source--__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation.t_diff--source--__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation.t_diff--source--__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation.t_diff--source--__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation.t_diff--source--__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation.t_diff--source--__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation.t_diff--source--__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#geomech.core.operations.Variation.t_diff--source--__codelineno-0-70">70</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Variation.t_diff--source--__codelineno-0-63" name="geomech.core.operations.Variation.t_diff--source--__codelineno-0-63"></a><span class="k">def</span><span class="w"> </span><span class="nf">t_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="geomech.core.operations.Variation.t_diff--source--__codelineno-0-64" name="geomech.core.operations.Variation.t_diff--source--__codelineno-0-64"></a><span class="w">    </span><span class="sd">"""d/dt(δx) — put TimeDerivative on the outside.</span>
+<a id="geomech.core.operations.Variation.t_diff--source--__codelineno-0-65" name="geomech.core.operations.Variation.t_diff--source--__codelineno-0-65"></a>
+<a id="geomech.core.operations.Variation.t_diff--source--__codelineno-0-66" name="geomech.core.operations.Variation.t_diff--source--__codelineno-0-66"></a><span class="sd">    δ and d/dt commute, but the expression tree produces</span>
+<a id="geomech.core.operations.Variation.t_diff--source--__codelineno-0-67" name="geomech.core.operations.Variation.t_diff--source--__codelineno-0-67"></a><span class="sd">    TimeDerivative(Variation(x)) when taking the variation of d/dt(x).</span>
+<a id="geomech.core.operations.Variation.t_diff--source--__codelineno-0-68" name="geomech.core.operations.Variation.t_diff--source--__codelineno-0-68"></a><span class="sd">    This override ensures the IBP target matches that structure.</span>
+<a id="geomech.core.operations.Variation.t_diff--source--__codelineno-0-69" name="geomech.core.operations.Variation.t_diff--source--__codelineno-0-69"></a><span class="sd">    """</span>
+<a id="geomech.core.operations.Variation.t_diff--source--__codelineno-0-70" name="geomech.core.operations.Variation.t_diff--source--__codelineno-0-70"></a>    <span class="k">return</span> <span class="n">TimeDerivative</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.operations.Vee" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Vee</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.operations.Vee" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.operations.mixins._UnaryMixin">_UnaryMixin</span></code>, <code><a class="autorefs autorefs-internal" title="              VectorExpr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.VectorExpr)" href="../base/expressions/#geomech.core.base.expressions.VectorExpr">VectorExpr</a></code></p>
+
+
+
+        <p>Vee map: so(3) → R^3.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/operations/geometry.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.operations.Vee--source--__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#geomech.core.operations.Vee--source--__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#geomech.core.operations.Vee--source--__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#geomech.core.operations.Vee--source--__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#geomech.core.operations.Vee--source--__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#geomech.core.operations.Vee--source--__codelineno-0-116">116</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.operations.Vee--source--__codelineno-0-111" name="geomech.core.operations.Vee--source--__codelineno-0-111"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+<a id="geomech.core.operations.Vee--source--__codelineno-0-112" name="geomech.core.operations.Vee--source--__codelineno-0-112"></a>    <span class="p">(</span><span class="n">expr</span><span class="p">,)</span> <span class="o">=</span> <span class="n">_node_operands</span><span class="p">(</span><span class="s2">"Vee"</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+<a id="geomech.core.operations.Vee--source--__codelineno-0-113" name="geomech.core.operations.Vee--source--__codelineno-0-113"></a>    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">:</span>
+<a id="geomech.core.operations.Vee--source--__codelineno-0-114" name="geomech.core.operations.Vee--source--__codelineno-0-114"></a>        <span class="n">_set_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">expr</span><span class="p">,))</span>
+<a id="geomech.core.operations.Vee--source--__codelineno-0-115" name="geomech.core.operations.Vee--source--__codelineno-0-115"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.operations.Vee--source--__codelineno-0-116" name="geomech.core.operations.Vee--source--__codelineno-0-116"></a>        <span class="k">raise</span> <span class="n">ExpressionMismatchError</span><span class="o">.</span><span class="n">unary</span><span class="p">(</span><span class="s2">"Vee"</span><span class="p">,</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "content.code.copy"], "search": "../../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

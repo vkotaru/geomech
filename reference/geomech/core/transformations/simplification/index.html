@@ -1,0 +1,3362 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Symbolic computation of dynamics on smooth manifolds">
+      
+      
+      
+        <link rel="canonical" href="https://vkotaru.github.io/geomech/reference/geomech/core/transformations/simplification/">
+      
+      
+        <link rel="prev" href="../pulling/">
+      
+      
+        <link rel="next" href="../utils/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>simplification - geomech</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#geomech.core.transformations.simplification" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../.." title="geomech" class="md-header__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            geomech
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              simplification
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../pipeline/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  The Pipeline, Stage by Stage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../conventions/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Conventions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../vbl/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Variation-Based Linearization
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../codegen/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Code Generation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../simulation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Simulation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../visualization/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Visualization and Reports
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../numeric-verification/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Verifying an Equation Numerically
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../manifold-implementation-notes/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Manifold Rules: Derivation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../../" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../.." title="geomech" class="md-nav__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    geomech
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Pipeline, Stage by Stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation-Based Linearization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../codegen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization and Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../numeric-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying an Equation Numerically
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../manifold-implementation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifold Rules: Derivation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geomech
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1" id="__nav_13_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    geomech
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../codegen/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    codegen
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_1" id="__nav_13_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    codegen
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/casadi_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    casadi_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    emitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/energy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    energy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/numpy_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numpy_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    core
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2" id="__nav_13_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../base/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    base
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_1" id="__nav_13_1_2_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    base
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../base/constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../base/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../base/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../math/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    math
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_2" id="__nav_13_1_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    math
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/collecting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    collecting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/extract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    extract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/ibp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ibp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../operations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_3" id="__nav_13_1_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    addition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/calculus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    calculus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/geometry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geometry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/mixins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mixins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/multiplication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    multiplication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1_2_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    transformations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_4" id="__nav_13_1_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    transformations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expansion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expansion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../manifold_rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    manifold_rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pulling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pulling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simplification
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simplification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.transformations.simplification.full_simplify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;full_simplify
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" full_simplify">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.transformations.simplification.full_simplify--parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.transformations.simplification.simplify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;simplify
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.transformations.simplification.term_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;term_key
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vector_identities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vector_identities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../dynamics/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dynamics
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_3" id="__nav_13_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    dynamics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dynamics/eom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    eom
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dynamics/standard_form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    standard_form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dynamics/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dynamics/vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vbl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../numeric/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numeric
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../simulation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simulation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_5" id="__nav_13_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    simulation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../simulation/control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../simulation/integrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    integrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../simulation/model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_6" id="__nav_13_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/invariants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/printing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    printing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    trace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../viz/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    viz
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_7" id="__nav_13_1_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    viz
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../viz/latex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    latex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../viz/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../viz/scene/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.transformations.simplification.full_simplify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;full_simplify
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" full_simplify">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.transformations.simplification.full_simplify--parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.transformations.simplification.simplify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;simplify
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.transformations.simplification.term_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;term_key
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h1 id="geomech.core.transformations.simplification" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>simplification</code>
+
+
+<a href="#geomech.core.transformations.simplification" class="headerlink" title="Permanent link">&para;</a></h1>
+
+    <div class="doc doc-contents first">
+
+        <p>Simplification passes.</p>
+<p>simplify(expr)      — one pass: <code>pull</code> (hoist scalars), <code>vector_rules</code> (geometric
+                      identities), then <code>_eliminate</code> (bottom-up zeros, identities and
+                      numeric folding, the rules below).
+full_simplify(expr) — <code>expand</code> once, then <code>simplify</code> until the printed tree stops
+                      changing (at most <code>max_iter</code> passes; hitting the cap warns).</p>
+<p>Rules of <code>_eliminate</code> (name, identity, hypothesis the code checks). "Zero" means the
+operand is flagged zero (<code>Zero</code>, <code>ZeroVector</code>, <code>ZeroMatrix</code>, a <code>Constant</code>
+symbol's variation...), "one" a numeric leaf with value 1, "identity" a leaf flagged
+<code>Identity</code>.</p>
+<p>simplify.add_fold                Add: zeros dropped, numeric leaves summed, like terms
+                                   merged; float sums within 1e-12 of the largest
+                                   magnitude are cancelled to 0 (<code>_CANCEL_RTOL</code>)
+  simplify.vadd_fold               VAdd: zeros dropped, like terms merged
+  simplify.madd_fold               MAdd: zeros dropped, like terms merged</p>
+<p>Like terms (all three folds): an addend is split into a number (the product of every
+numeric literal in its flattened <code>Mul</code> chain and, for vectors and matrices, in the
+scalars of its <code>SVMul</code>/<code>SMMul</code>), its other scalar factors and its vector/matrix base;
+two addends merge when their bases are equal and their factors are equal as multisets
+(<code>x(2)y + xy(3) → xy(5)</code>, <code>v a + v a(-1) → 0</code>, <code>(vᵀw)s + s(vᵀw) → (vᵀw)s(2)</code>).
+"Equal" is <code>term_key</code>: the operands of a <code>Dot</code> and of an inner product <code>aᵀb</code> commute
+(<code>aᵀb s − bᵀa s → 0</code>) and so do the factors of a <code>Mul</code>; every other product keeps its
+order. Grouping is one pass over the addends, keyed by <code>term_key</code>.
+Numeric literals are anonymous numbers only: a named <code>Scalar("m", value=2)</code> is a symbol
+and is never folded (decision D1); its value is used by <code>geomech.numeric</code> only.
+  simplify.mul_fold                Mul: a zero factor gives 0, a factor one is dropped,
+                                   numeric factors of a Mul chain are multiplied into one
+                                   number placed last; a float with an integer value
+                                   becomes an int (<code>(-1.0) → (-1)</code>)</p>
+<p>Every numeric literal leaf is put in the spelling <code>Number</code> gives it (<code>(2.0)</code> → <code>(2)</code>,
+<code>Scalar("0.5", value=0.5)</code> → <code>(0.5)</code>), so equal numbers print, and compare, the same.
+  simplify.svmul_zero              v·0 = 0·s = 0 (vector)
+  simplify.svmul_one               v·1 = v
+  simplify.smmul_zero              M·0 = 0·s = 0 (matrix)
+  simplify.smmul_one               M·1 = M
+  simplify.mvmul_zero              0·v = M·0 = 0
+  simplify.mvmul_identity          I·v = v                    left factor flagged identity
+                                                              (or its transpose)
+  simplify.mvmul_hat_to_cross      Hat(a)·v = Cross(a, v)
+  simplify.mvmul_reassociate       (A·B)·v = A·(B·v)
+  simplify.mvmul_combine           A·(B·v) = (A·B)·v          only when A·B simplifies to a
+                                                              non-product (e.g. RᵀR = I)
+  simplify.mmmul_zero              0·B = A·0 = 0
+  simplify.mmmul_identity          I·B = B, A·I = A           factor flagged identity (or
+                                                              its transpose)
+  simplify.mmmul_reassociate       (A·B)·C = A·(B·C)
+  simplify.mmmul_combine           A·(B·C) = (A·B)·C          only when A·B simplifies to a
+                                                              non-product (e.g. RᵀR = I)
+  simplify.orthogonal_transpose    RᵀR = I and RRᵀ = I        R flagged orthogonal (SO3),
+                                                              both factors equal by name
+  simplify.vvmul_zero              0ᵀw = vᵀ0 = 0 (scalar), v0ᵀ = 0 (matrix)
+  simplify.dot_zero                Dot(0, w) = Dot(v, 0) = 0
+  simplify.cross_zero              Cross(0, w) = Cross(v, 0) = 0
+  simplify.hat_zero                Hat(0) = 0
+  simplify.hat_vee_skew            Hat(Vee(X)) = X            X skew-symmetric: a Hat, a
+                                                              leaf flagged
+                                                              SkewSymmetricMatrix, or a
+                                                              sum/scaling/transpose of such
+  simplify.vee_zero                Vee(0) = 0
+  simplify.vee_hat                 Vee(Hat(v)) = v
+  simplify.transpose_transpose     (Xᵀ)ᵀ = X
+  simplify.transpose_symmetric     Jᵀ = J                     J flagged symmetric (the
+                                                              identity <code>I</code> is)
+  simplify.transpose_hat_skew      Hat(v)ᵀ = -Hat(v)
+  simplify.transpose_skew          Sᵀ = -S                    S skew-symmetric (a leaf flagged
+                                                              SkewSymmetricMatrix, a sum or
+                                                              transpose of such), not a Hat
+                                                              or a scaled matrix
+  simplify.transpose_scaled        (M s)ᵀ = Mᵀ s
+  simplify.transpose_scaled_row    (aᵀ s)ᵀ = a s
+  simplify.transpose_product       (A·B)ᵀ = Bᵀ·Aᵀ
+  simplify.variation_zero          δ(0) = 0
+  simplify.time_derivative_zero    d/dt(0) = 0
+  simplify.time_derivative_integral   d/dt(∫x dt) = x
+  simplify.time_integral_zero      ∫0 dt = 0
+  simplify.time_integral_derivative   ∫d/dt(x) dt = x</p>
+<p>The rules of the other two stages of a pass are listed in <code>pull</code> and <code>vector_rules</code>.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.core.transformations.simplification.full_simplify" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">full_simplify</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span></code>
+
+<a href="#geomech.core.transformations.simplification.full_simplify" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Expand once, then loop simplify until convergence.</p>
+<h4 id="geomech.core.transformations.simplification.full_simplify--parameters">Parameters<a class="headerlink" href="#geomech.core.transformations.simplification.full_simplify--parameters" title="Permanent link">&para;</a></h4>
+<p>max_iter : int
+    Safety cap on the number of passes (default 10). Hitting it emits a
+    <code>RuntimeWarning</code> ("no confirmed fixed point after N passes") naming the
+    expression: the result may be unsimplified. A pass that changes nothing ends the
+    loop, so the warning fires only when the last allowed pass still changed the
+    expression; that last result may already be the fixed point, which only one more
+    pass could confirm (hence "confirmed").</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/transformations/simplification.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-132">132</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-134">134</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-146">146</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-148">148</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-149">149</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-150">150</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-151">151</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-152">152</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-153">153</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-161">161</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-162">162</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-163">163</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-131" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-131"></a><span class="k">def</span><span class="w"> </span><span class="nf">full_simplify</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-132" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-132"></a><span class="w">    </span><span class="sd">"""Expand once, then loop simplify until convergence.</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-133" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-133"></a>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-134" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-134"></a><span class="sd">    Parameters</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-135" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-135"></a><span class="sd">    ----------</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-136" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-136"></a><span class="sd">    max_iter : int</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-137" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-137"></a><span class="sd">        Safety cap on the number of passes (default 10). Hitting it emits a</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-138" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-138"></a><span class="sd">        ``RuntimeWarning`` ("no confirmed fixed point after N passes") naming the</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-139" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-139"></a><span class="sd">        expression: the result may be unsimplified. A pass that changes nothing ends the</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-140" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-140"></a><span class="sd">        loop, so the warning fires only when the last allowed pass still changed the</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-141" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-141"></a><span class="sd">        expression; that last result may already be the fixed point, which only one more</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-142" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-142"></a><span class="sd">        pass could confirm (hence "confirmed").</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-143" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-143"></a><span class="sd">    """</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-144" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-144"></a>    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-145" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-145"></a>    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-146" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-146"></a>        <span class="n">prev</span> <span class="o">=</span> <span class="n">expr</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-147" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-147"></a>        <span class="n">expr</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-148" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-148"></a>        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">prev</span><span class="p">):</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-149" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-149"></a>            <span class="k">break</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-150" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-150"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-151" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-151"></a>        <span class="n">why</span> <span class="o">=</span> <span class="p">(</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-152" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-152"></a>            <span class="s2">"max_iter=0: no simplify pass ran"</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-153" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-153"></a>            <span class="k">if</span> <span class="n">max_iter</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-154" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-154"></a>            <span class="k">else</span> <span class="sa">f</span><span class="s2">"the last pass still changed the expression, so no fixed point after"</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-155" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-155"></a>            <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">max_iter</span><span class="si">}</span><span class="s2"> passes was confirmed by an unchanged pass"</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-156" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-156"></a>        <span class="p">)</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-157" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-157"></a>        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-158" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-158"></a>            <span class="sa">f</span><span class="s2">"full_simplify: no confirmed fixed point after </span><span class="si">{</span><span class="n">max_iter</span><span class="si">}</span><span class="s2"> passes (</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">);"</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-159" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-159"></a>            <span class="sa">f</span><span class="s2">" result may be unsimplified: </span><span class="si">{</span><span class="n">expr</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-160" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-160"></a>            <span class="ne">RuntimeWarning</span><span class="p">,</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-161" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-161"></a>            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-162" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-162"></a>        <span class="p">)</span>
+<a id="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-163" name="geomech.core.transformations.simplification.full_simplify--source--__codelineno-0-163"></a>    <span class="k">return</span> <span class="n">expr</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.core.transformations.simplification.simplify" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">simplify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+<a href="#geomech.core.transformations.simplification.simplify" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Pull scalars, apply vector identities, then eliminate zeros and
+combine numeric constants — single call does everything.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/transformations/simplification.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.transformations.simplification.simplify--source--__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.simplify--source--__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.simplify--source--__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.simplify--source--__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.simplify--source--__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.simplify--source--__codelineno-0-128">128</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.transformations.simplification.simplify--source--__codelineno-0-123" name="geomech.core.transformations.simplification.simplify--source--__codelineno-0-123"></a><span class="k">def</span><span class="w"> </span><span class="nf">simplify</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+<a id="geomech.core.transformations.simplification.simplify--source--__codelineno-0-124" name="geomech.core.transformations.simplification.simplify--source--__codelineno-0-124"></a><span class="w">    </span><span class="sd">"""Pull scalars, apply vector identities, then eliminate zeros and</span>
+<a id="geomech.core.transformations.simplification.simplify--source--__codelineno-0-125" name="geomech.core.transformations.simplification.simplify--source--__codelineno-0-125"></a><span class="sd">    combine numeric constants — single call does everything."""</span>
+<a id="geomech.core.transformations.simplification.simplify--source--__codelineno-0-126" name="geomech.core.transformations.simplification.simplify--source--__codelineno-0-126"></a>    <span class="n">expr</span> <span class="o">=</span> <span class="n">pull</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.simplify--source--__codelineno-0-127" name="geomech.core.transformations.simplification.simplify--source--__codelineno-0-127"></a>    <span class="n">expr</span> <span class="o">=</span> <span class="n">vector_rules</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.simplify--source--__codelineno-0-128" name="geomech.core.transformations.simplification.simplify--source--__codelineno-0-128"></a>    <span class="k">return</span> <span class="n">_eliminate</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.core.transformations.simplification.term_key" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">term_key</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+<a href="#geomech.core.transformations.simplification.term_key" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>A canonical string for <em>expr</em> up to the commutativity the like-term merge knows.</p>
+<p>Two expressions have the same key exactly when they are the same tree except that the
+operands of a <code>Dot</code> may be swapped, the factors of a <code>Mul</code> chain may be reordered,
+and an inner product <code>aᵀb</code> of two columns (<code>VVMul(Transpose(a), b)</code>) may be
+written <code>bᵀa</code> (at any depth). Every other node compares its operands in order, and a leaf
+by class and printed name. The key is injective on such classes: a leaf is written
+<code>Class#len#name</code> (the length makes it self-delimiting), a node
+<code>Class(key,key,...)</code> with the operand keys sorted for <code>Dot</code> and the flattened
+<code>Mul</code> factors, and an inner product <code>VVMul.inner(key,key)</code> with the keys of its
+two columns sorted.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/transformations/simplification.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-562">562</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-563">563</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-564">564</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-565">565</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-566">566</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-567">567</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-568">568</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-569">569</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-570">570</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-571">571</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-572">572</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-573">573</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-574">574</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-575">575</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-576">576</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-577">577</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-578">578</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-579">579</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-580">580</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-581">581</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-582">582</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-583">583</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-584">584</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-585">585</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-586">586</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-587">587</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-588">588</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-589">589</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-590">590</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-591">591</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-592">592</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-593">593</a></span>
+<span class="normal"><a href="#geomech.core.transformations.simplification.term_key--source--__codelineno-0-594">594</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-562" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-562"></a><span class="k">def</span><span class="w"> </span><span class="nf">term_key</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-563" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-563"></a><span class="w">    </span><span class="sd">"""A canonical string for *expr* up to the commutativity the like-term merge knows.</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-564" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-564"></a>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-565" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-565"></a><span class="sd">    Two expressions have the same key exactly when they are the same tree except that the</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-566" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-566"></a><span class="sd">    operands of a ``Dot`` may be swapped, the factors of a ``Mul`` chain may be reordered,</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-567" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-567"></a><span class="sd">    and an inner product ``aᵀb`` of two columns (``VVMul(Transpose(a), b)``) may be</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-568" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-568"></a><span class="sd">    written ``bᵀa`` (at any depth). Every other node compares its operands in order, and a leaf</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-569" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-569"></a><span class="sd">    by class and printed name. The key is injective on such classes: a leaf is written</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-570" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-570"></a><span class="sd">    ``Class#len#name`` (the length makes it self-delimiting), a node</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-571" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-571"></a><span class="sd">    ``Class(key,key,...)`` with the operand keys sorted for ``Dot`` and the flattened</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-572" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-572"></a><span class="sd">    ``Mul`` factors, and an inner product ``VVMul.inner(key,key)`` with the keys of its</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-573" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-573"></a><span class="sd">    two columns sorted.</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-574" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-574"></a><span class="sd">    """</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-575" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-575"></a>    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">"nodes"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-576" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-576"></a>    <span class="bp">cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-577" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-577"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes</span><span class="p">:</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-578" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-578"></a>        <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-579" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-579"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-580" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-580"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-581" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-581"></a>        <span class="n">keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">term_key</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">flatten_mul</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-582" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-582"></a>    <span class="k">elif</span> <span class="p">(</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-583" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-583"></a>        <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">VVMul</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-584" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-584"></a>        <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">ExprType</span><span class="o">.</span><span class="n">SCALAR</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-585" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-585"></a>        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">Transpose</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-586" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-586"></a>    <span class="p">):</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-587" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-587"></a>        <span class="c1"># the inner product aᵀb of two columns is symmetric: aᵀb = bᵀa</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-588" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-588"></a>        <span class="n">keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">term_key</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">expr</span><span class="p">),</span> <span class="n">term_key</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)))</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-589" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-589"></a>        <span class="k">return</span> <span class="s2">"VVMul.inner("</span> <span class="o">+</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">+</span> <span class="s2">")"</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-590" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-590"></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Dot</span><span class="p">):</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-591" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-591"></a>        <span class="n">keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">term_key</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">)</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-592" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-592"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-593" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-593"></a>        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">term_key</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">]</span>
+<a id="geomech.core.transformations.simplification.term_key--source--__codelineno-0-594" name="geomech.core.transformations.simplification.term_key--source--__codelineno-0-594"></a>    <span class="k">return</span> <span class="bp">cls</span> <span class="o">+</span> <span class="s2">"("</span> <span class="o">+</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">+</span> <span class="s2">")"</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "content.code.copy"], "search": "../../../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

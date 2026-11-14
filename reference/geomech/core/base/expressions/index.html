@@ -1,0 +1,4109 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Symbolic computation of dynamics on smooth manifolds">
+      
+      
+      
+        <link rel="canonical" href="https://vkotaru.github.io/geomech/reference/geomech/core/base/expressions/">
+      
+      
+        <link rel="prev" href="../constants/">
+      
+      
+        <link rel="next" href="../types/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>expressions - geomech</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#geomech.core.base.expressions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../.." title="geomech" class="md-header__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            geomech
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              expressions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../pipeline/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  The Pipeline, Stage by Stage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../conventions/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Conventions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../vbl/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Variation-Based Linearization
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../codegen/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Code Generation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../simulation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Simulation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../visualization/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Visualization and Reports
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../numeric-verification/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Verifying an Equation Numerically
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../../manifold-implementation-notes/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Manifold Rules: Derivation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../../" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../.." title="geomech" class="md-nav__button md-logo" aria-label="geomech" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    geomech
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/vkotaru/geomech" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    vkotaru/geomech
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Pipeline, Stage by Stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variation-Based Linearization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../codegen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization and Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../numeric-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying an Equation Numerically
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../manifold-implementation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifold Rules: Derivation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geomech
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1" id="__nav_13_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_13_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    geomech
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../codegen/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    codegen
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_1" id="__nav_13_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    codegen
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/casadi_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    casadi_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/emitter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    emitter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/energy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    energy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/numpy_target/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numpy_target
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../codegen/source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    core
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2" id="__nav_13_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13_1_2_1" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    base
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_1" id="__nav_13_1_2_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    base
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expressions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Expr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Expr
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Expr">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Expr.T" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;T
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Expr.__eq__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__eq__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Expr.has" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;has
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.MatrixExpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MatrixExpr
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.S2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;S2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.SO3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;SO3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.ScalarExpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;ScalarExpr
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.SkewSymmMatrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;SkewSymmMatrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.TS2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;TS2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.TSO3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;TSO3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.VectorExpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;VectorExpr
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Number" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;Number
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.is_number_literal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;is_number_literal
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../math/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    math
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_2" id="__nav_13_1_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    math
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/collecting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    collecting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/extract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    extract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../math/ibp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ibp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../operations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_3" id="__nav_13_1_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    addition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/calculus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    calculus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/geometry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    geometry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/mixins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mixins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/multiplication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    multiplication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_2_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../transformations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    transformations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_2_4" id="__nav_13_1_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_13_1_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    transformations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transformations/expansion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expansion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transformations/manifold_rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    manifold_rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transformations/pulling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pulling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transformations/simplification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simplification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transformations/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transformations/vector_identities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vector_identities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../dynamics/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dynamics
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_3" id="__nav_13_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    dynamics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dynamics/eom/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    eom
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dynamics/standard_form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    standard_form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dynamics/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dynamics/vbl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vbl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../numeric/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    numeric
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../simulation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    simulation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_5" id="__nav_13_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    simulation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../simulation/control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../simulation/integrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    integrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../simulation/model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_6" id="__nav_13_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    utils
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/invariants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    invariants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/printing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    printing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../utils/trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    trace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13_1_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../viz/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    viz
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_13_1_7" id="__nav_13_1_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_13_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    viz
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../viz/latex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    latex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../viz/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../viz/scene/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scene
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Expr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Expr
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Expr">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Expr.T" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;T
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Expr.__eq__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__eq__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Expr.has" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;has
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.MatrixExpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;MatrixExpr
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.S2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;S2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.SO3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;SO3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.ScalarExpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;ScalarExpr
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.SkewSymmMatrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;SkewSymmMatrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.TS2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;TS2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.TSO3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;TSO3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.VectorExpr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;VectorExpr
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.Number" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;Number
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geomech.core.base.expressions.is_number_literal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;is_number_literal
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h1 id="geomech.core.base.expressions" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>expressions</code>
+
+
+<a href="#geomech.core.base.expressions" class="headerlink" title="Permanent link">&para;</a></h1>
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.Expr" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">Expr</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.Expr" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Base expression node.</p>
+<p>Python operators build the tree: <code>+</code>, <code>-</code>, <code>*</code> and unary <code>-</code> accept another
+expression or a number on either side (<code>2 * x</code>, <code>x + 1</code>, <code>1 - x</code>, <code>-x</code>);
+<code>x / 2</code> divides by a number only.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="geomech.core.base.expressions.Expr.T" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">T</span><span class="p">()</span></code>
+
+<a href="#geomech.core.base.expressions.Expr.T" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p><code>Transpose(self)</code>; <code>x.T().T()</code> is <code>x</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.Expr.T--source--__codelineno-0-332">332</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.T--source--__codelineno-0-333">333</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.T--source--__codelineno-0-334">334</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.T--source--__codelineno-0-335">335</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.T--source--__codelineno-0-336">336</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.Expr.T--source--__codelineno-0-332" name="geomech.core.base.expressions.Expr.T--source--__codelineno-0-332"></a><span class="k">def</span><span class="w"> </span><span class="nf">T</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expr</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.Expr.T--source--__codelineno-0-333" name="geomech.core.base.expressions.Expr.T--source--__codelineno-0-333"></a><span class="w">    </span><span class="sd">"""``Transpose(self)``; ``x.T().T()`` is ``x``."""</span>
+<a id="geomech.core.base.expressions.Expr.T--source--__codelineno-0-334" name="geomech.core.base.expressions.Expr.T--source--__codelineno-0-334"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">geomech.core.operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transpose</span>
+<a id="geomech.core.base.expressions.Expr.T--source--__codelineno-0-335" name="geomech.core.base.expressions.Expr.T--source--__codelineno-0-335"></a>
+<a id="geomech.core.base.expressions.Expr.T--source--__codelineno-0-336" name="geomech.core.base.expressions.Expr.T--source--__codelineno-0-336"></a>    <span class="k">return</span> <span class="n">Transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="geomech.core.base.expressions.Expr.__eq__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></code>
+
+<a href="#geomech.core.base.expressions.Expr.__eq__" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Same class, same printed form and, for a calculus node, the same operand class.</p>
+<p><code>str</code> is the identity of a tree (the product family prints a separator that no
+leaf name may contain, decision D2, so two products print alike only when they
+multiply the same factors in the same order, up to regrouping); the class guard keeps
+<code>Scalar("x")</code> and <code>Vector("x")</code> apart, and <code>_identity_extra</code> lets a node add
+what its printed form leaves out (<code>Variation(Scalar x)</code> vs <code>Variation(Vector x)</code>
+both print <code>\delta{x}</code>). Commutative rearrangements are different trees.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-276">276</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-277">277</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-278">278</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-287">287</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-275" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-275"></a><span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-276" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-276"></a><span class="w">    </span><span class="sd">"""Same class, same printed form and, for a calculus node, the same operand class.</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-277" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-277"></a>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-278" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-278"></a><span class="sd">    ``str`` is the identity of a tree (the product family prints a separator that no</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-279" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-279"></a><span class="sd">    leaf name may contain, decision D2, so two products print alike only when they</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-280" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-280"></a><span class="sd">    multiply the same factors in the same order, up to regrouping); the class guard keeps</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-281" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-281"></a><span class="sd">    ``Scalar("x")`` and ``Vector("x")`` apart, and ``_identity_extra`` lets a node add</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-282" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-282"></a><span class="sd">    what its printed form leaves out (``Variation(Scalar x)`` vs ``Variation(Vector x)``</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-283" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-283"></a><span class="sd">    both print ``\\delta{x}``). Commutative rearrangements are different trees.</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-284" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-284"></a><span class="sd">    """</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-285" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-285"></a>    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-286" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-286"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-287" name="geomech.core.base.expressions.Expr.__eq__--source--__codelineno-0-287"></a>    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_extra</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_identity_extra</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="geomech.core.base.expressions.Expr.has" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">has</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span></code>
+
+<a href="#geomech.core.base.expressions.Expr.has" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>True if <em>elem</em> occurs in this tree: for a leaf, if it is <em>elem</em> (<code>==</code>, so a
+<code>Scalar("m")</code> does not occur in a <code>Vector("m")</code>).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.Expr.has--source--__codelineno-0-380">380</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.has--source--__codelineno-0-381">381</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.has--source--__codelineno-0-382">382</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Expr.has--source--__codelineno-0-383">383</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.Expr.has--source--__codelineno-0-380" name="geomech.core.base.expressions.Expr.has--source--__codelineno-0-380"></a><span class="k">def</span><span class="w"> </span><span class="nf">has</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.Expr.has--source--__codelineno-0-381" name="geomech.core.base.expressions.Expr.has--source--__codelineno-0-381"></a><span class="w">    </span><span class="sd">"""True if *elem* occurs in this tree: for a leaf, if it is *elem* (``==``, so a</span>
+<a id="geomech.core.base.expressions.Expr.has--source--__codelineno-0-382" name="geomech.core.base.expressions.Expr.has--source--__codelineno-0-382"></a><span class="sd">    ``Scalar("m")`` does not occur in a ``Vector("m")``)."""</span>
+<a id="geomech.core.base.expressions.Expr.has--source--__codelineno-0-383" name="geomech.core.base.expressions.Expr.has--source--__codelineno-0-383"></a>    <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">elem</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.MatrixExpr" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">MatrixExpr</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.MatrixExpr" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="              Expr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.Expr)" href="#geomech.core.base.expressions.Expr">Expr</a></code></p>
+
+
+
+        <p>Base for matrix-typed expressions.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.S2" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">S2</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,),</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.S2" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.base.expressions.Vector">Vector</span></code></p>
+
+
+
+        <p>S2 manifold (unit sphere in R3, ||q|| = 1).</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-575">575</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-576">576</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-577">577</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-578">578</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-579">579</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-580">580</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-581">581</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-582">582</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-583">583</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.S2--source--__codelineno-0-584">584</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.S2--source--__codelineno-0-575" name="geomech.core.base.expressions.S2--source--__codelineno-0-575"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,),</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-576" name="geomech.core.base.expressions.S2--source--__codelineno-0-576"></a>    <span class="n">attr</span> <span class="o">=</span> <span class="n">_attr_list</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>  <span class="c1"># copy: the caller's list is not mutated</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-577" name="geomech.core.base.expressions.S2--source--__codelineno-0-577"></a>    <span class="n">attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Manifold"</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-578" name="geomech.core.base.expressions.S2--source--__codelineno-0-578"></a>    <span class="n">attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"UnitNorm"</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-579" name="geomech.core.base.expressions.S2--source--__codelineno-0-579"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="n">attr</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-580" name="geomech.core.base.expressions.S2--source--__codelineno-0-580"></a>    <span class="n">info</span> <span class="o">=</span> <span class="n">ManifoldInfo</span><span class="p">(</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-581" name="geomech.core.base.expressions.S2--source--__codelineno-0-581"></a>        <span class="n">tangent_vector_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">omega_</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">}}</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-582" name="geomech.core.base.expressions.S2--source--__codelineno-0-582"></a>        <span class="n">variation_vector_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">xi_</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">}}</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-583" name="geomech.core.base.expressions.S2--source--__codelineno-0-583"></a>    <span class="p">)</span>
+<a id="geomech.core.base.expressions.S2--source--__codelineno-0-584" name="geomech.core.base.expressions.S2--source--__codelineno-0-584"></a>    <span class="n">_set_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manifold_info</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.SO3" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">SO3</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.SO3" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.base.expressions.Matrix">Matrix</span></code></p>
+
+
+
+        <p>SO(3) rotation matrix manifold (R^T R = I, det(R) = 1).</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-680">680</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-681">681</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-682">682</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-683">683</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-684">684</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-685">685</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-686">686</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-687">687</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-688">688</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SO3--source--__codelineno-0-689">689</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.SO3--source--__codelineno-0-680" name="geomech.core.base.expressions.SO3--source--__codelineno-0-680"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-681" name="geomech.core.base.expressions.SO3--source--__codelineno-0-681"></a>    <span class="n">attr</span> <span class="o">=</span> <span class="n">_attr_list</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>  <span class="c1"># copy: the caller's list is not mutated</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-682" name="geomech.core.base.expressions.SO3--source--__codelineno-0-682"></a>    <span class="n">attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Manifold"</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-683" name="geomech.core.base.expressions.SO3--source--__codelineno-0-683"></a>    <span class="n">attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"OrthogonalMatrix"</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-684" name="geomech.core.base.expressions.SO3--source--__codelineno-0-684"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="n">attr</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-685" name="geomech.core.base.expressions.SO3--source--__codelineno-0-685"></a>    <span class="n">info</span> <span class="o">=</span> <span class="n">ManifoldInfo</span><span class="p">(</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-686" name="geomech.core.base.expressions.SO3--source--__codelineno-0-686"></a>        <span class="n">tangent_vector_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">Omega_</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">}}</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-687" name="geomech.core.base.expressions.SO3--source--__codelineno-0-687"></a>        <span class="n">variation_vector_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">eta_</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">}}</span><span class="s2">"</span><span class="p">,</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-688" name="geomech.core.base.expressions.SO3--source--__codelineno-0-688"></a>    <span class="p">)</span>
+<a id="geomech.core.base.expressions.SO3--source--__codelineno-0-689" name="geomech.core.base.expressions.SO3--source--__codelineno-0-689"></a>    <span class="n">_set_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manifold_info</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.ScalarExpr" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">ScalarExpr</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.ScalarExpr" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="              Expr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.Expr)" href="#geomech.core.base.expressions.Expr">Expr</a></code></p>
+
+
+
+        <p>Base for scalar-typed expressions.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.SkewSymmMatrix" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">SkewSymmMatrix</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.SkewSymmMatrix" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.base.expressions.Matrix">Matrix</span></code></p>
+
+
+
+        <p>Skew-symmetric matrix leaf (Xᵀ = −X); carries the <code>SkewSymmetricMatrix</code> flag.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-666">666</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-667">667</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-668">668</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-669">669</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-670">670</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-671">671</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-666" name="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-666"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-667" name="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-667"></a>    <span class="c1"># copy (the caller's list is not mutated) and append before super().__init__ so</span>
+<a id="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-668" name="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-668"></a>    <span class="c1"># that the flags built there include it</span>
+<a id="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-669" name="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-669"></a>    <span class="n">attr</span> <span class="o">=</span> <span class="n">_attr_list</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+<a id="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-670" name="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-670"></a>    <span class="n">attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"SkewSymmetricMatrix"</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-671" name="geomech.core.base.expressions.SkewSymmMatrix--source--__codelineno-0-671"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="n">attr</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.TS2" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">TS2</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">S2</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.TS2" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.base.expressions.Vector">Vector</span></code></p>
+
+
+
+        <p>Tangent space of S2 manifold.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.TS2--source--__codelineno-0-564">564</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.TS2--source--__codelineno-0-565">565</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.TS2--source--__codelineno-0-566">566</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.TS2--source--__codelineno-0-564" name="geomech.core.base.expressions.TS2--source--__codelineno-0-564"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">S2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.TS2--source--__codelineno-0-565" name="geomech.core.base.expressions.TS2--source--__codelineno-0-565"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.TS2--source--__codelineno-0-566" name="geomech.core.base.expressions.TS2--source--__codelineno-0-566"></a>    <span class="n">_set_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S2</span><span class="o">=</span><span class="n">S2</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">[</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="ow">or</span> <span class="p">[]),</span> <span class="s2">"TangentVector"</span><span class="p">])</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.TSO3" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">TSO3</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">SO3</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.TSO3" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="geomech.core.base.expressions.Vector">Vector</span></code></p>
+
+
+
+        <p>Tangent space of SO3 manifold.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.TSO3--source--__codelineno-0-552">552</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.TSO3--source--__codelineno-0-553">553</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.TSO3--source--__codelineno-0-554">554</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.TSO3--source--__codelineno-0-552" name="geomech.core.base.expressions.TSO3--source--__codelineno-0-552"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">SO3</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.TSO3--source--__codelineno-0-553" name="geomech.core.base.expressions.TSO3--source--__codelineno-0-553"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.TSO3--source--__codelineno-0-554" name="geomech.core.base.expressions.TSO3--source--__codelineno-0-554"></a>    <span class="n">_set_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SO3</span><span class="o">=</span><span class="n">SO3</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">[</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="ow">or</span> <span class="p">[]),</span> <span class="s2">"TangentVector"</span><span class="p">])</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="geomech.core.base.expressions.VectorExpr" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">VectorExpr</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geomech.core.base.expressions.VectorExpr" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="              Expr()
+
+  
+      dataclass
+   (geomech.core.base.expressions.Expr)" href="#geomech.core.base.expressions.Expr">Expr</a></code></p>
+
+
+
+        <p>Base for vector-typed expressions.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.core.base.expressions.Number" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">Number</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></code>
+
+<a href="#geomech.core.base.expressions.Number" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Anonymous numeric constant <code>(value)</code>.</p>
+<p><code>value</code> is an <code>int</code> or <code>float</code> (numpy integer and floating scalars are converted
+to the equal Python number) or a <code>str</code> name; <code>bool</code> is rejected.</p>
+<p><code>Number(0)</code> carries the <code>Zero</code> flag and <code>Number(1)</code> the <code>Ones</code> flag, so the
+zero/identity rules of <code>simplify</code> see them like <code>Zero</code>/<code>One</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-726">726</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-727">727</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-728">728</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-729">729</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-730">730</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-731">731</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-732">732</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-733">733</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-734">734</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-735">735</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-736">736</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-737">737</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-738">738</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-739">739</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-740">740</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-741">741</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-742">742</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-743">743</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-744">744</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-745">745</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-746">746</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-747">747</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-748">748</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-749">749</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-750">750</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-751">751</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-752">752</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-753">753</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-754">754</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.Number--source--__codelineno-0-755">755</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.Number--source--__codelineno-0-726" name="geomech.core.base.expressions.Number--source--__codelineno-0-726"></a><span class="k">def</span><span class="w"> </span><span class="nf">Number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-727" name="geomech.core.base.expressions.Number--source--__codelineno-0-727"></a><span class="w">    </span><span class="sd">"""Anonymous numeric constant ``(value)``.</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-728" name="geomech.core.base.expressions.Number--source--__codelineno-0-728"></a>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-729" name="geomech.core.base.expressions.Number--source--__codelineno-0-729"></a><span class="sd">    ``value`` is an ``int`` or ``float`` (numpy integer and floating scalars are converted</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-730" name="geomech.core.base.expressions.Number--source--__codelineno-0-730"></a><span class="sd">    to the equal Python number) or a ``str`` name; ``bool`` is rejected.</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-731" name="geomech.core.base.expressions.Number--source--__codelineno-0-731"></a>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-732" name="geomech.core.base.expressions.Number--source--__codelineno-0-732"></a><span class="sd">    ``Number(0)`` carries the ``Zero`` flag and ``Number(1)`` the ``Ones`` flag, so the</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-733" name="geomech.core.base.expressions.Number--source--__codelineno-0-733"></a><span class="sd">    zero/identity rules of ``simplify`` see them like ``Zero``/``One``.</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-734" name="geomech.core.base.expressions.Number--source--__codelineno-0-734"></a><span class="sd">    """</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-735" name="geomech.core.base.expressions.Number--source--__codelineno-0-735"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)):</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-736" name="geomech.core.base.expressions.Number--source--__codelineno-0-736"></a>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-737" name="geomech.core.base.expressions.Number--source--__codelineno-0-737"></a>            <span class="sa">f</span><span class="s2">"Number expects int, float, or str, got bool </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">; write Number(1) or Number(0)"</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-738" name="geomech.core.base.expressions.Number--source--__codelineno-0-738"></a>        <span class="p">)</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-739" name="geomech.core.base.expressions.Number--source--__codelineno-0-739"></a>    <span class="c1"># numpy scalars become the equal Python number, so that str() is the same as for</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-740" name="geomech.core.base.expressions.Number--source--__codelineno-0-740"></a>    <span class="c1"># the literal (np.int64(2) -&gt; "(2)", np.float64(0.5) -&gt; "(0.5)")</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-741" name="geomech.core.base.expressions.Number--source--__codelineno-0-741"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-742" name="geomech.core.base.expressions.Number--source--__codelineno-0-742"></a>        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-743" name="geomech.core.base.expressions.Number--source--__codelineno-0-743"></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-744" name="geomech.core.base.expressions.Number--source--__codelineno-0-744"></a>        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-745" name="geomech.core.base.expressions.Number--source--__codelineno-0-745"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-746" name="geomech.core.base.expressions.Number--source--__codelineno-0-746"></a>        <span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Constant"</span><span class="p">]</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-747" name="geomech.core.base.expressions.Number--source--__codelineno-0-747"></a>        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-748" name="geomech.core.base.expressions.Number--source--__codelineno-0-748"></a>            <span class="n">attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Zero"</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-749" name="geomech.core.base.expressions.Number--source--__codelineno-0-749"></a>        <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-750" name="geomech.core.base.expressions.Number--source--__codelineno-0-750"></a>            <span class="n">attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Ones"</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-751" name="geomech.core.base.expressions.Number--source--__codelineno-0-751"></a>        <span class="k">return</span> <span class="n">Scalar</span><span class="p">(</span><span class="s2">"("</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">")"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="n">attr</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-752" name="geomech.core.base.expressions.Number--source--__codelineno-0-752"></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-753" name="geomech.core.base.expressions.Number--source--__codelineno-0-753"></a>        <span class="k">return</span> <span class="n">Scalar</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">[</span><span class="s2">"Constant"</span><span class="p">])</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-754" name="geomech.core.base.expressions.Number--source--__codelineno-0-754"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.Number--source--__codelineno-0-755" name="geomech.core.base.expressions.Number--source--__codelineno-0-755"></a>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Number expects int, float, or str, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="geomech.core.base.expressions.is_number_literal" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">is_number_literal</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></code>
+
+<a href="#geomech.core.base.expressions.is_number_literal" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>True for an anonymous numeric constant: a <code>Scalar</code> leaf printed as its own value.</p>
+<p><code>Number(2)</code> (<code>(2)</code>), <code>Zero</code>/<code>One</code> (<code>0</code>/<code>1</code>), <code>Scalar("0.5", value=0.5)</code> and
+the numbers the operators wrap (<code>2 * x</code>) are literals; the simplifier folds them.
+A <em>named</em> scalar with a value, <code>Scalar("m", value=2)</code>, is a symbol: the value is
+only what <code>geomech.numeric</code> evaluates it to, and simplification keeps the name
+(fix plan decision D1).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>geomech/core/base/expressions.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-758">758</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-759">759</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-760">760</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-761">761</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-762">762</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-763">763</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-764">764</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-765">765</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-766">766</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-767">767</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-768">768</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-769">769</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-770">770</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-771">771</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-772">772</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-773">773</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-774">774</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-775">775</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-776">776</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-777">777</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-778">778</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-779">779</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-780">780</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-781">781</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-782">782</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-783">783</a></span>
+<span class="normal"><a href="#geomech.core.base.expressions.is_number_literal--source--__codelineno-0-784">784</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-758" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-758"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_number_literal</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-759" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-759"></a><span class="w">    </span><span class="sd">"""True for an anonymous numeric constant: a ``Scalar`` leaf printed as its own value.</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-760" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-760"></a>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-761" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-761"></a><span class="sd">    ``Number(2)`` (``(2)``), ``Zero``/``One`` (``0``/``1``), ``Scalar("0.5", value=0.5)`` and</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-762" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-762"></a><span class="sd">    the numbers the operators wrap (``2 * x``) are literals; the simplifier folds them.</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-763" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-763"></a><span class="sd">    A *named* scalar with a value, ``Scalar("m", value=2)``, is a symbol: the value is</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-764" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-764"></a><span class="sd">    only what ``geomech.numeric`` evaluates it to, and simplification keeps the name</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-765" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-765"></a><span class="sd">    (fix plan decision D1).</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-766" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-766"></a><span class="sd">    """</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-767" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-767"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Scalar</span><span class="p">)</span> <span class="ow">or</span> <span class="n">expr</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">"nodes"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-768" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-768"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-769" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-769"></a>    <span class="n">name</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">name</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-770" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-770"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-771" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-771"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-772" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-772"></a>    <span class="n">text</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"("</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">")"</span><span class="p">)</span> <span class="k">else</span> <span class="n">name</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-773" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-773"></a>    <span class="n">value</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">value</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-774" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-774"></a>    <span class="c1"># an int is compared exactly: float() of an int beyond the float range overflows</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-775" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-775"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-776" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-776"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-777" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-777"></a>            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">==</span> <span class="n">value</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-778" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-778"></a>        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-779" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-779"></a>            <span class="k">pass</span>  <span class="c1"># e.g. "2.0" for the value 2</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-780" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-780"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-781" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-781"></a>        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-782" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-782"></a>    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">):</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-783" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-783"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-784" name="geomech.core.base.expressions.is_number_literal--source--__codelineno-0-784"></a>    <span class="k">return</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span> <span class="ow">or</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="ow">and</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>  <span class="c1"># Number(nan) prints "(nan)"</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "content.code.copy"], "search": "../../../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+        <script src="../../../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
