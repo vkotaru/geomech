@@ -11,8 +11,20 @@ Rules (name, identity, hypothesis the code checks):
                                  only for an inner product that contains the target, so
                                  ``v.T() * A * v`` in a kinetic energy can be integrated
                                  by parts
-  collect.flip                   Dot(a, b) = Dot(b, a)
-                                 none (commutativity)
+  collect.flip_target_right      Dot(a, v) = Dot(v, a)    the target is the right operand
+  collect.flip_cross_mvmul       Dot(b×c, M x) = Dot(M x, b×c)
+                                                         the target is on either side; the
+                                                         MVMul goes left for the rules below
+  collect.flip_mvmul_pair        Dot(M x, N f(v)) = Dot(N f(v), M x)
+                                                         the target is in the right MVMul
+  collect.flip_mvmul_left        Dot(M x, f(v)) = Dot(f(v), M x)
+                                                         the target is in the non-MVMul side
+  collect.flip_mvmul_right       Dot(a, M f(v)) = Dot(M f(v), a)
+                                                         the target is in the right MVMul
+  collect.flip_cross_left        Dot(f(v)×c, a) = Dot(a, f(v)×c)
+                                                         the target is in the left Cross
+                                 all six are commutativity of Dot (no hypothesis); the
+                                 names say which call site flipped
   collect.triple_product_left    a·(v×c) = v·(c×a)       the target v is the left operand
                                                          of the Cross
   collect.triple_product_right   a·(b×v) = v·(a×b)       the target is the right operand
@@ -152,7 +164,7 @@ def _collect_dot(expr, vec):
 
     # Simple flip
     if r == vec:
-        return rule("collect.flip", expr, Dot(r, l))
+        return rule("collect.flip_target_right", expr, Dot(r, l))
 
     # Neither side contains vec — nothing to do
     if not l.has(vec) and not r.has(vec):
@@ -164,7 +176,7 @@ def _collect_dot(expr, vec):
         # MVMul + Cross: kinetic energy patterns
         case (Cross(), MVMul()):
             # Flip so MVMul is on the left, then recurse
-            return collect(rule("collect.flip", expr, Dot(r, l)), vec)
+            return collect(rule("collect.flip_cross_mvmul", expr, Dot(r, l)), vec)
 
         case (MVMul(), Cross()):
             # Dot(M*a, Cross(b, c)) — use triple product to put vec on left
@@ -212,7 +224,7 @@ def _collect_dot(expr, vec):
                 # Cross/MVMul rules expose vec (e.g. Dot(R1*(vec×a), R2*b) with R1 ≠ R2).
                 return _peel(l, r, vec, expr)
             # vec is in the right MVMul: flip so it is on the left
-            return collect(rule("collect.flip", expr, Dot(r, l)), vec)
+            return collect(rule("collect.flip_mvmul_pair", expr, Dot(r, l)), vec)
 
         # MVMul on one side only
         case (MVMul(), _):
@@ -223,16 +235,16 @@ def _collect_dot(expr, vec):
                 # (SVMul, VAdd, ...) the recursion stops with the peeled Dot unchanged.
                 return _peel(l, r, vec, expr)
             # vec not in MVMul — the other side holds it
-            return collect(rule("collect.flip", expr, Dot(r, l)), vec)
+            return collect(rule("collect.flip_mvmul_left", expr, Dot(r, l)), vec)
 
         case (_, MVMul()) if r.has(vec):
             # vec is inside the MVMul: flip so MVMul is on the left, recurse
-            return collect(rule("collect.flip", expr, Dot(r, l)), vec)
+            return collect(rule("collect.flip_mvmul_right", expr, Dot(r, l)), vec)
 
         # Cross on one or both sides — scalar triple product
         case (Cross(), _) if l.has(vec):
             # Flip so vec's Cross is on the right, then use triple product
-            return collect(rule("collect.flip", expr, Dot(r, l)), vec)
+            return collect(rule("collect.flip_cross_left", expr, Dot(r, l)), vec)
 
         case (_, Cross()):
             if r.left == vec:

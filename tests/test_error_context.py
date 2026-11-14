@@ -206,7 +206,7 @@ def test_row_kinetic_energy_derives():
     (eq,) = [e for _, e in eom.values()]
     assert str(eq) == (
         "(A\\frac{d}{dt}(\\frac{d}{dt}(x))(-0.5)+(A)'\\frac{d}{dt}(\\frac{d}{dt}(x))(-0.5)"
-        "+Kx(-1.0)+f)"
+        "+Kx(-1)+f)"
     )
     assert assert_eom(s.L, s.dW, s.variables, eom, inputs=s.inputs) < 1e-6
 

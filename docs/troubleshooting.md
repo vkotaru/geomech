@@ -14,7 +14,7 @@ old result can be recognised; they are not suspects for a wrong equation today.
 | Symptom | Cause | Fix |
 |---|---|---|
 | A `δm`/`ṁ` term, or a `ValueError` "δS still contains the variation symbols '\delta{m}'" | `m` is not `Constant` | `Scalar("m", attr=["Constant"])`; attribute names are case-sensitive |
-| `ω·q` or `q × (ω × q)` stays in an S² equation | The term sits *below* a `Dot` operand, an `MVMul`, a `Hat` or a calculus node, where `vector_rules` does not descend (`ω̇ ⊥ q` is never assumed) | correct but unreduced; see `vector_rules` in [Pipeline](pipeline.md) |
+| `q × (ω̇ × q)` stays in an S² equation | `ω̇ ⊥ q` holds on the sphere but is never assumed: the tangency test sees `ω`, `ξ` and `Cross(·, q)` only, not a `d/dt` (`vector_rules` reaches every node, so `ω·q` and `q × (ω × q)` are reduced wherever they sit) | correct but unreduced; `to_standard_form` reads it as the projection `(I − qqᵀ) ω̇` |
 | Partially simplified output, with a `RuntimeWarning` "no confirmed fixed point after N passes" | `full_simplify` stopped at `max_iter` | raise `max_iter`, or look at the expression in the warning |
 | Two different inertias print the same and are merged | Two leaves with the same name are the same symbol (`str` is the identity): `J2 = Matrix("J1")` | give every symbol its own name; `print_tree` shows the names |
 | On S², `to_standard_form`'s 3×3 solve leaves the sphere | `E` is meaningful on the tangent plane only | solve `(I − qqᵀ)(M ω̇ + f + G u) = 0` with `ω̇ ⊥ q` ([Conventions](conventions.md)) |
@@ -98,7 +98,7 @@ it, and the coefficient of `η` cannot be read off:
 ```
 AlgebraicError: compute_eom: while extracting the equation for '\eta_{R}': the time
 derivative '\frac{d}{dt}(\eta_{R})' of the variation vector '\eta_{R}' survived integration
-by parts in the term 'Dot(w,Vee((Hat(\frac{d}{dt}(\eta_{R}))A+Hat(Cross(\Omega_{R},\eta_{R}))A)))'
+by parts in the term 'Dot(w,Vee(Hat(\frac{d}{dt}(\eta_{R}))A))'
 of δS; collect could not expose it as the left operand of a Dot (Dot(\frac{d}{dt}(\eta_{R}), f)),
 so the term was not integrated by parts and has no coefficient. Inspect the term with
 print_tree(term, style='indent'), or run compute_eom(..., trace=EOMTrace()) and look at the
@@ -226,7 +226,7 @@ ones of the example). Every message starts with the function or node that raised
 | Mistake | Message |
 |---|---|
 | an input missing from `inputs` (or a symbol missing `Constant`) | `AlgebraicError: linearize: in row '\delta{x}', the term '\delta{f}' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries '\delta{f}' (of 'f'), which is neither a configuration, velocity nor input variation. If the symbol is an input, list it in `inputs`; if it is a constant, give it attr=['Constant']; if it is a prescribed parameter (compute_eom(..., params=[...])), linearize does not support prescribed parameters yet (pass params=[...] to linearize to have it say so).` |
-| equations with a prescribed param, `linearize(..., params=[l])` | `AlgebraicError: linearize: in row '\xi_{q}', the term '\frac{d}{dt}(\omega_{q})(-1)m\delta{l}l' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries the variation of the prescribed parameter(s) 'l' declared in params: linearize does not support prescribed parameters yet (the variation of a prescribed parameter vanishes along the reference, but its rate does not in general).` |
+| equations with a prescribed param, `linearize(..., params=[l])` | `AlgebraicError: linearize: in row '\xi_{q}', the term '\frac{d}{dt}(\omega_{q})m\delta{l}l(-2)' of the variation contains no perturbation symbol (configuration, velocity or input variation); the linearization is incomplete. It carries the variation of the prescribed parameter(s) 'l' declared in params: linearize does not support prescribed parameters yet (the variation of a prescribed parameter vanishes along the reference, but its rate does not in general).` |
 | other `SystemVariables` than for `compute_eom` | `ValueError: linearize: eom keys ['\\delta{x}'] do not match the variation vectors ['\\xi_{q}'] of the given SystemVariables` |
 | an input that is a variable | `ValueError: linearize: input 'x' is also a configuration variable` |
 | `ω` as an input | `ValueError: linearize: input '\omega_{q}' is a tangent or variation vector of a configuration variable; its variation is part of the perturbation state, not an input` |

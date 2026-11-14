@@ -445,7 +445,7 @@ class TestExactPins:
         lin = linearize(eom, var, [f])
         row = str(x.delta())
         assert str(lin.A[row][str(x.delta().t_diff())]) == "c(-1)"
-        assert str(lin.A[row][str(x.delta())]) == "k(-1.0)"
+        assert str(lin.A[row][str(x.delta())]) == "k(-1)"
         assert str(lin.M[row][str(x.delta().t_diff().t_diff())]) == "m"
         assert str(lin.B[row][str(f.delta())]) == "1"
 
@@ -608,17 +608,31 @@ class TestErrorPathsHeld:
     @pytest.mark.parametrize(
         "E",
         [
-            MVMul(Transpose(Hat(_q) + Hat(_om)), _om),
             MVMul(Transpose(VVMul(_q, Transpose(_om))), _om),
             Vee(Hat(_q) * Hat(_om) + Hat(_om) * Hat(_q)),
-            Vee(Hat(_q + _om)),
         ],
-        ids=["transpose_madd", "transpose_outer", "vee_madd", "vee_hat_vadd"],
+        ids=["transpose_outer", "vee_madd"],
     )
     def test_unsupported_structures_raise_not_drop(self, E):
         """Transpose of a sum/outer product and Vee are opaque to extraction; must raise."""
         with pytest.raises(AlgebraicError):
             linearize({str(_xi): (_xi, E)}, SystemVariables(vectors=[_q]))
+
+    @pytest.mark.parametrize(
+        "E",
+        [
+            MVMul(Transpose(Hat(_q) + Hat(_om)), _om),
+            Vee(Hat(_q + _om)),
+        ],
+        ids=["transpose_madd", "vee_hat_vadd"],
+    )
+    def test_formerly_unsupported_structures_linearize_correctly(self, E):
+        """Phase 5a: (Hat(a) + Hat(b))ᵀ simplifies to −(Hat(a) + Hat(b)) (a sum of skew
+        matrices is skew) and Vee distributes over the sum, so these two used to raise and
+        now linearize. Not dropped: the blocks match finite differences."""
+        eom, variables = {str(_xi): (_xi, E)}, SystemVariables(vectors=[_q])
+        lin = linearize(eom, variables)
+        assert finite_difference_check(lin, eom, variables, []) < 1e-6
 
     def test_input_named_like_a_configuration_variable_raises(self):
         s = vbl_systems.free_rigid_body()

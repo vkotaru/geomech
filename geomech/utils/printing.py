@@ -110,17 +110,25 @@ def _leaf_prefix(expr):
 def _repr_leaf(expr, decorate=""):
     """``repr`` of a leaf: type prefix, name (with *decorate* appended), ``*`` if constant.
 
-    A numeric leaf (``Number(2)``, ``Scalar("0.5", value=0.5)``) prints its name alone:
-    it is constant by construction.
+    A number literal (``Number(2)``, ``Scalar("0.5", value=0.5)``) prints its name alone:
+    it is constant by construction. A named scalar with a value (``Scalar("m", value=2)``) is a
+    symbol (decision D1) and, being constant in time, prints with a ``*``.
     """
+    from geomech.core.base.expressions import is_number_literal
+
     name = getattr(expr, "name", None)
     if name is None:
         value = getattr(expr, "value", None)
         return str(value) if value is not None else "?"
-    if expr.is_numeric:
+    if is_number_literal(expr):
         return name
-    star = "*" if expr.is_constant else ""
+    star = "*" if expr.is_constant or expr.is_numeric else ""
     return _leaf_prefix(expr) + name + decorate + star
+
+
+def _paren_negative(s):
+    """``(s)`` when the repr *s* starts with a minus sign, else *s*."""
+    return f"({s})" if s.startswith("-") else s
 
 
 def repr_str(expr):
@@ -156,16 +164,19 @@ def repr_str(expr):
 
     # Binary multiplication — check for negative scalar factor
     if isinstance(expr, (Mul, SVMul, SMMul, MVMul, MMMul, VVMul)):
+        from geomech.core.base.expressions import is_number_literal
+
         left = repr_str(expr.left)
         right = repr_str(expr.right)
-        # Detect multiplying by -1
-        lval = getattr(expr.left, "value", None)
-        rval = getattr(expr.right, "value", None)
-        if isinstance(lval, (int, float)) and lval == -1:
-            return f"-{right}"
-        if isinstance(rval, (int, float)) and rval == -1:
-            return f"-{left}"
-        return f"{left}·{right}"
+        # A negated operand is parenthesised, so nested negations stay readable:
+        # -(-hat(ρ)), hat(ρ)·(-(-1)) instead of --hat(ρ), hat(ρ)·-(-1).
+        # Multiplying by the literal -1 prints as a minus sign (a named scalar with
+        # value -1 is a symbol and prints by name).
+        if is_number_literal(expr.left) and expr.left.value == -1:
+            return f"-{_paren_negative(right)}"
+        if is_number_literal(expr.right) and expr.right.value == -1:
+            return f"-{_paren_negative(left)}"
+        return f"{_paren_negative(left)}·{_paren_negative(right)}"
 
     # Dot, Cross
     if isinstance(expr, Dot):
@@ -489,8 +500,14 @@ def _wrap(s):
 
 
 def _numeric_value(expr):
-    """The number of a numeric leaf (``Number(2)``, ``Scalar("0.5", value=0.5)``), else None."""
-    if getattr(expr, "nodes", None):
+    """The number of a numeric literal (``Number(2)``, ``Scalar("0.5", value=0.5)``), else None.
+
+    A named scalar with a value (``Scalar("k", value=1e7)``) is a symbol and prints by
+    name (decision D1).
+    """
+    from geomech.core.base.expressions import is_number_literal
+
+    if getattr(expr, "nodes", None) or not is_number_literal(expr):
         return None
     val = getattr(expr, "value", None)
     if isinstance(val, (int, float)) and not isinstance(val, bool):

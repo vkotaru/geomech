@@ -48,6 +48,7 @@ from geomech.core.operations.addition import VAdd
 from geomech.core.operations.calculus import TimeDerivative, Variation
 from geomech.core.operations.geometry import Cross
 from geomech.core.operations.multiplication import SVMul
+from geomech.core.transformations.utils import map_children
 from geomech.utils.trace import rule
 
 if TYPE_CHECKING:  # the dynamics layer imports this module; avoid the cycle
@@ -115,48 +116,4 @@ def _substitute(expr, tangent_map):
         return expr
 
     # Recurse into children
-    nodes = getattr(expr, "nodes", None)
-    if nodes is None or len(nodes) == 0:
-        return expr
-
-    new_nodes = [_substitute(n, tangent_map) for n in nodes]
-    if all(n is o for n, o in zip(new_nodes, nodes)):
-        return expr  # nothing changed
-
-    # Rebuild the node with new children
-    return _rebuild(expr, new_nodes)
-
-
-def _rebuild(expr, new_nodes):
-    """Rebuild an expression node with new children."""
-    from geomech.core.operations.addition import Add, MAdd, VAdd
-    from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-    from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
-    from geomech.core.operations.multiplication import (
-        MMMul,
-        Mul,
-        MVMul,
-        SMMul,
-        SVMul,
-        VVMul,
-    )
-
-    cls = type(expr)
-
-    # N-ary (Add, VAdd, MAdd)
-    if isinstance(expr, (Add, VAdd, MAdd)):
-        return cls(*new_nodes)
-
-    # Binary ops
-    if isinstance(expr, (Mul, SVMul, SMMul, MVMul, MMMul, VVMul, Dot, Cross)):
-        return cls(new_nodes[0], new_nodes[1])
-
-    # Unary ops
-    if isinstance(expr, (Hat, Vee, Transpose, Variation, TimeDerivative, TimeIntegral)):
-        return cls(new_nodes[0])
-
-    # Returning the original node here would silently discard the substitution.
-    raise TypeError(
-        f"apply_manifold_rules: cannot rebuild a {cls.__name__} node ('{expr}') with"
-        " substituted children; add the class to manifold_rules._rebuild"
-    )
+    return map_children(expr, lambda n: _substitute(n, tangent_map), "apply_manifold_rules")

@@ -155,7 +155,7 @@ zero constants. The shape of a block follows from the row and column types,
 | scalar equation | 1×3 `Transpose(Vector)` | `Scalar` expression |
 
 For example, in the quadrotor with thrust `f: Scalar` and moment `M: Vector`, the
-translational row has `B[δf] = Re3` (3×1) and `A[η] = RHat(e3)(-1)f` (3×3), and the
+translational row has `B[δf] = Re3` (3×1) and `A[η] = RHat(e3)f(-1)` (3×3), and the
 elastic spherical pendulum's scalar row has the 1×3 block `A[δω] = (ω m l (2))'`.
 
 `str(lin)` lists the non-zero blocks row by row; `to_latex(block)` renders any block.

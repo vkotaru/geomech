@@ -32,7 +32,7 @@ class TestGyroscopicTerm:
         """
         s, eom, _ = derive(ps.s2_gyroscopic)
         expected = (
-            "(\\frac{d}{dt}(\\omega_{q})(-1)mll+Cross(\\omega_{q},c)(2)+Cross(q,e3)mgl(-1)+f)"
+            "(\\frac{d}{dt}(\\omega_{q})mll(-1)+Cross(\\omega_{q},c)(2)+Cross(q,e3)mgl(-1)+f)"
         )
         assert str(equation(eom, s.symbols["q"])) == expected
 
@@ -46,7 +46,7 @@ class TestAnisotropicInertiaOmegaForm:
         """
         s, eom, _ = derive(ps.s2_anisotropic_omega)
         expected = (
-            "(A\\frac{d}{dt}(\\omega_{q})(-1.0)+Cross(\\omega_{q},A\\omega_{q})(2.0)"
+            "(A\\frac{d}{dt}(\\omega_{q})(-1)+Cross(\\omega_{q},A\\omega_{q})(2)"
             "+Cross(q,e3)mgl(-1)+f)"
         )
         assert str(equation(eom, s.symbols["q"])) == expected
@@ -72,22 +72,20 @@ class TestRotatingSphere:
     """
 
     OMEGA_FORM = (
-        "(\\frac{d}{dt}(\\omega_{q})(-1)mLL"
-        "+Cross(q,Cross(e3,Cross(q,\\omega_{q})))\\OmegamLL"
-        "+Cross(q,Cross(\\omega_{q},Cross(e3,q)))(-1)\\OmegamLL"
-        "+Cross(Cross(Cross(\\omega_{q},q),e3),q)(-1)\\OmegamLL"
-        "+Cross(Cross(q,e3),Cross(\\omega_{q},q))(-1)\\OmegamLL"
-        "+Cross(\\omega_{q},Cross(q,Cross(e3,q)))\\OmegamLL(2.0)"
-        "+Cross(q,Cq)\\Omega\\OmegamLL+f)"
+        "(\\frac{d}{dt}(\\omega_{q})mLL(-1)+Cross(q,Cross(e3,Cross(q,\\omega_{q})))mLL\\Omega"
+        "+Cross(q,Cross(\\omega_{q},Cross(e3,q)))mLL\\Omega(-1)"
+        "+Cross(Cross(Cross(\\omega_{q},q),e3),q)mLL\\Omega(-1)"
+        "+Cross(Cross(q,e3),Cross(\\omega_{q},q))mLL\\Omega(-1)"
+        "+Cross(\\omega_{q},Cross(q,Cross(e3,q)))mLL\\Omega(2)+Cross(q,Cq)mLL\\Omega\\Omega+f)"
     )
     QDOT_FORM = (
-        "(Cross(q,Cross(\\frac{d}{dt}(\\omega_{q}),q))(-1)mLL"
-        "+Cross(q,Cross(e3,Cross(\\omega_{q},q)))\\Omega(-1)mLL"
-        "+Cross(Cross(\\omega_{q},q),Cross(q,e3))\\OmegamLL"
-        "+Cross(q,Cross(Cross(\\omega_{q},q),e3))\\OmegamLL"
-        "+Cross(\\omega_{q},Cross(q,Cross(e3,q)))\\OmegamLL(2.0)"
-        "+Cross(q,Cross(\\omega_{q},Cross(e3,q)))\\Omega(-1)mLL"
-        "+Cross(q,Cq)\\Omega\\OmegamLL+f)"
+        "(Cross(q,Cross(\\frac{d}{dt}(\\omega_{q}),q))mLL(-1)"
+        "+Cross(q,Cross(e3,Cross(\\omega_{q},q)))mLL\\Omega(-1)"
+        "+Cross(Cross(\\omega_{q},q),Cross(q,e3))mLL\\Omega"
+        "+Cross(q,Cross(Cross(\\omega_{q},q),e3))mLL\\Omega"
+        "+Cross(\\omega_{q},Cross(q,Cross(e3,q)))mLL\\Omega(2)"
+        "+Cross(q,Cross(\\omega_{q},Cross(e3,q)))mLL\\Omega(-1)+Cross(q,Cq)mLL\\Omega\\Omega"
+        "+f)"
     )
 
     @staticmethod
@@ -180,8 +178,8 @@ class TestRotatingFrame:
         """
         s, eom, _ = derive(ps.s2_rotating_frame)
         expected = (
-            "(\\frac{d}{dt}(\\omega_{q})(-1)mll+Cross(\\omega_{q},W0)mll(2.0)"
-            "+Cross(q,W0)mllDot(W0,q)(-1.0)+Cross(q,e3)mgl(-1)+f)"
+            "(\\frac{d}{dt}(\\omega_{q})mll(-1)+Cross(\\omega_{q},W0)mll(2)"
+            "+Cross(q,W0)mllDot(W0,q)(-1)+Cross(q,e3)mgl(-1)+f)"
         )
         assert str(equation(eom, s.symbols["q"])) == expected
 
@@ -195,10 +193,10 @@ class TestR3xS2VelocityCoupling:
         """
         s, eom, _ = derive(ps.r3_s2_velocity_coupling)
         assert str(eom[str(s.symbols["x"].delta())][1]) == (
-            "(\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)m+\\frac{d}{dt}(\\omega_{q})(-1)+F)"
+            "(\\frac{d}{dt}(\\frac{d}{dt}(x))m(-1)+\\frac{d}{dt}(\\omega_{q})(-1)+F)"
         )
         assert str(equation(eom, s.symbols["q"])) == (
-            "(\\frac{d}{dt}(\\omega_{q})(-1)mll+\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)"
+            "(\\frac{d}{dt}(\\omega_{q})mll(-1)+\\frac{d}{dt}(\\frac{d}{dt}(x))(-1)"
             "+Cross(\\omega_{q},\\frac{d}{dt}(x))(2)+f)"
         )
 
@@ -213,12 +211,12 @@ class TestS2xSO3Couplings:
         """
         s, eom, _ = derive(ps.s2_so3_omega_coupling)
         assert str(equation(eom, s.symbols["q"])) == (
-            "(\\frac{d}{dt}(\\omega_{q})(-1)m+\\frac{d}{dt}(\\Omega_{R})(-1)k"
+            "(\\frac{d}{dt}(\\omega_{q})m(-1)+\\frac{d}{dt}(\\Omega_{R})k(-1)"
             "+Cross(\\omega_{q},\\Omega_{R})k(2)+f)"
         )
         assert str(equation(eom, s.symbols["R"])) == (
-            "(J\\frac{d}{dt}(\\Omega_{R})(-1.0)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-            "+\\frac{d}{dt}(\\omega_{q})(-1)k+Cross(\\Omega_{R},\\omega_{q})(-1)k+M)"
+            "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
+            "+\\frac{d}{dt}(\\omega_{q})k(-1)+Cross(\\Omega_{R},\\omega_{q})k(-1)+M)"
         )
 
     def test_omega_dot_body_axis(self):
@@ -231,10 +229,10 @@ class TestS2xSO3Couplings:
         """
         s, eom, _ = derive(ps.s2_so3_axis_coupling)
         assert str(equation(eom, s.symbols["q"])) == (
-            "(\\frac{d}{dt}(\\omega_{q})(-1)m+Cross(\\Omega_{R},(R)'e3)k"
+            "(\\frac{d}{dt}(\\omega_{q})m(-1)+Cross(\\Omega_{R},(R)'e3)k"
             "+Cross(\\omega_{q},(R)'e3)k(2)+f)"
         )
         assert str(equation(eom, s.symbols["R"])) == (
-            "(J\\frac{d}{dt}(\\Omega_{R})(-1.0)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-            "+Cross((R)'e3,\\omega_{q})(-1)k+M)"
+            "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
+            "+Cross((R)'e3,\\omega_{q})k(-1)+M)"
         )
