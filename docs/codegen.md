@@ -76,11 +76,14 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
   `R`, `x_L_dot`, `omega_q`, `Omega_R`); `pack` also takes a dict keyed by those names or
   by the printed symbols. Every configuration slot is required, a velocity left out is
   zero, `R` is a 3×3 matrix or its 9 row-major entries. `pack` does not project onto the
-  manifold; `simulate` and `lqr` check the state.
+  manifold; `simulate` and `lqr` check the state. Velocity names follow the variable's
+  name, indices included: `x_dot`, `omega_q1` for `S2("q1")`, `Omega_R2` for
+  `SO3("R2")`; `layout.slot_names()` lists every key in state order.
 
   ```python
   x_eq = layout.pack(x_L=np.zeros(3), q=[0, 0, -1], R=np.eye(3))   # at rest
   layout.unpack(traj.state)["q"]                                    # (N, 3)
+  layout.slot_names()          # ['x_L', 'q', 'R', 'x_L_dot', 'omega_q', 'Omega_R']
   ```
 - `layout.state_from_env(env)`, `accel_from_env`, `inputs_from_env`, `params_from_env`
   convert an `Evaluator` env (printed-name keys, `(3, 1)` columns) to the flat arrays, and

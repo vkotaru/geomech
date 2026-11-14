@@ -16,10 +16,18 @@
   console.error = function () { errs.push(Array.prototype.join.call(arguments, " ")); mark(); origError.apply(console, arguments); };
   mark();
 })();
+// MathJax typesets the equation containers (class "math") only, never the title,
+// description or units, and without the TeX packages that emit links, CSS or HTML
+// attributes (\href, \class, \style, \cssId, \bbox, \unicode, \toggle, \texttip) or
+// that load or re-enable packages (\require, autoload, \setOptions): symbol names are
+// user text, so a name such as \href{javascript:...}{x} must stay an error, not a link.
 window.MathJax = {
-  tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]] },
+  tex: {
+    inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]],
+    packages: { "[-]": ["html", "action", "bbox", "unicode", "require", "autoload", "setoptions"] }
+  },
   svg: { fontCache: "global" },
-  options: { enableMenu: false },
+  options: { enableMenu: false, ignoreHtmlClass: "gm-nomath", processHtmlClass: "math" },
   startup: {
     pageReady: function () {
       return MathJax.startup.defaultPageReady().then(function () {
@@ -44,9 +52,10 @@ window.MathJax = {
   --bad: #b3261e;
   --bad-bg: #fbe9e7;
   --code-bg: #f1f3f6;
+  --scroll-hint: rgba(28, 31, 36, 0.28);
   --canvas-bg: #e9edf2;
-  --grid-major: #9aa2ad;
-  --grid-minor: #c7ccd4;
+  --grid-major: #7b8492;
+  --grid-minor: #aab2bd;
   --shadow: 0.22;
   --edge: #1c1f24;
   --axis-x: #d33a3a;
@@ -75,6 +84,7 @@ window.MathJax = {
     --bad: #ff8a80;
     --bad-bg: #3a1c1a;
     --code-bg: #23262d;
+    --scroll-hint: rgba(0, 0, 0, 0.75);
     --canvas-bg: #1a1d23;
     --grid-major: #4a515c;
     --grid-minor: #2a2f37;
@@ -106,6 +116,7 @@ window.MathJax = {
   --bad: #ff8a80;
   --bad-bg: #3a1c1a;
   --code-bg: #23262d;
+  --scroll-hint: rgba(0, 0, 0, 0.75);
   --canvas-bg: #1a1d23;
   --grid-major: #4a515c;
   --grid-minor: #2a2f37;
@@ -165,8 +176,17 @@ section { min-width: 0; }
 .sw { display: inline-block; width: 0.9em; height: 0.9em; border-radius: 2px; vertical-align: -0.1em; }
 .sw.x { background: var(--axis-x); } .sw.y { background: var(--axis-y); } .sw.z { background: var(--axis-z); }
 .eq {
-  overflow-x: auto; overflow-y: hidden; background: var(--surface); border: 1px solid var(--border);
+  overflow-x: auto; overflow-y: hidden; border: 1px solid var(--border);
   border-radius: 8px; padding: 2px 12px; margin: 6px 0;
+  /* a shadow on each side that has more to scroll to: the surface-coloured covers move
+     with the content (local) and hide the fixed shadows (scroll) at either end */
+  background:
+    linear-gradient(to right, var(--surface) 40%, transparent) left / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 40%, transparent) right / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--scroll-hint), transparent) left / 12px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--scroll-hint), transparent) right / 12px 100% no-repeat scroll,
+    var(--surface);
+  scrollbar-width: thin;
 }
 .eq mjx-container[display="true"] { text-align: left !important; margin: 0.6em 0 !important; }
 .note { color: var(--muted); font-size: 0.9rem; }
@@ -179,7 +199,7 @@ code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; 
 footer { margin-top: 32px; color: var(--muted); font-size: 0.8rem; }
 </style>
 </head>
-<body>
+<body class="gm-nomath">
 <main>
 <header>
 <h1>__GM_TITLE__</h1>
@@ -197,18 +217,22 @@ __GM_BODY__
   var DATA = JSON.parse(document.getElementById("gm-data").textContent);
   var S = DATA.scene;
   var host = document.getElementById("gm-viewer");
-  if (!S || !host) return;
+  // The state of the 3-D view, on the root element (data-gm-viewer): "ready" once the
+  // scene is built and the first frame is requested, "no-three" or "no-webgl" when it
+  // cannot be drawn, "none" without a scene. Tests wait for it instead of a fixed delay.
+  function viewer(state) { document.documentElement.setAttribute("data-gm-viewer", state); }
+  if (!S || !host) { viewer("none"); return; }
   var msg = document.getElementById("gm-viewer-msg");
-  function fail(text) { msg.textContent = text; msg.style.display = "flex"; }
+  function fail(text, state) { msg.textContent = text; msg.style.display = "flex"; viewer(state); }
   if (!window.THREE || !THREE.OrbitControls) {
-    fail("three.js could not be loaded (it is fetched from cdn.jsdelivr.net). The equations below do not need it.");
+    fail("three.js could not be loaded (it is fetched from cdn.jsdelivr.net). The equations below do not need it.", "no-three");
     return;
   }
   var renderer;
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   } catch (e) {
-    fail("WebGL is not available in this browser, so the 3-D view cannot be drawn.");
+    fail("WebGL is not available in this browser, so the 3-D view cannot be drawn.", "no-webgl");
     return;
   }
   msg.style.display = "none";
@@ -232,6 +256,9 @@ __GM_BODY__
   // ---------------------------------------------------------------- world
   // Inertial frame: e3 up. three.js is y-up, so every inertial object lives in `world`,
   // rotated by -90° about x: inertial (x, y, z) is drawn at three.js (x, z, -y).
+  // The corner gizmo (an inertial triad turned with the camera) has its own scene, made
+  // before the main one and filled below.
+  var gizmoScene = new THREE.Scene();
   var scene = new THREE.Scene();
   var world = new THREE.Group();
   world.rotation.x = -Math.PI / 2;
@@ -311,7 +338,7 @@ __GM_BODY__
     function draw() {
       ctx.clearRect(0, 0, 64, 64);
       ctx.fillStyle = token(axisTokens[i]);
-      ctx.font = "italic bold 44px serif";
+      ctx.font = "italic bold 52px serif";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(text, 32, 34);
       tex.needsUpdate = true;
@@ -323,51 +350,129 @@ __GM_BODY__
     return sp;
   }
 
-  // inertial axes at the origin
-  var inertial = new THREE.Group();
-  var inertialLen = 0.35 * R, sprites = [];
-  for (var i = 0; i < 3; i++) {
-    inertial.add(arrow(i, inertialLen, 0.006 * R, axisColor(i)));
-    var sp = label(["x", "y", "z"][i], i, 0.09 * R);
-    var p = [0, 0, 0]; p[i] = inertialLen + 0.06 * R;
-    sp.position.set(p[0], p[1], p[2]);
-    inertial.add(sp); sprites.push(sp);
+  // inertial triads: e1 x, e2 y, e3 z, in the axis colours
+  var sprites = [];
+  function triad(len, radius, labelSize) {
+    var g = new THREE.Group();
+    for (var i = 0; i < 3; i++) {
+      g.add(arrow(i, len, radius, axisColor(i)));
+      var sp = label(["x", "y", "z"][i], i, labelSize);
+      var p = [0, 0, 0]; p[i] = len + 0.75 * labelSize;
+      sp.position.set(p[0], p[1], p[2]);
+      g.add(sp); sprites.push(sp);
+    }
+    return g;
   }
+  // at the origin
+  var inertial = triad(0.35 * R, 0.006 * R, 0.09 * R);
   world.add(inertial);
+  // and, when the origin is far from the scene (outside the camera's view), a copy on the
+  // ground behind the scene, so the inertial directions are read next to the bodies
+  if (Math.sqrt(C[0] * C[0] + C[1] * C[1] + C[2] * C[2]) > 3 * R) {
+    var near = triad(0.3 * R, 0.006 * R, 0.08 * R);
+    near.position.set(C[0] - R, C[1] + R, ground);
+    world.add(near);
+  }
+  // the corner gizmo: always visible, whatever the camera and the scene's position
+  var gizmoWorld = new THREE.Group();
+  gizmoWorld.rotation.x = -Math.PI / 2;
+  // label sprites of 0.6 in a 3.3-wide view at least 96 px wide: 17 px sprites, letters
+  // set at 52/64 of that (about 14 px), so they stay readable on a phone
+  gizmoWorld.add(triad(0.85, 0.05, 0.6));
+  gizmoScene.add(gizmoWorld);
+  gizmoScene.add(new THREE.HemisphereLight(0xffffff, 0x666670, 1.1));
+  var gizmoCam = new THREE.OrthographicCamera(-1.65, 1.65, 1.65, -1.65, 0.1, 20);
 
   // ---------------------------------------------------------------- bodies
-  function tinted(colorFn, tokenName, amount) {
-    return function () { return colorFn().clone().lerp(new THREE.Color(token(tokenName)), amount); };
+  // Orientation tints must stand out on every body colour: a tint is the first mix of the
+  // body colour towards the axis colour that differs from the body colour by at least
+  // MIN_DE (CIE76 ΔE); when even the pure axis colour is too close (a red body and the
+  // red e1), the axis hue is shifted in lightness away from the body until it does.
+  var MIN_DE = 25;
+  function labOf(c) {
+    function lin(u) { return u <= 0.04045 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4); }
+    function f(t) { return t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116; }
+    var r = lin(c.r), g = lin(c.g), b = lin(c.b);
+    var x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047;
+    var y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    var z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883;
+    return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
+  }
+  function deltaE(a, b) {
+    var p = labOf(a), q = labOf(b);
+    return Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]) + (p[2] - q[2]) * (p[2] - q[2]));
+  }
+  function contrastTint(base, target, start) {
+    for (var a = start; a < 1.0001; a += 0.05) {
+      var c = base.clone().lerp(target, Math.min(a, 1));
+      if (deltaE(c, base) >= MIN_DE) return c;
+    }
+    var bh = {}, th = {}, best = target.clone(), bestDE = deltaE(target, base);
+    base.getHSL(bh); target.getHSL(th);
+    var dir = bh.l > 0.5 ? -1 : 1;
+    for (var s = 0.1; s < 0.951; s += 0.05) {
+      var l = Math.max(0.04, Math.min(0.96, bh.l + dir * s));
+      var c2 = new THREE.Color().setHSL(th.h, Math.max(th.s, 0.5), l);
+      var d = deltaE(c2, base);
+      if (d >= MIN_DE) return c2;
+      if (d > bestDE) { best = c2; bestDE = d; }
+    }
+    return best;
+  }
+  function tinted(colorFn, tokenName, start) {
+    return function () { return contrastTint(colorFn(), new THREE.Color(token(tokenName)), start); };
+  }
+  // An orientation marker on a body of revolution (shown with or without the body axes):
+  // a sector of a cylinder's side and end caps, or a cap of a sphere, centred on body
+  // axis `dir` and tinted towards that axis colour. userData.gmMarker = dir.
+  function marker(geo, colorFn, dir) {
+    var m = new THREE.Mesh(geo, standard(tinted(colorFn, axisTokens[dir], 0.55), { roughness: 0.5 }));
+    m.userData.gmMarker = dir;
+    m.castShadow = true;
+    return m;
   }
   var bodies = S.bodies.map(function (b) {
     var g = new THREE.Group();
     g.matrixAutoUpdate = false;
     var base = function () { return colorOf(b.color); };
-    var mesh, sh = b.shape, geo;
+    var mesh, sh = b.shape, geo, markers = null;
     if (sh.kind === "box") {
       geo = new THREE.BoxGeometry(sh.size[0], sh.size[1], sh.size[2]);
       // faces: +x, -x, +y, -y, +z, -z. The +e1 face is tinted towards the e1 colour so
       // that a turn about the long axis shows even with the axes hidden.
-      var mats = [standard(tinted(base, "--axis-x", 0.55)), standard(base), standard(tinted(base, "--axis-y", 0.25)), standard(base), standard(base), standard(base)];
+      var mats = [standard(tinted(base, "--axis-x", 0.55)), standard(base), standard(tinted(base, "--axis-y", 0.3)), standard(base), standard(base), standard(base)];
       mesh = new THREE.Mesh(geo, mats);
     } else if (sh.kind === "cylinder") {
       geo = new THREE.CylinderGeometry(sh.radius, sh.radius, sh.length, 40);
-      if (sh.axis === "z") geo.rotateX(Math.PI / 2);
-      if (sh.axis === "x") geo.rotateZ(-Math.PI / 2);
+      // a 60° sector (side and both caps) at local +x, just outside the cylinder
+      var mg = new THREE.CylinderGeometry(1.015 * sh.radius, 1.015 * sh.radius, sh.length + 0.03 * sh.radius,
+                                          10, 1, false, Math.PI / 3, Math.PI / 3);
+      if (sh.axis === "z") { geo.rotateX(Math.PI / 2); mg.rotateX(Math.PI / 2); }
+      if (sh.axis === "x") { geo.rotateZ(-Math.PI / 2); mg.rotateZ(-Math.PI / 2); mg.rotateX(Math.PI); }
       mesh = new THREE.Mesh(geo, standard(base));
+      // the sector sits on body e1, or on e2 for a cylinder along e1
+      markers = [marker(mg, base, sh.axis === "x" ? 1 : 0)];
     } else {
       geo = new THREE.SphereGeometry(sh.radius, 40, 20);
       mesh = new THREE.Mesh(geo, standard(base));
+      // a large cap on body e1 and a smaller one on e2 (SphereGeometry caps open at +y)
+      var cap1 = new THREE.SphereGeometry(1.012 * sh.radius, 32, 8, 0, 2 * Math.PI, 0, Math.PI / 4);
+      cap1.rotateZ(-Math.PI / 2);
+      var cap2 = new THREE.SphereGeometry(1.012 * sh.radius, 32, 6, 0, 2 * Math.PI, 0, Math.PI / 7);
+      markers = [marker(cap1, base, 0), marker(cap2, base, 1)];
     }
     mesh.castShadow = true; mesh.receiveShadow = true;
     g.add(mesh);
+    (markers || []).forEach(function (m) { g.add(m); });
     var edgeMat = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.55 });
     themed.push([edgeMat, function () { return new THREE.Color(token("--edge")); }]);
     g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat));
     var axes = null;
     if (b.axes) {
       axes = new THREE.Group();
-      var r = Math.max(0.004, Math.min(0.03, 0.02 * Math.max.apply(null, b.axisLengths)));
+      // radius proportional to the arrows (no absolute clamp: a 1 km and a 1 mm body
+      // look alike)
+      var r = 0.02 * Math.max.apply(null, b.axisLengths);
       for (var k = 0; k < 3; k++) axes.add(arrow(k, b.axisLengths[k], r, axisColor(k)));
       g.add(axes);
     }
@@ -463,9 +568,13 @@ __GM_BODY__
   var speedSel = document.getElementById("gm-speed");
   var themeBtn = document.getElementById("gm-theme");
   scrub.max = String(N - 1);
+  // a single stored state has nothing to play
+  playBtn.disabled = N < 2;
+  scrub.disabled = N < 2;
   var playing = N > 1, simTime = 0, last = null;
-  function setPlaying(on) { playing = on; playBtn.textContent = on ? "Pause" : "Play"; last = null; if (on) requestRender(); }
+  function setPlaying(on) { playing = on && N > 1; playBtn.textContent = playing ? "Pause" : "Play"; last = null; if (playing) requestRender(); }
   playBtn.addEventListener("click", function () {
+    if (N < 2) return;
     if (!playing && frame >= N - 1) simTime = 0;
     setPlaying(!playing);
   });
@@ -521,7 +630,8 @@ __GM_BODY__
     if (playing && N > 1) {
       if (last !== null) {
         simTime += ((ts - last) / 1000) * parseFloat(speedSel.value);
-        if (simTime > S.t[N - 1]) simTime = 0;
+        // past the end: show the last stored state once, then start over
+        if (simTime > S.t[N - 1]) simTime = frame === N - 1 ? 0 : S.t[N - 1];
       }
       last = ts;
       var k = frameAt(simTime);
@@ -529,8 +639,25 @@ __GM_BODY__
     }
     var moving = controls.update();
     renderer.render(scene, camera);
+    renderGizmo();
     if (!checked) { checked = true; selfCheck(); }
     if (playing || moving) requestRender();
+  }
+
+  // The inertial gizmo in the bottom-left corner, turned like the main camera.
+  function renderGizmo() {
+    var w = host.clientWidth || 300, gs = Math.max(96, Math.min(140, Math.round(0.24 * w)));
+    gizmoCam.position.set(0, 0, 8).applyQuaternion(camera.quaternion);
+    gizmoCam.quaternion.copy(camera.quaternion);
+    renderer.autoClear = false;
+    renderer.clearDepth();
+    renderer.setScissorTest(true);
+    renderer.setScissor(6, 6, gs, gs);
+    renderer.setViewport(6, 6, gs, gs);
+    renderer.render(gizmoScene, gizmoCam);
+    renderer.setScissorTest(false);
+    renderer.setViewport(0, 0, w, w);
+    renderer.autoClear = true;
   }
 
   // The number of distinct colours on a coarse grid of the canvas, on the root element
@@ -554,6 +681,7 @@ __GM_BODY__
   resize();
   setFrame(0);
   setPlaying(playing);
+  viewer("ready");
 })();
 </script>
 </body>

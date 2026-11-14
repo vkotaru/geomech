@@ -378,6 +378,13 @@ class StateLayout:
             f" are {names} (or their printed names {list(self.slices)})"
         )
 
+    def slot_names(self) -> list[str]:
+        """The keys ``pack`` takes and ``unpack`` returns, in state order: every
+        configuration slot, then every velocity slot. Velocity names follow the
+        variable's name: ``x_dot``, ``omega_q1`` for ``S2("q1")``, ``Omega_R2`` for
+        ``SO3("R2")``, ``s_dot`` for ``Scalar("s")``."""
+        return [s.name for s in self.configuration + self.velocity]
+
     def pack(self, values: dict | None = None, /, **slots) -> np.ndarray:
         """The flat ``state`` from named slot values.
 

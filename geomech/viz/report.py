@@ -40,8 +40,11 @@ EXTERNAL_URLS = (THREE_URL, ORBIT_URL, MATHJAX_URL)
 #: ``check_eom`` errors above this are shown as a failure (``docs/numeric-verification.md``).
 CHECK_EOM_TOL = 1e-5
 
-#: Digits kept in the inlined trajectory (positions in scene units, rotation entries).
+#: Decimals kept in the inlined rotation entries and times.
 _DIGITS = 5
+#: Significant figures of the scene size kept in the inlined positions: a position is
+#: rounded to ``10**(floor(log10(radius)) - _POS_SIG + 1)``, whatever the scene's units.
+_POS_SIG = 6
 
 _MARKER = re.compile(r"__GM_([A-Z_]+)__")
 
@@ -66,10 +69,21 @@ def _json_script(obj) -> str:
     return text.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 
-def _flat(arr) -> list:
-    a = np.round(np.asarray(arr, dtype=float).reshape(-1), _DIGITS)
+def _flat(arr, decimals: int = _DIGITS) -> list:
+    a = np.round(np.asarray(arr, dtype=float).reshape(-1), decimals)
     a[a == 0] = 0.0  # no "-0.0"
     return a.tolist()
+
+
+def _sig(x: float, digits: int = _POS_SIG) -> float:
+    """*x* to *digits* significant figures (sizes of any magnitude survive the JSON)."""
+    return float(f"{float(x):.{digits}g}")
+
+
+def _position_decimals(radius: float) -> int:
+    """Decimals that keep ``_POS_SIG`` significant figures of a scene of half-size
+    *radius* (5 for a 1 m scene, 9 for 1 mm, 2 for 1 km)."""
+    return int(_POS_SIG - 1 - np.floor(np.log10(radius)))
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +181,10 @@ class Report:
         standard_form: the ``to_standard_form`` result; computed here when ``None``.
         scene: a ``Scene``; with *trajectory*, the 3-D view is drawn.
         trajectory: a ``Trajectory`` from ``geomech.simulation.simulate``.
-        params: the parameter values (``p``); defaults to ``trajectory.p``.
+        params: the parameter values for the table. With a *trajectory* they are
+            ``trajectory.p``, the values that were simulated, and the scene is evaluated
+            with them too; *params* (and ``Scene(params=...)``) may be omitted and raise
+            ``ValueError`` naming the parameter when they give a different value.
         checks: run ``check_eom`` and show its error (``True`` by default).
         units: ``{parameter name: unit}`` for the parameter table.
         source: the system definition as Python source, shown at the end.
@@ -220,8 +237,20 @@ class Report:
         self.standard_form = standard_form
         self.scene: Any = scene
         self.trajectory: Any = trajectory
-        if params is None and trajectory is not None:
-            params = trajectory.p
+        if trajectory is not None:
+            from geomech.viz.scene import check_finite_states, check_same_params
+
+            simulated = dict(trajectory.p)
+            check_same_params(params, simulated, "Report(params=...)")
+            if scene is not None:
+                check_same_params(scene.params, simulated, "Scene(params=...)")
+                check_finite_states(
+                    np.asarray(trajectory.state, dtype=float),
+                    np.asarray(trajectory.t, dtype=float),
+                    scene.layout,
+                    "Report",
+                )
+            params = simulated
         self.params = dict(params or {})
         self.units = dict(units or {})
         self.source = source
@@ -299,10 +328,28 @@ class Report:
         traj = self.trajectory
         if traj is not None:
             drift = self.energy_drift()
+            forced = self.forced()
+            # "drift" (an integrator error) only for a run known to be unforced: zero
+            # recorded inputs. Unknown inputs (traj.u is None) give a neutral "change".
+            recorded = getattr(traj, "u", None) is not None
+            label = "Energy drift" if recorded and not forced else "Energy change"
             if drift is None:
-                out.append(_Stat("Energy drift", "—", note="module has no energy()"))
+                out.append(_Stat(label, "—", note="module has no energy()"))
+            elif forced:
+                out.append(
+                    _Stat(
+                        label,
+                        f"{drift:.2e}",
+                        note="max |E − E₀| / |E₀| of a forced run: the work of the inputs,"
+                        " not an integrator error",
+                    )
+                )
+            elif not recorded:
+                out.append(
+                    _Stat(label, f"{drift:.2e}", note="max |E − E₀| / |E₀|; inputs not recorded")
+                )
             else:
-                out.append(_Stat("Energy drift", f"{drift:.2e}", note="max |E − E₀| / |E₀|"))
+                out.append(_Stat(label, f"{drift:.2e}", note="max |E − E₀| / |E₀|, unforced"))
             out.append(
                 _Stat("Constraint drift", f"{traj.max_drift():.1e}", note="|q|−1, ‖RᵀR − I‖")
             )
@@ -312,6 +359,14 @@ class Report:
             t = np.asarray(traj.t)
             out.append(_Stat("Simulated", f"{t[-1] - t[0]:.3g} s", note=f"{len(t)} stored states"))
         return out
+
+    def forced(self) -> bool:
+        """``True`` when the trajectory has a nonzero input at some stored state
+        (``trajectory.u``); the energy then changes by the work of the inputs. ``False``
+        both for zero inputs and for inputs that were not recorded (``u is None``, e.g. a
+        hand-built ``Trajectory``); the summary calls only the first "unforced"."""
+        u = getattr(self.trajectory, "u", None)
+        return u is not None and bool(np.any(np.asarray(u) != 0))
 
     def energy_drift(self) -> float | None:
         """``max |E(t) − E(0)| / |E(0)|`` of ``trajectory.energy()`` (``None`` without an
@@ -334,57 +389,100 @@ class Report:
         return np.unique(np.r_[idx[idx < len(t)], len(t) - 1])
 
     def scene_data(self) -> dict:
-        """The animation data inlined in the page (rounded to 5 decimals)."""
+        """The animation data inlined in the page.
+
+        Positions keep six significant figures of the scene size, rotation entries five
+        decimals. The view is framed on everything drawn (shapes, body-axis arrows, point
+        and rod radii), with no minimum size, so a 1 mm and a 1 km scene look alike.
+        Default point and rod radii are fractions of the scene size.
+        """
         scene = self.scene
         idx = self.frame_indices()
         fr = scene.frames(self.trajectory, indices=idx)
+        lo, hi = fr.bounds()
+        body_ext = max((b.shape.extent for b in scene.bodies), default=0.0)
+        explicit = [body_ext / 2]
+        explicit += [pm.radius for pm in scene.points if pm.radius is not None]
+        explicit += [r.radius for r in scene.rods if r.radius is not None]
+        size = max(float(np.max(hi - lo)) / 2, *explicit)
+        if not size > 0:
+            size = 1.0
+        point_r, rod_r = 0.06 * size, 0.01 * size
+        if body_ext > 0:
+            point_r, rod_r = min(point_r, 0.35 * body_ext), min(rod_r, 0.06 * body_ext)
+        points_r = [pm.radius if pm.radius is not None else point_r for pm in scene.points]
+        rods_r = [r.radius if r.radius is not None else rod_r for r in scene.rods]
+
+        # bounds of everything drawn: positions widened by each element's reach
+        los, his = [lo[None, :]], [hi[None, :]]
+
+        def widen(xyz, reach):
+            xyz = np.asarray(xyz, dtype=float).reshape(-1, 3)
+            los.append(xyz.min(axis=0, keepdims=True) - reach)
+            his.append(xyz.max(axis=0, keepdims=True) + reach)
+
+        reach_of = []
+        for body, ev in zip(scene.bodies, fr.bodies):
+            lengths = _axis_lengths(body.shape)
+            reach = float(np.linalg.norm(_half_sizes(body.shape)))
+            if body.axes:
+                reach = max(reach, max(lengths))
+            reach_of.append(lengths)
+            widen(ev["center"], reach)
+        for v, r in zip(fr.points, points_r):
+            widen(v, r)
+        for v, r in zip(fr.rods, rods_r):
+            widen(v, r)
+        lo = np.min(np.concatenate(los), axis=0)
+        hi = np.max(np.concatenate(his), axis=0)
+        center = (lo + hi) / 2
+        radius = float(np.max(hi - lo)) / 2
+        if not radius > 0:
+            radius = size
+        dec = _position_decimals(radius)
+        center = np.round(center, dec)
+        zlow = float(lo[2])
+        ground = 0.0 if 0.0 <= zlow <= 2 * radius else zlow - 0.05 * radius
+
         rot_tracks: list[list] = []
         rot_keys: dict[str, int] = {}
         bodies = []
-        extent = 0.0
-        for body, ev in zip(scene.bodies, fr.bodies):
+        for body, ev, lengths in zip(scene.bodies, fr.bodies, reach_of):
             key = str(body.R)
             if key not in rot_keys:
                 rot_keys[key] = len(rot_tracks)
                 rot_tracks.append(_flat(ev["rotation"]))
-            shape = body.shape
-            extent = max(extent, shape.extent)
             bodies.append(
                 {
                     "name": body.name,
-                    "shape": shape.to_dict(),
+                    "shape": _shape_dict(body.shape),
                     "color": body.color,
                     "axes": bool(body.axes),
-                    "axisLengths": _axis_lengths(shape),
+                    "axisLengths": [_sig(v) for v in lengths],
                     "rot": rot_keys[key],
-                    "pos": _flat(ev["center"]),
+                    "pos": _flat(ev["center"], dec),
                 }
             )
-        lo, hi = fr.bounds()
-        center = (lo + hi) / 2
-        radius = float(max(np.max(hi - lo) / 2 + extent / 2, 0.5))
-        zlow = float(lo[2] - extent / 2)
-        ground = 0.0 if 0.0 <= zlow <= 2 * radius else zlow - 0.05 * radius
         return {
             "t": _flat(fr.t - fr.t[0]),
             "t0": float(fr.t[0]),
             "rotations": rot_tracks,
             "bodies": bodies,
             "points": [
-                {"name": pm.name, "radius": pm.radius, "color": pm.color, "pos": _flat(v)}
-                for pm, v in zip(scene.points, fr.points)
+                {"name": pm.name, "radius": _sig(r), "color": pm.color, "pos": _flat(v, dec)}
+                for pm, r, v in zip(scene.points, points_r, fr.points)
             ],
             "rods": [
-                {"name": r.name, "radius": r.radius, "color": r.color, "ends": _flat(v)}
-                for r, v in zip(scene.rods, fr.rods)
+                {"name": rd.name, "radius": _sig(r), "color": rd.color, "ends": _flat(v, dec)}
+                for rd, r, v in zip(scene.rods, rods_r, fr.rods)
             ],
             "traces": [
-                {"name": tr.name, "color": tr.color, "pos": _flat(v)}
+                {"name": tr.name, "color": tr.color, "pos": _flat(v, dec)}
                 for tr, v in zip(scene.traces, fr.traces)
             ],
             "center": [float(c) for c in center],
-            "radius": radius,
-            "ground": float(ground),
+            "radius": _sig(radius),
+            "ground": _sig(ground),
         }
 
     # ------------------------------------------------------------------ sections
@@ -627,4 +725,26 @@ def _axis_lengths(shape) -> list[float]:
         half = [shape.radius] * 3
         small = 2 * shape.radius
     margin = max(0.25 * shape.extent, 4 * small)
-    return [round(h + margin, 6) for h in half]
+    return [h + margin for h in half]
+
+
+def _half_sizes(shape) -> np.ndarray:
+    """Half the shape's size along the body axes."""
+    from geomech.viz.scene import Box, Cylinder
+
+    if isinstance(shape, Box):
+        return np.array([shape.lx, shape.ly, shape.lz]) / 2
+    if isinstance(shape, Cylinder):
+        half = np.full(3, shape.radius)
+        half["xyz".index(shape.axis)] = shape.length / 2
+        return half
+    return np.full(3, shape.radius)
+
+
+def _shape_dict(shape) -> dict:
+    """``shape.to_dict()`` with its sizes to six significant figures."""
+    d = shape.to_dict()
+    for key in ("size", "radius", "length"):
+        if key in d:
+            d[key] = [_sig(v) for v in d[key]] if isinstance(d[key], list) else _sig(d[key])
+    return d

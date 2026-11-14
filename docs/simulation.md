@@ -14,10 +14,20 @@ from geomech.simulation import accelerations, simulate, lqr
 a = accelerations(module, state, u, p)              # mass @ a + bias + G @ u = 0, S² on T_qS²
 traj = simulate(module, x0, (0.0, 10.0), p, u=None, method="rkmk4", dt=1e-3)
 traj.t, traj.state, traj.constraint_drift, traj.energy()
+traj.u                                              # inputs at the stored states, (N, n_inputs)
 ctrl = lqr(lin_module, x_eq, u_eq, p, Q, R, module=module)   # checks (x_eq, u_eq)
 traj = simulate(module, x0, 5.0, p, u=ctrl)
 more = simulate(module, traj.state[-1], (5.0, 10.0), p)      # continue from the last state
 ```
+
+`traj.u` holds the inputs at the stored states (zeros for `u=None`), recorded during
+the run: with RKMK4 they are the values the first stage of each stored step used, so a
+controller is never called twice at one state (with `solve_ivp`, whose stored states
+are interpolated, it is called once more at each of them after the run). An exception
+raised by a controller propagates as soon as it is raised, unchanged, with a note giving
+the time. `geomech.viz.Report` reads `traj.u` to label a forced run's energy as "energy
+change" rather than drift; a hand-built `Trajectory` without `u` gets the neutral
+"energy change … inputs not recorded".
 
 scipy is an optional dependency (`pip install "geomech[sim]"`), imported only by
 `method="solve_ivp"` and by `lqr`; `import geomech.simulation` does not import it, and

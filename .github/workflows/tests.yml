@@ -57,6 +57,11 @@ jobs:
         run: pip install -e ".[casadi]"
 
       - name: Run tests
+        # The headless-Chrome tests (tests/browser.py) need Chrome, the three.js and
+        # MathJax CDNs and software WebGL; they run in one job only, so a CDN hiccup
+        # cannot fail all three required checks.
+        env:
+          GEOMECH_BROWSER_TESTS: ${{ matrix.python-version == '3.12' && '1' || '0' }}
         run: pytest tests/ -v
 
       - name: Run the report examples (outputs discarded)

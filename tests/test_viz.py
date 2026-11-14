@@ -1,5 +1,5 @@
 """``geomech.viz``: scene geometry against NumPy, the LaTeX name map, the HTML report and
-a headless-browser smoke test (skipped without Chrome or network)."""
+a headless-browser smoke test (opt-in, see ``tests/browser.py``)."""
 
 from __future__ import annotations
 
@@ -8,11 +8,9 @@ import importlib.util
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -35,6 +33,7 @@ from geomech.viz import (
     pretty_name,
 )
 from geomech.viz.report import EXTERNAL_URLS
+from tests import browser
 from tests.codegen_systems import derived
 from tests.simulation_systems import BUILDERS, SETUPS, standard_module
 
@@ -490,41 +489,11 @@ def test_imports_stay_light():
 # Headless browser
 # ---------------------------------------------------------------------------
 
-CHROME = (
-    shutil.which("google-chrome")
-    or shutil.which("chromium")
-    or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
-)
 
-
-def _network_ok() -> bool:
-    for url in EXTERNAL_URLS:
-        try:
-            req = urllib.request.Request(url, method="HEAD")
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status != 200:
-                    return False
-        except Exception:
-            return False
-    return True
-
-
-def test_headless_browser_smoke(dp_report, tmp_path):
-    if CHROME is None:
-        pytest.skip("no Chrome/Chromium on this machine")
-    if not _network_ok():
-        pytest.skip("no network: the page loads three.js and MathJax from their CDNs")
+def test_headless_browser_smoke(dp_report):
+    """Opt-in (``GEOMECH_BROWSER_TESTS=1``); see ``tests/browser.py``."""
     _, out = dp_report
-    cmd = [CHROME, "--headless=new", "--disable-gpu", "--no-sandbox",
-           f"--user-data-dir={tmp_path / 'profile'}", "--virtual-time-budget=8000",
-           "--dump-dom", out.resolve().as_uri()]  # fmt: skip
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-    except subprocess.TimeoutExpired:
-        pytest.skip("Chrome did not finish in 120 s")
-    dom = proc.stdout
-    if not dom.strip():
-        pytest.skip(f"Chrome produced no DOM: {proc.stderr[-500:]}")
+    dom = browser.load(out.read_text(encoding="utf-8"))
     root = re.search(r"<html[^>]*>", dom).group(0)
     assert 'data-gm-errors="0"' in root, root
     assert 'data-gm-mathjax="done"' in root, root
