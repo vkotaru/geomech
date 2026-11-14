@@ -204,6 +204,9 @@ def _eliminate(expr):
             # (s*M)^T = s*M^T
             if isinstance(inner, SMMul):
                 return SMMul(_eliminate(Transpose(inner.left)), inner.right)
+            # a transposed scaled row is the scaled column: (aᵀ s)ᵀ = a s
+            if isinstance(inner, SVMul) and isinstance(inner.left, Transpose):
+                return SVMul(inner.left.expr, inner.right)
             # (A*B)^T = B^T * A^T
             if isinstance(inner, MMMul):
                 return _eliminate(MMMul(Transpose(inner.right), Transpose(inner.left)))
@@ -283,17 +286,32 @@ def _zero_for(expr):
 # ---------------------------------------------------------------------------
 
 
+# Relative size below which a sum of float coefficients is roundoff of an exact zero:
+# x*0.1*3 - x*0.3 sums 0.30000000000000004 - 0.3 = 5.55e-17, which is not a term.
+_CANCEL_RTOL = 1e-12
+
+
+def _cancelled(total, scale):
+    """*total* with float cancellation residue (``|total| <= 1e-12·scale``) set to 0."""
+    if isinstance(total, float) and abs(total) <= _CANCEL_RTOL * scale:
+        return 0
+    return total
+
+
 def _simplify_add(nodes):
     """Scalar addition: filter zeros, combine numerics, collect like terms."""
     numeric_total = 0
+    scale = 0
     kept = []
     for n in nodes:
         if _is_zero(n):
             continue
         if _is_numeric_leaf(n):
             numeric_total += n.value
+            scale = max(scale, abs(n.value))
         else:
             kept.append(n)
+    numeric_total = _cancelled(numeric_total, scale)
     if numeric_total != 0:
         kept.append(Number(numeric_total))
     kept = _collect_like_terms(kept, ExprType.SCALAR)
@@ -421,6 +439,7 @@ def _collect_like_terms(nodes, expr_type):
     # Group by commutative equality
     merged_coeffs = list(range(len(pairs)))  # index of canonical representative
     coeffs = [c for c, _ in pairs]
+    scales = [abs(c) for c in coeffs]
     terms = [t for _, t in pairs]
 
     for i in range(len(pairs)):
@@ -436,6 +455,7 @@ def _collect_like_terms(nodes, expr_type):
                 continue
             if ti is not None and tj is not None and _commutative_equal(ti, tj):
                 coeffs[i] += coeffs[j]
+                scales[i] = max(scales[i], abs(coeffs[j]))
                 coeffs[j] = 0
                 merged_coeffs[j] = i
 
@@ -444,7 +464,7 @@ def _collect_like_terms(nodes, expr_type):
     for i in range(len(pairs)):
         if merged_coeffs[i] != i:
             continue
-        made = _make_term(coeffs[i], terms[i], expr_type)
+        made = _make_term(_cancelled(coeffs[i], scales[i]), terms[i], expr_type)
         if made is not None:
             result.append(made)
     return result

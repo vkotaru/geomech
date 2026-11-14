@@ -24,7 +24,7 @@ from geomech.core.base.expressions import Zero, ZeroMatrix, ZeroVector
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee
+from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose, Vee, column_of
 from geomech.core.operations.multiplication import (
     MMMul,
     Mul,
@@ -207,7 +207,7 @@ def _scalar_from_scalar(expr, query):
                 _nonlinear("_scalar_from_scalar", "VVMul", expr, query)
             if _has_algebraic(left, query):
                 # left is Transpose(v), query inside v → Transpose(coeff) * right
-                return VVMul(Transpose(_scalar_from_vector(left.expr, query)), right)
+                return VVMul(Transpose(_scalar_from_vector(column_of(left), query)), right)
             if _has_algebraic(right, query):
                 # right is plain vector → left * coeff
                 return VVMul(left, _scalar_from_vector(right, query))
@@ -328,7 +328,7 @@ def _scalar_from_matrix(expr, query):
             if _has_algebraic(left, query):
                 return VVMul(_scalar_from_vector(left, query), right)
             if _has_algebraic(right, query):
-                return VVMul(left, Transpose(_scalar_from_vector(right.expr, query)))
+                return VVMul(left, Transpose(_scalar_from_vector(column_of(right), query)))
             return ZeroMatrix
 
         case _:
@@ -395,14 +395,14 @@ def _vector_from_scalar(expr, query):
                 _nonlinear("_vector_from_scalar", "VVMul", expr, query)
             if _has_algebraic(left, query):
                 # left = Transpose(v), query in v → coeff^T * right
-                inner = left.expr
+                inner = column_of(left)
                 if inner == query:
                     return right
                 return MVMul(Transpose(_vector_from_vector(inner, query)), right)
             if _has_algebraic(right, query):
                 if right == query:
-                    return left.expr
-                return MVMul(Transpose(_vector_from_vector(right, query)), left.expr)
+                    return column_of(left)
+                return MVMul(Transpose(_vector_from_vector(right, query)), column_of(left))
             return ZeroVector
 
         case _:
@@ -537,7 +537,7 @@ def _vector_from_mvmul_mat(mat, vec, query):
             # VVMul(v, Transpose(w)) is outer product (matrix).
             # (v * w^T) * vec = v * (w^T * vec) = SVMul(v, Dot(w, vec))
             outer_left, outer_right = mat.left, mat.right
-            return _vector_from_vector(SVMul(outer_left, Dot(outer_right.expr, vec)), query)
+            return _vector_from_vector(SVMul(outer_left, Dot(column_of(outer_right), vec)), query)
 
         case _:
             return _zero_or_raise("_vector_from_mvmul_mat", mat, query, ZeroMatrix)
@@ -597,10 +597,12 @@ def _vector_from_vector_svmul_scalar(vec, scl, query):
                 )
             # left = Transpose(a), query in a
             if _has_algebraic(left, query):
-                return _vector_from_vector(MVMul(VVMul(vec, Transpose(right)), left.expr), query)
+                return _vector_from_vector(
+                    MVMul(VVMul(vec, Transpose(right)), column_of(left)), query
+                )
             # right = b, query in b
             if _has_algebraic(right, query):
-                return _vector_from_vector(MVMul(VVMul(vec, Transpose(left.expr)), right), query)
+                return _vector_from_vector(MVMul(VVMul(vec, left), right), query)
             return ZeroMatrix
 
         case _:
