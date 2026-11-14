@@ -1,8 +1,8 @@
 site_name: geomech
-site_url: https://vkotaru.github.io/pygeomech/
+site_url: https://vkotaru.github.io/geomech/
 site_description: Symbolic computation of dynamics on smooth manifolds
-repo_url: https://github.com/vkotaru/pygeomech
-repo_name: vkotaru/pygeomech
+repo_url: https://github.com/vkotaru/geomech
+repo_name: vkotaru/geomech
 
 theme:
   name: material

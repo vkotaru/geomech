@@ -36,7 +36,7 @@ If you use geomech in your research, please cite this package along with corresp
 @software{kotaru2026geomech,
   title={geomech: Symbolic toolbox for geometric mechanics on smooth manifolds},
   author={Kotaru, Prasanth},
-  url={https://github.com/vkotaru/pygeomech},
+  url={https://github.com/vkotaru/geomech},
   year={2026}
 }
 ```
