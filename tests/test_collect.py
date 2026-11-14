@@ -1,10 +1,10 @@
-"""Tests for geomech.core.math.collect — rearrange Dot so target vec is on the left."""
+"""Tests for geomech.core.math.collecting — rearrange Dot so target vec is on the left."""
 
 import numpy as np
 import pytest
 
 from geomech.core.base.expressions import Matrix, Scalar, Vector
-from geomech.core.math.collect import collect
+from geomech.core.math.collecting import collect
 from geomech.core.operations.addition import Add
 from geomech.core.operations.geometry import Cross, Dot, Transpose
 from geomech.core.operations.multiplication import Mul, MVMul

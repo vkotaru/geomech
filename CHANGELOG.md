@@ -7,6 +7,63 @@ All notable changes to `geomech` are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- Debugging aids (phase 4; `docs/pipeline.md`, `docs/troubleshooting.md`):
+  - `compute_eom(..., trace=EOMTrace())` (keyword only) keeps every stage — δL, δW, δS,
+    after the manifold rules, after `full_simplify`, per integration-by-parts target the
+    result of `collect`, of the IBP pass and of `full_simplify`, after `expand`, and the
+    raw and final equation per variation vector — filled as the pipeline runs, so it also
+    holds the stages before an exception. `linearize(..., trace=LinearizationTrace())`
+    keeps per row δE, the term buckets, the raw coefficients (before `full_simplify` and
+    before the mass blocks are negated) and the final blocks. Both have `summary()` (stage
+    name, node count, first 200 characters of the `repr`) and `show(stage)`
+    (`print_tree(style="indent")`). `EOMTrace`, `LinearizationTrace` and
+    `apply_manifold_rules` are exported from `geomech`.
+  - The `geomech` logger: one `DEBUG` line per stage of `compute_eom`,
+    `integrate_by_parts` (per target), `to_standard_form` (per block) and `linearize` (per
+    row). `GEOMECH_DEBUG=1` (read at import) sets the level, attaches a `stderr` handler if
+    none is configured, and runs `check_tree` on the inputs and outputs of the three
+    pipelines. Nothing is computed for the log when the level is above `DEBUG`. The
+    handler is added only when neither the `geomech` loggers nor the root logger have
+    one, so under `logging.basicConfig()` each line is printed once.
+  - `geomech.check_tree(expr)` and `InvariantError`: operand types per node class, no
+    nested same-class sums, exactly one row operand in a `VVMul`, columns only in `Dot`,
+    `Cross` and `Hat`, no `VAdd` mixing rows and columns, no calculus node directly over an
+    `S2`/`SO3` leaf, tangent vectors with their point set and named after it, numeric
+    scalars consistent with their value. The message names the invariant, the subtree and
+    its path. The test suite runs it on every tree that goes into or comes out of a
+    successful `compute_eom`, `to_standard_form` or `linearize` call (`tests/conftest.py`).
+  - Named rewrite rules: every rewriting case of `vector_rules`, `simplify` (`_eliminate`),
+    `pull`, `expand`, `collect`, integration by parts and the manifold rules returns through
+    `rule(name, before, after)` (`geomech/utils/trace.py`) with a dotted name
+    (`vector.dot_tangent_orthogonal`, `simplify.hat_vee_skew`, `collect.peel_matrix`, …).
+    Each module docstring lists its rule names with the hypothesis each needs;
+    `tests/test_rule_names.py` checks that the docstring and the code list the same names.
+    `geomech.set_trace(True)` or `GEOMECH_TRACE=1` logs every firing on `geomech.rules` as
+    `name: before ==> after`. A `simplify.*_fold` line is logged only when the fold itself
+    changed the node, not for a rewrite made by a child rule. The scalar triple product
+    of `collect` has one name per rotation (`collect.triple_product_left`, `_right`,
+    `_left_nested`, `_right_nested`, and the `_mvmul_*` variants).
+    `tests/test_rule_coverage.py` checks that every rewrite of random trees logs a rule.
+  - A trace is cleared when a pipeline starts (reusing one object keeps the last run
+    only); after an exception `failed_at` names the stage that raised and `summary()`
+    starts with `FAILED at <stage>: <exception>`.
+  - `troubleshooting.md` has a recipe for a wrong equation that matches no row (bisect
+    with `summary()`, run `specs/reviews/scripts/engine_fuzz.py --quick`, rerun the
+    suspect stage under `set_trace`), and lists the silent bugs fixed in earlier versions
+    in a separate history section.
+  - Docs: "The Pipeline, Stage by Stage", "Conventions" and "Troubleshooting" (every
+    silent case fixed in phases 1–3 with its old symptom, the exact text of every typed
+    error a user can hit, the three `AlgebraicError` causes told apart); the manifold
+    derivation notes are in the nav as "Manifold Rules: Derivation".
+- A kinetic energy written with rows derives: `collect` rewrites an inner product that
+  holds the integration-by-parts target, `VVMul(rᵀ, b)`, to `Dot(column_of(rᵀ), b)`, so
+  `½ ẋᵀAẋ` and `½ ΩᵀJΩ` go through (the latter prints the same equation as `½ Ω·JΩ`). Two
+  new oracle systems (`row_kinetic_energy`, `row_kinetic_energy_so3` in
+  `tests/test_eom_oracle.py`). No pinned equation changes: before, any such inner product
+  made extraction fail.
+- `linearize(..., params=[...])`: the prescribed parameters given to `compute_eom`. They
+  are still not supported; a term carrying the variation of a declared param raises
+  `AlgebraicError` saying so instead of suggesting a missing input or `Constant`.
 - Numbers on either side of the arithmetic operators: `2 * x`, `x + 1`, `1 + x`, `x - 1`,
   `1 - x`, unary `-x` (the same tree as `x * -1`, so its `str` matches the existing
   `x(-1)` output) and `x / 2` (division by a number only; dividing by an expression raises
@@ -25,7 +82,7 @@ All notable changes to `geomech` are recorded here. The format follows
   form (`(aᵀ(K + J)) b → aᵀK b + aᵀJ b`, `((a + b)ᵀK) c`, `(aᵀ + bᵀ) c`, `((a + b)ᵀ s) c`),
   `extract_linear_coeff` takes the column of a row with `column_of`, and `pull` hoists the
   scalar of a scaled row out of an inner product (`(aᵀs) b → aᵀb s`). A row in a kinetic
-  energy (`v.T() * A * v`) is not supported yet: integration by parts only handles `Dot`.
+  energy (`v.T() * A * v`) is handled by `collect` (see the row kinetic energy entry above).
 - `0 + x` is `x` for every expression type, so `sum([a, b, c])` works for vectors and
   matrices and leaves no `(0)` term in a scalar sum.
 - `compute_eom(L, dW, variables, params=[...])`: prescribed time-varying parameters (a
@@ -81,6 +138,46 @@ All notable changes to `geomech` are recorded here. The format follows
   notebooks for the rigid pendulum, spherical pendulum, quadrotor and quadrotor with payload.
 
 ### Changed
+- Engine errors reaching the user through a pipeline are re-raised with the same type,
+  the original chained as `__cause__`, and the pipeline context: `compute_eom` names the
+  variation vector being extracted and, when a time derivative of a variation vector
+  survived integration by parts, the term it survived in and that `collect` could not
+  expose it (pointing to `print_tree` and the `ibp.collect[...]` trace stage); a `collect`
+  error during integration by parts is prefixed with the stage; `to_standard_form` names
+  the equation and the term, and a jerk says the equation is not second order (the two
+  causes of the "appears only inside the calculus operator" error are now told apart);
+  `linearize` keeps the inner message when a coefficient still contains a perturbation,
+  and its "no perturbation symbol" hint names the stray variation and lists every remedy.
+- The transformation modules no longer share their names with their functions:
+  `expand.py`, `pull.py`, `simplify.py`, `vector_rules.py` and `core/math/collect.py` are
+  now `expansion.py`, `pulling.py`, `simplification.py`, `vector_identities.py` and
+  `collecting.py`. The packages still export the *functions* under the old names, so
+  `from geomech.core.transformations import simplify; simplify(expr)` is unchanged (a
+  plain function: picklable, with its own signature), and
+  `import geomech.core.transformations.simplification as m` gives the module. Before,
+  the package re-exported the function under the module's name and hid the module.
+  Imports through the old module paths now raise `ModuleNotFoundError`, for example
+  `from geomech.core.transformations.simplify import simplify` and
+  `from geomech.core.math.collect import collect`; use the new module names, or import
+  the functions from `geomech`, `geomech.core.transformations` or `geomech.core.math`,
+  which are unchanged.
+- A Lagrangian in accelerations (`½ ẍ·ẍ`) is reported as such by `compute_eom`
+  ("the Lagrangian depends on accelerations …; higher-order Lagrangians are not
+  supported"), instead of as a term that `collect` could not expose with a trace stage
+  that did not exist. A surviving first-order derivative already in the IBP shape points
+  to `ibp.integrate[t]`; a scalar one is described as a factor of a product, not as the
+  operand of a `Dot`.
+- The public `integrate_by_parts` logs its stages on the `geomech` logger at `DEBUG`, as
+  its docstring said.
+- `full_simplify`'s cap warning says "no confirmed fixed point after N passes" (the last
+  allowed pass changed the expression, so no further pass confirmed it).
+- A composite `SystemVariables` entry (`x + y`, `m * z`, `q.t_diff()`) raises `TypeError`
+  "is a VAdd expression, not a single symbol"; before, it got past validation and failed
+  later with a stray-variation message that did not name the entry.
+- `render_eom` reports through the `geomech` logger (`WARNING` with the end of the
+  `pdflatex` log on failure, `INFO` with the path on success) instead of `print`.
+- `is_row_vector`/`column_of` import their node classes once at module level instead of on
+  every call.
 - `to_latex` is precedence-aware: composite operands of a cross product, of a matrix
   product and of a transpose are wrapped in `\left( \right)` (`a \times \left(b \times
   c\right)`, `R^T \left(a \times b\right)`, `\left(R a\right)^T`), a dot product

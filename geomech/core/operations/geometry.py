@@ -10,7 +10,10 @@ from geomech.core.base.expressions import (
     _node_operands,
 )
 from geomech.core.base.types import ExprType
+from geomech.core.operations.addition import VAdd
+from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
 from geomech.core.operations.mixins import _BaseMixin, _BinaryMixin, _UnaryMixin
+from geomech.core.operations.multiplication import MVMul, SVMul
 from geomech.utils.errors import ExpressionMismatchError, SizeMismatchError
 
 # ---------------------------------------------------------------------------
@@ -197,10 +200,6 @@ def is_row_vector(expr):
     multiple of a row, a sum whose first addend is a row, or a calculus operator
     (d/dt, δ, ∫) of a row. Every other vector expression is a column.
     """
-    from geomech.core.operations.addition import VAdd
-    from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-    from geomech.core.operations.multiplication import MVMul, SVMul
-
     if getattr(expr, "type", None) != ExprType.VECTOR:
         return False
     match expr:
@@ -227,10 +226,6 @@ def column_of(row):
     ``Transpose(row)``; for the other row shapes (``aᵀK``, ``s aᵀ``) it gives a column the
     engine can work with, where ``Transpose(MVMul(aᵀ, K))`` would be opaque.
     """
-    from geomech.core.operations.addition import VAdd
-    from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
-    from geomech.core.operations.multiplication import MVMul, SVMul
-
     match row:
         case Transpose():
             return row.expr

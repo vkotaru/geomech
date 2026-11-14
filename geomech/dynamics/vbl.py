@@ -100,11 +100,12 @@ from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
 from geomech.core.operations.geometry import Hat, Transpose
 from geomech.core.operations.multiplication import MMMul, Mul, SMMul, VVMul
-from geomech.core.transformations.expand import expand
-from geomech.core.transformations.simplify import full_simplify
+from geomech.core.transformations.expansion import expand
+from geomech.core.transformations.simplification import full_simplify
 from geomech.dynamics.eom import _check_variables
 from geomech.dynamics.variables import SystemVariables
 from geomech.utils.errors import AlgebraicError
+from geomech.utils.trace import debug_enabled, stage_recorder
 
 # ---------------------------------------------------------------------------
 # Result container
@@ -178,7 +179,27 @@ class LinearizedSystem:
 # ---------------------------------------------------------------------------
 
 
-def linearize(eom, variables: SystemVariables, inputs=None) -> LinearizedSystem:
+def _failed_row_stage(trace, stage):
+    """``trace.failed_at`` for ``linearize``: the first stage of the failing row that is
+    not recorded (``dE[row]``, then ``bucket``/``raw``/``block`` of the last symbol), or
+    *stage* (``validation``, ``row[label]``) when that cannot be told."""
+    if not stage.startswith("row["):
+        return stage
+    label = stage[4:-1]
+    names = [n for n in trace.stage_names() if n.split("[", 1)[-1].startswith(label + "]")]
+    if f"dE[{label}]" not in names:
+        return f"dE[{label}]"
+    last = names[-1]
+    kind, _, rest = last.partition("[")
+    following = {"bucket": "raw", "raw": "block"}.get(kind)
+    if following is not None:
+        return f"{following}[{rest}"
+    return f"bucket[{label}]"
+
+
+def linearize(
+    eom, variables: SystemVariables, inputs=None, params=(), *, trace=None
+) -> LinearizedSystem:
     """Linearize the equations of motion along an arbitrary trajectory.
 
     Parameters
@@ -189,6 +210,16 @@ def linearize(eom, variables: SystemVariables, inputs=None) -> LinearizedSystem:
         The configuration variables used for ``compute_eom``.
     inputs : list[Scalar | Vector], optional
         Input symbols (forces, torques, thrust). Their variations form δu.
+    params : list, optional
+        The prescribed parameters passed to ``compute_eom(..., params=...)``. Prescribed
+        parameters are not supported by ``linearize`` yet: a term carrying the variation
+        of a declared param raises ``AlgebraicError`` saying so (without ``params`` the
+        message cannot tell a param from a missing input or a missing ``Constant``).
+    trace : LinearizationTrace, optional
+        Keyword only. Filled per dynamic row with δE, the partition buckets, the raw
+        coefficients (before ``full_simplify`` and before the mass blocks are negated)
+        and the final blocks; see ``LinearizationTrace``. Cleared when the call
+        starts; after an exception ``trace.failed_at`` names the stage that raised.
 
     Returns
     -------
@@ -213,99 +244,127 @@ def linearize(eom, variables: SystemVariables, inputs=None) -> LinearizedSystem:
         incompletely distributed term), or one only inside a non-canonical calculus
         node, or a coefficient could not be factored.
     """
-    _check_variables(variables, caller="linearize")
-    cfg_vars, cfg_perts, vel_perts = _perturbation_variables(variables)
-    _check_eom(eom, variables)
-    states = cfg_perts + vel_perts
-    dstates = [s.t_diff() for s in states]
-    inputs = _check_inputs(inputs, variables, states + dstates)
-    input_perts = [u.delta() for u in inputs]
-    dvel_perts = dstates[len(cfg_perts) :]
+    if trace is not None:
+        trace._reset()
+    stage = "validation"
+    try:
+        _check_variables(variables, caller="linearize")
+        cfg_vars, cfg_perts, vel_perts = _perturbation_variables(variables)
+        _check_eom(eom, variables)
+        param_names = _param_names(params)
+        debug = debug_enabled()
+        if debug:
+            from geomech.utils.invariants import check_tree
 
-    col_types = {}
-    for sym in states + dstates + input_perts:
-        col_types[str(sym)] = sym.type
+            for _, eq in eom.values():
+                check_tree(eq)
+        record = stage_recorder(trace, "linearize")
+        states = cfg_perts + vel_perts
+        dstates = [s.t_diff() for s in states]
+        inputs = _check_inputs(inputs, variables, states + dstates)
+        input_perts = [u.delta() for u in inputs]
+        dvel_perts = dstates[len(cfg_perts) :]
 
-    rows, row_types = [], {}
-    M, A, B = {}, {}, {}
+        col_types = {}
+        for sym in states + dstates + input_perts:
+            col_types[str(sym)] = sym.type
 
-    # ---- kinematic rows -------------------------------------------------
-    for i, var in enumerate(cfg_vars):
-        label = "kin:" + str(var)
-        cfg, vel = cfg_perts[i], vel_perts[i]
-        row_type = cfg.type
-        rows.append(label)
-        row_types[label] = row_type
-        M[label] = {str(d): _zero_block(row_type, d.type) for d in dstates}
-        A[label] = {str(s): _zero_block(row_type, s.type) for s in states}
-        B[label] = {str(u): _zero_block(row_type, u.type) for u in input_perts}
+        rows, row_types = [], {}
+        M, A, B = {}, {}, {}
 
-        M[label][str(dstates[i])] = One if row_type == ExprType.SCALAR else IdentityMatrix
-        if isinstance(var, S2):
-            omega = var.get_tangent_vector()
-            qqT = VVMul(var, Transpose(var))
-            A[label][str(cfg)] = MMMul(qqT, Hat(omega))
-            A[label][str(vel)] = MAdd(IdentityMatrix, SMMul(qqT, -1))
-        elif isinstance(var, SO3):
-            A[label][str(cfg)] = SMMul(Hat(var.get_tangent_vector()), -1)
-            A[label][str(vel)] = IdentityMatrix
-        else:
-            A[label][str(vel)] = One if row_type == ExprType.SCALAR else IdentityMatrix
+        # ---- kinematic rows -------------------------------------------------
+        for i, var in enumerate(cfg_vars):
+            label = "kin:" + str(var)
+            cfg, vel = cfg_perts[i], vel_perts[i]
+            row_type = cfg.type
+            rows.append(label)
+            row_types[label] = row_type
+            M[label] = {str(d): _zero_block(row_type, d.type) for d in dstates}
+            A[label] = {str(s): _zero_block(row_type, s.type) for s in states}
+            B[label] = {str(u): _zero_block(row_type, u.type) for u in input_perts}
 
-    # ---- dynamic rows ---------------------------------------------------
-    # Priority order for assigning a term to its perturbation symbol: the most
-    # deeply wrapped symbols first, so that a term in d/dt(δv) is never tested
-    # for δv (which would raise inside _has_algebraic).
-    priority = dvel_perts + vel_perts + cfg_perts + input_perts
-    all_perts = priority + [d for d in dstates[: len(cfg_perts)]]
-    n_mass = len(dvel_perts)
-    n_state = n_mass + len(vel_perts) + len(cfg_perts)
-
-    for label, (var_vec, eq) in eom.items():
-        row_type = var_vec.type
-        rows.append(label)
-        row_types[label] = row_type
-        M[label] = {str(d): _zero_block(row_type, d.type) for d in dstates}
-        A[label] = {str(s): _zero_block(row_type, s.type) for s in states}
-        B[label] = {str(u): _zero_block(row_type, u.type) for u in input_perts}
-
-        dE = expand(full_simplify(eq.delta()))
-        if _is_zero_block(dE):
-            continue
-        buckets = _partition_terms(dE, priority, label)
-
-        # Route by position in ``priority`` (identity), never by printed name.
-        for index, terms in enumerate(buckets):
-            if not terms:
-                continue
-            sym = priority[index]
-            part = _combine(terms, row_type)
-            coeff = full_simplify(extract_linear_coeff(part, sym))
-            _check_coefficient_free(coeff, all_perts, part, label)
-            is_mass = index < n_mass
-            if is_mass:
-                coeff = full_simplify(_negate(coeff))
-            if row_type == ExprType.SCALAR and sym.type == ExprType.VECTOR:
-                coeff = Transpose(coeff)
-            key = str(sym)
-            if is_mass:
-                M[label][key] = coeff
-            elif index < n_state:
-                A[label][key] = coeff
+            M[label][str(dstates[i])] = One if row_type == ExprType.SCALAR else IdentityMatrix
+            if isinstance(var, S2):
+                omega = var.get_tangent_vector()
+                qqT = VVMul(var, Transpose(var))
+                A[label][str(cfg)] = MMMul(qqT, Hat(omega))
+                A[label][str(vel)] = MAdd(IdentityMatrix, SMMul(qqT, -1))
+            elif isinstance(var, SO3):
+                A[label][str(cfg)] = SMMul(Hat(var.get_tangent_vector()), -1)
+                A[label][str(vel)] = IdentityMatrix
             else:
-                B[label][key] = coeff
+                A[label][str(vel)] = One if row_type == ExprType.SCALAR else IdentityMatrix
 
-    return LinearizedSystem(
-        rows=rows,
-        states=states,
-        dstates=dstates,
-        inputs=input_perts,
-        M=M,
-        A=A,
-        B=B,
-        row_types=row_types,
-        col_types=col_types,
-    )
+        # ---- dynamic rows ---------------------------------------------------
+        # Priority order for assigning a term to its perturbation symbol: the most
+        # deeply wrapped symbols first, so that a term in d/dt(δv) is never tested
+        # for δv (which would raise inside _has_algebraic).
+        priority = dvel_perts + vel_perts + cfg_perts + input_perts
+        all_perts = priority + [d for d in dstates[: len(cfg_perts)]]
+        n_mass = len(dvel_perts)
+        n_state = n_mass + len(vel_perts) + len(cfg_perts)
+
+        for label, (var_vec, eq) in eom.items():
+            stage = f"row[{label}]"
+            row_type = var_vec.type
+            rows.append(label)
+            row_types[label] = row_type
+            M[label] = {str(d): _zero_block(row_type, d.type) for d in dstates}
+            A[label] = {str(s): _zero_block(row_type, s.type) for s in states}
+            B[label] = {str(u): _zero_block(row_type, u.type) for u in input_perts}
+
+            dE = expand(full_simplify(eq.delta()))
+            if record is not None:
+                record(f"dE[{label}]", dE)
+            if _is_zero_block(dE):
+                continue
+            buckets = _partition_terms(dE, priority, label, param_names)
+
+            # Route by position in ``priority`` (identity), never by printed name.
+            for index, terms in enumerate(buckets):
+                if not terms:
+                    continue
+                sym = priority[index]
+                part = _combine(terms, row_type)
+                key = str(sym)
+                if record is not None:
+                    record(f"bucket[{label}][{key}]", part)
+                raw = extract_linear_coeff(part, sym)
+                if record is not None:
+                    record(f"raw[{label}][{key}]", raw)
+                coeff = full_simplify(raw)
+                _check_coefficient_free(coeff, all_perts, part, label)
+                is_mass = index < n_mass
+                if is_mass:
+                    coeff = full_simplify(_negate(coeff))
+                if row_type == ExprType.SCALAR and sym.type == ExprType.VECTOR:
+                    coeff = Transpose(coeff)
+                if record is not None:
+                    record(f"block[{label}][{key}]", coeff)
+                if debug:
+                    check_tree(coeff)
+                if is_mass:
+                    M[label][key] = coeff
+                elif index < n_state:
+                    A[label][key] = coeff
+                else:
+                    B[label][key] = coeff
+
+        return LinearizedSystem(
+            rows=rows,
+            states=states,
+            dstates=dstates,
+            inputs=input_perts,
+            M=M,
+            A=A,
+            B=B,
+            row_types=row_types,
+            col_types=col_types,
+        )
+    except Exception as err:
+        if trace is not None:
+            trace._fail(_failed_row_stage(trace, stage), err)
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -436,7 +495,58 @@ def _combine(terms, row_type):
     return VAdd(*terms)
 
 
-def _partition_terms(dE, priority, label):
+def _param_names(params):
+    """Printed names of the declared prescribed parameters (``params`` of compute_eom)."""
+    if isinstance(params, (Expr, str)) or not hasattr(params, "__iter__"):
+        hint = f"; write params=[{params}]" if isinstance(params, Expr) else ""
+        raise TypeError(
+            f"linearize: params must be a sequence of leaves, got {type(params).__name__}"
+            f" {str(params)!r}{hint}"
+        )
+    return {str(p) for p in params}
+
+
+def _variation_symbols(term):
+    """``{printed δs: printed s}`` for every ``Variation`` node in *term* (outermost)."""
+    found = {}
+    stack = [term]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, Variation):
+            inner = node.expr
+            while isinstance(inner, TimeDerivative):
+                inner = inner.expr
+            found[str(node)] = str(inner)
+            continue
+        stack.extend(getattr(node, "nodes", None) or ())
+    return found
+
+
+def _no_perturbation_hint(term, param_names):
+    """The remedy part of the "no perturbation symbol" message for *term*."""
+    symbols = _variation_symbols(term)
+    params = sorted({s for s in symbols.values() if s in param_names})
+    if params:
+        names = ", ".join(f"'{p}'" for p in params)
+        return (
+            f" It carries the variation of the prescribed parameter(s) {names} declared in"
+            " params: linearize does not support prescribed parameters yet (the variation"
+            " of a prescribed parameter vanishes along the reference, but its rate does not"
+            " in general)."
+        )
+    if symbols:
+        listed = ", ".join(f"'{d}' (of '{s}')" for d, s in sorted(symbols.items()))
+        return (
+            f" It carries {listed}, which is neither a configuration, velocity nor input"
+            " variation. If the symbol is an input, list it in `inputs`; if it is a"
+            " constant, give it attr=['Constant']; if it is a prescribed parameter"
+            " (compute_eom(..., params=[...])), linearize does not support prescribed"
+            " parameters yet (pass params=[...] to linearize to have it say so)."
+        )
+    return " Is an input missing from `inputs`, or a symbol missing the 'Constant' attribute?"
+
+
+def _partition_terms(dE, priority, label, param_names=frozenset()):
     """Assign every additive term of *dE* to exactly one perturbation symbol.
 
     Returns one list of terms per entry of *priority* (same order). A term that
@@ -466,8 +576,8 @@ def _partition_terms(dE, priority, label):
             raise AlgebraicError(
                 f"linearize: in row '{label}', the term '{term}' of the variation"
                 " contains no perturbation symbol (configuration, velocity or input"
-                " variation); the linearization is incomplete. Is an input missing"
-                " from `inputs`, or a symbol missing the 'Constant' attribute?"
+                " variation); the linearization is incomplete."
+                + _no_perturbation_hint(term, param_names)
             )
         for other in priority[owner + 1 :]:
             if _occurs_outside(term, other, priority[owner]):
@@ -502,13 +612,15 @@ def _check_coefficient_free(coeff, all_perts, part, label):
     for other in all_perts:
         try:
             leftover = _has_algebraic(coeff, other)
-        except AlgebraicError:
-            leftover = True
+            inner = None
+        except AlgebraicError as err:
+            leftover, inner = True, err
         if leftover:
+            detail = f" ({inner})" if inner is not None else ""
             raise AlgebraicError(
                 f"linearize: in row '{label}', the coefficient '{coeff}' extracted from"
-                f" '{part}' still contains the perturbation '{other}'"
-            )
+                f" '{part}' still contains the perturbation '{other}'{detail}"
+            ) from inner
 
 
 def _negate(expr):

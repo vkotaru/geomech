@@ -93,3 +93,15 @@ class NonLinearError(Exception):
 
     def __init__(self, msg=""):
         super().__init__(msg)
+
+
+class InvariantError(Exception):
+    """An expression tree violates a structural invariant of the engine.
+
+    Raised by ``geomech.check_tree`` (``geomech/utils/invariants.py``); the message names
+    the invariant and the offending subtree, with its path from the root
+    (``root.R.0.L``: right child, first addend, left child).
+    """
+
+    def __init__(self, msg=""):
+        super().__init__(msg)

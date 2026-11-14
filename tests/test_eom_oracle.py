@@ -216,6 +216,27 @@ def row_damping_work():
     return System(L, dW, SystemVariables(vectors=[x]), [f], dict(m=m, A=A, x=x))
 
 
+def row_kinetic_energy():
+    """L = ½ ẋᵀA ẋ − ½ xᵀK x (A not symmetric, K symmetric): ½(A + Aᵀ) ẍ + K x = f.
+
+    The kinetic energy is written with rows; ``collect`` turns the inner products that
+    hold d/dt(δx) into ``Dot`` so that integration by parts reaches them (phase 4.2).
+    """
+    m, K, A, e3, x, f = _row_symbols()
+    v = x.t_diff()
+    L = v.T() * A * v / 2 - x.T() * K * x / 2
+    return System(L, Dot(x.delta(), f), SystemVariables(vectors=[x]), [f], dict(A=A, K=K, x=x))
+
+
+def row_kinetic_energy_so3():
+    """Free rigid body with a row kinetic energy, L = ½ Ωᵀ J Ω: Lee et al. Eq. 6.16."""
+    J = Matrix("J", attr=["Constant", "SymmetricMatrix"])
+    R, M = SO3("R"), Vector("M")
+    Om, eta = R.get_tangent_vector(), R.get_variation_vector()
+    L = Om.T() * J * Om / 2
+    return System(L, Dot(eta, M), SystemVariables(matrices=[R]), [M], dict(J=J, R=R, M=M))
+
+
 SYSTEMS = [
     vbl_systems.point_mass_r3,
     vbl_systems.spring_mass_r,
@@ -244,6 +265,8 @@ SYSTEMS = [
     row_quadratic_form,
     row_shifted_spring,
     row_damping_work,
+    row_kinetic_energy,
+    row_kinetic_energy_so3,
 ]
 
 

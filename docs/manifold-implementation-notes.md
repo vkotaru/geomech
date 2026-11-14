@@ -1,4 +1,7 @@
-# Manifold Implementation Notes
+# Manifold Rules: Derivation
+
+The kinematic substitutions of pipeline stage 2 ([Pipeline](pipeline.md)), why the S²
+rule has a factor 2, and how the manifold points are kept out of the tree.
 
 ## S² variation rule: δω = ξ̇ − 2 ω × ξ
 
@@ -66,34 +69,28 @@ directly and never forming δω). The two are related by the Jacobi identity; th
 formulation needs the extra simplification rules below (BAC-CAB, skew-symmetry) because it
 produces more intermediate cross products.
 
-### S² simplification rules (`vector_rules.py`)
-- BAC-CAB identity: `cross(q, cross(a, q)) = a` when `‖q‖ = 1` and `a` is tangent
-- Variants: `cross(q, cross(q, a)) = −a`, `cross(cross(q, a), q) = a`, etc.
-- `cross(a, cross(a, q)) = −q · dot(a, a)` when `a` is tangent
-- Recursion into Cross children, VAdd, SVMul
+### Rules that rely on the manifold structure
 
-Tangency is only assumed for `TS2` leaves (ω, ξ) and for `Cross(·, q)`; it is never
-assumed for `d/dt(ω)`, `d/dt(ξ)` or the substituted δω, which is correct because δω is
-not tangent.
+The rewrite rules are listed, with the hypothesis each one checks, in the docstrings of
+their modules; the ones that depend on S² or SO(3) are:
 
-### Simplification rules (`simplify.py`)
-- `Hat(v) * w → Cross(v, w)` in MVMul
-- `MMMul(A, B) * v → A * (B * v)` matrix associativity in MVMul
-- `Transpose(Hat(v)) → −Hat(v)` (skew-symmetry)
-- `Transpose(SMMul(M, s)) → SMMul(Transpose(M), s)`
-- `Transpose(MMMul(A, B)) → MMMul(Transpose(B), Transpose(A))`
-- `Hat(Vee(X)) → X` only when X is skew-symmetric (a `Hat`, a `SkewSymmMatrix`, or a
-  scalar multiple / sum / transpose of such); `Vee(Hat(v)) → v` always
+- `vector.dot_tangent_orthogonal` (`ω·q = 0`), `vector.dot_unit_norm` (`q·q = 1`),
+  `vector.s2_tangent_recovery` (`q × (a × q) = a`), `vector.s2_tangent_negated`
+  (`q × (q × a) = −a`) and `vector.s2_double_cross` (`a × (a × q) = −q (a·a)`) in
+  `vector_identities.py`. Tangency is only assumed for a `TS2` leaf of the same point (compared
+  by name) and for `Cross(·, q)`; never for `d/dt(ω)`, `d/dt(ξ)` or the substituted δω,
+  which is correct because δω is not tangent. `vector_rules` recurses through `Add`,
+  `Mul`, `VAdd`, `SVMul` and `Cross` only.
+- `simplify.orthogonal_transpose` (`RᵀR = RRᵀ = I` for an `SO3` point),
+  `simplify.mvmul_hat_to_cross` (`Hat(v) w = v × w`), `simplify.transpose_hat_skew`
+  (`Hat(v)ᵀ = −Hat(v)`), `simplify.hat_vee_skew` (`Hat(Vee(X)) = X` for skew-symmetric `X`
+  only) and `simplify.vee_hat` in `simplification.py`.
+- `expand.hat_over_vadd` (`Hat(a + b) = Hat(a) + Hat(b)`) in `expansion.py`.
+- `collect.strip_rotation` (`Dot(R a, R b) = Dot(a, b)`), `collect.peel_matrix`
+  (`Dot(M f(v), w) = Dot(f(v), Mᵀ w)`, one matrix layer per step, only when the target is
+  in the vector operand) and `collect.triple_product_*` (one name per rotation) in `collecting.py`.
 
-### Expand rules (`expand.py`)
-- `Hat(a + b) → Hat(a) + Hat(b)` (linearity)
-- `Vee(a + b) → Vee(a) + Vee(b)` (linearity)
-
-### Collect rules (`collect.py`)
-- `Dot(R*a, R*b) → Dot(a, b)` for SO3 rotation stripping
-- `Dot(Cross(vec, a), b)` — flip and use the scalar triple product
-- `Dot(M*f(vec), w) → Dot(f(vec), Mᵀ*w)` — the matrix is peeled off the side holding the
-  target, one layer per step, until the target is a direct operand
+`geomech.set_trace(True)` logs each firing ([Pipeline](pipeline.md#which-rule-fired)).
 
 ---
 
@@ -102,10 +99,10 @@ not tangent.
 ### Source
 - `geomech/core/base/expressions.py` — SO3/TS2/TSO3 types
 - `geomech/core/transformations/manifold_rules.py` — S2 + SO3 substitutions
-- `geomech/core/transformations/vector_rules.py` — S2 cross product identities
-- `geomech/core/transformations/simplify.py` — Hat/Transpose/associativity
-- `geomech/core/transformations/expand.py` — Hat/Vee linearity
-- `geomech/core/math/collect.py` — SO3 rotation stripping, matrix peeling
+- `geomech/core/transformations/vector_identities.py` — S2 cross product identities
+- `geomech/core/transformations/simplification.py` — Hat/Transpose/associativity
+- `geomech/core/transformations/expansion.py` — Hat/Vee linearity
+- `geomech/core/math/collecting.py` — SO3 rotation stripping, matrix peeling
 
 ### Tests
 - `tests/test_manifold_rules.py` — S2/SO3 manifold substitutions

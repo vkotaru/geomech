@@ -8,7 +8,7 @@ from geomech.core.base.expressions import (
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.geometry import Cross, Dot
 from geomech.core.operations.multiplication import MMMul, Mul, MVMul, SMMul, SVMul
-from geomech.core.transformations.pull import pull
+from geomech.core.transformations.pulling import pull
 
 # ---------------------------------------------------------------------------
 # Scalar: Dot

@@ -1,25 +1,50 @@
-"""Algebraic identities for vector/matrix geometry operations.
+"""Algebraic identities for vector/matrix geometry operations (``vector_rules``).
 
-Rules applied:
-  - cross(x, x) = 0              self-cross is zero vector
-  - cross(x, 0) = cross(0, x) = 0  zero absorption
-  - dot(x, x) = 1                when x has unit norm
-  - dot(x, 0) = dot(0, x) = 0    zero absorption
-  - dot(x, cross(x, y)) = 0      orthogonality
-  - dot(x, cross(y, x)) = 0      orthogonality
-  - dot(x, cross(y, y)) = 0      self-cross is zero
-  - Same rules when cross is on the left side of dot (commutativity)
-  - dot(ω, q) = 0                tangent vector orthogonal to S2 manifold point
-  - cross(q, cross(ω, q)) = ω    S2 tangent recovery (unit norm + orthogonality)
-  - Transpose(Transpose(x)) = x  double transpose cancellation
-  - Hat(0) = ZeroMatrix           hat of zero vector
-  - Linearity through Add and Mul
+One top-down pass. It recurses through ``Add``, ``Mul``, ``VAdd``, ``SVMul`` and
+``Cross`` only: below a ``Dot`` operand, an ``MVMul``, ``Hat``, ``MMMul``, ``MAdd``,
+``Transpose`` or a calculus node the rules do not fire (the pipeline's ``expand`` lifts
+``Cross`` to the top of each term first; see ``docs/pipeline.md``). Equality of two
+operands is ``==`` (type + printed name), so two ``S2("q")`` objects are the same point.
+
+Rules (name, identity, hypothesis the code checks):
+
+  vector.dot_zero                  Dot(x, 0) = Dot(0, x) = 0
+                                   an operand is flagged zero
+  vector.dot_cross_orthogonal      Dot(x, Cross(x, y)) = Dot(x, Cross(y, x)) = 0,
+                                   Dot(z, Cross(y, y)) = 0, and the mirror with the Cross
+                                   on the left; x equal to a Cross operand, or the two
+                                   Cross operands equal
+  vector.dot_unit_norm             Dot(q, q) = 1
+                                   both operands flagged unit norm (S2 points) and equal
+  vector.dot_tangent_orthogonal    Dot(w, q) = Dot(q, w) = 0
+                                   w a TS2 leaf (ω or ξ) whose S2 point equals q by name
+  vector.cross_self                Cross(x, x) = 0
+                                   operands equal
+  vector.cross_zero                Cross(x, 0) = Cross(0, x) = 0
+                                   an operand is flagged zero
+  vector.cross_scaled_self         Cross(a, a s) = Cross(a s, a) = 0
+                                   the SVMul's vector equals the other operand
+  vector.s2_tangent_recovery       Cross(q, Cross(a, q)) = a and Cross(Cross(q, a), q) = a
+                                   q an S2 point (unit norm), a tangent to q: a TS2 leaf
+                                   of q (by name) or a Cross with q as an operand
+  vector.s2_tangent_negated        Cross(q, Cross(q, a)) = -a and Cross(Cross(a, q), q) = -a
+                                   same hypothesis as vector.s2_tangent_recovery
+  vector.s2_double_cross           Cross(a, Cross(a, q)) = -q (a·a)
+                                   q an S2 point, a tangent to q (as above)
+  vector.transpose_transpose       Transpose(Transpose(x)) = x
+                                   none
+  vector.hat_zero                  Hat(0) = 0 (matrix)
+                                   the operand is flagged zero
+
+The tangency test does not look inside ``TimeDerivative``/``Variation``: ``ω̇ ⊥ q`` holds
+on S² but needs a constraint system to prove, so ``Cross(q, Cross(ω̇, q))`` is kept.
 """
 
 from geomech.core.base.expressions import S2, TS2, Scalar, ZeroMatrix, ZeroVector
 from geomech.core.operations.addition import Add, VAdd
 from geomech.core.operations.geometry import Cross, Dot, Hat, Transpose
 from geomech.core.operations.multiplication import Mul, SVMul
+from geomech.utils.trace import rule
 
 
 def _is_orthogonal_dot_cross(vec, cross_expr):
@@ -66,32 +91,32 @@ def _try_s2_cross_reduction(expr):
     if isinstance(l, S2) and isinstance(r, Cross) and r.right == l:
         a = r.left
         if _is_tangent_to_s2(a, l):
-            return a
+            return rule("vector.s2_tangent_recovery", expr, a)
 
     # Pattern: Cross(q, Cross(q, a)) = -a (when a is tangent)
     if isinstance(l, S2) and isinstance(r, Cross) and r.left == l:
         a = r.right
         if _is_tangent_to_s2(a, l):
-            return SVMul(a, _neg1)
+            return rule("vector.s2_tangent_negated", expr, SVMul(a, _neg1))
 
     # Pattern: Cross(Cross(q, a), q) = a (when a is tangent)
     if isinstance(l, Cross) and isinstance(r, S2) and l.left == r:
         a = l.right
         if _is_tangent_to_s2(a, r):
-            return a
+            return rule("vector.s2_tangent_recovery", expr, a)
 
     # Pattern: Cross(Cross(a, q), q) = -a (when a is tangent)
     if isinstance(l, Cross) and isinstance(r, S2) and l.right == r:
         a = l.left
         if _is_tangent_to_s2(a, r):
-            return SVMul(a, _neg1)
+            return rule("vector.s2_tangent_negated", expr, SVMul(a, _neg1))
 
     # Pattern: Cross(a, Cross(a, q)) = -q*(a·a) when a is tangent to q
     if isinstance(r, Cross) and r.right is not None and isinstance(r.right, S2) and l == r.left:
         q = r.right
         a = l
         if _is_tangent_to_s2(a, q):
-            return SVMul(q, Mul(Dot(a, a), _neg1))
+            return rule("vector.s2_double_cross", expr, SVMul(q, Mul(Dot(a, a), _neg1)))
 
     return None
 
@@ -122,6 +147,7 @@ _ONE = lambda: Scalar("1", value=1, attr=["Constant", "Ones"])
 
 
 def vector_rules(expr):
+    """Apply the geometric identities listed in the module docstring, top down, once."""
     match expr:
         # --- Linearity through scalar and vector ops ---
         case Add(nodes=nodes):
@@ -140,47 +166,47 @@ def vector_rules(expr):
         case Dot():
             # zero absorption: dot(0, x) or dot(x, 0)
             if expr.left.is_zero or expr.right.is_zero:
-                return _ZERO()
+                return rule("vector.dot_zero", expr, _ZERO())
 
             match (expr.left, expr.right):
                 # dot(x, cross(a, b)) — cross on right
                 case (_, Cross()):
                     if _is_orthogonal_dot_cross(expr.left, expr.right):
-                        return _ZERO()
+                        return rule("vector.dot_cross_orthogonal", expr, _ZERO())
                     return expr
 
                 # dot(cross(a, b), x) — cross on left
                 case (Cross(), _):
                     if _is_orthogonal_dot_cross(expr.right, expr.left):
-                        return _ZERO()
+                        return rule("vector.dot_cross_orthogonal", expr, _ZERO())
                     return expr
 
                 # dot(q, q) = 1 when unit norm
                 case _ if (
                     expr.left.is_unit_norm and expr.right.is_unit_norm and expr.left == expr.right
                 ):
-                    return _ONE()
+                    return rule("vector.dot_unit_norm", expr, _ONE())
 
                 # dot(ω, q) = 0 — tangent vector orthogonal to manifold point
                 case _ if _is_tangent_orthogonal(expr.left, expr.right):
-                    return _ZERO()
+                    return rule("vector.dot_tangent_orthogonal", expr, _ZERO())
 
                 case _:
                     return expr
 
         # --- Cross product rules ---
         case Cross() if expr.left == expr.right:
-            return ZeroVector
+            return rule("vector.cross_self", expr, ZeroVector)
 
         case Cross() if expr.left.is_zero or expr.right.is_zero:
-            return ZeroVector
+            return rule("vector.cross_zero", expr, ZeroVector)
 
         # cross(a, s*a) = s*(a × a) = 0  and  cross(s*a, a) = 0
         case Cross() if isinstance(expr.right, SVMul) and expr.right.left == expr.left:
-            return ZeroVector
+            return rule("vector.cross_scaled_self", expr, ZeroVector)
 
         case Cross() if isinstance(expr.left, SVMul) and expr.left.left == expr.right:
-            return ZeroVector
+            return rule("vector.cross_scaled_self", expr, ZeroVector)
 
         # S2 BAC-CAB identity with tangent orthogonality.
         # First recurse into children so inner reductions fire before outer.
@@ -193,11 +219,11 @@ def vector_rules(expr):
 
         # --- Transpose rules ---
         case Transpose() if isinstance(expr.expr, Transpose):
-            return expr.expr.expr
+            return rule("vector.transpose_transpose", expr, expr.expr.expr)
 
         # --- Hat rules ---
         case Hat() if expr.expr.is_zero:
-            return ZeroMatrix
+            return rule("vector.hat_zero", expr, ZeroMatrix)
 
         case _:
             return expr

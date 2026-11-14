@@ -17,9 +17,9 @@ The pipeline:
 
 1. Define symbolic scalars, vectors, and matrices
 2. Build kinetic/potential energy and virtual work expressions
-3. Call `compute_eom()` -- the library takes variations, applies the
-   product rule, expands, integrates by parts, simplifies, and
-   extracts the equations
+3. Call `compute_eom()` -- the library takes the variation of the action, applies the
+   manifold kinematics, simplifies, integrates by parts and extracts the equations
+   ([pipeline, stage by stage](docs/pipeline.md))
 4. Optionally call `to_standard_form()` for `M(q) a + f + G u = 0`, or
    `linearize()` for the variation-based linearization `M δẋ = A δx + B δu`
    along a trajectory
@@ -73,20 +73,36 @@ def _eliminate(expr):
     match expr:
         case Dot():                          # binary
             l, r = _eliminate(expr.left), _eliminate(expr.right)
-            if l.is_zero or r.is_zero:
-                return _ZERO()
+            if _is_zero(l) or _is_zero(r):
+                return rule("simplify.dot_zero", expr, Zero)
             return Dot(l, r)
         case Hat():                          # unary
             inner = _eliminate(expr.expr)
-            if isinstance(inner, Vee):
-                return inner.expr            # Hat(Vee(M)) = M
+            if isinstance(inner, Vee) and _is_skew_symmetric(inner.expr):
+                return rule("simplify.hat_vee_skew", expr, inner.expr)  # Hat(Vee(X)) = X
             return Hat(inner)
         case Add(nodes=nodes):               # n-ary
-            return _simplify_add([_eliminate(n) for n in nodes])
+            children = [_eliminate(n) for n in nodes]
+            out = _simplify_add(children)
+            if _trace._TRACE_RULES:          # a fold logs only its own work
+                rule("simplify.add_fold", _folded_from(Add, children, expr), out)
+            return out
 ```
 
-The full pipeline (`compute_eom`) applies variation → expand → integrate by parts →
-simplify → extract coefficients, each as a recursive tree rewrite.
+Every rewrite is logged through `rule(name, before, after)`; the names, with the hypothesis
+each rule needs, are listed in the module docstrings, and `GEOMECH_TRACE=1` logs every
+firing.
+
+The full pipeline (`compute_eom`), each stage a recursive tree rewrite:
+
+δS = δL + δW → manifold rules (δω, δΩ) → `full_simplify` → integration by parts
+(`expand`, `full_simplify`, then per variation vector: `collect` → IBP → `full_simplify`) →
+`expand` → extract the coefficient of each variation vector → `full_simplify`.
+
+[`docs/pipeline.md`](docs/pipeline.md) has one paragraph per stage;
+`compute_eom(..., trace=EOMTrace())` keeps every stage, `GEOMECH_DEBUG=1` logs them, and
+`GEOMECH_TRACE=1` logs every named rewrite rule that fires
+([`docs/troubleshooting.md`](docs/troubleshooting.md)).
 
 ## Installation
 
@@ -197,7 +213,7 @@ Transpose(x)   # transpose (x.T() is the same; Transpose(Transpose(x)) is x)
 R.T() * x      # a transposed matrix multiplies like a matrix: R^T x
 x.T() * y      # row times column: the inner product x^T y; x * y.T() is the outer product
 x.T() * K * x  # a row times a matrix is a row: the quadratic form x^T K x
-# (in a potential or in dW; in a kinetic energy write Dot(v, K * v): integration by parts handles Dot only)
+# (also in a kinetic energy, v.T() * K * v: collect turns it into Dot(v, K * v) for integration by parts)
 2 * x, a + 1, 1 - a, -x, x / 2   # numbers on either side (a number adds only to a scalar); / divides by a number only
 ```
 
