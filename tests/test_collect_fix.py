@@ -45,7 +45,7 @@ class TestGyroscopicCouplingSO3:
     """
 
     EXPECTED = (
-        "(J\\frac{d}{dt}(\\Omega_{R})(-1.0)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
+        "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
         "+JCross(Cross(\\Omega_{R},(R)'e3),b)+Cross(\\Omega_{R},JCross((R)'e3,b))(-1)"
         "+Cross((R)'e3,Cross(b,J\\Omega_{R}))(-1)+M)"
     )
@@ -73,8 +73,9 @@ class TestInertialAngularMomentumSO3:
     """
 
     EXPECTED = (
-        "(J\\frac{d}{dt}(\\Omega_{R})(-1.0)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
-        "+Cross(J\\Omega_{R},(R)'e3)+JCross(\\Omega_{R},(R)'e3)+Cross(\\Omega_{R},J(R)'e3)(-1)+M)"
+        "(J\\frac{d}{dt}(\\Omega_{R})(-1)+Cross(\\Omega_{R},J\\Omega_{R})(-1)"
+        "+Cross(J\\Omega_{R},(R)'e3)+JCross(\\Omega_{R},(R)'e3)+Cross(\\Omega_{R},J(R)'e3)(-1)"
+        "+M)"
     )
 
     def test_R_times_J_Omega(self):
@@ -99,15 +100,16 @@ class TestAnisotropicInertiaQdotForm:
         E = −(ω × q) × A(ω × q) − q × A(ω̇ × q) − q × A(ω × (ω × q))
             + 2 ω × (q × A(ω × q)) − q × (ω × A(ω × q)) − m g q × e₃ + f.
         Crashed with AlgebraicError before the fix (target two levels under A).
+        The new printed form is the same expression simplified further: the third term
+        prints as q × (A q)(ω·ω), since ω × (ω × q) = −q (ω·ω) for ω ⊥ q (phase 5a).
         """
         s, eom, _ = derive(ps.s2_anisotropic_qdot)
         expected = (
-            "(Cross(Cross(\\omega_{q},q),ACross(\\omega_{q},q))(-1.0)"
-            "+Cross(q,ACross(\\frac{d}{dt}(\\omega_{q}),q))(-1.0)"
-            "+Cross(q,ACross(\\omega_{q},Cross(\\omega_{q},q)))(-1.0)"
-            "+Cross(\\omega_{q},Cross(q,ACross(\\omega_{q},q)))(2.0)"
-            "+Cross(q,Cross(\\omega_{q},ACross(\\omega_{q},q)))(-1)"
-            "+Cross(q,e3)mg(-1)+f)"
+            "(Cross(Cross(\\omega_{q},q),ACross(\\omega_{q},q))(-1)"
+            "+Cross(q,ACross(\\frac{d}{dt}(\\omega_{q}),q))(-1)"
+            "+Cross(q,Aq)Dot(\\omega_{q},\\omega_{q})"
+            "+Cross(\\omega_{q},Cross(q,ACross(\\omega_{q},q)))(2)"
+            "+Cross(q,Cross(\\omega_{q},ACross(\\omega_{q},q)))(-1)+Cross(q,e3)mg(-1)+f)"
         )
         assert str(equation(eom, s.symbols["q"])) == expected
 
@@ -125,23 +127,20 @@ class TestRelativeRateCouplingSO3xSO3:
             p₂ × Ω₂ = −Ω₂ × J₂Ω₂ − kΩ₂ × QᵀΩ₁, δR₂-term k η₂·(Ω₂ × QᵀΩ₁):
             E₂ = −J₂Ω̇₂ − Ω₂ × J₂Ω₂ + 2kΩ₂ × QᵀΩ₁ − kQᵀ(Ω₁ × Ω₁) − kQᵀΩ̇₁ − kΩ₂ × QᵀΩ₁ + M₂.
         The engine keeps the identically-zero Q(Ω × Ω) terms (no rule descends into MVMul).
+        The new printed form is the same expression simplified further (phase 5a): the
+        Q(Ω × Ω) terms vanish and the k-cross terms are merged.
         Crashed with AlgebraicError before the fix.
         """
         s, eom, _ = derive(ps.so3_so3_relative_rate_coupling)
         assert str(equation(eom, s.symbols["R1"])) == (
-            "(J1\\frac{d}{dt}(\\Omega_{R1})(-1.0)+Cross(\\Omega_{R1},J1\\Omega_{R1})(-1)"
-            "+Cross(\\Omega_{R1},(R1)'R2\\Omega_{R2})k"
-            "+(R1)'R2Cross(\\Omega_{R2},\\Omega_{R2})(-1)k"
-            "+(R1)'R2\\frac{d}{dt}(\\Omega_{R2})(-1)k"
-            "+Cross(\\Omega_{R1},(R1)'R2\\Omega_{R2})(-1)k"
-            "+Cross((R1)'R2\\Omega_{R2},\\Omega_{R1})(-1)k+M1)"
+            "(J1\\frac{d}{dt}(\\Omega_{R1})(-1)+Cross(\\Omega_{R1},J1\\Omega_{R1})(-1)"
+            "+(R1)'R2\\frac{d}{dt}(\\Omega_{R2})k(-1)"
+            "+Cross((R1)'R2\\Omega_{R2},\\Omega_{R1})k(-1)+M1)"
         )
         assert str(equation(eom, s.symbols["R2"])) == (
-            "(J2\\frac{d}{dt}(\\Omega_{R2})(-1.0)+Cross(\\Omega_{R2},J2\\Omega_{R2})(-1)"
-            "+Cross(\\Omega_{R2},(R2)'R1\\Omega_{R1})k(2)"
-            "+(R2)'R1Cross(\\Omega_{R1},\\Omega_{R1})(-1)k"
-            "+(R2)'R1\\frac{d}{dt}(\\Omega_{R1})(-1)k"
-            "+Cross(\\Omega_{R2},(R2)'R1\\Omega_{R1})(-1)k+M2)"
+            "(J2\\frac{d}{dt}(\\Omega_{R2})(-1)+Cross(\\Omega_{R2},J2\\Omega_{R2})(-1)"
+            "+Cross(\\Omega_{R2},(R2)'R1\\Omega_{R1})k+(R2)'R1\\frac{d}{dt}(\\Omega_{R1})k(-1)"
+            "+M2)"
         )
 
 
@@ -155,7 +154,7 @@ class TestOffsetMassMatrixInertia:
         """
         s, eom, _ = derive(ps.so3_offset_mass_matrix_inertia)
         assert str(equation(eom, s.symbols["R"])) == (
-            "(Cross(\\rho,JCross(\\frac{d}{dt}(\\Omega_{R}),\\rho))(-1.0)"
+            "(Cross(\\rho,JCross(\\frac{d}{dt}(\\Omega_{R}),\\rho))(-1)"
             "+Cross(\\Omega_{R},Cross(\\rho,JCross(\\Omega_{R},\\rho)))(-1)+M)"
         )
 

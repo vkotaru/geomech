@@ -142,6 +142,7 @@ class TestIntegrateByParts:
         """Simple Dot(d/dt(eta), w) through the full pipeline.
 
         IBP gives Dot(-eta, d/dt(w)), simplify pulls -1 out → Mul(-1, Dot(eta, d/dt(w))).
+        Since phase 5a a numeric factor is placed last: Mul(Dot(eta, d/dt(w)), -1).
         """
         dot_eta, eta = dot_vectors
         w = Vector("w")
@@ -149,10 +150,10 @@ class TestIntegrateByParts:
         result = integrate_by_parts(expr, [dot_eta])
         # full_simplify pulls the -1 scalar out of the Dot
         assert isinstance(result, Mul)
-        assert result.left.value == -1
-        assert isinstance(result.right, Dot)
-        assert str(result.right.left) == "eta"
-        assert isinstance(result.right.right, TimeDerivative)
+        assert result.right.value == -1
+        assert isinstance(result.left, Dot)
+        assert str(result.left.left) == "eta"
+        assert isinstance(result.left.right, TimeDerivative)
 
     def test_flipped_dot_gets_collected_then_ibpd(self, dot_vectors):
         """Dot(w, d/dt(eta)) — collect flips it, then IBP applies."""
@@ -160,7 +161,8 @@ class TestIntegrateByParts:
         w = Vector("w")
         expr = Dot(w, dot_eta)
         result = integrate_by_parts(expr, [dot_eta])
-        # collect flips to Dot(dot_eta, w), then IBP → Mul(-1, Dot(eta, d/dt(w)))
+        # collect flips to Dot(dot_eta, w), then IBP → Mul(Dot(eta, d/dt(w)), -1)
+        # (a numeric factor is placed last since phase 5a)
         assert isinstance(result, Mul)
-        assert result.left.value == -1
-        assert isinstance(result.right, Dot)
+        assert result.right.value == -1
+        assert isinstance(result.left, Dot)

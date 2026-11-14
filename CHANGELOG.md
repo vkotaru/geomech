@@ -7,6 +7,34 @@ All notable changes to `geomech` are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- Simplifier completeness (phase 5a of `specs/fix-plan.md`); no derived equation changes
+  value, most print shorter:
+  - `vector_rules` and `pull` recurse through every node class with one structural helper
+    (`geomech.core.transformations.utils.rebuild`/`map_children`, shared with
+    `apply_manifold_rules`), so the geometric identities fire below a `Dot` operand, an
+    `MVMul`, `MMMul`, `SMMul`, `MAdd`, `VVMul`, `Hat`, `Vee`, `Transpose` or a calculus node:
+    `Dot(v, q×(ω×q)) → v·ω`, `J(a×a) → 0v`, `Q(Ω×Ω) → 0`. New `pull` rules
+    `pull.row_mvmul_scaled`, `pull.vvmul_scaled`, `pull.transpose_scaled`,
+    `pull.hat_scaled`, `pull.vee_scaled` (`Hat(v s) = Hat(v) s`, `(v s)ᵀ = vᵀ s`, ...).
+  - `expand.vee_over_madd`: `Vee(A + B) = Vee(A) + Vee(B)`.
+  - `simplify.transpose_skew` (`Sᵀ = −S` for a skew-symmetric leaf, sum or transpose),
+    `simplify.mmmul_reassociate` and `simplify.mmmul_combine` (the `MMMul` mirror of the
+    `MVMul` associativity: `A Rᵀ R → A`, `Rᵀ(R A) → A`); `IdentityMatrix` is flagged
+    symmetric and `Iᵀ` is the identity.
+  - Like terms are compared on flattened products: an addend is split into the product
+    of all its numeric literals, its other scalar factors (a multiset) and its vector or
+    matrix base. `x(2)y + xy(3) → xy(5)`, `v a − v a → 0v`, `(vᵀ s) w + s (vᵀ w)` merge;
+    the three `k Ω₁ × QΩ₂` terms of the SO(3)×SO(3) coupling now sum to one.
+  - `is_number_literal(expr)` (`geomech.core.base.expressions`): a scalar leaf printed as
+    its own value (`Number(2)`, `Zero`, `Scalar("0.5", value=0.5)`).
+  - `ibp.product_rule` names the rate `ȧ` that `ibp.dot_prefactor` builds, and the six
+    `collect.flip` call sites have their own names (`collect.flip_target_right`,
+    `collect.flip_cross_mvmul`, `collect.flip_mvmul_pair`, `collect.flip_mvmul_left`,
+    `collect.flip_mvmul_right`, `collect.flip_cross_left`).
+  - `specs/reviews/scripts/pinned_snapshot.py`: records every pipeline call of the test
+    suite and every builder system at one commit and replays them later, comparing each
+    output's value at fixed manifold states (and each linearization row along admissible
+    directions) and `check_eom`; the gate for changes that reprint pinned equations.
 - Debugging aids (phase 4; `docs/pipeline.md`, `docs/troubleshooting.md`):
   - `compute_eom(..., trace=EOMTrace())` (keyword only) keeps every stage — δL, δW, δS,
     after the manifold rules, after `full_simplify`, per integration-by-parts target the
@@ -138,6 +166,28 @@ All notable changes to `geomech` are recorded here. The format follows
   notebooks for the rigid pendulum, spherical pendulum, quadrotor and quadrotor with payload.
 
 ### Changed
+- Pinned equation strings change form (phase 5a; every changed output was checked to be
+  numerically identical, ≤ 1e-15 relative, at fixed states, see
+  `specs/reviews/phase5a-string-changes.md`):
+  - the numbers of a product are folded into one placed last, `(-1)mll → mll(-1)`,
+    `Mul(-1, Dot(…)) → Mul(Dot(…), -1)`;
+  - a float with an integer value is an `int`: `J\frac{d}{dt}(\Omega_{R})(-1.0)` is
+    now `…(-1)`, `(2.0)` is `(2)`; one equation no longer mixes `(-1)` and `(-1.0)`;
+  - terms that are identically zero on the manifold or like terms that were kept apart
+    are gone (the double spherical pendulum's two equations shrink from 14 and 12 terms
+    to 10 and 8).
+- `Scalar("m", value=2)` stays a symbol in every simplification and in `to_latex`
+  (decision D1): before, `m + l` with values was folded to `(5)` and the names lost. Only
+  `geomech.numeric` uses the value.
+- `linearize` on S²: blocks of an equation that changed form may differ as matrices from
+  the old ones by terms that vanish along admissible perturbations (`ξ ⊥ q`,
+  `q·δω = −ω·(ξ × q)`); every row `−M δẋ + A δx + B δu` is unchanged along such
+  directions (the blocks were never unique on S²). `MVMul(Transpose(Hat(a) + Hat(b)), w)`
+  and `Vee(Hat(a + b))` in an equation now linearize instead of raising.
+- Rule trace lines: a firing whose two sides have the same `repr` but a different `str`
+  shows the `str` forms, a side longer than 300 characters is cut around the first
+  difference, and a line whose two sides would print the same is not logged. `repr`
+  parenthesises a negated operand (`-(-hat(v:ρ*))`, `hat(v:ρ*)·(-(-1))`).
 - Engine errors reaching the user through a pipeline are re-raised with the same type,
   the original chained as `__cause__`, and the pipeline context: `compute_eom` names the
   variation vector being extracted and, when a time derivative of a variation vector
@@ -306,6 +356,16 @@ All notable changes to `geomech` are recorded here. The format follows
   `geomech`.
 
 ### Fixed
+- A rewrite under `TimeDerivative`/`Variation` that reduces the operand to a bare
+  `S2`/`SO3` leaf (`d/dt(q·(q·q))`, `d/dt(q·1)`, `δ(I q)`, `d/dt(RᵀR q)`) raised
+  `ValueError` from `simplify`/`full_simplify`; the node is now rebuilt in eager form,
+  `q.t_diff()` or `q.delta()` (`transformations.utils.calculus_node`).
+- The scalar factor of a vector or matrix term is normalised like a scalar chain:
+  `v·(2.0)` simplifies to `v(2)`, the same string as `v·(2)`.
+- `Number(10**400) * x` raised `OverflowError` in `simplify`; an `int` literal is
+  compared exactly.
+- `repr` of a named scalar with a value prints it as a constant symbol (`m*`), not as a
+  bare number.
 - `Transpose(R) * v`, `Transpose(R) * M` and `Transpose(R) * s` raised
   `ExpressionMismatchError` (the transpose was always treated as a row vector); they now
   build `MVMul`, `MMMul` and `SMMul`. `Transpose(v) * s` built the double transpose
