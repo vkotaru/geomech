@@ -64,7 +64,22 @@ intersphinx_mapping = {
 
 # ── HTML (furo) ───────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = f"geomech {release}"
+html_title = "geomech"  # the version is shown at the bottom of the sidebar instead
+templates_path = ["_templates"]
+html_static_path = ["_static"]
+html_css_files = ["sidebar-version.css"]
+html_sidebars = {
+    "**": [
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/scroll-start.html",
+        "sidebar/navigation.html",
+        "sidebar/ethical-ads.html",
+        "sidebar/scroll-end.html",
+        "sidebar/version.html",
+        "sidebar/variant-selector.html",
+    ]
+}
 html_theme_options = {
     "navigation_with_keys": True,
     "source_repository": "https://github.com/vkotaru/geomech/",
