@@ -1,5 +1,4 @@
-"""Arguments and helpers of the generated code (fixes F1–F5 of
-``specs/reviews/codegen-review.md``).
+"""Arguments and helpers of the generated code (fixes F1–F5 of the codegen review).
 
 - F1: ``state``, ``a`` and ``u`` are required exactly when a function's expressions use
   them; ``None`` then raises ``ValueError`` naming the argument. A function that does not

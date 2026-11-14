@@ -68,8 +68,7 @@ row, a sum whose first addend is a row, and d/dt, δ, ∫ of a row.
 - **Products.** Every product node prints its two factors joined by `*`: `Mul` (`m*l`),
   `SVMul` (`x*m`), `SMMul` (`J*(2)`), `MVMul` (`J*\Omega`), `MMMul` (`R*J`), `VVMul`
   (`(a)'*b`, `a*(b)'`). Before phase 5b the factors were juxtaposed, so
-  `Mul(ab, c)` and `Mul(a, bc)` both printed `abc` and compared equal (decision D2 in
-  `specs/fix-plan.md`). `repr` keeps `·` between factors and `*` as the constant marker.
+  `Mul(ab, c)` and `Mul(a, bc)` both printed `abc` and compared equal. `repr` keeps `·` between factors and `*` as the constant marker.
 - **Numbers.** `Number(2.5)` prints `(2.5)`, `Number(-1)` `(-1)`; `x * -1` and `-x` are
   `SVMul(x, (-1))`, printed `x*(-1)`. A scalar factor is always normalised to the right of
   `SVMul`/`SMMul` (`m * x` is `SVMul(x, m)`, printed `x*m`). `simplify` multiplies the
@@ -97,8 +96,7 @@ row, a sum whose first addend is a row, and d/dt, δ, ∫ of a row.
   but is a symbol; `check_tree` rejects it. `Scalar("m", value=2)` is a *symbol* with a
   value: every simplification keeps it by name (`m + m` is `m*(2)`, never `(4)`; with
   `l = Scalar("l", value=3)`, `m·l` stays `m*l`, never `(6)`), `to_latex` prints `m`, and only
-  `geomech.numeric` (`Evaluator`, `evaluate`, `check_eom`) uses the 2 (decision D1 in
-  `specs/fix-plan.md`). A number literal is a scalar leaf printed as its own value:
+  `geomech.numeric` (`Evaluator`, `evaluate`, `check_eom`) uses the 2. A number literal is a scalar leaf printed as its own value:
   `Number(2)`, `Zero`, `One`, `Scalar("0.5", value=0.5)` and the numbers the operators
   wrap (`2 * x`); `geomech.core.base.expressions.is_number_literal` tells them apart.
 

@@ -1,5 +1,5 @@
 # ruff: noqa: E501  (the injected JavaScript probes are kept on readable single lines)
-"""Regression tests for the fixes of ``specs/reviews/viz-skill-review.md`` (F1–F9).
+"""Regression tests for the fixes of the visualizer review (F1–F9).
 
 The browser tests reuse the headless-Chrome harness of ``tests/browser.py`` through the
 ``browser`` fixture of ``tests/test_viz_adversarial.py`` (opt-in with

@@ -1,6 +1,6 @@
 """Adversarial review of the shared input validation (``check_inputs``, ``check_symbol_clash``).
 
-Review range ``5a48f91..735cfba``; the report is ``specs/reviews/inputs-review.md``. Passing
+Passing
 tests record what held; each confirmed finding is a strict xfail whose reason starts with
 its number (``F<n>``), so that fixing it turns the test into an XPASS failure.
 """

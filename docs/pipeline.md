@@ -249,7 +249,7 @@ false rewrite without deriving the equation by hand, run the engine fuzzer from 
 repository root:
 
 ```
-python specs/reviews/scripts/engine_fuzz.py --quick
+python scripts/engine_fuzz.py --quick
 ```
 
 It applies every rewrite to thousands of random trees and compares input and output

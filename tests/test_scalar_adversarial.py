@@ -10,8 +10,7 @@ equation reads  ``-(d/dt ∂L/∂q̇ - ∂L/∂q) + f = 0``, and ``to_standard_f
 reports ``Σ M[a] a + f + Σ G[u] u = 0`` with a *negative* mass coefficient.
 
 Tests marked ``xfail(strict=True)`` record bugs; the reason string says
-which.  Findings are discussed in
-``specs/reviews/scalar-config-variables-review.md``.
+which.
 """
 
 import pytest

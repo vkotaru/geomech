@@ -8,8 +8,7 @@ All notable changes to `geomech` are recorded here. The format follows
 
 ### Upgrading from 0.1.0
 
-The 2026-11-13 fix plan (`specs/fix-plan.md`) changed derived equations and the public
-surface. In short:
+This release changed derived equations and the public surface. In short:
 
 - **Equations on S² change value** when `∂L/∂ω` has a component along `q`: the variation
   rule is now `δω = ξ̇ − 2 ω×ξ` (Lee et al. eq. 5.13). Gyroscopic and coupling terms
@@ -37,7 +36,6 @@ surface. In short:
   `linearize`, `compute_eom(..., trace=EOMTrace())`, `GEOMECH_DEBUG`, `GEOMECH_TRACE`,
   `check_tree`. See `docs/pipeline.md`.
 
-Open follow-ups are listed in `specs/follow-ups.md`.
 
 ### Added
 - 3-D visualizer and HTML report, `geomech.viz` (`specs/viz-and-skill.md`,
@@ -165,8 +163,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
     class of the translation table, the layout and its errors, `∂L/∂v` and `E` against
     finite differences, `dE/dt = 0` along the unforced dynamics, and a 10 s free rigid
     body run with `solve_ivp` conserving the generated energy to 1e-8.
-- Structure and typing (phase 5b of `specs/fix-plan.md`, items 5.5–5.7, decisions D2 (a)
-  and D3 (a)):
+- Structure and typing :
   - `geomech.core.base.constants`: the literals `NEG_ONE`, `NEG_TWO`, `HALF` (printed
     `(-1)`, `(-2)`, `(0.5)`, the same as `Number(...)`), `negate(expr)` (the tree of
     `-expr`) and `zero_like(expr)`/`zero_of(expr_type)`; every rewrite builds its −1, −2
@@ -182,7 +179,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
     public functions of `geomech.dynamics`, `geomech.numeric` and `geomech.utils` are
     annotated. `mypy geomech --ignore-missing-imports` passes and runs in CI (lint job);
     `mypy` is in the `dev` extras, pinned to 2.4.1 there and in CI. pyright: 109 errors at the start of the phase, 5 now.
-- Simplifier completeness (phase 5a of `specs/fix-plan.md`); no derived equation changes
+- Simplifier completeness ; no derived equation changes
   value, most print shorter:
   - `vector_rules` and `pull` recurse through every node class with one structural helper
     (`geomech.core.transformations.utils.rebuild`/`map_children`, shared with
@@ -206,7 +203,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
     `collect.flip` call sites have their own names (`collect.flip_target_right`,
     `collect.flip_cross_mvmul`, `collect.flip_mvmul_pair`, `collect.flip_mvmul_left`,
     `collect.flip_mvmul_right`, `collect.flip_cross_left`).
-  - `specs/reviews/scripts/pinned_snapshot.py`: records every pipeline call of the test
+  - `scripts/pinned_snapshot.py`: records every pipeline call of the test
     suite and every builder system at one commit and replays them later, comparing each
     output's value at fixed manifold states (and each linearization row along admissible
     directions) and `check_eom`; the gate for changes that reprint pinned equations.
@@ -251,7 +248,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
     only); after an exception `failed_at` names the stage that raised and `summary()`
     starts with `FAILED at <stage>: <exception>`.
   - `troubleshooting.md` has a recipe for a wrong equation that matches no row (bisect
-    with `summary()`, run `specs/reviews/scripts/engine_fuzz.py --quick`, rerun the
+    with `summary()`, run `scripts/engine_fuzz.py --quick`, rerun the
     suspect stage under `set_trace`), and lists the silent bugs fixed in earlier versions
     in a separate history section.
   - Docs: "The Pipeline, Stage by Stage", "Conventions" and "Troubleshooting" (every
@@ -351,8 +348,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   otherwise). A generator of inputs is no longer consumed before the extraction (it gave
   an empty `G`), and one leaf passed instead of a list (`inputs=f`) raises `TypeError`
   "inputs must be a sequence of Scalar/Vector leaves" in both functions.
-- An input printed like a different leaf of the equations raises `ValueError` naming both
-  (formerly item 1 of `specs/follow-ups.md`). With `L = ½ m ẋ·ẋ − m g e₃·x` and `g` `Constant`,
+- An input printed like a different leaf of the equations raises `ValueError` naming both. With `L = ½ m ẋ·ẋ − m g e₃·x` and `g` `Constant`,
   `linearize(eom, V, [f, Scalar("g")])` used to return a zero `B[δg]` column (the
   constant has no variation) while `to_standard_form(eom, V, inputs=[Scalar("g")])`
   matched it by name and returned `G[g] = −m e₃`; both now raise "input 'g' has the name
@@ -362,7 +358,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   `L` or `δW` (a declared param named like a constant had no effect). An input that is
   the same symbol as its leaf in the equations is unchanged. The check is
   `geomech.dynamics.eom.check_symbol_clash`.
-- Input validation, after the review `specs/reviews/inputs-review.md` (F1-F5):
+- Input validation, hardened (F1-F5):
   `inputs` must be an ordered sequence: a `set` or `dict` raises `TypeError` (the order
   of a set depends on the hash seed, and it is the order of the columns of `B`); an input
   printed like the velocity or acceleration of a configuration variable
@@ -375,12 +371,11 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   says to drop `value=`. The duplicate-input message adds "(an entry that prints like
   'f' is the same symbol)". `to_standard_form` with a non-dict `eom` raises `TypeError`
   like `linearize`. `compute_eom` params stay order-free (a set is accepted).
-- Products print a `*` between their factors (phase 5b, decision D2 (a)): `Mul`
+- Products print a `*` between their factors: `Mul`
   (`m*l`), `SVMul` (`x*m`), `SMMul` (`J*(2)`), `MVMul` (`J*\Omega`), `MMMul` (`R*J`),
   `VVMul` (`(a)'*b`). Every pinned equation string changes form; each changed output was
-  checked to be the old string with separators inserted and numerically identical
-  (`specs/reviews/phase5b-string-changes.md`). `repr` is unchanged (`·` between factors).
-- Equality (D2 (a)): two products whose factors concatenate alike are no longer equal
+  checked to be the old string with separators inserted and numerically identical. `repr` is unchanged (`·` between factors).
+- Equality: two products whose factors concatenate alike are no longer equal
   (`Mul(ab, c) != Mul(a, bc)`); a calculus node also compares the class of its operand
   (`Variation(Scalar("x")) != Variation(Vector("x"))`); `expr.has(x)` uses the same `==`,
   so `Scalar("m")` does not occur in `Dot(Vector("m"), w)`. A scalar and a vector variable
@@ -409,8 +404,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   extraction context with a small internal exception instead of an attribute set on the
   error. Rule names are unchanged.
 - Pinned equation strings change form (phase 5a; every changed output was checked to be
-  numerically identical, ≤ 1e-15 relative, at fixed states, see
-  `specs/reviews/phase5a-string-changes.md`):
+  numerically identical, ≤ 1e-15 relative, at fixed states):
   - the numbers of a product are folded into one placed last, `(-1)mll → mll(-1)`,
     `Mul(-1, Dot(…)) → Mul(Dot(…), -1)`;
   - a float with an integer value is an `int`: `J\frac{d}{dt}(\Omega_{R})(-1.0)` is
@@ -419,7 +413,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
     are gone (the double spherical pendulum's two equations shrink from 14 and 12 terms
     to 10 and 8).
 - `Scalar("m", value=2)` stays a symbol in every simplification and in `to_latex`
-  (decision D1): before, `m + l` with values was folded to `(5)` and the names lost. Only
+ : before, `m + l` with values was folded to `(5)` and the names lost. Only
   `geomech.numeric` uses the value.
 - `linearize` on S²: blocks of an equation that changed form may differ as matrices from
   the old ones by terms that vanish along admissible perturbations (`ξ ⊥ q`,
@@ -601,8 +595,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   `geomech`.
 
 ### Fixed
-- Code generation and simulation together (final review
-  `specs/reviews/codegen-simulation-final.md`, R1–R6):
+- Code generation and simulation together (R1–R6):
   - R1: a linearization module built from another input order or another
     `SystemVariables` order than its `StateLayout` was accepted, so `B_lin` paired its
     columns with the wrong entries of `u` (a quadrotor with a load under LQR diverged to
@@ -632,7 +625,7 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   - `geomech.dynamics.vbl.perturbation_variables` and `partition_terms` are public (the
     codegen energy used the private names; `_perturbation_variables` and
     `_partition_terms` stay as aliases).
-- Code generation (review `specs/reviews/codegen-review.md`, F1–F6 and the advisory):
+- Code generation (F1–F6):
   - An omitted `a` or `u` (`None`, the `lambdify` default for `a`) of size 1 became NaN,
     and of larger size raised a misleading size error. A generated function now raises
     `ValueError` (`u must have 1 entries, got None (u is required here)`) when it uses

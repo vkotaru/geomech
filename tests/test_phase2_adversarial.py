@@ -1,9 +1,8 @@
-"""Adversarial review of phase 2 (`specs/fix-plan.md` 2.1–2.12): error instead of silence.
+"""Adversarial review of phase 2 (2.1–2.12): error instead of silence.
 
 Every new guard is attacked two ways: a legitimate system that must still derive (false
 positive) and a misuse that must raise (false negative). Confirmed findings are strict
-``xfail`` tests whose reason starts with ``F<n>``; the details, reproducers and diagnosis
-are in ``specs/reviews/phase2-review.md``. Everything else here pins what held.
+``xfail`` tests whose reason starts with ``F<n>``. Everything else here pins what held.
 
 The numeric oracle (``check_eom``) is used wherever a derived equation is claimed correct,
 so the tests do not depend on the printed form alone.

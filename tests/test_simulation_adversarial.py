@@ -1,4 +1,4 @@
-"""Adversarial review of ``geomech.simulation`` (``specs/reviews/simulation-review.md``).
+"""Adversarial review of ``geomech.simulation``.
 
 Every reference here is written directly in NumPy, never through geomech:
 

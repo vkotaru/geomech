@@ -1,5 +1,5 @@
 """Regression tests for the final review of the visualizer and skill
-(``specs/reviews/viz-skill-final.md``): recorded inputs, controller errors, the energy
+: recorded inputs, controller errors, the energy
 label without recorded inputs, ``StateLayout.slot_names`` and the page's ready hook."""
 
 from __future__ import annotations

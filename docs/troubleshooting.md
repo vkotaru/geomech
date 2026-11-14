@@ -35,7 +35,7 @@ above `1e-5` means a wrong term. Then localise it in three steps.
    node count that drops sharply) is the stage to suspect. `tr.ibp[t]["collect"]`,
    `["integrate"]` and `["simplify"]` split integration by parts per target.
 2. **Run the engine fuzzer.** From the repository root, `python
-   specs/reviews/scripts/engine_fuzz.py --quick` applies every rewrite (expand, pull,
+   scripts/engine_fuzz.py --quick` applies every rewrite (expand, pull,
    vector_rules, simplify, collect, the manifold rules, the product rules) to thousands
    of random trees and compares input and output numerically. A rule that changes a
    value is reported as a `[wrong-value]` finding with a shrunk counterexample naming
@@ -324,7 +324,7 @@ The full list of invariants is in the docstring of `geomech/utils/invariants.py`
   with a finite-difference Euler–Lagrange residual computed without the library's rules
   ([Verifying an Equation Numerically](numeric-verification.md)). A wrong term shows up as
   a relative error far above `1e-5`.
-- **`specs/reviews/scripts/engine_fuzz.py --quick`**: checks every rewrite numerically
+- **`scripts/engine_fuzz.py --quick`**: checks every rewrite numerically
   on random trees; a `[wrong-value]` finding names the transformation and a minimal
   counterexample (step 2 of [the recipe](#the-equation-is-wrong-and-no-row-matches)).
 - The modules are importable for breakpoints and patches under names distinct from their

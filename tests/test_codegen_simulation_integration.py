@@ -1,5 +1,4 @@
-"""Code generation and simulation together: the final review of the branch
-(``specs/reviews/codegen-simulation-final.md``).
+"""Code generation and simulation together: the final review of the branch.
 
 - R1: a linearization generated with another input or variable order than its
   ``StateLayout`` raises at ``generate_module`` (before it was accepted, and LQR on it

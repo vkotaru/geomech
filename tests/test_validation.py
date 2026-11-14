@@ -1,4 +1,4 @@
-"""Phase 2 of ``specs/fix-plan.md``: ill-posed input raises instead of returning silently.
+"""Phase 2 of the fix plan: ill-posed input raises instead of returning silently.
 
 One class per item of the phase 2 table. Every test asserts the exception type and that
 the message names the offending symbol, in the style of ``tests/test_vbl_validation.py``.
