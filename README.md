@@ -127,10 +127,12 @@ The full pipeline (`compute_eom`), each stage a recursive tree rewrite:
 Requires Python >= 3.10.
 
 ```bash
-pip install -e .
-pip install -e ".[casadi]"   # optional: the CasADi code generation target
-pip install -e ".[sim]"      # optional: scipy, for solve_ivp and lqr in geomech.simulation
+pip install geomech
+pip install "geomech[casadi]"   # optional: the CasADi code generation target
+pip install "geomech[sim]"      # optional: scipy, for solve_ivp and lqr in geomech.simulation
 ```
+
+From a clone, for development: `pip install -e ".[dev]"`.
 
 ## Quick start
 
