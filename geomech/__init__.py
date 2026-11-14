@@ -8,6 +8,15 @@ if sys.version_info < (3, 10):
     raise ImportError("Python version >= 3.10 is required")
 del sys
 
+from importlib.metadata import PackageNotFoundError as _PackageNotFoundError
+from importlib.metadata import version as _version
+
+try:
+    __version__ = _version("geomech")
+except _PackageNotFoundError:  # running from a source tree that is not installed
+    __version__ = "unknown"
+del _version, _PackageNotFoundError
+
 # --- Layer 1: types & leaf nodes ---
 from geomech.core.base import (
     S2,

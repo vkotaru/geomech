@@ -38,6 +38,9 @@ This release changed derived equations and the public surface. In short:
 
 
 ### Added
+- `geomech.__version__` (the installed package version). Contributor files:
+  `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SUPPORT.md`,
+  `CITATION.cff`, and issue templates for bugs, feature requests and questions.
 - Release workflow `.github/workflows/publish.yml`: pushing a tag `v*` that matches the
   package version builds the sdist and wheel, checks them, uploads them to PyPI through
   trusted publishing (environment `release`) and creates a GitHub release. Package
