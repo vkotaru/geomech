@@ -40,6 +40,31 @@ surface. In short:
 Open follow-ups are listed in `specs/follow-ups.md`.
 
 ### Added
+- 3-D visualizer and HTML report, `geomech.viz` (`specs/viz-and-skill.md`,
+  `docs/visualization.md`):
+  - `Scene(layout, params)` with `RigidBody(R, origin, shape, offset, axes)`,
+    `PointMass`, `Rod`, `Trace` and the shapes `Box`, `Cylinder`, `Sphere`; geometry is
+    written with geomech expressions of the configuration variables and parameters and
+    evaluated with `geomech.codegen.lambdify` (anything else raises `ValueError` naming
+    the leaf). `scene.frames(traj)` gives every body's position and rotation, every
+    point, rod and trace per stored state.
+  - `Report(title, system=(L, dW, variables, inputs), ...)`: one self-contained HTML page
+    with a summary (derivation time, `check_eom` error, energy and constraint drift,
+    integrator), a three.js animation (solid bodies with body axes, lighting and shadows,
+    ground grid, inertial axes, orbit camera; play/pause, scrubber, speed, toggles), the
+    Lagrangian and equations one term per line, the standard form (block overview and
+    each block), the parameters and the source. three.js r147 and MathJax 3.2.2 from
+    pinned CDN URLs are the only external resources; light and dark themes.
+  - `latex_names` / `pretty_name`: readable LaTeX for leaf names (`J1` → `J_1`,
+    `\Omega_{R1}` → `\Omega_1`), one-to-one, applied to leaves only.
+  - Examples `examples/report_double_rigid_pendulum.py`, `report_spherical_pendulum.py`,
+    `report_quadrotor_load.py`, run in CI.
+- `to_latex(expr, names=None)`: an optional map from leaf names to LaTeX; the default
+  output is unchanged.
+- Agent skill `skills/geomech/` (`SKILL.md`, `reference.md`; copy for Claude Code in
+  `.claude/skills/geomech/`): the procedure define, derive, `check_eom`, standard form,
+  generate, simulate, report, the conventions to state and the failure modes. Every
+  Python block in it runs in the test suite.
 - Simulation, `geomech.simulation` (roadmap feature 6, `specs/simulation.md`,
   `docs/simulation.md`); it consumes only `geomech.codegen` modules and imports scipy
   (extra `geomech[sim]`) only for `solve_ivp` and `lqr`:

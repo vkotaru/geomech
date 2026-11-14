@@ -30,6 +30,10 @@ The pipeline:
    (`simulate` with a Lie-group RK4 integrator or `solve_ivp`, energy checks, and `lqr`
    from the linearization; [simulation](docs/simulation.md),
    `examples/inverted_rigid_pendulum_lqr.py`)
+7. Optionally draw the simulated system in 3-D and write one self-contained HTML report
+   (animation, equations, standard form, verification numbers) with `geomech.viz`
+   ([visualization](docs/visualization.md), `examples/report_*.py`); an agent skill that
+   follows this whole procedure is in `skills/geomech/`
 
 ## How it works
 
@@ -273,6 +277,7 @@ geomech/
     dynamics/           # compute_eom, to_standard_form, linearize, SystemVariables
     codegen/            # StateLayout, to_source, lambdify, generate_module, energy_function
     simulation/         # accelerations, simulate (RKMK4, solve_ivp), Trajectory, lqr
+    viz/                # Scene (3-D bodies from expressions), Report (HTML), latex_names
     numeric.py          # evaluate, check_eom, finite_difference_check
     utils/              # print_eom, print_tree, render_eom
 ```
