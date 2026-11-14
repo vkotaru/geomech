@@ -1,0 +1,36 @@
+name: Bug report
+description: A wrong equation, an unexpected error, or a crash
+labels: [bug]
+body:
+  - type: textarea
+    id: system
+    attributes:
+      label: Minimal system
+      description: The smallest Lagrangian, virtual work and SystemVariables that show the problem.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened
+      description: The equation or the full error message and traceback.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: For a wrong equation, the reference (book equation number or hand derivation).
+  - type: textarea
+    id: check
+    attributes:
+      label: check_eom output
+      description: The value returned by geomech.numeric.check_eom for this system, if it applies.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Versions
+      description: "Output of: python -c \"import geomech, sys; print(geomech.__version__, sys.version)\""
