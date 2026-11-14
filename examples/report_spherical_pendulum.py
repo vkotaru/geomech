@@ -58,7 +58,7 @@ def main(out="spherical_pendulum.html"):
     traj = simulate(plant, layout.pack(q=q0, omega_q=w0), 10.0, p)
 
     bob = s["q"] * s["l"]
-    scene = Scene(layout, params=p)
+    scene = Scene(layout)  # drawn with traj.p, the simulated parameters
     scene.add(Rod(ZeroVector, bob, radius=0.012))
     scene.add(PointMass(bob, radius=0.08))
     scene.add(Trace(bob))
@@ -70,7 +70,6 @@ def main(out="spherical_pendulum.html"):
         standard_form=sf,
         scene=scene,
         trajectory=traj,
-        params=p,
         derive_time=derive_time,
         units={"m": "kg", "g": "m/s²", "l": "m"},
         source=inspect.getsource(model),

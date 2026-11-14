@@ -10,14 +10,22 @@ number) and corrupt it.
 
 Rules, applied to one leaf name at a time (``pretty_name``):
 
-====================================  ===========================  =======================
-Leaf                                  Example                      Printed
-====================================  ===========================  =======================
-letters (or one ``\command``) + digits ``J1``, ``e3``, ``m12``     ``J_1``, ``e_3``, ``m_{12}``
-tangent/variation vector of a point    ``\Omega_{R1}``, ``\eta_{R2}``  ``\Omega_1``, ``\eta_2``
+====================================  ==============================  ========================
+Leaf                                  Example                         Printed
+====================================  ==============================  ========================
+letters or a symbol command + digits  ``J1``, ``\theta2``, ``m12``    ``J_1``, ``\theta_2``
+tangent/variation vector of a point   ``\Omega_{R1}``, ``\eta_{R2}``  ``\Omega_1``, ``\eta_2``
 named letters + digits
-anything else                          ``m_L``, ``\rho_1``, ``q``, ``\omega_{q}``  unchanged
-====================================  ===========================  =======================
+anything else                         ``m_L``, ``\rho_1``, ``\bar1``  unchanged
+====================================  ==============================  ========================
+
+``m12`` prints as ``m_{12}``.
+
+A "symbol command" is one that prints a symbol without taking an argument: a Greek
+letter (``\alpha`` … ``\Omega``, ``\varepsilon``, …) or one of ``\ell``, ``\hbar``,
+``\imath``, ``\jmath``, ``\aleph``, ``\wp``, ``\partial``, ``\nabla``, ``\infty``.
+A command that takes an argument (``\bar1``, ``\hat1``, ``\vec1``, ``\mathbf1``) or that
+is not known is left as it is: ``\bar_1`` would not be valid TeX.
 
 The map must stay one-to-one: when two different leaves would print alike (``J1`` and a
 leaf already named ``J_1``; ``\Omega_{R1}`` and ``\Omega_{Q1}``), neither is renamed.
@@ -32,6 +40,30 @@ __all__ = ["pretty_name", "latex_names"]
 
 # one leaf name, never a formula: letters or a single LaTeX command, then digits
 _INDEXED = re.compile(r"^([A-Za-z]+|\\[A-Za-z]+)(\d+)$")
+
+_GREEK = (
+    "alpha beta gamma delta epsilon varepsilon zeta eta theta vartheta iota kappa varkappa"
+    " lambda mu nu xi omicron pi varpi rho varrho sigma varsigma tau upsilon phi varphi chi"
+    " psi omega Gamma Delta Theta Lambda Xi Pi Sigma Upsilon Phi Psi Omega"
+)
+#: Commands that print one symbol and take no argument: the only ones a subscript may
+#: follow directly (``\theta_1``). ``\bar``, ``\hat``, ``\mathbf`` … take an argument.
+SYMBOL_COMMANDS = frozenset(
+    _GREEK.split() + "ell hbar imath jmath aleph wp partial nabla infty".split()
+)
+
+
+def _indexed(name: str):
+    """``(base, digits)`` of a leaf named letters or a symbol command then digits."""
+    m = _INDEXED.match(name)
+    if m is None:
+        return None
+    base = m.group(1)
+    if base.startswith("\\") and base[1:] not in SYMBOL_COMMANDS:
+        return None
+    return base, m.group(2)
+
+
 # the tangent/variation vector names of an S2/SO3 point: \omega_{q}, \xi_{q}, \Omega_{R}, \eta_{R}
 _TANGENT = re.compile(r"^(\\(?:omega|xi|Omega|eta))_\{(.+)\}$")
 
@@ -49,13 +81,13 @@ def pretty_name(name: str, point: str | None = None) -> str:
     """
     if point is not None:
         m = _TANGENT.match(name)
-        p = _INDEXED.match(point)
+        p = _indexed(point)
         if m and m.group(2) == point and p:
-            return _subscript(m.group(1), p.group(2))
+            return _subscript(m.group(1), p[1])
         return name
-    m = _INDEXED.match(name)
-    if m:
-        return _subscript(m.group(1), m.group(2))
+    idx = _indexed(name)
+    if idx:
+        return _subscript(*idx)
     return name
 
 

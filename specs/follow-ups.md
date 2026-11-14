@@ -79,3 +79,34 @@ public `perturbation_variables`/`partition_terms` of `geomech.dynamics.vbl`. Ope
     marker on those rows, deselected locally with `-m "not slow"` and run in CI.
 29. `StateLayout.pack` covers `state` only; `u` is still stacked by hand in the layout's
     input order (`layout.input_slices`). A `pack_inputs(**inputs)` would complete it.
+
+## Visualizer and skill
+
+Open after the final review (`specs/reviews/viz-skill-final.md`) and its fix log.
+
+30. **MCP server** (the spec's "next step"): expose derive, check, simulate and report as
+    MCP tools so an agent can call geomech without writing Python.
+31. One-frame display lag during playback, noted in the F9 fix log of the adversarial
+    review (`specs/reviews/viz-skill-review.md`) and left unchanged.
+32. MathJax `ui/safe` is not loaded (a fourth URL would break the artifact CSP); the
+    unsafe TeX packages are excluded instead. Revisit if MathJax is ever self-hosted.
+33. The browser smoke test reads the page's hooks (`data-gm-errors`, …) and misses an
+    error thrown before the first inline script runs.
+34. The browser tests depend on the three.js and MathJax CDNs and on software WebGL. They
+    now skip (not fail) without them and run in the 3.12 CI job only
+    (`GEOMECH_BROWSER_TESTS=1`); a vendored copy of the two scripts served from a local
+    file would remove the network dependence.
+35. No pixel-level check of screenshots: the tests count distinct canvas colours only.
+    A reference-image comparison (with a tolerance for SwiftShader differences) would
+    catch visual regressions such as the faint light-theme grid of the final review.
+36. `Report` frames the view on the whole trajectory; a drifting open-loop run shows
+    small bodies at t = 0. Documented (skill step 9, `docs/visualization.md`); a
+    `Report(frame="initial")` option or a camera that follows the bodies is open.
+37. A body hinged at the origin hanging along −e₃ shows its e₃ arrow along the inertial
+    z arrow of the origin triad (two blue arrows overlap). Documented; drawing the body
+    triad offset from the hinge, or the origin triad with a distinct style, is open.
+38. `simulate(method="solve_ivp")` evaluates a callable `u` once more at each stored
+    (interpolated) state after the run, to record `traj.u`; recording them during the
+    run would need a step-by-step `OdeSolver` loop.
+39. A rigid body hanging from an S² point cannot be drawn with an attitude (an S² point
+    has none); documented in `docs/visualization.md` as a model limitation.

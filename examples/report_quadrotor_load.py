@@ -97,7 +97,7 @@ def main(out="quadrotor_load.html"):
 
     R, xQ, xL = s["R"], s["xQ"], s["xL"]
     arm = 0.25
-    scene = Scene(layout, params=p)
+    scene = Scene(layout)  # drawn with traj.p, the simulated parameters
     scene.add(RigidBody(R, origin=xQ, shape=Box(0.16, 0.12, 0.06), color="link1", name="body"))
     scene.add(RigidBody(R, xQ, Box(2 * arm, 0.025, 0.02), axes=False, color="cable", name="arm 1"))
     scene.add(RigidBody(R, xQ, Box(0.025, 2 * arm, 0.02), axes=False, color="cable", name="arm 2"))
@@ -128,7 +128,6 @@ def main(out="quadrotor_load.html"):
         standard_form=sf,
         scene=scene,
         trajectory=traj,
-        params=p,
         derive_time=derive_time,
         units={"m_Q": "kg", "m_L": "kg", "g": "m/s²", "l": "m", "J": "kg m²"},
         source=inspect.getsource(model),
