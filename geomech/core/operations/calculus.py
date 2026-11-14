@@ -2,8 +2,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from geomech.core.base.expressions import Expr
+from geomech.core.base.expressions import S2, SO3, Expr
 from geomech.core.operations.mixins import _CalcUnaryMixin
+
+
+def _reject_manifold_leaf(expr, op, method, s2_form, so3_form):
+    """``TimeDerivative(q)``/``Variation(q)`` for a manifold point is not a tree node.
+
+    The kinematics of ``S2``/``SO3`` leaves are eager: ``q.t_diff()`` returns ``ω × q``
+    and ``R.delta()`` returns ``R·Hat(η)``. A calculus node wrapping the leaf itself
+    would carry none of that structure, so it is rejected at construction.
+    """
+    if isinstance(expr, (S2, SO3)):
+        form = s2_form if isinstance(expr, S2) else so3_form
+        raise ValueError(
+            f"{op}: {op}({expr}) is not represented in the tree for the manifold point"
+            f" '{expr}'; use {expr}.{method}(), which returns the kinematic expression {form}"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Variation  (δ operator as a tree node)
@@ -19,6 +35,7 @@ class Variation(_CalcUnaryMixin, Expr):
     def __init__(self, expr):
         from geomech.core.base.expressions import TS2, TSO3
 
+        _reject_manifold_leaf(expr, "Variation", "delta", "ξ × q", "R·Hat(η)")
         # δ(δ(...)) is a second-order variation — vanishes in Hamilton's principle
         if isinstance(expr, Variation):
             raise ValueError(
@@ -67,6 +84,7 @@ class TimeDerivative(_CalcUnaryMixin, Expr):
     nodes: list = field(default_factory=list)
 
     def __init__(self, expr):
+        _reject_manifold_leaf(expr, "TimeDerivative", "t_diff", "ω × q", "R·Hat(Ω)")
         self.nodes = [expr]
 
     def __str__(self):

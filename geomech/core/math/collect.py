@@ -20,6 +20,7 @@ be exposed by transposition, which only moves the matrix: ``collect`` raises
 from __future__ import annotations
 
 from geomech.core.base.expressions import SO3
+from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add
 from geomech.core.operations.geometry import Cross, Dot, Transpose
 from geomech.core.operations.multiplication import Mul, MVMul
@@ -29,8 +30,15 @@ from geomech.utils.errors import AlgebraicError, NonLinearError
 def collect(expr, vec):
     """Collect *expr* with respect to *vec*.
 
-    Rearranges so *vec* appears on the left of every Dot that contains it.
+    Rearranges so *vec* appears on the left of every Dot that contains it. Only a scalar
+    expression can hold a ``Dot``; anything else raises ``TypeError``.
     """
+    if getattr(expr, "type", None) != ExprType.SCALAR:
+        kind = getattr(getattr(expr, "type", None), "name", None)
+        raise TypeError(
+            f"collect: expected a scalar expression, got {type(expr).__name__} '{expr}'"
+            f" of type {kind}"
+        )
     match expr:
         case Add(nodes=nodes):
             return Add(*[collect(n, vec) for n in nodes])
@@ -94,6 +102,16 @@ def _collect_dot(expr, vec):
     """
     l, r = expr.left, expr.right
 
+    # vec on both sides: the Dot is at least quadratic in vec; no rotation can
+    # expose a single linear occurrence (and flipping would recurse forever).  This
+    # runs before the shortcuts below so that Dot(vec, f(vec)) and Dot(f(vec), vec)
+    # are reported, not flipped into a "canonical" form.
+    if l.has(vec) and r.has(vec):
+        raise NonLinearError(
+            f"collect: '{vec}' appears on both sides of '{expr}'; the expression is not"
+            " linear in the target"
+        )
+
     # Already canonical
     if l == vec:
         return expr
@@ -105,14 +123,6 @@ def _collect_dot(expr, vec):
     # Neither side contains vec — nothing to do
     if not l.has(vec) and not r.has(vec):
         return expr
-
-    # vec on both sides: the Dot is at least quadratic in vec; no rotation can
-    # expose a single linear occurrence (and flipping would recurse forever).
-    if l.has(vec) and r.has(vec):
-        raise NonLinearError(
-            f"collect: '{vec}' appears on both sides of '{expr}'; the expression is not"
-            " linear in the target"
-        )
 
     # --- structural patterns (exactly one side has vec) ---
 

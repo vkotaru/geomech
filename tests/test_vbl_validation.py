@@ -57,7 +57,7 @@ class TestPartitionExactlyOne:
 
     def test_owner_inside_calculus_node_is_not_a_second_symbol(self):
         """J d/dt(δω) is owned by d/dt(δω); the δω inside it must not trip the check."""
-        J = Matrix("J", attr=["Constant", "Symmetric"])
+        J = Matrix("J", attr=["Constant", "SymmetricMatrix"])
         term = MVMul(J, ddom)
         buckets = _partition_terms(term, [ddom, dom, xi], "row")
         assert [len(b) for b in buckets] == [1, 0, 0]

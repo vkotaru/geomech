@@ -13,6 +13,22 @@ from geomech.utils.errors import ExpressionMismatchError, UndefinedCaseError
 # ---------------------------------------------------------------------------
 
 
+def _attr_list(attr, name):
+    """Copy *attr* into a fresh list (never alias the caller's), rejecting a bare string.
+
+    ``attr="Constant"`` would otherwise be iterated character by character and fail with
+    ``unknown attribute 'C'``, which hides the actual mistake.
+    """
+    if attr is None:
+        return None
+    if isinstance(attr, str):
+        where = f" for symbol '{name}'" if name is not None else ""
+        raise TypeError(
+            f"attr must be a list of strings, got str {attr!r}{where}; write attr=[{attr!r}]"
+        )
+    return list(attr)
+
+
 @dataclass(eq=False, repr=False)
 class Expr:
     """Base expression node."""
@@ -139,7 +155,7 @@ class ScalarExpr(Expr):
         from geomech.core.operations import Mul, SMMul, SVMul
 
         if isinstance(other, (int, float)):
-            other = Scalar("(" + str(other) + ")", value=other, attr=["Constant"])
+            other = Number(other)
         if other.type == ExprType.SCALAR:
             return Mul(self, other)
         elif other.type == ExprType.VECTOR:
@@ -158,7 +174,7 @@ class Scalar(ScalarExpr):
     flags: ExprFlags = field(init=False, repr=False, default=None)
 
     def __post_init__(self):
-        self.flags = ExprFlags.from_attr_list(self.attr)
+        self.flags = ExprFlags.from_attr_list(self.attr, self.name)
         if self.value is not None:
             self.flags.is_numeric = True
 
@@ -192,7 +208,7 @@ class Scalar(ScalarExpr):
         # 's' is the legacy positional arg; 'name' is the dataclass field
         self.name = s if s is not None else name
         self.value = value
-        self.attr = list(attr) if attr is not None else None  # never alias the caller's list
+        self.attr = _attr_list(attr, self.name)  # never alias the caller's list
         self.__post_init__()
 
 
@@ -231,7 +247,7 @@ class VectorExpr(Expr):
         from geomech.core.operations import MVMul, SVMul, VVMul
 
         if isinstance(other, (int, float)):
-            other = Scalar("(" + str(other) + ")", value=other, attr=["Constant"])
+            other = Number(other)
         if other.type == ExprType.SCALAR:
             return SVMul(self, other)
         elif other.type == ExprType.VECTOR:
@@ -266,7 +282,7 @@ class Vector(VectorExpr):
     flags: ExprFlags = field(init=False, repr=False, default=None)
 
     def __post_init__(self):
-        self.flags = ExprFlags.from_attr_list(self.attr)
+        self.flags = ExprFlags.from_attr_list(self.attr, self.name)
         if self.value is None:
             self.value = np.empty(self.size, dtype="object")
         else:
@@ -305,7 +321,7 @@ class Vector(VectorExpr):
         self.name = s if s is not None else name
         self.size = size
         self.value = value
-        self.attr = list(attr) if attr is not None else None  # never alias the caller's list
+        self.attr = _attr_list(attr, self.name)  # never alias the caller's list
         self.__post_init__()
 
 
@@ -335,7 +351,7 @@ class S2(Vector):
     """S2 manifold (unit sphere in R3, ||q|| = 1)."""
 
     def __init__(self, s=None, *, size=(3,), value=None, attr=None):
-        attr = [] if attr is None else list(attr)  # copy: the caller's list is not mutated
+        attr = _attr_list(attr, s) or []  # copy: the caller's list is not mutated
         attr.append("Manifold")
         attr.append("UnitNorm")
         super().__init__(s, size=size, value=value, attr=attr)
@@ -396,7 +412,7 @@ class MatrixExpr(Expr):
         from geomech.core.operations import MMMul, MVMul, SMMul, Transpose
 
         if isinstance(other, (int, float)):
-            other = Scalar("(" + str(other) + ")", value=other, attr=["Constant"])
+            other = Number(other)
         if other.type == ExprType.SCALAR:
             return SMMul(self, other)
         elif other.type == ExprType.VECTOR:
@@ -418,7 +434,7 @@ class Matrix(MatrixExpr):
     flags: ExprFlags = field(init=False, repr=False, default=None)
 
     def __post_init__(self):
-        self.flags = ExprFlags.from_attr_list(self.attr)
+        self.flags = ExprFlags.from_attr_list(self.attr, self.name)
         if self.value is None:
             self.value = np.empty(self.size, dtype="object")
 
@@ -452,7 +468,7 @@ class Matrix(MatrixExpr):
         self.name = s if s is not None else name
         self.size = size
         self.value = value
-        self.attr = list(attr) if attr is not None else []  # never alias the caller's list
+        self.attr = _attr_list(attr, self.name) or []  # never alias the caller's list
         self.__post_init__()
 
 
@@ -462,7 +478,7 @@ class SkewSymmMatrix(Matrix):
     def __init__(self, s=None, *, size=(3, 3), value=None, attr=None):
         # copy (the caller's list is not mutated) and append before super().__init__ so
         # that __post_init__ sees the flag when it builds ExprFlags
-        attr = [] if attr is None else list(attr)
+        attr = _attr_list(attr, s) or []
         attr.append("SkewSymmetricMatrix")
         super().__init__(s, size=size, value=value, attr=attr)
 
@@ -471,7 +487,7 @@ class SO3(Matrix):
     """SO(3) rotation matrix manifold (R^T R = I, det(R) = 1)."""
 
     def __init__(self, s=None, *, size=(3, 3), value=None, attr=None):
-        attr = [] if attr is None else list(attr)  # copy: the caller's list is not mutated
+        attr = _attr_list(attr, s) or []  # copy: the caller's list is not mutated
         attr.append("Manifold")
         attr.append("OrthogonalMatrix")
         super().__init__(s, size=size, value=value, attr=attr)
@@ -516,8 +532,22 @@ I = IdentityMatrix
 
 
 def Number(value):
+    """Anonymous numeric constant ``(value)``.
+
+    ``Number(0)`` carries the ``Zero`` flag and ``Number(1)`` the ``Ones`` flag, so the
+    zero/identity rules of ``simplify`` see them like ``Zero``/``One``.
+    """
+    if isinstance(value, bool):
+        raise TypeError(
+            f"Number expects int, float, or str, got bool {value}; write Number(1) or Number(0)"
+        )
     if isinstance(value, (int, float)):
-        return Scalar("(" + str(value) + ")", value=value, attr=["Constant"])
+        attr = ["Constant"]
+        if value == 0:
+            attr.append("Zero")
+        elif value == 1:
+            attr.append("Ones")
+        return Scalar("(" + str(value) + ")", value=value, attr=attr)
     elif isinstance(value, str):
         return Scalar(s=value, attr=["Constant"])
     else:

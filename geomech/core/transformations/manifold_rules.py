@@ -140,4 +140,8 @@ def _rebuild(expr, new_nodes):
     if isinstance(expr, (Hat, Vee, Transpose, Variation, TimeDerivative, TimeIntegral)):
         return cls(new_nodes[0])
 
-    return expr
+    # Returning the original node here would silently discard the substitution.
+    raise TypeError(
+        f"apply_manifold_rules: cannot rebuild a {cls.__name__} node ('{expr}') with"
+        " substituted children; add the class to manifold_rules._rebuild"
+    )

@@ -152,7 +152,9 @@ the terms are of comparable size. `check_eom` reports the relative error only.
   "Resolution").
 - **Unlisted time-varying parameters.** A non-constant leaf that is neither a configuration
   variable nor listed in `params` is frozen during the check, so a correct equation that
-  contains its rate looks wrong. List it: `check_eom(..., params=[l])`.
+  contains its rate looks wrong. List it: `check_eom(..., params=[l])`. `compute_eom`
+  takes the same `params=[l]`; without it, the surviving `δl` is reported as an error
+  rather than dropped, so the two calls declare the prescribed symbols identically.
 - **The symbolic form.** Two equations that agree numerically are accepted even if one is
   not simplified; `check_eom` checks values, the pinned string tests check form.
 - **`to_standard_form` and `linearize`.** The standard-form split is a rearrangement of

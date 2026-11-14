@@ -201,7 +201,7 @@ def test_check_eom_with_a_prescribed_parameter():
     omega, xi = q.get_tangent_vector(), q.get_variation_vector()
     L = HALF * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
     variables = SystemVariables(vectors=[q])
-    eom = compute_eom(L, Dot(xi, f), variables)
+    eom = compute_eom(L, Dot(xi, f), variables, params=[l])
     assert check_eom(L, Dot(xi, f), variables, eom, inputs=[f], params=[l]) < 1e-5
     assert check_eom(L, Dot(xi, f), variables, eom, inputs=[f]) > 1e-2  # l frozen: wrong
 
