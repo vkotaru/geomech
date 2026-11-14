@@ -16,6 +16,7 @@ from geomech.core.operations.calculus import TimeDerivative
 from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.simplification import full_simplify
 from geomech.core.transformations.utils import addends, sum_of
+from geomech.dynamics.eom import check_inputs
 from geomech.dynamics.variables import SystemVariables
 from geomech.utils.errors import AlgebraicError, NonLinearError
 from geomech.utils.invariants import check_tree
@@ -57,8 +58,18 @@ def to_standard_form(
         ``{str(variation_vec): (variation_vec, eom_expr)}``.
     variables : SystemVariables
         Configuration variables (used to derive acceleration variables).
-    inputs : list[Expr], optional
-        Input variables (forces, torques). Default: empty.
+    inputs : list[Scalar | Vector], optional
+        Input variables (forces, torques). Default (``None``): no inputs. Validated by
+        ``check_inputs``, exactly as in ``linearize``: a ``TypeError`` for an entry that
+        is not a plain ``Scalar``/``Vector`` leaf, one leaf instead of a sequence, or a
+        ``set``/``dict`` (the order of *inputs* is the order of the input columns), a
+        ``ValueError`` for a constant or duplicate input, a configuration variable, a
+        tangent or variation vector (``ω``, ``ξ``, ``Ω``, ``η``), or an input printed like
+        a velocity or acceleration, or like a different node of the equations (a constant
+        ``g`` of ``L`` given as ``Scalar("g")``, another class, ``attr`` or size, or an
+        operation node such as ``d/dt(l)``), since leaves are matched by printed name; an
+        ``AlgebraicError`` for an input whose rate occurs in the equations (a param of
+        ``compute_eom``). A non-dict *eom_dict* raises ``TypeError``.
 
     Returns
     -------
@@ -81,8 +92,13 @@ def to_standard_form(
     ``NonLinearError``. With ``GEOMECH_DEBUG=1`` the blocks of each equation are logged
     on the ``geomech`` logger and ``check_tree`` runs on every equation and block.
     """
-    if inputs is None:
-        inputs = []
+    if not isinstance(eom_dict, dict):
+        raise TypeError(
+            f"to_standard_form: eom must be the dict returned by compute_eom, got {type(eom_dict)}"
+        )
+    inputs = check_inputs(
+        inputs, variables, [eq for _, eq in eom_dict.values()], "to_standard_form"
+    )
 
     accel_vars = _get_accel_vars(variables)
     debug = debug_enabled()

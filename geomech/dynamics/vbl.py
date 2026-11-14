@@ -85,13 +85,9 @@ from geomech.core.base.constants import negate
 from geomech.core.base.expressions import (
     S2,
     SO3,
-    TS2,
-    TSO3,
     Expr,
     IdentityMatrix,
     One,
-    Scalar,
-    Vector,
     Zero,
     ZeroMatrix,
     ZeroVector,
@@ -105,7 +101,7 @@ from geomech.core.operations.multiplication import MMMul, SMMul, VVMul
 from geomech.core.transformations.expansion import expand
 from geomech.core.transformations.simplification import full_simplify
 from geomech.core.transformations.utils import addends, sum_of
-from geomech.dynamics.eom import check_variables
+from geomech.dynamics.eom import check_inputs, check_variables
 from geomech.dynamics.variables import SystemVariables
 from geomech.utils.errors import AlgebraicError
 from geomech.utils.invariants import check_tree
@@ -239,26 +235,32 @@ def linearize(
     Raises
     ------
     TypeError
-        Invalid ``variables`` or ``inputs`` (not plain ``Scalar``/``Vector`` leaves),
+        Invalid ``variables`` or ``inputs`` (not plain ``Scalar``/``Vector`` leaves, or a
+        ``set``/``dict``, whose order would be that of the columns of ``B``),
         a non-``SO3`` matrix configuration, or an equation whose type differs from
         that of its variation vector (a scalar equation under a vector key).
     ValueError
-        Constant or duplicate inputs, an input that is also a configuration variable
-        or a tangent vector (``Ω``, ``ω``) whose variation is already a state, or
+        Constant or duplicate inputs (the input checks are ``check_inputs``, shared with
+        ``to_standard_form``), an input that is also a configuration variable
+        or a tangent vector (``Ω``, ``ω``) whose variation is already a state, an input
+        printed like a velocity, an acceleration or a different node of the equations
+        (a constant ``g`` of ``L`` given as ``Scalar("g")``, another class, ``attr`` or
+        size, or an operation node such as ``d/dt(l)``), or
         ``eom`` keys that do not match ``variables``. A stray variation symbol in an
         equation also surfaces as the engine's ``ValueError`` (δ of a variation is
         not representable).
     AlgebraicError
-        A term of δE carries no perturbation symbol, more than one (a nonlinear or
-        incompletely distributed term), or one only inside a non-canonical calculus
-        node, or a coefficient could not be factored.
+        An input whose rate occurs in the equations (a param of ``compute_eom`` given as
+        an input, ``check_inputs``). A term of δE carries no perturbation symbol, more
+        than one (a nonlinear or incompletely distributed term), or one only inside a
+        non-canonical calculus node, or a coefficient could not be factored.
     """
     if trace is not None:
         trace._reset()
     stage = "validation"
     try:
         check_variables(variables, caller="linearize")
-        cfg_vars, cfg_perts, vel_perts = _perturbation_variables(variables)
+        cfg_vars, cfg_perts, vel_perts = perturbation_variables(variables)
         _check_eom(eom, variables)
         param_names = _param_names(params)
         debug = debug_enabled()
@@ -268,7 +270,7 @@ def linearize(
         record = stage_recorder(trace, "linearize")
         states = cfg_perts + vel_perts
         dstates = [s.t_diff() for s in states]
-        inputs = _check_inputs(inputs, variables, states + dstates)
+        inputs = check_inputs(inputs, variables, [eq for _, eq in eom.values()], "linearize")
         input_perts = [u.delta() for u in inputs]
         dvel_perts = dstates[len(cfg_perts) :]
 
@@ -389,7 +391,7 @@ def _dynamic_row(
         record(f"dE[{label}]", dE)
     if _is_zero_block(dE):
         return
-    buckets = _partition_terms(dE, priority, label, param_names)
+    buckets = partition_terms(dE, priority, label, param_names)
 
     # Route by position in ``priority`` (identity), never by printed name.
     for index, terms in enumerate(buckets):
@@ -425,45 +427,6 @@ def _dynamic_row(
 # ---------------------------------------------------------------------------
 # Validation
 # ---------------------------------------------------------------------------
-
-
-def _check_inputs(inputs, variables, state_symbols):
-    """Inputs must be distinct, non-constant ``Scalar``/``Vector`` leaves that are neither
-    configuration variables nor tangent vectors, and whose variation is not already a
-    state or d/dt-of-state symbol."""
-    if inputs is None:
-        return []
-    inputs = list(inputs)
-    config = {str(v) for v in variables.scalars + variables.vectors + variables.matrices}
-    states = {str(s) for s in state_symbols}
-    seen = set()
-    for u in inputs:
-        if not isinstance(u, (Scalar, Vector)) or isinstance(u, S2):
-            raise TypeError(
-                f"linearize: input '{u}' must be a Scalar or Vector leaf, got {type(u).__name__}"
-            )
-        if isinstance(u, (TS2, TSO3)):
-            raise ValueError(
-                f"linearize: input '{u}' is a tangent or variation vector of a configuration"
-                " variable; its variation is part of the perturbation state, not an input"
-            )
-        if u.is_constant or u.is_numeric or u.is_zero:
-            raise ValueError(
-                f"linearize: input '{u}' is constant: its variation vanishes,"
-                " so it cannot be an input"
-            )
-        if str(u) in config:
-            raise ValueError(f"linearize: input '{u}' is also a configuration variable")
-        if str(u.delta()) in states:
-            raise ValueError(
-                f"linearize: the variation '{u.delta()}' of input '{u}' is already a"
-                f" perturbation state (is '{u}' a tangent vector of a configuration"
-                " variable?)"
-            )
-        if str(u) in seen:
-            raise ValueError(f"linearize: input '{u}' is listed more than once")
-        seen.add(str(u))
-    return inputs
 
 
 def _check_eom(eom, variables):
@@ -504,8 +467,11 @@ def _check_eom(eom, variables):
             )
 
 
-def _perturbation_variables(variables):
-    """Configuration variables with their configuration and velocity perturbations."""
+def perturbation_variables(variables):
+    """``(cfg_vars, cfg_perts, vel_perts)``: the configuration variables of *variables* in
+    ``SystemVariables`` order (scalars, vectors, matrices) with their configuration and
+    velocity perturbation symbols (see the module docstring). This is the column order of
+    ``LinearizedSystem.states``; ``geomech.codegen`` uses it to match a layout."""
     cfg_vars, cfg_perts, vel_perts = [], [], []
     for s in variables.scalars:
         cfg_vars.append(s)
@@ -587,7 +553,7 @@ def _no_perturbation_hint(term, param_names):
     return " Is an input missing from `inputs`, or a symbol missing the 'Constant' attribute?"
 
 
-def _partition_terms(dE, priority, label, param_names=frozenset()):
+def partition_terms(dE, priority, label, param_names=frozenset()):
     """Assign every additive term of *dE* to exactly one perturbation symbol.
 
     Returns one list of terms per entry of *priority* (same order). A term that
@@ -681,3 +647,8 @@ def _zero_block(row_type, col_type):
 
 def _is_zero_block(expr) -> bool:
     return bool(getattr(expr, "is_zero", False))
+
+
+# Former private names, kept for existing imports.
+_perturbation_variables = perturbation_variables
+_partition_terms = partition_terms

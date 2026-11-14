@@ -183,7 +183,10 @@ must project onto the tangent space (Lee et al., Appendix B).
 - It does not reduce the perturbation to minimal coordinates at an equilibrium (Lee et al.
   Appendix B basis \(\sigma\)); the output stays in the full perturbation vectors, as in
   Wu & Sreenath.
-- It does not synthesise controllers, discretise, simulate or generate code.
+- It does not synthesise controllers, discretise, simulate or generate code itself:
+  [Code generation](codegen.md) turns a `LinearizedSystem` into `M_lin`, `A_lin`, `B_lin`
+  functions, and [Simulation](simulation.md) designs an LQR gain from them
+  (`geomech.simulation.lqr`) and simulates the closed loop.
 - It does not call the EOM manifold rules on the velocity variations, and it does not
   change `compute_eom` or `to_standard_form`.
 

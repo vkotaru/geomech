@@ -60,6 +60,8 @@ nav:
   - Conventions: conventions.md
   - Troubleshooting: troubleshooting.md
   - Variation-Based Linearization: vbl.md
+  - Code Generation: codegen.md
+  - Simulation: simulation.md
   - Verifying an Equation Numerically: numeric-verification.md
   - "Manifold Rules: Derivation": manifold-implementation-notes.md
   - API Reference: reference/
