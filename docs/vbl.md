@@ -201,4 +201,7 @@ must project onto the tangent space (Lee et al., Appendix B).
   variation is not representable) or as the `AlgebraicError` described above.
 - An equation whose variation is identically zero produces an all-zero dynamic row; it is
   not reported as an error.
-
+- Prescribed time-varying parameters (`compute_eom(..., params=[l])`) are not supported:
+  the variation of the equation contains `δl`, which is neither a state nor an input
+  perturbation, and `linearize` raises `AlgebraicError` naming the term. Listing `l` in
+  `inputs` does not help, because `l̇` brings in `d/dt(δl)`.

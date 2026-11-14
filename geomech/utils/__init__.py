@@ -1,3 +1,9 @@
+from geomech.utils.errors import (
+    AlgebraicError,
+    ExpressionMismatchError,
+    NonLinearError,
+    SizeMismatchError,
+)
 from geomech.utils.printing import (
     display_eom,
     display_latex,

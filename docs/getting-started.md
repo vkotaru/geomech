@@ -39,6 +39,13 @@ print_eom(eqs)
 
 This produces the equation \(m \ddot{x} = f - mge_3\), output as a LaTeX integral equation.
 
+Every symbol in `L` and `dW` is one of three things: a configuration variable (listed in
+`SystemVariables`), a constant (`attr=["Constant"]`), or a prescribed time-varying
+parameter declared with `compute_eom(L, dW, variables, params=[l])` — a cable length
+`l(t)`, say, whose rate `l̇` appears in the equations but whose variation is not free. A
+symbol that is none of these and whose variation survives (a forgotten `y`, an `e3`
+missing `Constant`) raises `ValueError` naming it; the terms are never dropped silently.
+
 ## How it works
 
 The `compute_eom` pipeline:
@@ -58,6 +65,9 @@ The `compute_eom` pipeline:
 | `Matrix` | Square matrix (default 3x3) | `Matrix('J', attr=['Constant'])` |
 | `S2` | Unit vector on the 2-sphere | `S2('q')` |
 | `SO3` | Rotation matrix on \(SO(3)\) | `SO3('R')` |
+
+Attributes are passed as a list of strings, `attr=['Constant']`, and the names are
+case-sensitive (`'constant'` raises `ValueError` listing the valid names).
 
 Batch constructors: `getScalars('a b c')`, `getVectors(['x', 'y'])`, `getMatrices('M N')`.
 

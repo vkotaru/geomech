@@ -7,6 +7,14 @@ All notable changes to `geomech` are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- `compute_eom(L, dW, variables, params=[...])`: prescribed time-varying parameters (a
+  cable length `l(t)`, a moving attachment point `b(t)`) are declared explicitly, mirroring
+  `check_eom(params=...)`. Entries must be distinct, non-constant plain
+  `Scalar`/`Vector`/`Matrix` leaves that are not configuration variables or tangent vectors
+  (`TypeError`/`ValueError` naming the entry otherwise). A declared symbol contributes its
+  rate terms (`l̇`) and its variation is not free (`δl` is dropped); an undeclared one is an
+  error (see Changed). `to_standard_form` accepts such equations; `linearize` does not yet
+  (it raises `AlgebraicError` on `δl`).
 - Numeric oracle in the package, `geomech.numeric` (`docs/numeric-verification.md`):
   `evaluate(expr, env)` evaluates a tree with leaf values keyed by `str(leaf)` and draws
   the rest deterministically; `check_eom(L, dW, variables, eom)` returns the worst relative
@@ -52,6 +60,72 @@ All notable changes to `geomech` are recorded here. The format follows
   notebooks for the rigid pendulum, spherical pendulum, quadrotor and quadrotor with payload.
 
 ### Changed
+- Unknown `attr=[...]` strings raise `ValueError` naming the symbol and listing the valid
+  attributes (`Constant`, `Zero`, `Ones`, `Identity`, `UnitNorm`, `SymmetricMatrix`,
+  `SkewSymmetricMatrix`, `OrthogonalMatrix`, `Manifold`, `TangentVector`). Before, a typo
+  such as `attr=["constant"]` was ignored and the symbol was silently non-constant, so `ṁ`
+  and `δm` terms appeared in the equations. A bare string (`attr="Constant"`) raises
+  `TypeError: attr must be a list of strings, got str 'Constant'`; before, it was iterated
+  character by character and reported as `unknown attribute 'C'`.
+- `compute_eom` rejects a time derivative of a listed variation vector in `inf_work`
+  (`Dot(x.t_diff().delta(), f)`, `Dot(ξ.t_diff(), f)`, `δ(q̇)·f` on S², `η̇·M` on SO(3))
+  with a `ValueError` naming the term: virtual work is linear in the variations
+  themselves. Before, integration by parts moved the derivative onto the force and the
+  equation silently carried `−ḟ` instead of `f`. A velocity-dependent force
+  (`δx·(−c ẋ)`) is unaffected; δL is not checked.
+- A `SystemVariables` entry or a `params` entry printed like the tangent vector (`ω_q`,
+  `Ω_R`) of a listed `S2`/`SO3` point raises `ValueError` naming both (params also may not
+  reuse a variation vector name). Before, two different leaves with one printed name were
+  merged by printing, `check_eom` and `linearize`, and the equation was wrong.
+- `params` given as a bare leaf and a `SystemVariables` group given as a bare leaf
+  (`vectors=x`) raise `TypeError` saying a list is expected; `compute_eom` with no
+  configuration variables raises `ValueError` (an empty `SystemVariables()` can still be
+  built and passed to `check_eom`). `Number(True)`, `x * True` and `compute_eom(L, False,
+  …)` raise `TypeError` (bool was taken as the integer 1/0). A hand-built
+  `Variation(x.t_diff())` is reported under `x` with a hint to write `x.delta()`.
+- `compute_eom` raises `ValueError` when a variation symbol survives extraction that is
+  neither the variation of a listed configuration variable nor of a symbol declared in
+  `params` (`δy` of an unlisted `y`, `δe3` of an `e3` missing `Constant`, `ξ`/`δω` of an
+  `S2("q")` listed as `Vector("q")`, `δp` from `δW = … + δp·F`), naming the symbols and
+  saying to list them in `SystemVariables`, declare them in `params=...`, or mark them
+  `Constant`. Before, those terms were dropped from every equation without a message, so a
+  forgotten degree of freedom lost its equation silently and a prescribed parameter was
+  indistinguishable from a typo. Prescribed time-varying parameters are now declared with
+  `compute_eom(..., params=[l])` (see Added).
+- `SystemVariables` entries are validated by `compute_eom` and `linearize`: a printed name
+  listed twice (across groups, or a `Scalar` and a `Vector` of the same name), a tangent or
+  variation vector (`ω`, `ξ`, `Ω`, `η`) or a `TimeDerivative`/`Variation` node listed as a
+  configuration variable, and a non-`SO3` matrix raise `TypeError`/`ValueError` naming the
+  entry; `linearize._check_eom` also compares the number of keys. Before, a duplicate merged
+  two equations into one and `linearize` emitted duplicate rows and states, a tangent vector
+  gave the meaningless equation `(ω m + f)`, and a plain matrix failed later with an
+  `AlgebraicError` from `extract_linear_coeff`/`collect` that did not name the entry.
+- The S² tangent rules (`ω·q = 0`, `q × (ω × q) = ω`) compare the tangent vector's parent by
+  name, as every other rule does, so a second `S2("q")` object is the same point. Before,
+  the rules were skipped for it and `ω·q`, `q×(ω×q)` terms stayed in the equation.
+- `compute_eom(L, None, …)` and `compute_eom(L, 0, …)` mean δW = 0; a non-scalar or
+  non-expression `lagrangian`/`inf_work` raises `TypeError` naming its type. Before, `None`
+  and `0` crashed with `AttributeError` and a vector `dW` with `ExpressionMismatchError: Add`.
+- `apply_manifold_rules` raises `TypeError` naming the node class when it cannot rebuild a
+  node whose children were substituted. Before, the original node was returned and the
+  substitution silently discarded.
+- `TimeDerivative(q)` and `Variation(q)` for an `S2`/`SO3` leaf raise `ValueError` pointing
+  to `q.t_diff()`/`q.delta()`. Before, the node was built and carried none of the
+  kinematics.
+- `collect` raises `TypeError` for a non-scalar argument, and a target on both sides of a
+  `Dot` raises `NonLinearError` before the flip shortcut. Before, a non-scalar argument was
+  returned unchanged and `Dot(f(v), v)` with `v` inside `f` was flipped and accepted as
+  linear.
+- `full_simplify` emits a `RuntimeWarning` carrying the expression when it stops at
+  `max_iter` passes without reaching a fixed point. Before, the partially simplified
+  expression was returned silently.
+- `Number(0)` carries the `Zero` flag and `Number(1)` the `Ones` flag (also for the numbers
+  wrapped by `2 * x`-style operators), and a product of numerics that folds to 0 is the
+  `Zero` leaf. Before, `Number(0) * x` simplified to `(0)x` with `is_zero == False`.
+- `AlgebraicError`, `NonLinearError`, `ExpressionMismatchError` and `SizeMismatchError` are
+  exported from `geomech` (and `geomech.utils`) so user code can catch them.
+- `examples/rigid_pendulum.py`: the second inertia matrix of the double rigid pendulum is
+  named `J2` (it was a second `Matrix("J1")`, so both links printed the same symbol).
 - `expand` distributes `VVMul` over `VAdd`: outer products `(a + b) cᵀ`, `a (b + c)ᵀ` and
   inner products `(a + b)ᵀ c`, `aᵀ (b + c)` are split into sums of products, as every other
   product already was. `Transpose` itself is still not expanded. The printed output of
