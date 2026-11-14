@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [geomech]
+    branches: [main]
   pull_request:
-    branches: [geomech]
+    branches: [main]
 
 jobs:
   lint:

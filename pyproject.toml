@@ -16,7 +16,7 @@ dependencies = [
 Homepage = "https://github.com/vkotaru/geomech"
 Documentation = "https://vkotaru.github.io/geomech/"
 Repository = "https://github.com/vkotaru/geomech"
-Changelog = "https://github.com/vkotaru/geomech/blob/geomech/CHANGELOG.md"
+Changelog = "https://github.com/vkotaru/geomech/blob/main/CHANGELOG.md"
 [project.optional-dependencies]
 dev = [
     "pytest",
