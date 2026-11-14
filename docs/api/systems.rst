@@ -35,6 +35,7 @@ Rigid bodies: ``geomech.systems.rigid``
 
 .. automodule:: geomech.systems.rigid
    :members: free_rigid_body, heavy_top, rigid_pendulum, double_rigid_pendulum,
+             n_link_rigid_chain, chain_link_defaults,
              two_rigid_bodies_spherical_joint, rigid_body
 
 Aerial vehicles: ``geomech.systems.aerial``
@@ -44,3 +45,9 @@ Aerial vehicles: ``geomech.systems.aerial``
    :members: quadrotor, quadrotor_offset_com, quadrotor_suspended_load,
              quadrotor_elastic_load, quadrotor_flexible_cable, multi_quadrotor_point_mass,
              multi_quadrotor_rigid_load, add_quadrotor
+
+Multibody systems: ``geomech.systems.multibody``
+------------------------------------------------
+
+.. automodule:: geomech.systems.multibody
+   :members: spacecraft_reaction_wheels, biped_3d

@@ -39,7 +39,9 @@ def test_golden_file_set_is_complete():
         f"tests/golden/ does not match geomech.systems; run `{SCRIPT.REGENERATE}`"
     )
     # every parametric system is stored at two sizes
-    assert len(ENTRIES) == len({name for _, name, _ in ENTRIES}) + 4
+    n_parametric = sum(1 for info in SCRIPT.list_systems() if info.parameters)
+    assert n_parametric == 5
+    assert len(ENTRIES) == len({name for _, name, _ in ENTRIES}) + n_parametric
 
 
 @pytest.mark.parametrize("stem, name, kwargs", ENTRIES, ids=[e[0] for e in ENTRIES])

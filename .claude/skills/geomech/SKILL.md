@@ -17,7 +17,9 @@ Manifolds*).
 If the system is one of `geomech.systems.list_systems()` (point mass, spring, spherical,
 double spherical and n-link spherical pendulums, particle on a rotating sphere, elastic
 pendulum, 3-D cart-pole, free rigid body, heavy top, rigid and double rigid pendulums,
-two bodies with a spherical joint, 6-DOF rigid body, quadrotor, quadrotor with an offset
+n-link rigid chain,
+two bodies with a spherical joint, 6-DOF rigid body, spacecraft with reaction wheels,
+3-D compass-gait biped (swing phase), quadrotor, quadrotor with an offset
 centre of mass, with a suspended, elastic or flexible-cable load, several quadrotors
 carrying a point mass or a rigid body), start from `sys = geomech.systems.get(name)`
 (`get("multi_quadrotor_point_mass", n_quads=4)` for a size) instead of retyping the
