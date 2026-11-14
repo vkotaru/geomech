@@ -44,21 +44,32 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   `docs/simulation.md`); it consumes only `geomech.codegen` modules and imports scipy
   (extra `geomech[sim]`) only for `solve_ivp` and `lqr`:
   - `accelerations(module, state, u, p)`: solves `mass @ a + bias + G u = 0` with each S²
-    row block replaced by `P_q · row + q qᵀ` on its own `ω̇` column (right-hand side
+    row block replaced by `P_q · row + s q qᵀ` on its own `ω̇` column (right-hand side
     `−P_q (bias + G u)`), so `q · ω̇ = 0` and the tangent-plane equation holds whether the
     derived S² mass block is singular (`Hat(q) Hat(q) m l²`) or full rank (`−m l² I`).
-    A singular system (condition number > 1e12) raises `LinAlgError` with the condition
-    number and the state.
+    The stabiliser weight `s = ‖P_q D‖_F/√2` is the tangent-plane inertia `m l²` of the
+    row's own block `D`, and the rows are equilibrated before the solve and the condition
+    check, so the result does not depend on the units (a mass ratio of 1e-14 or a 1 t mass
+    on a 100 km tether solve to round-off). A singular system (condition number > 1e12
+    after equilibration) raises `LinAlgError` with the condition number and the state.
   - `simulate(module, x0, t_span, p, u=None, method="rkmk4", dt=1e-3)` → `Trajectory`
     (`t`, `state`, `constraint_drift`, `energy()`, slot access `traj["q"]`). `"rkmk4"`:
     fixed-step Runge–Kutta–Munthe-Kaas of order 4 (S² rotated from the left, SO(3) from
     the right, `dexp⁻¹` to the `ad²` term, classical RK4 on vector slots); constraint
     drift at round-off. `"solve_ivp"`: DOP853 on the embedded state, outputs projected
     (`q/|q|`, polar factor of `R`), drift before projection reported. `x0` is checked
-    (unit `q`, `ω ⊥ q`, `R ∈ SO(3)`) with `ValueError` naming the slot; `u` is `None`, a
-    constant or a callable `u(t, state)`.
-  - `lqr(lin_module, x_eq, u_eq, p, Q, R)` → `LQRController` (gain, Riccati solution,
-    reduced `A`, `B`, `error(state)`, callable as `u(t, state)`), with SO(3) error
+    (unit `q`, `ω ⊥ q`, `R ∈ SO(3)`) with `ValueError` naming the slot. Stored states are
+    on the manifold (`ω` made tangent after each RKMK4 step and in the `solve_ivp`
+    projection), so `traj.state[-1]` can start the next segment. `u` is `None`, a
+    constant 1-D array or a callable `u(t, state)`; a wrong shape (including 2-D),
+    non-finite entries or a callable returning `None` raise naming `u` (and the time).
+    `t_span` must be finite. `output_every=k` stores every k-th step.
+  - `lqr(lin_module, x_eq, u_eq, p, Q, R, module=None)` → `LQRController` (gain, Riccati
+    solution, reduced `A`, `B`, `error(state)`, callable as `u(t, state)`). With
+    `module=` (the standard-form module) it checks that `(x_eq, u_eq)` is an equilibrium
+    at rest (residual `≤ eq_tol · scale`, `eq_tol = 1e-8` relative) and raises
+    `ValueError` with the residual otherwise; without it, it warns (`UserWarning`) that
+    nothing was checked. SO(3) error
     `vee(log(R_eqᵀ R))` and S² perturbations reduced to a 2-D tangent basis
     (`tangent_basis`). `geomech.numeric.log_so3` (principal logarithm, accurate near 0
     and π).
@@ -74,7 +85,10 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   - `StateLayout(variables, inputs, params)`: the flat `state` (configuration slots, then
     velocity slots; R row-major, S² `q` and `ω`), `a` (accelerations), `u` (inputs) and
     `p` (a dict keyed by `str(symbol)`), with `slices`, `to_dict()` and conversions to and
-    from `Evaluator` envs; `collect_params` lists the parameters of a set of expressions.
+    from `Evaluator` envs; `collect_params` lists the parameters of a system.
+    `layout.pack(**slots)` builds `state` from named slot values (`x_L=…, q=…, R=…`;
+    velocities default to zero) and `layout.unpack(state)` splits a state, or a
+    `(N, n_state)` array, into a dict of slot values.
   - `to_source(expr, layout, target)` and `lambdify(...)` (`f(state, u, p, a=None)`), and
     `generate_module(system, layout, path, target)` for the dict of `compute_eom`
     (`residual`), of `to_standard_form` (`mass`, `bias`, `input_matrix`) and a
@@ -82,13 +96,13 @@ Open follow-ups are listed in `specs/follow-ups.md`.
     the `_hat`/`_vee` helpers. Generated modules are ruff-clean and need only `numpy`.
     Leaves are checked: a stray symbol, a `TimeDerivative` of a non-leaf, a missing or an
     extra parameter raise naming the symbol.
-  - Targets `"numpy"` (default) and `"casadi"` (optional extra `geomech[casadi]`, pinned
-    to `casadi==3.8.2`; functions accept CasADi symbols, so `ca.jacobian` applies).
+  - Targets `"numpy"` (default) and `"casadi"` (optional extra `geomech[casadi]`, requiring
+    `casadi>=3.6,<4`; functions accept CasADi symbols, so `ca.jacobian` applies).
   - `energy_function(L, layout)` (and `energy_expr`, `momenta`): the total energy
     `Σ (∂L/∂v)·v − L`, with `∂L/∂v` extracted from the first variation of `L`;
     `generate_module(..., lagrangian=L)` adds `energy(state, p)`.
   - `examples/generated/`: the standard-form and linearized modules of the nine systems of
-    `tests/vbl_systems.py`, rewritten by `scripts/regenerate_generated.py`; CI regenerates
+    `tests/vbl_systems.py`, rewritten by `scripts/regenerate_generated.py`; CI checks
     them and fails on a diff. Optional extra `geomech[sim]` (scipy) for integrating them.
   - Tests `tests/test_codegen*.py`: every block of every oracle, phase-1 and VBL system
     against `evaluate` at 20 admissible states (1e-12), CasADi against NumPy, each node
@@ -292,6 +306,19 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   `L` or `δW` (a declared param named like a constant had no effect). An input that is
   the same symbol as its leaf in the equations is unchanged. The check is
   `geomech.dynamics.eom.check_symbol_clash`.
+- Input validation, after the review `specs/reviews/inputs-review.md` (F1-F5):
+  `inputs` must be an ordered sequence: a `set` or `dict` raises `TypeError` (the order
+  of a set depends on the hash seed, and it is the order of the columns of `B`); an input
+  printed like the velocity or acceleration of a configuration variable
+  (`Vector(str(x.t_diff()))`) or like any operation node of the equations
+  (`d/dt(l)`) raises `ValueError` (it used to pass, giving a zero `B` column); an input
+  whose rate occurs in the equations (a `compute_eom` param given as an input) raises
+  `AlgebraicError` naming `d/dt(u)` from `check_inputs` instead of an engine error;
+  `StateLayout` validates its inputs with the same `check_inputs`. A size-only clash
+  names both sizes; against a named numeric leaf (`Scalar("k", value=2.0)`) the hint
+  says to drop `value=`. The duplicate-input message adds "(an entry that prints like
+  'f' is the same symbol)". `to_standard_form` with a non-dict `eom` raises `TypeError`
+  like `linearize`. `compute_eom` params stay order-free (a set is accepted).
 - Products print a `*` between their factors (phase 5b, decision D2 (a)): `Mul`
   (`m*l`), `SVMul` (`x*m`), `SMMul` (`J*(2)`), `MVMul` (`J*\Omega`), `MMMul` (`R*J`),
   `VVMul` (`(a)'*b`). Every pinned equation string changes form; each changed output was
@@ -518,6 +545,64 @@ Open follow-ups are listed in `specs/follow-ups.md`.
   `geomech`.
 
 ### Fixed
+- Code generation and simulation together (final review
+  `specs/reviews/codegen-simulation-final.md`, R1–R6):
+  - R1: a linearization module built from another input order or another
+    `SystemVariables` order than its `StateLayout` was accepted, so `B_lin` paired its
+    columns with the wrong entries of `u` (a quadrotor with a load under LQR diverged to
+    `|x_L| = 35 m` while the gain's eigenvalues looked stable) or `lqr` failed with a
+    misleading singular `M_lin`. `generate_module` of a `LinearizedSystem` now raises
+    `ValueError` unless its rows, states and inputs follow the layout's variables and
+    inputs in the same order, naming both orders. `lqr` matches `LINEARIZATION` to its
+    `LAYOUT` by symbol (kinematic row per variable, `δu` per input), not by position,
+    and with `module=` requires the two modules to have the same variables, velocities
+    and inputs in the same order (the message names both).
+  - R2: `collect_params([L, dW], …)` listed the variation vectors `ξ`, `η` of `δW` as
+    parameters, so every generated function required `p["\eta_{R}"]`. They are left out,
+    `StateLayout` rejects a tangent or variation vector as a parameter (`ValueError`),
+    and a stray one in an expression is reported as such by the code generator rather
+    than with the advice to add it to `params`.
+  - R3: `collect_params` returned `[]` for entries it could not walk (the values of
+    `to_standard_form`). It now accepts `[L, dW]`, the dict of `compute_eom` or of
+    `to_standard_form`, a `LinearizedSystem`, one expression or an iterable of these,
+    and raises `TypeError` for anything else.
+  - Docs: "One layout for everything" in `docs/codegen.md` and the LQR section of
+    `docs/simulation.md`; the new errors in `docs/troubleshooting.md`; the S² solve
+    uses `s q qᵀ` (codegen page); an anisotropic `Q` on an S² block depends on
+    `tangent_basis` (simulation page); `docs/vbl.md` points to the codegen and
+    simulation pages.
+  - CI lints `examples/inverted_rigid_pendulum_lqr.py`, and a test runs it under
+    `-W error` and checks its printed final error.
+  - `geomech.dynamics.vbl.perturbation_variables` and `partition_terms` are public (the
+    codegen energy used the private names; `_perturbation_variables` and
+    `_partition_terms` stay as aliases).
+- Code generation (review `specs/reviews/codegen-review.md`, F1–F6 and the advisory):
+  - An omitted `a` or `u` (`None`, the `lambdify` default for `a`) of size 1 became NaN,
+    and of larger size raised a misleading size error. A generated function now raises
+    `ValueError` (`u must have 1 entries, got None (u is required here)`) when it uses
+    the argument, and accepts `None` when it does not (no inputs, no accelerations).
+    `None` as zero input remains a `geomech.simulation` convenience only.
+  - A scalar parameter given as `[1.5]` or a `(1,)` array was list-repeated or broadcast;
+    `_scalar` converts Python/NumPy scalars and single-element arrays to a float and
+    rejects more entries with `ValueError` naming the parameter (both targets; CasADi
+    scalars pass through).
+  - `Number(inf)` was emitted as `inf` (`NameError` at call time) and `Number(nan)` was
+    collected as a parameter; they are written `np.inf`/`-np.inf`/`np.nan` (`ca.inf` in
+    the CasADi target), and `is_number_literal(Number(nan))` is true.
+  - NumPy target: `Cross` is written with a component-wise `_cross` helper instead of
+    `np.cross` (identical values, ~10 µs less per call): the double rigid pendulum's
+    `bias` drops from 272 to 45 µs and a 1 s simulation from 1.36 to 0.45 s.
+  - `scripts/regenerate_generated.py` deletes stale files when writing, and `--check`
+    reports modules that are out of date, missing, stale or not tracked by git; CI's lint
+    job runs `--check`.
+  - Common subexpressions are identified structurally, once per node object, instead of
+    by `str` of every node: generation is linear in the number of node objects (a chain of
+    depth 800 from 730 to 5 ms, a depth-20 tree with shared subtrees from 8 s to 0.4 ms).
+    The generated code is unchanged.
+  - The `casadi` extra requires `casadi>=3.6,<4` instead of exactly `3.8.2`.
+- `Vector`/`Matrix` leaves store `size` as a tuple of ints: `Vector("F", size=[3])` and
+  `size=3` are the same symbol as `Vector("F")` (they were rejected as "a different
+  symbol" by the input and param checks). No printed string changes.
 - A rewrite under `TimeDerivative`/`Variation` that reduces the operand to a bare
   `S2`/`SO3` leaf (`d/dt(q·(q·q))`, `d/dt(q·1)`, `δ(I q)`, `d/dt(RᵀR q)`) raised
   `ValueError` from `simplify`/`full_simplify`; the node is now rebuilt in eager form,

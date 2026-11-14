@@ -31,7 +31,7 @@ from geomech.core.transformations.simplification import full_simplify
 from geomech.core.transformations.utils import sum_of
 from geomech.dynamics.eom import check_variables
 from geomech.dynamics.variables import SystemVariables
-from geomech.dynamics.vbl import _partition_terms, _perturbation_variables
+from geomech.dynamics.vbl import partition_terms, perturbation_variables
 
 __all__ = ["momenta", "energy_expr", "energy_function", "energy_source"]
 
@@ -49,9 +49,9 @@ def momenta(L: Expr, variables: SystemVariables) -> dict[str, tuple[Expr, Expr]]
     full gradient in ``ω``, which may have a component along ``q``).
     """
     check_variables(variables, caller="momenta")
-    cfg_vars, cfg_perts, vel_perts = _perturbation_variables(variables)
+    cfg_vars, cfg_perts, vel_perts = perturbation_variables(variables)
     dL = expand(full_simplify(L.delta()))
-    buckets = _partition_terms(dL, vel_perts + cfg_perts, "L")
+    buckets = partition_terms(dL, vel_perts + cfg_perts, "L")
     out = {}
     for var, pert, terms in zip(cfg_vars, vel_perts, buckets):
         coeff = extract_linear_coeff(sum_of(terms, ExprType.SCALAR), pert)

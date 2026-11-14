@@ -125,10 +125,19 @@ _PARAMS = ("e3", "g", "k", "l0", "m")
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -145,6 +154,12 @@ def _hat(v):
 
 def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
+
+
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
 
 
 def _check_params(p, names):
@@ -167,7 +182,7 @@ def mass(state, p):
     _check_params(p, _PARAMS)
     state = _arr(state, 8, "state")
     l = state[0]
-    m = p["m"]
+    m = _scalar(p["m"], "m")
     out = np.zeros((4, 4))
     out[0, 0] = m * -1
     out[1:4, 1:4] = np.eye(3) * (m * l * l * -1)
@@ -183,16 +198,15 @@ def bias(state, p):
     l_dot = state[4]
     omega_q = state[5:8]
     e3 = _vec(p["e3"])
-    g = p["g"]
-    k = p["k"]
-    l0 = p["l0"]
-    m = p["m"]
+    g = _scalar(p["g"], "g")
+    k = _scalar(p["k"], "k")
+    l0 = _scalar(p["l0"], "l0")
+    m = _scalar(p["m"], "m")
     _t0 = m * l
     _t1 = m * g
-    _t2 = np.cross(q, e3) * (_t1 * l * -1)
     out = np.zeros(4)
     out[0] = _t0 * (omega_q @ omega_q) + _t1 * (q @ e3) * -1 + k * l * -1 + k * l0
-    out[1:4] = omega_q * (_t0 * l_dot * -2) + _t2
+    out[1:4] = omega_q * (_t0 * l_dot * -2) + _cross(q, e3) * (_t1 * l * -1)
     return out
 
 
@@ -213,7 +227,7 @@ def kinematics(state):
     omega_q = state[5:8]
     out = np.zeros(4)
     out[0] = l_dot
-    out[1:4] = np.cross(omega_q, q)
+    out[1:4] = _cross(omega_q, q)
     return out
 
 
@@ -226,10 +240,10 @@ def energy(state, p):
     l_dot = state[4]
     omega_q = state[5:8]
     e3 = _vec(p["e3"])
-    g = p["g"]
-    k = p["k"]
-    l0 = p["l0"]
-    m = p["m"]
+    g = _scalar(p["g"], "g")
+    k = _scalar(p["k"], "k")
+    l0 = _scalar(p["l0"], "l0")
+    m = _scalar(p["m"], "m")
     _t0 = m * l * l * (omega_q @ omega_q)
     _t1 = k * l
     _t2 = m * l_dot * l_dot * 0.5 + _t0 * 0.5 + m * g * l * (q @ e3)

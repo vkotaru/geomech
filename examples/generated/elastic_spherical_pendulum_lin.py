@@ -193,10 +193,19 @@ _PARAMS = ("e3", "g", "k", "l0", "m")
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -213,6 +222,12 @@ def _hat(v):
 
 def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
+
+
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
 
 
 def _check_params(p, names):
@@ -235,7 +250,7 @@ def M_lin(state, a, u, p):
     _check_params(p, _PARAMS)
     state = _arr(state, 8, "state")
     l = state[0]
-    m = p["m"]
+    m = _scalar(p["m"], "m")
     out = np.zeros((8, 8))
     out[0, 0] = 1
     out[1:4, 1:4] = np.eye(3)
@@ -255,12 +270,12 @@ def A_lin(state, a, u, p):
     omega_q = state[5:8]
     omega_q_dot = a[1:4]
     e3 = _vec(p["e3"])
-    g = p["g"]
-    k = p["k"]
-    m = p["m"]
+    g = _scalar(p["g"], "g")
+    k = _scalar(p["k"], "k")
+    m = _scalar(p["m"], "m")
     _t0 = np.outer(q, q)
     _t1 = m * g
-    _t2 = np.cross(q, e3) * (_t1 * -1)
+    _t2 = _cross(q, e3) * (_t1 * -1)
     _t3 = m * l
     _t4 = _t3 * -2
     out = np.zeros((8, 8))
@@ -294,5 +309,5 @@ def kinematics(state):
     omega_q = state[5:8]
     out = np.zeros(4)
     out[0] = l_dot
-    out[1:4] = np.cross(omega_q, q)
+    out[1:4] = _cross(omega_q, q)
     return out

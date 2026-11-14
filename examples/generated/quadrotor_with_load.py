@@ -156,10 +156,19 @@ _PARAMS = ("J", "e3", "g", "l", "m_L", "m_Q")
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -176,6 +185,12 @@ def _hat(v):
 
 def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
+
+
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
 
 
 def _check_params(p, names):
@@ -199,9 +214,9 @@ def mass(state, p):
     state = _arr(state, 24, "state")
     q = state[3:6]
     J = _mat(p["J"])
-    l = p["l"]
-    m_L = p["m_L"]
-    m_Q = p["m_Q"]
+    l = _scalar(p["l"], "l")
+    m_L = _scalar(p["m_L"], "m_L")
+    m_Q = _scalar(p["m_Q"], "m_Q")
     _t0 = _hat(q)
     _t1 = m_Q * l
     out = np.zeros((9, 9))
@@ -223,20 +238,20 @@ def bias(state, p):
     Omega_R = state[21:24]
     J = _mat(p["J"])
     e3 = _vec(p["e3"])
-    g = p["g"]
-    l = p["l"]
-    m_L = p["m_L"]
-    m_Q = p["m_Q"]
+    g = _scalar(p["g"], "g")
+    l = _scalar(p["l"], "l")
+    m_L = _scalar(p["m_L"], "m_L")
+    m_Q = _scalar(p["m_Q"], "m_Q")
     _t0 = omega_q @ omega_q * m_Q * l * -1
     _t1 = m_Q * g
     _t2 = m_Q * l
-    _t3 = np.cross(np.cross(omega_q, q), x_L_dot) * _t2
-    _t4 = np.cross(omega_q, np.cross(q, x_L_dot)) * (_t2 * -2)
-    _t5 = np.cross(q, np.cross(omega_q, x_L_dot)) * _t2
+    _t3 = _cross(_cross(omega_q, q), x_L_dot) * _t2
+    _t4 = _cross(omega_q, _cross(q, x_L_dot)) * (_t2 * -2)
+    _t5 = _cross(q, _cross(omega_q, x_L_dot)) * _t2
     out = np.zeros(9)
     out[0:3] = q * _t0 + e3 * (_t1 * -1) + e3 * (m_L * g * -1)
-    out[3:6] = _t3 + _t4 + _t5 + np.cross(q, e3) * (_t1 * l)
-    out[6:9] = np.cross(Omega_R, J @ Omega_R) * -1
+    out[3:6] = _t3 + _t4 + _t5 + _cross(q, e3) * (_t1 * l)
+    out[6:9] = _cross(Omega_R, J @ Omega_R) * -1
     return out
 
 
@@ -247,11 +262,11 @@ def input_matrix(state, p):
     q = state[3:6]
     R = state[6:15].reshape(3, 3)
     e3 = _vec(p["e3"])
-    l = p["l"]
+    l = _scalar(p["l"], "l")
     _t0 = R @ e3
     out = np.zeros((9, 4))
     out[0:3, 0] = _t0
-    out[3:6, 0] = np.cross(q, _t0) * (l * -1)
+    out[3:6, 0] = _cross(q, _t0) * (l * -1)
     out[6:9, 1:4] = np.eye(3)
     return out
 
@@ -267,7 +282,7 @@ def kinematics(state):
     _t0 = (R @ _hat(Omega_R)).reshape(9)
     out = np.zeros(15)
     out[0:3] = x_L_dot
-    out[3:6] = np.cross(omega_q, q)
+    out[3:6] = _cross(omega_q, q)
     out[6:15] = _t0
     return out
 
@@ -283,15 +298,15 @@ def energy(state, p):
     Omega_R = state[21:24]
     J = _mat(p["J"])
     e3 = _vec(p["e3"])
-    g = p["g"]
-    l = p["l"]
-    m_L = p["m_L"]
-    m_Q = p["m_Q"]
+    g = _scalar(p["g"], "g")
+    l = _scalar(p["l"], "l")
+    m_L = _scalar(p["m_L"], "m_L")
+    m_Q = _scalar(p["m_Q"], "m_Q")
     _t0 = x_L_dot @ x_L_dot
     _t1 = m_Q * l
-    _t2 = _t1 * (np.cross(q, x_L_dot) @ omega_q)
+    _t2 = _t1 * (_cross(q, x_L_dot) @ omega_q)
     _t3 = _t1 * l
-    _t4 = np.cross(omega_q, q)
+    _t4 = _cross(omega_q, q)
     _t5 = m_Q * g
     _t6 = e3 @ x_L
     _t7 = m_Q * _t0 * 0.5 + m_L * _t0 * 0.5 + _t2 * -1 + _t3 * (omega_q @ omega_q)

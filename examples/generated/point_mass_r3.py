@@ -70,10 +70,19 @@ _PARAMS = ("m",)
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -90,6 +99,12 @@ def _hat(v):
 
 def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
+
+
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
 
 
 def _check_params(p, names):
@@ -110,7 +125,7 @@ def layout():
 def mass(state, p):
     """Mass matrix M(state): blocks M[a_j] per equation (M = -physical inertia)."""
     _check_params(p, _PARAMS)
-    m = p["m"]
+    m = _scalar(p["m"], "m")
     out = np.zeros((3, 3))
     out[0:3, 0:3] = np.eye(3) * (m * -1)
     return out
@@ -145,5 +160,5 @@ def energy(state, p):
     _check_params(p, _PARAMS)
     state = _arr(state, 6, "state")
     x_dot = state[3:6]
-    m = p["m"]
+    m = _scalar(p["m"], "m")
     return m * (x_dot @ x_dot) * 0.5

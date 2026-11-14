@@ -5,7 +5,7 @@ Roadmap feature 5. Branch `feature/codegen` from `geomech`.
 ## Goal
 
 Turn the symbolic output of the pipeline into plain numeric functions that simulation,
-control design, the MCP server and the paper's numeric tables can call, through one
+control design and other tools can call, through one
 code path that is verified against `geomech.numeric.evaluate`.
 
 Two targets:
@@ -67,7 +67,7 @@ rows are produced only inside inner products.
 | `MMMul` | `A @ B` | |
 | `VVMul` | inner `a @ b`, outer `np.outer(a, b)` | decided by `is_row_vector` |
 | `Dot` | `a @ b` | |
-| `Cross` | `np.cross(a, b)` | |
+| `Cross` | `_cross(a, b)` | component-wise helper (fix F5 of `specs/reviews/codegen-review.md`) |
 | `Hat` / `Vee` | `_hat(v)` / `_vee(M)` | helpers emitted once per module |
 | `Transpose` | `M.T`; of a vector, the column (row form handled by the parent) | |
 | `TimeDerivative` of a leaf | the corresponding velocity or acceleration slot | anything else raises |

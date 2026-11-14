@@ -227,10 +227,19 @@ _PARAMS = (
 
 
 def _arr(x, n, name):
+    if x is None:
+        raise ValueError(f"{name} must have {n} entries, got None ({name} is required here)")
     x = np.asarray(x, dtype=float).reshape(-1)
     if x.size != n:
         raise ValueError(f"{name} must have {n} entries, got {x.size}")
     return x
+
+
+def _scalar(x, name):
+    x = np.asarray(x, dtype=float)
+    if x.size != 1:
+        raise ValueError(f"parameter {name!r} is a scalar, got {x.size} entries")
+    return float(x.reshape(()))
 
 
 def _vec(x):
@@ -247,6 +256,12 @@ def _hat(v):
 
 def _vee(M):
     return np.array([M[2, 1], M[0, 2], M[1, 0]])
+
+
+def _cross(a, b):
+    return np.array(
+        [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    )
 
 
 def _check_params(p, names):
@@ -275,8 +290,8 @@ def M_lin(state, a, u, p):
     rho_1 = _vec(p["\\rho_1"])
     rho_2 = _vec(p["\\rho_2"])
     l_1 = _vec(p["l_1"])
-    m1 = p["m1"]
-    m2 = p["m2"]
+    m1 = _scalar(p["m1"], "m1")
+    m2 = _scalar(p["m2"], "m2")
     _t0 = _hat(rho_1)
     _t1 = _hat(l_1)
     _t2 = m2 * -1
@@ -307,23 +322,23 @@ def A_lin(state, a, u, p):
     rho_1 = _vec(p["\\rho_1"])
     rho_2 = _vec(p["\\rho_2"])
     e3 = _vec(p["e3"])
-    g = p["g"]
+    g = _scalar(p["g"], "g")
     l_1 = _vec(p["l_1"])
-    m1 = p["m1"]
-    m2 = p["m2"]
+    m1 = _scalar(p["m1"], "m1")
+    m2 = _scalar(p["m2"], "m2")
     _t0 = _hat(Omega_R1)
     _t1 = _hat(Omega_R2)
-    _t2 = np.cross(Omega_R1, l_1)
+    _t2 = _cross(Omega_R1, l_1)
     _t3 = _hat(_t2)
     _t4 = R1.T
-    _t5 = np.cross(Omega_R2, rho_2)
+    _t5 = _cross(Omega_R2, rho_2)
     _t6 = _t4 @ (R2 @ _t5)
     _t7 = _hat(_t6)
     _t8 = _hat(l_1)
-    _t9 = np.cross(Omega_R2, _t5)
+    _t9 = _cross(Omega_R2, _t5)
     _t10 = m2 * -1
     _t11 = _t8 @ _hat(_t4 @ (R2 @ _t9)) * _t10
-    _t12 = np.cross(Omega_R2_dot, rho_2)
+    _t12 = _cross(Omega_R2_dot, rho_2)
     _t13 = _t8 @ _hat(_t4 @ (R2 @ _t12)) * _t10
     _t14 = _t8 @ _t7
     _t15 = _hat(rho_1)
@@ -337,18 +352,18 @@ def A_lin(state, a, u, p):
     _t23 = _t8 @ (_t4 @ (R2 @ _hat(_t12)))
     _t24 = _t8 @ _t21
     _t25 = _t3 @ _t21 * _t10 + _t8 @ (_t0 @ _t21) * _t10 + _t22 + _t23 * m2
-    _t26 = _hat(np.cross(rho_1, np.cross(Omega_R1, rho_1))) * m1
+    _t26 = _hat(_cross(rho_1, _cross(Omega_R1, rho_1))) * m1
     _t27 = _hat(J1 @ Omega_R1) + _t0 @ J1 * -1 + _t26 + _t0 @ (_t15 @ _t15) * m1
-    _t28 = _t27 + _t7 @ _t8 * m2 + _t14 * _t10 + _hat(np.cross(l_1, _t2)) * m2
+    _t28 = _t27 + _t7 @ _t8 * m2 + _t14 * _t10 + _hat(_cross(l_1, _t2)) * m2
     _t29 = _hat(rho_2)
     _t30 = _t4 @ (R2 @ _t29)
     _t31 = _t8 @ (_t4 @ (R2 @ (_t1 @ _t29)))
     _t32 = _t3 @ _t30 * _t10 + _t8 @ (_t0 @ _t30) * _t10 + _t24 * m2 + _t31 * m2
     _t33 = R2.T
     _t34 = _t33 @ (R1 @ _t3)
-    _t35 = np.cross(Omega_R1, _t2)
+    _t35 = _cross(Omega_R1, _t2)
     _t36 = _t29 @ (_t33 @ (R1 @ _hat(_t35)))
-    _t37 = np.cross(Omega_R1_dot, l_1)
+    _t37 = _cross(Omega_R1_dot, l_1)
     _t38 = _t29 @ (_t33 @ (R1 @ _hat(_t37)))
     _t39 = _t29 @ _t34
     _t40 = _t20 @ _t34 * _t10 + _t29 @ (_t1 @ _t34) * _t10 + _t36 * m2 + _t38 * m2
@@ -361,9 +376,8 @@ def A_lin(state, a, u, p):
     _t47 = _t33 @ (R1 @ _t8)
     _t48 = _t29 @ (_t33 @ (R1 @ (_t0 @ _t8)))
     _t49 = _t20 @ _t47 * _t10 + _t29 @ (_t1 @ _t47) * _t10 + _t39 * m2 + _t48 * m2
-    _t50 = _hat(np.cross(rho_2, _t41)) * m2
-    _t51 = _hat(np.cross(rho_2, _t5)) * m2
-    _t52 = _hat(J2 @ Omega_R2) + _t1 @ J2 * -1 + _t42 @ _t29 * m2 + _t45 * _t10
+    _t50 = _hat(J2 @ Omega_R2) + _t1 @ J2 * -1 + _t42 @ _t29 * m2 + _t45 * _t10
+    _t51 = _t50 + _hat(_cross(rho_2, _t41)) * m2 + _hat(_cross(rho_2, _t5)) * m2
     out = np.zeros((12, 12))
     out[0:3, 0:3] = _t0 * -1
     out[0:3, 6:9] = np.eye(3)
@@ -371,12 +385,12 @@ def A_lin(state, a, u, p):
     out[3:6, 9:12] = np.eye(3)
     out[6:9, 0:3] = _t19 + _t8 @ _t16 * _t17
     out[6:9, 3:6] = _t25 + _t0 @ _t24 * m2
-    out[6:9, 6:9] = _t28 + _t0 @ (_t8 @ _t8) * m2 + _hat(np.cross(l_1, _t6)) * m2
+    out[6:9, 6:9] = _t28 + _t0 @ (_t8 @ _t8) * m2 + _hat(_cross(l_1, _t6)) * m2
     out[6:9, 9:12] = _t32 + _t0 @ (_t8 @ _t30) * m2
     out[9:12, 0:3] = _t40 + _t1 @ _t39 * m2
     out[9:12, 3:6] = _t46 + _t1 @ _t45 * _t10 + _t29 @ _hat(_t33 @ e3) * _t17
     out[9:12, 6:9] = _t49 + _t1 @ (_t29 @ _t47) * m2
-    out[9:12, 9:12] = _t52 + _t50 + _t51 + _t1 @ (_t29 @ _t29) * m2
+    out[9:12, 9:12] = _t51 + _t1 @ (_t29 @ _t29) * m2
     return out
 
 

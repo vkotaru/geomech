@@ -153,10 +153,16 @@ non-calculus operand; hashing uses `str`. `expr.has(x)` uses the same `==`. Henc
   they are ordinary non-constant symbols in `δW`. An input must be the same symbol as its
   leaf in the equations (class, `attr`, size): `Scalar("g")` against a constant
   `Scalar("g", attr=["Constant"])` raises `ValueError`, as does a param of `compute_eom`.
-  Both functions accept and reject the same inputs (`check_inputs`): a list (or tuple,
-  generator) of distinct non-constant `Scalar`/`Vector` leaves that are neither a
-  configuration variable nor a tangent or variation vector (`ω`, `ξ`, `Ω`, `η`);
-  `inputs=None` means none.
+  Both functions, and `StateLayout`, accept and reject the same inputs (`check_inputs`):
+  an ordered sequence (a list, tuple or generator) of distinct non-constant
+  `Scalar`/`Vector` leaves that are neither a configuration variable, a tangent or
+  variation vector (`ω`, `ξ`, `Ω`, `η`), nor printed like a velocity, an acceleration or
+  any other node of the equations; `inputs=None` means none. A `set` or a `dict` raises
+  `TypeError`: the order of `inputs` is the order of the columns of `B` and of the
+  generated `u` vector, and a set has no order (it would depend on the hash seed). A size
+  may be spelled `3`, `[3]` or `(3,)`: leaves store it as a tuple. A param of
+  `compute_eom` may also be an input only while its rate does not occur in the equations
+  (`AlgebraicError` otherwise).
 - **constant**: A leaf with `attr=["Constant"]` (or a number): its variation and derivative vanish.
   A symbol that is neither a configuration variable, a param nor a constant makes
   `compute_eom` raise ([Troubleshooting](troubleshooting.md)).
