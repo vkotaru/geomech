@@ -36,6 +36,7 @@ from geomech.systems._base import (
     systems_table,
 )
 from geomech.systems.aerial import (
+    multi_quadrotor_hose,
     multi_quadrotor_point_mass,
     multi_quadrotor_rigid_load,
     quadrotor,
@@ -115,4 +116,5 @@ __all__ = [
     "quadrotor_flexible_cable",
     "multi_quadrotor_point_mass",
     "multi_quadrotor_rigid_load",
+    "multi_quadrotor_hose",
 ]

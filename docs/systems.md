@@ -76,6 +76,7 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 | `quadrotor_flexible_cable(n_links=…)` | R³ × SO(3) × (S²)ⁿ | 12 | — | — |
 | `multi_quadrotor_point_mass(n_quads=…)` | R³ × (SO(3) × S²)ⁿ | 18 | — | — |
 | `multi_quadrotor_rigid_load(n_quads=…)` | R³ × SO(3) × (SO(3) × S²)ⁿ | 21 | — | — |
+| `multi_quadrotor_hose(n_links=…)` | R³ × (S²)ⁿ × SO(3)² | 15 | — | — |
 <!-- /systems-table -->
 
 Each builder's docstring, in the [API reference](api/systems.rst), states the Lagrangian,

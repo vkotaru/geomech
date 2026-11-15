@@ -39,6 +39,7 @@ SIZED = {
     "quadrotor_flexible_cable": "n_links",
     "multi_quadrotor_point_mass": "n_quads",
     "multi_quadrotor_rigid_load": "n_quads",
+    "multi_quadrotor_hose": "n_links",
 }
 
 
@@ -459,6 +460,26 @@ class Model:
 
     def multi_quadrotor_rigid_load(self, n):
         self._team(n, rigid=True)
+
+    def multi_quadrotor_hose(self, n):
+        ends = (0, n)  # the builder's default attachment
+
+        def joint(c, k):
+            x = c["x_0"]
+            for i in range(1, k + 1):
+                x = x + self.v(f"l{i}") * c[f"q{i}"]
+            return x
+
+        def pts(c, t):
+            out = [(self.v(f"m{k}"), joint(c, k)) for k in range(n + 1)]
+            return out + [(self.v(f"m_Q{k}"), joint(c, k)) for k in ends]
+
+        self.points = pts
+        self.bodies = [(self.v(f"J{k}"), f"\\Omega_{{R{k}}}") for k in ends]
+        self.forces = lambda c, u: [
+            (u[f"f{k}"] * c[f"R{k}"] @ UP, (lambda c, k=k: joint(c, k))) for k in ends
+        ]
+        self.body_moment(*[(f"M{k}", f"R{k}") for k in ends])
 
 
 def errors(s, name, seed):

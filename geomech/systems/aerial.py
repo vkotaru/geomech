@@ -510,3 +510,145 @@ __all__ = [
     "multi_quadrotor_point_mass",
     "multi_quadrotor_rigid_load",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Several quadrotors carrying a flexible hose
+# ---------------------------------------------------------------------------
+
+
+def _hose_attach(attach, n):
+    if attach is None:
+        return (0, n)
+    try:
+        idx = tuple(sorted({int(a) for a in attach}))
+    except TypeError:
+        raise ValueError(
+            f"multi_quadrotor_hose: attach must be a collection of joint indices, got {attach!r}"
+        ) from None
+    if (
+        not idx
+        or idx[0] < 0
+        or idx[-1] > n
+        or any(isinstance(a, bool) or not isinstance(a, (int, np.integer)) for a in attach)
+    ):
+        raise ValueError(
+            f"multi_quadrotor_hose: attach must be distinct joint indices from 0 to {n}, got"
+            f" {attach!r}"
+        )
+    return idx
+
+
+@register("R³ × (S²)ⁿ × SO(3)²")
+def multi_quadrotor_hose(*, n_links: int = 3):
+    """Two quadrotors carrying a flexible hose of n links, one at each end, on
+    R³ × (S²)ⁿ × SO(3)² (the model of Kotaru and Sreenath, 2020).
+
+    Joints ``x_k = x_0 + Σ_{i≤k} lᵢ qᵢ`` (k = 0, …, n) carry point masses mₖ; quadrotor
+    k ∈ {0, n} adds ``m_Qk``, ``J_k``, ``R_k``.
+    ``L = Σ_k ½ mₖ ẋₖ·ẋₖ − Σ_k mₖ g e₃·xₖ + Σ_{k∈{0,n}} (½ m_Qk ẋₖ·ẋₖ + ½ Ω_k·J_kΩ_k
+    − m_Qk g e₃·xₖ)``, ``δW = Σ_{k∈{0,n}} (f_k (R_k e₃)·δx_k + η_k·M_k)``.
+    ``hose_system(n_links, attach)`` builds the same model with quadrotors at any set of
+    joints; this builder is ``attach=(0, n)``. ``n_links`` is an int from 1 to 20
+    (``MAX_SIZE``).
+    """
+    return hose_system(n_links, None)
+
+
+def hose_system(n_links: int = 3, attach=None):
+    """Quadrotors carrying a flexible hose of n links, on R³ × (S²)ⁿ × SO(3)ᵐ (the model of
+    Kotaru and Sreenath, 2020).
+
+    The hose is n massless links of lengths lᵢ and directions qᵢ joined by spherical joints,
+    with point masses mₖ at the joints k = 0, …, n: ``x_k = x_0 + Σ_{i≤k} lᵢ qᵢ``. A
+    quadrotor of mass ``m_Qk``, inertia ``J_k`` and attitude ``R_k`` is attached at its
+    centre of mass to each joint k of *attach* (default ``(0, n)``, one at each end).
+    ``L = Σ_k ½ mₖ ẋₖ·ẋₖ + Σ_{k∈attach} (½ m_Qk ẋₖ·ẋₖ + ½ Ω_k·J_kΩ_k)
+    − Σ_k mₖ g e₃·xₖ − Σ_{k∈attach} m_Qk g e₃·xₖ``,
+    ``δW = Σ_{k∈attach} (f_k (R_k e₃)·δx_k + η_k·M_k)``, inputs ``[f_k, M_k]`` per
+    quadrotor. ``n_links`` is an int from 1 to 20 (``MAX_SIZE``); *attach* holds distinct
+    joint indices from 0 to n.
+    """
+    n = check_count(n_links, "multi_quadrotor_hose: n_links")
+    idx = _hose_attach(attach, n)
+    (g,) = getScalars("g", attr=["Constant"])
+    e3 = Vector("e3", attr=["Constant"])
+    x0 = Vector("x_0")
+    qs = [S2(f"q{i}") for i in range(1, n + 1)]
+    ls = getScalars(" ".join(f"l{i}" for i in range(1, n + 1)), attr=["Constant"])
+    ms = getScalars(" ".join(f"m{k}" for k in range(0, n + 1)), attr=["Constant"])
+    joints, x = [x0], x0
+    for q, li in zip(qs, ls):
+        x = x + q * li
+        joints.append(x)
+    Rs = {k: SO3(f"R{k}") for k in idx}
+    Js = {k: _inertia(f"J{k}") for k in idx}
+    mQs = {k: Scalar(f"m_Q{k}", attr=["Constant"]) for k in idx}
+    fs = {k: Scalar(f"f{k}") for k in idx}
+    Ms = {k: Vector(f"M{k}") for k in idx}
+    L = None
+    for m, p in zip(ms, joints):
+        v = p.t_diff()
+        term = HALF * m * Dot(v, v) - m * g * Dot(e3, p)
+        L = term if L is None else L + term
+    dW = None
+    for k in idx:
+        p, R, Om = joints[k], Rs[k], Rs[k].get_tangent_vector()
+        v = p.t_diff()
+        L = L + HALF * mQs[k] * Dot(v, v) + HALF * Dot(Om, Js[k] * Om)
+        L = L - mQs[k] * g * Dot(e3, p)
+        term = Dot(p.delta(), (R * e3) * fs[k]) + Dot(R.get_variation_vector(), Ms[k])
+        dW = term if dW is None else dW + term
+    params: dict = {"g": 9.81, "e3": E3}
+    total = 2.0  # hose length
+    for i in range(1, n + 1):
+        params[f"l{i}"] = total / n
+    for k in range(0, n + 1):
+        params[f"m{k}"] = 0.4 / (n + 1)
+    state: dict = {"x_0": [-0.8, 0.0, 2.0], "x_0_dot": [0.1, 0.0, 0.05]}
+    for i in range(1, n + 1):
+        s = (i - 0.5) / n  # a sagging hose between the ends
+        qi = unit([1.0, 0.05 * i, -1.5 * (1.0 - 2.0 * s)])
+        state[f"q{i}"] = qi
+        state[f"omega_q{i}"] = tangent(qi, [0.05 * i, -0.1, 0.02])
+    for k in idx:
+        params[f"m_Q{k}"] = 1.5
+        params[f"J{k}"] = J_QUAD
+        state[f"R{k}"] = rot([0.05, -0.03 * (k + 1), 0.1])
+        state[f"Omega_R{k}"] = [0.1, -0.05 * (k + 1), 0.2]
+    inputs = [u for k in idx for u in (fs[k], Ms[k])]
+
+    def scene(layout, s):
+        from geomech.viz import PointMass, Rod, Scene, Trace
+
+        sc = Scene(layout)
+        for a, b in zip(joints, joints[1:]):
+            sc.add(Rod(a, b, radius=0.008, color="cable"))
+        for k, p in enumerate(joints):
+            if k in Rs:
+                add_quadrotor(sc, Rs[k], p, label=str(k), first=k == idx[0])
+            else:
+                sc.add(PointMass(p, radius=0.02, color="cable"))
+        sc.add(Trace(joints[-1]))
+        return sc
+
+    return make_system(
+        "multi_quadrotor_hose",
+        "R³ × (S²)ⁿ × SO(3)²" if idx == (0, n) else "R³ × (S²)ⁿ × SO(3)ᵐ",
+        L,
+        dW,
+        SystemVariables(vectors=[x0, *qs], matrices=[Rs[k] for k in idx]),
+        inputs,
+        params,
+        Reference(
+            "check_eom",
+            note="Flexible hose of n links carried by quadrotors at the joints of attach"
+            " (Kotaru and Sreenath, 2020).",
+        ),
+        x0=state,
+        symbols=dict(
+            x0=x0, qs=tuple(qs), joints=tuple(joints), Rs=tuple(Rs[k] for k in idx), attach=idx
+        ),
+        scene=scene,
+        options={"n_links": n} if idx == (0, n) else {"n_links": n, "attach": idx},
+    )

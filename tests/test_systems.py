@@ -49,6 +49,7 @@ EXPECTED = {
     "quadrotor_flexible_cable": 12,
     "multi_quadrotor_point_mass": 18,
     "multi_quadrotor_rigid_load": 21,
+    "multi_quadrotor_hose": 15,
 }
 PARAMETRIC = {
     "n_link_spherical_chain": "n_links",
@@ -56,6 +57,7 @@ PARAMETRIC = {
     "quadrotor_flexible_cable": "n_links",
     "multi_quadrotor_point_mass": "n_quads",
     "multi_quadrotor_rigid_load": "n_quads",
+    "multi_quadrotor_hose": "n_links",
 }
 NAMES = list(EXPECTED)
 
@@ -320,3 +322,24 @@ def test_skill_mentions_the_library():
     b = (ROOT / ".claude" / "skills" / "geomech" / "SKILL.md").read_bytes()
     assert a == b
     assert b"geomech.systems" in a and b"get(" in a
+
+
+@pytest.mark.parametrize("n_links, attach", [(3, (1, 3)), (2, (0, 1, 2)), (4, (2,))])
+def test_hose_with_quadrotors_at_any_joints(n_links, attach):
+    """``hose_system`` attaches quadrotors at any joints (the set I of Kotaru and Sreenath,
+    2020); each model passes check_eom."""
+    from geomech import check_eom, compute_eom
+    from geomech.systems.aerial import hose_system
+
+    s = hose_system(n_links, attach)
+    assert len(s.variables.matrices) == len(attach)
+    eom = compute_eom(s.L, s.dW, s.variables)
+    assert check_eom(s.L, s.dW, s.variables, eom, inputs=list(s.inputs)) < 1e-5
+
+
+@pytest.mark.parametrize("attach", [(), (5,), (-1, 2), "0"])
+def test_hose_rejects_bad_attachments(attach):
+    from geomech.systems.aerial import hose_system
+
+    with pytest.raises(ValueError, match="attach"):
+        hose_system(3, attach)

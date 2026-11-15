@@ -50,7 +50,8 @@ Aerial vehicles: ``geomech.systems.aerial``
 .. automodule:: geomech.systems.aerial
    :members: quadrotor, quadrotor_offset_com, quadrotor_suspended_load,
              quadrotor_elastic_load, quadrotor_flexible_cable, multi_quadrotor_point_mass,
-             multi_quadrotor_rigid_load, add_quadrotor
+             multi_quadrotor_rigid_load, multi_quadrotor_hose,
+             hose_system, add_quadrotor
 
 Multibody systems: ``geomech.systems.multibody``
 ------------------------------------------------
