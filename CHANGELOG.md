@@ -6,6 +6,10 @@ All notable changes to `geomech` are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-11-15
+
+First stable release; the version described in the JOSS paper (`paper/`).
+
 ### Added
 - **Sums over a symbolic number of bodies** (`geomech.indexed`). A `Family` holds the
   symbols `q_1, …, q_n` of one kind (`Family(S2, "q")`, `q[i]`), and
@@ -35,12 +39,6 @@ All notable changes to `geomech` are recorded here. The format follows
   stored reference outputs; the library now has 30 systems.
 - `geomech.core.base.expressions.DeferredOperand`: `Expr` arithmetic returns
   `NotImplemented` for such an operand, so `m * Sum(...)` is built by the sum.
-
-## [1.0.0] — 2026-11-14
-
-First stable release; the version described in the JOSS paper (`paper/`).
-
-### Added
 - **S¹ as a configuration manifold** (Lee et al. ch. 4). `S1("q", axis=e)` is the unit
   circle in the plane normal to a constant unit axis `e` (a `Vector` leaf with
   `attr=["Constant", "UnitNorm"]`, required): `q.t_diff()` is `(e × q) ω` and `q.delta()`

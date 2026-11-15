@@ -3,9 +3,10 @@ message: "If you use this software, please cite it as below."
 title: "geomech: symbolic equations of motion on smooth manifolds"
 abstract: >-
   geomech derives coordinate-free equations of motion for mechanical systems on R, R³,
-  S¹, S², SO(3) and their products from a Lagrangian and virtual work, checks them
-  numerically, linearizes them along trajectories, generates NumPy and CasADi code,
-  simulates them with a Lie-group integrator, and renders them as 3-D reports.
+  S¹, S², SO(3) and their products from a Lagrangian and virtual work, including models
+  with a symbolic number of bodies, checks them numerically, linearizes them along
+  trajectories, generates NumPy and CasADi code, simulates them with a Lie-group
+  integrator, and renders them as 3-D reports.
 authors:
   - family-names: Kotaru
     given-names: Prasanth
@@ -21,4 +22,4 @@ keywords:
   - SO(3)
   - S2
 version: 1.0.0
-date-released: "2026-11-14"
+date-released: "2026-11-15"
