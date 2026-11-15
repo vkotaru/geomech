@@ -32,7 +32,7 @@ returns one vector equation per variable, expressed with rotation matrices, unit
 cross products and hat maps, valid globally and free of the singularities of Euler
 angles.
 
-Around this core the package provides: a numeric oracle that checks every derived
+Around this core the package provides: an independent numerical check, `check_eom`, that tests every derived
 equation against a finite-difference Euler–Lagrange residual computed without the
 library's own rewrite rules; the standard form $M a + f + G u = 0$; the variation-based
 linearization $M\,\delta\dot x = A\,\delta x + B\,\delta u$ along an arbitrary trajectory
@@ -117,7 +117,7 @@ $\omega \cdot q = 0$ for a tangent vector at $q$), listed with the hypothesis it
 in its module's docstring and logged on demand. Tests check that the documented and
 implemented rule names agree and that every rewrite of random trees logs a rule.
 
-Correctness rests on two numeric checks, not on the rules alone. The oracle `check_eom`
+Correctness rests on two numeric checks, not on the rules alone. The check `check_eom`
 evaluates the Lagrangian numerically and forms the Euler–Lagrange residual by central
 differences (on $S^2$ through the constrained Lagrangian and compared on the tangent
 plane; on $SO(3)$ in the body-frame form [@lee2018global]), then compares it with the
@@ -136,15 +136,15 @@ to drop as "normal to the sphere"; on the constraint set it equals $\omega \time
 giving $\delta\omega = \dot\xi - 2\,\omega \times \xi$. An earlier version of `geomech`
 used $\dot\xi - \omega \times \xi$. The two agree whenever $\partial L/\partial\omega$ is
 orthogonal to $q$, as for every pendulum example, so string tests pinned against the
-textbook passed; the oracle exposed that gyroscopic and coupling terms otherwise came
+textbook passed; `check_eom` exposed that gyroscopic and coupling terms otherwise came
 out at half strength. Such systems are now in the test suite.
 
 The `systems` library makes these checks reusable. Each of its 29 systems carries its
 Lagrangian, virtual work, default parameters, an initial state and its source, and the
-test suite checks each one with the oracle; its Lagrangian and virtual work against
+test suite checks each one with `check_eom`; its Lagrangian and virtual work against
 an independent numeric model of its bodies (positions, kinetic energy by finite
-differences, heights, and the work of forces at their points of application), which the
-oracle alone cannot do because it only shows that the equations follow from the stated
+differences, heights, and the work of forces at their points of application), which
+`check_eom` alone cannot do because it only shows that the equations follow from the stated
 Lagrangian; the closed forms of Lee et al. where the book gives one; and golden
 reference outputs (equations stored as strings and as values at fixed states) that fail
 on any change of value.
@@ -181,8 +181,8 @@ implementation was written without AI assistance.
 
 The author made the design decisions, reviewed the changes, and is responsible for the
 content. Correctness of the derived equations does not rest on review alone: the
-equation of every pinned system is checked by the test suite against the numeric
-Euler–Lagrange oracle, the textbook systems also against the equations of Lee et al.
+equation of every pinned system is checked by the test suite against the numerical
+Euler–Lagrange check `check_eom`, the textbook systems also against the equations of Lee et al.
 [@lee2018global], and the rewrite rules are checked by numeric fuzzing.
 
 # Acknowledgements
