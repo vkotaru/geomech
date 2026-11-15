@@ -6,6 +6,12 @@ All notable changes to `geomech` are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-11-15
+
+The code of the `v1.0.0` tag, published to PyPI as 1.0.1: the 1.0.0 files on PyPI were
+uploaded before the sums over a symbolic number of bodies and `multi_quadrotor_hose`
+were added to 1.0.0, and PyPI does not accept a second upload of a version.
+
 ## [1.0.0] — 2026-11-15
 
 First stable release; the version described in the JOSS paper (`paper/`).
