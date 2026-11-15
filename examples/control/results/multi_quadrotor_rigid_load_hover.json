@@ -1,0 +1,80 @@
+{
+ "name": "multi_quadrotor_rigid_load_hover",
+ "system": "multi_quadrotor_rigid_load",
+ "kwargs": {
+  "n_quads": 3
+ },
+ "description": "Three quadrotors hold a rigid plate level; 0.4 m offset, 15\u00b0 yaw of the plate, one cable swung 6\u00b0.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 2.733224610082511e-16,
+ "u_eq": [
+  17.349881955843326,
+  3.552713678800501e-15,
+  3.944304526105059e-31,
+  0.0,
+  17.349881955843323,
+  0.0,
+  0.0,
+  0.0,
+  17.34988195584333,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 42,
+ "dropped": [],
+ "controllability_rank": 42,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.438459246905005,
+ "closed_loop_min_damping": 0.16580741485638048,
+ "closed_loop_fastest": 50.11596238652329,
+ "library_lqr": true,
+ "horizon": 12.0,
+ "dt": 0.001,
+ "derive_seconds": 0.13876210805028677,
+ "initial_error": {
+  "position": 0.41231056256176607,
+  "attitude": 0.28147328068437377,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 19.830872078891844,
+ "final_normalized_error": 0.0024900404573517643,
+ "max_normalized_error": 1.0,
+ "settling_time": 6.8100000000000005,
+ "converged": true,
+ "peak_inputs": {
+  "f1": {
+   "peak_deviation": 0.12133820195728973,
+   "peak_abs": 17.372848150709633,
+   "unit": "N"
+  },
+  "M1": {
+   "peak_deviation": 0.18071407233182876,
+   "peak_abs": 0.18071407233182876,
+   "unit": "N\u00b7m"
+  },
+  "f2": {
+   "peak_deviation": 0.14284246962515468,
+   "peak_abs": 17.370842281515277,
+   "unit": "N"
+  },
+  "M2": {
+   "peak_deviation": 0.2036813543665619,
+   "peak_abs": 0.2036813543665619,
+   "unit": "N\u00b7m"
+  },
+  "f3": {
+   "peak_deviation": 0.09958272478295171,
+   "peak_abs": 17.373747638100557,
+   "unit": "N"
+  },
+  "M3": {
+   "peak_deviation": 0.32118163832130064,
+   "peak_abs": 0.32118163832130064,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.2581533580853762e-13,
+ "energy_change": -10.792649826370287
+}

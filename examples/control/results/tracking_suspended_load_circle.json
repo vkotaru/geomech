@@ -1,0 +1,32 @@
+{
+ "name": "suspended_load_circle",
+ "system": "quadrotor_suspended_load",
+ "horizon": 12.0,
+ "dt": 0.001,
+ "reference_radius": 0.8157305879793575,
+ "reference_speed_max": 0.9497264320388824,
+ "initial_position_error": 0.41231056256176607,
+ "initial_attitude_error": 0.3490658503988659,
+ "rms_position_error_second_half": 9.344112999796419e-05,
+ "final_position_error": 1.4063121946943694e-06,
+ "final_attitude_error": 2.152110330203908e-06,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 0.7690470105218665,
+   "unit": "N"
+  },
+  "M": {
+   "peak_deviation": 1.2551785148314503,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 2.3860011259374436e-14,
+ "reference": "simulated (hover LQR with a set point on a 1 m circle, period 5 s)",
+ "max_reference_omega_q": 0.21540383711158703,
+ "reduction_vs_finite_differences": {
+  "equilibrium reduction only": 0.03100221910998281,
+  "+ basis rate (\u2212T\u1d40M\u1e6a)": 0.03100221910998281,
+  "+ normal velocity coupling": 0.013985761083219488,
+  "+ curvature term (all)": 4.0320013545304004e-07
+ }
+}

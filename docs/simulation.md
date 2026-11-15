@@ -290,6 +290,28 @@ weights on the two entries of an S² block weight different physical directions.
 S² block (both `xi_q` entries, and both `delta_omega_q` entries) equal weights, or check
 `ctrl.bases[str(q)]` for the basis that was used. A scalar `Q` is always safe.
 
+### The reduced linearization without a gain
+
+`reduced_linearization(lin_module, x, u, p, *, a=None, basis=tangent_basis)` returns the
+matrices `lqr` designs with, without solving a Riccati equation: a
+`ReducedLinearization` with `A`, `B` (`δẋ = A δx + B δu` in the reduced coordinates),
+`T`, `labels`, `bases` and the full `M_lin`, `A_lin`, `B_lin` at the point. `lqr` calls
+it, so the two always agree (`ctrl.A`, `ctrl.B`, `ctrl.T`, `ctrl.labels`). Use it to check
+controllability before designing (an uncontrollable mode on the imaginary axis or in the
+right half-plane makes `lqr`'s Riccati solve fail), or to design another controller in the
+same coordinates as `LQRController.error`. *basis* replaces `tangent_basis` for the S²
+blocks (any function returning an orthonormal 3×2 basis of the tangent plane).
+
+The reduction assumes `δω ⊥ q`, a constant basis and a zero S² equation residual, which
+hold at an equilibrium. Along a moving reference three terms are missing: a time-varying
+basis adds `−Tᵀ M Ṫ` to the reduced `A`; the normal component of the velocity
+perturbation, `q·δω = −(q × ω)·ξ`, couples the velocity rows to `ξ`; and the S² equation
+`Bᵀ E = 0`, satisfied by the reference with a normal residual `E_r = q (q·E_r)`, gains
+`(q·E_r) Bᵀ q̂ B` in its `ξ` columns when it is linearized (from `δBᵀ q = −Bᵀ δq`).
+`examples/control/tracking.py` builds that time-varying version and checks it against
+finite differences of the nonlinear error dynamics. `model_of(module)`
+(also exported) parses a generated module's `LAYOUT` into its variables and slices.
+
 ### Example: the inverted rigid pendulum
 
 `examples/inverted_rigid_pendulum_lqr.py` derives a rigid pendulum about its pivot on

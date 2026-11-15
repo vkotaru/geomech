@@ -21,10 +21,10 @@ jobs:
         run: pip install ruff "mypy==2.4.1" numpy
 
       - name: Ruff format check
-        run: ruff format --check geomech/ tests/ scripts/ examples/generated/ examples/inverted_rigid_pendulum_lqr.py examples/report_*.py
+        run: ruff format --check geomech/ tests/ scripts/ examples/generated/ examples/inverted_rigid_pendulum_lqr.py examples/report_*.py examples/control/
 
       - name: Ruff lint
-        run: ruff check geomech/ tests/ scripts/ examples/generated/ examples/inverted_rigid_pendulum_lqr.py examples/report_*.py
+        run: ruff check geomech/ tests/ scripts/ examples/generated/ examples/inverted_rigid_pendulum_lqr.py examples/report_*.py examples/control/
 
       - name: Mypy
         run: mypy geomech --ignore-missing-imports

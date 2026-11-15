@@ -1,0 +1,52 @@
+{
+ "name": "quadrotor_flexible_cable_hover",
+ "system": "quadrotor_flexible_cable",
+ "kwargs": {
+  "n_links": 3
+ },
+ "description": "Hover with a three-link cable hanging straight down; 0.37 m offset and 6\u20138\u00b0 link swings. Moments weighted R = 10 to keep the peak moment below 1 N\u00b7m; the two cable modes near 25 rad/s are left lightly damped (damping ratio 0.007, LQR's choice for these weights), so the horizon is 40 s.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  18.639000000000003,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 24,
+ "dropped": [],
+ "controllability_rank": 24,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.1664489920746532,
+ "closed_loop_min_damping": 0.0066541796887120514,
+ "closed_loop_fastest": 25.015049401082756,
+ "library_lqr": true,
+ "horizon": 40.0,
+ "dt": 0.001,
+ "derive_seconds": 0.10795845882967114,
+ "initial_error": {
+  "position": 0.37416573867739417,
+  "attitude": 0.2030309121711148,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 48.28862116485834,
+ "final_normalized_error": 0.0008855529188424668,
+ "max_normalized_error": 1.0,
+ "settling_time": 21.7,
+ "converged": true,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 0.1199249294195468,
+   "peak_abs": 18.683209682446215,
+   "unit": "N"
+  },
+  "M": {
+   "peak_deviation": 0.8077410402775139,
+   "peak_abs": 0.8077410402775139,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.3669544658925737e-13,
+ "energy_change": -1.8875779664584136
+}

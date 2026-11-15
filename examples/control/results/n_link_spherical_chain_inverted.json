@@ -1,0 +1,62 @@
+{
+ "name": "n_link_spherical_chain_inverted",
+ "system": "n_link_spherical_chain",
+ "kwargs": {
+  "n_links": 3
+ },
+ "description": "Three-link spherical chain upright; 8\u00b0, 10\u00b0, 12\u00b0 tilts.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 12,
+ "dropped": [],
+ "controllability_rank": 12,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -2.1679781725496228,
+ "closed_loop_min_damping": 0.996799884513255,
+ "closed_loop_fastest": 10.162172792178417,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.05362834595143795,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.30454903187596233,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 8.960054144728929,
+ "final_normalized_error": 6.398827854020611e-10,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.8800000000000001,
+ "converged": true,
+ "peak_inputs": {
+  "f1": {
+   "peak_deviation": 7.723050516888063,
+   "peak_abs": 7.723050516888063,
+   "unit": "N\u00b7m"
+  },
+  "f2": {
+   "peak_deviation": 5.629728267121722,
+   "peak_abs": 5.629728267121722,
+   "unit": "N\u00b7m"
+  },
+  "f3": {
+   "peak_deviation": 1.643934671081976,
+   "peak_abs": 1.643934671081976,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.532107773982716e-14,
+ "energy_change": 0.6573861942346042
+}

@@ -1,0 +1,41 @@
+{
+ "name": "cart_spherical_pendulum_out_of_plane",
+ "system": "cart_spherical_pendulum",
+ "kwargs": {},
+ "description": "Negative example: the same controller with a 1\u00b0 out-of-plane tilt diverges (the uncontrollable mode is unstable).",
+ "notes": "Expected to fail; kept to show that the stabilizability check is real.",
+ "stabilizable": false,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0
+ ],
+ "n_reduced": 6,
+ "dropped": [],
+ "controllability_rank": 4,
+ "uncontrollable_eigenvalues": [
+  [
+   -3.5017852589786247,
+   0.0
+  ],
+  [
+   3.5017852589786256,
+   0.0
+  ]
+ ],
+ "closed_loop_max_real": -1.511868185886606,
+ "closed_loop_min_damping": 0.7913095024504042,
+ "closed_loop_fastest": 4.785563628371016,
+ "library_lqr": false,
+ "horizon": 4.0,
+ "dt": 0.001,
+ "derive_seconds": 0.008767093997448683,
+ "initial_error": {
+  "position": 0.3,
+  "attitude": 0.17449668103149224,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 1.5343062044121325,
+ "converged": false,
+ "failure": "u(t, state) has non-finite entries at [0]: [nan] (at t = 3.8715)",
+ "settling_time": null
+}
