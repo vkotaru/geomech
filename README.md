@@ -1,10 +1,13 @@
 # geomech
 
-A Python library for the symbolic derivation of equations of motion and their variation-based linearization on smooth manifolds: $R$, $R^3$, $S^2$, $SO(3)$ and their products (e.g. $SE(3)$ as $R^3 \times SO(3)$).
+A Python library for the symbolic derivation of coordinate-free equations of motion, and their variation-based linearization, on $R$, $R^3$, $S^1$, $S^2$, $SO(3)$ and their products (e.g. $SE(3)$ as $R^3 \times SO(3)$), including models with a symbolic number of bodies.
 
-This work builds on the methods and math described in 
-1. [Global Formulations of Lagrangian and Hamiltonian Dynamics on Manifolds](https://link.springer.com/book/10.1007/978-3-319-56953-6) 
-2. [Symbolic Computation of Dynamics on Smooth Manifolds](https://link.springer.com/chapter/10.1007/978-3-030-43089-4_22) and its [Scala implementation](https://github.com/HybridRobotics/dynamics_on_manifolds).
+`geomech` implements the variational method of Lee, Leok and McClamroch,
+[Global Formulations of Lagrangian and Hamiltonian Dynamics on Manifolds](https://link.springer.com/book/10.1007/978-3-319-56953-6).
+Bittner and Sreenath were the first to automate the derivation of coordinate-free
+equations of motion on manifolds, in
+[Symbolic Computation of Dynamics on Smooth Manifolds](https://link.springer.com/chapter/10.1007/978-3-030-43089-4_22)
+and its [Scala package](https://github.com/HybridRobotics/dynamics_on_manifolds).
 
 Documentation: https://geomech.readthedocs.io
 
@@ -285,6 +288,8 @@ geomech/
         transformations/# expand, simplify, pull, vector_rules
         math/           # extract_linear_coeff, collect, integrate_by_parts
     dynamics/           # compute_eom, to_standard_form, linearize, SystemVariables
+    indexed/            # Family, Sum, compute_indexed_eom: models with n bodies, n symbolic
+    systems/            # library of 30 verified systems (get, list_systems)
     codegen/            # StateLayout, to_source, lambdify, generate_module, energy_function
     simulation/         # accelerations, simulate (RKMK4, solve_ivp), Trajectory, lqr
     viz/                # Scene (3-D bodies from expressions), Report (HTML), latex_names
@@ -301,11 +306,12 @@ pytest
 
 ## Citation
 
-If you use geomech in your research, please cite this package along with corresponding original work, [Global Formulations of Lagrangian and Hamiltonian Dynamics on Manifolds](https://link.springer.com/book/10.1007/978-3-319-56953-6) and [Symbolic Computation of Dynamics on Smooth Manifolds](https://link.springer.com/chapter/10.1007/978-3-030-43089-4_22).
+If you use geomech in your research, please cite this package and the book of Lee, Leok and McClamroch whose method it implements, [Global Formulations of Lagrangian and Hamiltonian Dynamics on Manifolds](https://link.springer.com/book/10.1007/978-3-319-56953-6). The first automated derivation of these equations is described in [Symbolic Computation of Dynamics on Smooth Manifolds](https://link.springer.com/chapter/10.1007/978-3-030-43089-4_22).
 
 ```bibtex
 @software{kotaru2026geomech,
-  title={geomech: Symbolic toolbox for geometric mechanics on smooth manifolds},
+  title={geomech: Coordinate-free equations of motion on manifolds for robotics},
+  version={1.0.0},
   author={Kotaru, Prasanth},
   url={https://github.com/vkotaru/geomech},
   year={2026}
