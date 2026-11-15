@@ -36,6 +36,11 @@ The pipeline:
    (animation, equations, standard form, verification numbers) with `geomech.viz`
    ([visualization](https://geomech.readthedocs.io/en/latest/visualization.html), `examples/report_*.py`); an agent skill that
    follows this whole procedure is in `skills/geomech/`
+8. For a model of n bodies (a chain, a cable of n links, a team of n quadrotors), write
+   the Lagrangian with `Sum` over a `Family` of variables and call
+   `geomech.indexed.compute_indexed_eom`: it derives the equation of the i-th body with
+   i and n symbolic, e.g. the inertia of an n-link chain as
+   `Σ_j Σ_{k ≥ max(i, j)} m_k l_i l_j (...)` ([sums over n bodies](https://geomech.readthedocs.io/en/latest/indexed.html))
 
 ## How it works
 

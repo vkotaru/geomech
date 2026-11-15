@@ -112,6 +112,17 @@ def _as_operand(val, op, other):
     )
 
 
+class DeferredOperand:
+    """Marker base for objects that build the result of ``expr <op> obj`` themselves.
+
+    ``Expr`` arithmetic returns ``NotImplemented`` for such an operand, so Python calls the
+    reflected method of the operand (``Sum.__rmul__`` for ``m * Sum(...)``). The indexed
+    sums of ``geomech.indexed`` use it; plain expressions never do.
+    """
+
+    __slots__ = ()
+
+
 def _add(a, b):
     """``a + b`` for two expressions, dispatched on the type of *a*."""
     from geomech.core.operations import Add, MAdd, VAdd
@@ -220,15 +231,21 @@ class Expr:
     # ------ arithmetic (one dispatch for leaves and operation nodes) ------
 
     def __add__(self, other):
+        if isinstance(other, DeferredOperand):
+            return NotImplemented
         return _add(self, _as_operand(other, "+", self))
 
     def __radd__(self, other):
+        if isinstance(other, DeferredOperand):
+            return NotImplemented
         if _is_number(other) and other == 0:
             # 0 + x is x, for every type: sum([a, b, c]) starts from int 0
             return self
         return _add(_as_operand(other, "+", self), self)
 
     def __sub__(self, other):
+        if isinstance(other, DeferredOperand):
+            return NotImplemented
         if _is_number(other):
             if self.type != ExprType.SCALAR:
                 # name the operands as written: 'a - 1', not the internal 'a + (-1)'
@@ -240,12 +257,18 @@ class Expr:
         return _sub(self, _as_operand(other, "-", self))
 
     def __rsub__(self, other):
+        if isinstance(other, DeferredOperand):
+            return NotImplemented
         return _sub(_as_operand(other, "-", self), self)
 
     def __mul__(self, other):
+        if isinstance(other, DeferredOperand):
+            return NotImplemented
         return _mul(self, _as_operand(other, "*", self))
 
     def __rmul__(self, other):
+        if isinstance(other, DeferredOperand):
+            return NotImplemented
         return _mul(_as_operand(other, "*", self), self)
 
     def __neg__(self):
