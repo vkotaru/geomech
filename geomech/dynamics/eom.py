@@ -17,16 +17,18 @@ from collections.abc import Set as AbstractSet
 from typing import Sequence
 
 from geomech.core.base.expressions import (
+    MANIFOLD_POINTS,
+    S1,
     S2,
     SO3,
-    TS2,
-    TSO3,
+    TANGENT_LEAVES,
     Expr,
     Matrix,
     Scalar,
     Vector,
     Zero,
     is_number_literal,
+    manifold_point_of,
 )
 from geomech.core.base.types import ExprType
 from geomech.core.math.extract import extract_linear_coeff
@@ -45,11 +47,12 @@ from geomech.utils.trace import EOMTrace, debug_enabled, stage_recorder
 
 
 def _tangent_names(variables: SystemVariables):
-    """``{printed tangent vector (ω_q, Ω_R): printed point}`` of the listed S2/SO3 entries."""
+    """``{printed tangent vector (ω_q, Ω_R): printed point}`` of the listed S1/S2/SO3
+    entries."""
     names = {}
     for group in (variables.vectors, variables.matrices):
         for var in group:
-            if isinstance(var, (S2, SO3)):
+            if isinstance(var, MANIFOLD_POINTS):
                 names[str(var.get_tangent_vector())] = str(var)
     return names
 
@@ -88,8 +91,8 @@ def check_variables(variables: SystemVariables, caller: str = "compute_eom") -> 
                     f"{where} '{var}' has type {getattr(var, 'type', None)}, expected"
                     f" {expected_type}"
                 )
-            if isinstance(var, (TS2, TSO3)):
-                parent = var.S2 if isinstance(var, TS2) else var.SO3
+            if isinstance(var, TANGENT_LEAVES):
+                parent = manifold_point_of(var)
                 hint = f"; list the manifold point '{parent}' instead" if parent else ""
                 raise TypeError(
                     f"{where} '{var}' is a tangent or variation vector, not a configuration"
@@ -103,7 +106,7 @@ def check_variables(variables: SystemVariables, caller: str = "compute_eom") -> 
             if getattr(var, "nodes", None):
                 raise TypeError(
                     f"{where} '{var}' is a {type(var).__name__} expression, not a single"
-                    " symbol; a configuration variable is one Scalar, Vector, S2 or SO3 leaf"
+                    " symbol; a configuration variable is one Scalar, Vector, S1, S2 or SO3 leaf"
                     " (list the symbols it is built from instead)"
                 )
             if var.is_constant or var.is_numeric or var.is_zero or var.delta().is_zero:
@@ -297,7 +300,7 @@ def _input_state_symbols(variables: SystemVariables) -> set[str]:
     for s in variables.scalars:
         states += [s.delta(), s.t_diff().delta()]
     for v in variables.vectors:
-        if isinstance(v, S2):
+        if isinstance(v, (S1, S2)):
             states += [v.get_variation_vector(), Variation(v.get_tangent_vector())]
         else:
             states += [v.delta(), v.t_diff().delta()]
@@ -309,10 +312,11 @@ def _input_state_symbols(variables: SystemVariables) -> set[str]:
 
 def _kinematic_names(variables: SystemVariables) -> dict[str, tuple[str, Expr]]:
     """``{printed velocity or acceleration: (kind, variable)}`` of every configuration
-    variable: ``ẋ``/``ẍ`` (``ṡ``/``s̈``), ``ω_q``/``ω̇_q`` on S², ``Ω_R``/``Ω̇_R`` on SO(3)."""
+    variable: ``ẋ``/``ẍ`` (``ṡ``/``s̈``), ``ω_q``/``ω̇_q`` on S¹ and S², ``Ω_R``/``Ω̇_R`` on
+    SO(3)."""
     names = {}
     for var in [*variables.scalars, *variables.vectors, *variables.matrices]:
-        if isinstance(var, (S2, SO3)):
+        if isinstance(var, MANIFOLD_POINTS):
             vel = var.get_tangent_vector()
         elif isinstance(var, (Scalar, Vector)):
             vel = var.t_diff()
@@ -335,7 +339,7 @@ def check_inputs(
     tuple or generator), not one leaf, nor a ``set`` or a ``dict`` (``TypeError``): the
     order is the order of the columns of ``B`` and of the codegen ``u`` vector. Each
     input must be a plain non-manifold ``Scalar`` or ``Vector`` leaf (``TypeError`` for
-    an ``S2``/``SO3`` point, a ``Matrix`` or an expression such as ``d/dt(x)`` or
+    an ``S1``/``S2``/``SO3`` point, a ``Matrix`` or an expression such as ``d/dt(x)`` or
     ``F + u``), and is rejected with ``ValueError`` if it is a tangent or variation
     vector (``ω``, ``ξ``, ``Ω``, ``η``), constant (``attr=['Constant']``, a number,
     zero), a configuration variable, printed like the velocity or acceleration of one
@@ -359,7 +363,7 @@ def check_inputs(
     container = inputs
     inputs = list(inputs)
     for u in inputs:
-        if not isinstance(u, (Scalar, Vector)) or isinstance(u, S2):
+        if not isinstance(u, (Scalar, Vector)) or isinstance(u, (S1, S2)):
             raise TypeError(
                 f"{caller}: input '{u}' must be a Scalar or Vector leaf, got {type(u).__name__}"
             )
@@ -378,7 +382,7 @@ def check_inputs(
     states = _input_state_symbols(variables)
     seen = set()
     for u in inputs:
-        if isinstance(u, (TS2, TSO3)):
+        if isinstance(u, TANGENT_LEAVES):
             raise ValueError(
                 f"{caller}: input '{u}' is a tangent or variation vector of a configuration"
                 " variable; its variation is part of the perturbation state, not an input"
@@ -444,9 +448,9 @@ def _check_params(params, variables):
 
     *params* must be an iterable of leaves (list, tuple, set, generator), not one leaf. A
     param printed like a configuration variable or like the tangent or variation vector of
-    a listed ``S2``/``SO3`` point (``ω_q``, ``Ω_R``, ``ξ_q``, ``η_R``) raises: the tree
-    would hold two different leaves with one printed name, which every str-keyed consumer
-    merges.
+    a listed ``S1``/``S2``/``SO3`` point (``ω_q``, ``Ω_R``, ``γ_q``, ``ξ_q``, ``η_R``) raises:
+    the tree would hold two different leaves with one printed name, which every str-keyed
+    consumer merges.
     """
     if isinstance(params, (Expr, str)) or not hasattr(params, "__iter__"):
         hint = f"; write params=[{params}]" if isinstance(params, Expr) else ""
@@ -457,7 +461,7 @@ def _check_params(params, variables):
     reserved = {}  # printed tangent/variation vector of a listed point → description
     for group in (variables.vectors, variables.matrices):
         for var in group:
-            if isinstance(var, (S2, SO3)):
+            if isinstance(var, MANIFOLD_POINTS):
                 reserved[str(var.get_tangent_vector())] = f"tangent vector of '{var}'"
                 reserved[str(var.get_variation_vector())] = f"variation vector of '{var}'"
     config_names = {}
@@ -470,12 +474,12 @@ def _check_params(params, variables):
             config_names[str(var)] = group_name
     seen = set()
     for p in params:
-        if isinstance(p, (TS2, TSO3)):
+        if isinstance(p, TANGENT_LEAVES):
             raise TypeError(
                 f"compute_eom: params entry '{p}' is a tangent or variation vector, not a"
                 " prescribed parameter"
             )
-        if isinstance(p, (S2, SO3)):
+        if isinstance(p, MANIFOLD_POINTS):
             raise TypeError(
                 f"compute_eom: params entry '{p}' is a manifold point, not a prescribed"
                 " parameter; list it in SystemVariables"
@@ -514,8 +518,8 @@ def _stray_variation_symbols(expr, allowed, param_names, wrapped=None):
 
     Returns ``{printed symbol: printed underlying symbol}`` for every ``Variation`` node
     whose printed form is not in *allowed* (the variation vectors of ``SystemVariables``)
-    and whose operand is not a declared param, and for every ``TS2``/``TSO3`` leaf that is
-    the variation vector (ξ, η) of a manifold point other than the listed ones. Such a
+    and whose operand is not a declared param, and for every ``TS1``/``TS2``/``TSO3`` leaf that is
+    the variation vector (γ, ξ, η) of a manifold point other than the listed ones. Such a
     symbol left in δS after extraction belongs to a degree of freedom that was not listed
     (or to a parameter that is neither ``Constant`` nor declared in ``params``): its terms
     were dropped from every equation without a message.
@@ -538,14 +542,14 @@ def _stray_variation_symbols(expr, allowed, param_names, wrapped=None):
                     inner = inner.expr
                 if wrapped is not None:
                     wrapped[str(node)] = str(inner)
-            if isinstance(inner, (TS2, TSO3)):
-                parent = inner.S2 if isinstance(inner, TS2) else inner.SO3
+            if isinstance(inner, TANGENT_LEAVES):
+                parent = manifold_point_of(inner)
                 stray[str(node)] = str(parent) if parent is not None else str(inner)
             else:
                 stray[str(node)] = str(inner)
             return
-        if isinstance(node, (TS2, TSO3)):
-            parent = node.S2 if isinstance(node, TS2) else node.SO3
+        if isinstance(node, TANGENT_LEAVES):
+            parent = manifold_point_of(node)
             if (
                 parent is not None
                 and node.name == parent.manifold_info.variation_vector_name
@@ -569,7 +573,7 @@ def _derivatives_of_variations(expr, allowed):
     found = {}
 
     def contained(node):
-        if str(node) in allowed and isinstance(node, (Variation, TS2, TSO3)):
+        if str(node) in allowed and isinstance(node, (Variation, *TANGENT_LEAVES)):
             return str(node)
         for child in getattr(node, "nodes", ()):
             hit = contained(child)
@@ -630,7 +634,7 @@ def compute_eom(
     1. ``[dL]`` the variation of the Lagrangian, ``[dW]`` the virtual work, and
        ``[dS]`` the infinitesimal action integral δS = δL + δW
     2. ``[manifold_rules]`` ``apply_manifold_rules``: δω and δΩ replaced by their
-       kinematic expansions (S², SO(3))
+       kinematic expansions (S¹, S², SO(3))
     3. ``[simplify]`` ``full_simplify`` (expand once, then simplify to a fixed point)
     4. integration by parts against the time derivative of each variation vector:
        ``[ibp.prepare]`` expand + full_simplify, then per target ``[ibp.collect[t]]``
@@ -918,7 +922,7 @@ def _derivative_order(derivative, var):
         node, depth = stack.pop()
         if isinstance(node, TimeDerivative):
             depth += 1
-        if str(node) == var and isinstance(node, (Variation, TS2, TSO3)):
+        if str(node) == var and isinstance(node, (Variation, *TANGENT_LEAVES)):
             best = max(best, depth)
             continue
         stack.extend((child, depth) for child in getattr(node, "nodes", None) or ())
@@ -935,12 +939,12 @@ def _is_exposed(term, derivative, scalar):
 
 def _accelerations_in(lagrangian, variables):
     """Printed accelerations of configuration variables that occur in *lagrangian*:
-    ``ẍ`` of a scalar or vector variable, ``ω̇``/``Ω̇`` of an S² or SO(3) point."""
+    ``ẍ`` of a scalar or vector variable, ``ω̇``/``Ω̇`` of an S¹, S² or SO(3) point."""
     if lagrangian is None or variables is None:
         return []
     wanted = set()
     for var in (*variables.scalars, *variables.vectors, *variables.matrices):
-        if isinstance(var, (S2, SO3)):
+        if isinstance(var, MANIFOLD_POINTS):
             wanted.add(str(var.get_tangent_vector().t_diff()))
         else:
             wanted.add(str(var.t_diff().t_diff()))

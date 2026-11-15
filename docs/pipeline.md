@@ -25,18 +25,21 @@ messages. With `GEOMECH_DEBUG=1`, `check_tree` also runs on `L` and `dW`.
 ## 1. Variation `[dL]`, `[dW]`, `[dS]`
 
 `L.delta()` applies the product rule through the tree. Manifold leaves are eager:
-`q.delta()` for an `S2` point is `ξ × q`, `R.delta()` for an `SO3` point is `R Hat(η)`,
+`q.delta()` for an `S1` point is `(e × q) γ`, for an `S2` point `ξ × q`, `R.delta()` for
+an `SO3` point is `R Hat(η)`,
 and the variation of a velocity is built as the time derivative of the variation
-(`x.t_diff().delta()` is `d/dt(δx)`). Tangent vectors (`ω`, `Ω`) are leaves at this
-point, so their variations stay as `δω`, `δΩ`. δS is `δL + δW` (`dW=None` or `0` means
+(`x.t_diff().delta()` is `d/dt(δx)`). Tangent vectors (`ω`, `Ω`; the scalar `ω` of an S¹
+point) are leaves at this point, so their variations stay as `δω`, `δΩ`. δS is `δL + δW` (`dW=None` or `0` means
 δW = 0).
 
 ## 2. Manifold rules `[manifold_rules]`
 
 `apply_manifold_rules(dS, variables)` replaces the variation of each listed tangent
-vector by its kinematic expansion (rules `manifold.s2_variation_omega`,
-`manifold.so3_variation_Omega`):
+vector by its kinematic expansion (rules `manifold.s1_variation_omega`,
+`manifold.s2_variation_omega`, `manifold.so3_variation_Omega`):
 
+- S¹: `δω → γ̇` (Lee et al. eq. 4.11; exact, the circle is abelian; derivation in
+  [Manifold rules](manifold-implementation-notes.md));
 - S²: `δω → ξ̇ − 2 ω × ξ` (Lee et al. eq. 5.13 on the constraint set ξ ⊥ q; the
   derivation, and why the factor is 2, is in
   [Manifold rules](manifold-implementation-notes.md));
@@ -55,7 +58,9 @@ tree stops changing (at most `max_iter=10` passes; hitting the cap emits the
    `pull.mvmul_scaled`, …);
 2. `vector_rules`: geometric identities, bottom up — orthogonality
    (`vector.dot_cross_orthogonal`), unit norm (`vector.dot_unit_norm`), tangency on S²
-   (`vector.dot_tangent_orthogonal`, `vector.s2_tangent_recovery`, …). Like `pull`, it
+   (`vector.dot_tangent_orthogonal`, `vector.s2_tangent_recovery`, …), and the S¹
+   identities of a point and its axis (`vector.s1_axis_orthogonal`,
+   `vector.s1_axis_double_cross`, `vector.s1_rotated_dot`, …). Like `pull`, it
    recurses through every node class (one shared `rebuild` helper), so a rule fires
    below a `Dot` operand, an `MVMul`, a `Hat`, a `Transpose` or a calculus node too;
 3. `_eliminate`: bottom up, zeros, identities and numbers (`simplify.mul_fold`,
@@ -73,8 +78,9 @@ The rules and the hypothesis each needs are listed in the docstrings of
 ## 4. Integration by parts `[ibp.prepare]`, `[ibp.collect[t]]`, `[ibp.integrate[t]]`, `[ibp.simplify[t]]`, `[ibp]`
 
 `integrate_by_parts(dS, targets)` takes the time derivative of each variation vector as
-a target (`d/dt(δx)`, `d/dt(ξ_q)`, `d/dt(η_R)`, in the order scalars, vectors,
-matrices). It first runs `expand` and `full_simplify` (`[ibp.prepare]`), then for each
+a target (`d/dt(δx)`, `d/dt(γ_q)`, `d/dt(ξ_q)`, `d/dt(η_R)`, in the order scalars,
+vectors, matrices). The S¹ target `γ̇` is a scalar, integrated like `d/dt(δs)` of a scalar
+variable (`ibp.scalar_factor`). It first runs `expand` and `full_simplify` (`[ibp.prepare]`), then for each
 target in turn:
 
 1. `collect(expr, target)` `[ibp.collect[t]]` rewrites every term so that the target is

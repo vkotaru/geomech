@@ -24,12 +24,14 @@ row vectors
     row the outer product); ``Dot``, ``Cross`` and ``Hat`` take columns only; a ``VAdd``
     does not mix rows and columns (zero addends are exempt).
 calculus
-    no ``TimeDerivative``/``Variation`` directly over an ``S2``/``SO3`` leaf (their
+    no ``TimeDerivative``/``Variation`` directly over an ``S1``/``S2``/``SO3`` leaf (their
     kinematics are eager: ``q.t_diff()`` is ``ω × q``), no ``Variation`` of a
-    ``Variation``, and no ``Variation`` of a variation vector (``ξ``, ``η``).
+    ``Variation``, and no ``Variation`` of a variation vector (``γ``, ``ξ``, ``η``).
 tangent vectors
-    every ``TS2``/``TSO3`` leaf has its manifold point set (``.S2``/``.SO3``) and is
-    named like that point's tangent or variation vector.
+    every ``TS1``/``TS2``/``TSO3`` leaf has its manifold point set (``.S1``/``.S2``/``.SO3``)
+    and is named like that point's tangent or variation vector.
+S1 points
+    every ``S1`` leaf has a constant ``UnitNorm`` axis of size 3.
 numeric scalars
     a ``Scalar`` has a ``value`` exactly when it is flagged numeric, the value is a
     real number, and a scalar printed like a number in parentheses (``(-1)``,
@@ -44,7 +46,16 @@ import math
 import numbers
 from typing import Any
 
-from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Expr, Scalar
+from geomech.core.base.expressions import (
+    MANIFOLD_POINTS,
+    S1,
+    TANGENT_LEAVES,
+    TS1,
+    TS2,
+    Expr,
+    Scalar,
+    manifold_point_of,
+)
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
@@ -205,7 +216,9 @@ def check_tree(expr) -> None:
                 )
             if isinstance(node, Hat) and is_row_vector(inner):
                 _fail(f"{path}.x", inner, "Hat operand is a row vector; Hat takes a column")
-            if isinstance(node, (TimeDerivative, Variation)) and isinstance(inner, (S2, SO3)):
+            if isinstance(node, (TimeDerivative, Variation)) and isinstance(
+                inner, MANIFOLD_POINTS
+            ):
                 _fail(
                     path,
                     node,
@@ -215,8 +228,8 @@ def check_tree(expr) -> None:
             if isinstance(node, Variation):
                 if isinstance(inner, Variation):
                     _fail(path, node, "variation of a variation")
-                if isinstance(inner, (TS2, TSO3)):
-                    parent = inner.S2 if isinstance(inner, TS2) else inner.SO3
+                if isinstance(inner, TANGENT_LEAVES):
+                    parent = manifold_point_of(inner)
                     if (
                         parent is not None
                         and inner.name == parent.manifold_info.variation_vector_name
@@ -228,9 +241,18 @@ def check_tree(expr) -> None:
         # ---- leaves ----
         if children:
             _fail(path, node, f"unknown node class {cls.__name__} with children")
-        if isinstance(node, (TS2, TSO3)):
-            parent = node.S2 if isinstance(node, TS2) else node.SO3
-            kind = "S2" if isinstance(node, TS2) else "SO3"
+        if isinstance(node, S1):
+            axis = node.axis
+            if (
+                axis is None
+                or not axis.is_constant
+                or not axis.is_unit_norm
+                or tuple(getattr(axis, "size", ())) != (3,)
+            ):
+                _fail(path, node, f"S1 point '{node}' needs a constant UnitNorm axis of size 3")
+        if isinstance(node, TANGENT_LEAVES):
+            parent = manifold_point_of(node)
+            kind = "S1" if isinstance(node, TS1) else "S2" if isinstance(node, TS2) else "SO3"
             if parent is None:
                 _fail(path, node, f"{cls.__name__} leaf has no {kind} point (.{kind} is None)")
             info = parent.manifold_info

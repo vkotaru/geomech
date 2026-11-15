@@ -35,6 +35,7 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
 |---|---|---|---|
 | `s: Scalar` ($\mathbb{R}$) | `s` (1) | `ṡ` (1) | `s̈` |
 | `x: Vector` ($\mathbb{R}^3$) | `x` (3) | `ẋ` (3) | `ẍ` |
+| `q: S1` | `q` (3, unit, $\perp e$) | `ω` (1) | `ω̇` (1) |
 | `q: S2` | `q` (3, unit) | `ω` (3, $\perp q$) | `ω̇` |
 | `R: SO3` | `R` (9, row-major) | `Ω` (3) | `Ω̇` |
 
@@ -105,7 +106,7 @@ LAYOUT = {...}                              # StateLayout.to_dict()
 def mass(state, p)         -> (n, n_a)      # block matrix of M[a_j] per equation
 def bias(state, p)         -> (n,)          # stacked f
 def input_matrix(state, p) -> (n, n_u)      # block matrix of G[u_k]
-def kinematics(state)      -> (n_config,)   # ṡ, ẋ, ω × q, R hat(Ω) row-major
+def kinematics(state)      -> (n_config,)   # ṡ, ẋ, ω e × q, ω × q, R hat(Ω) row-major
 def energy(state, p)                        # with generate_module(..., lagrangian=L)
 def layout()                                # a copy of LAYOUT
 ```

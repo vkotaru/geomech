@@ -600,6 +600,105 @@ class S2(Vector):
         return Cross(self.get_tangent_vector(), self)
 
 
+@dataclass(eq=False, repr=False, frozen=True)
+class TS1(Scalar):
+    """Scalar tangent coordinate of an S1 point: its angular velocity ``ω_q`` or its
+    variation ``γ_q`` (``q̇ = ω e × q``, ``δq = γ e × q``)."""
+
+    #: the S1 point this scalar belongs to, or None for a bare one
+    S1: Any = field(default=None, init=False, repr=False)
+
+    def __init__(self, s, *, S1=None):
+        super().__init__(s)
+        _set_fields(self, S1=S1, attr=[*(self.attr or []), "TangentVector"])
+
+
+def _check_s1_axis(axis, name):
+    """The axis of an ``S1`` point: a constant, unit-norm 3-vector leaf.
+
+    The S¹ identities of ``vector_rules`` (``e × (e × q) = −q``, ``|e × q| = 1``) need
+    ``|e| = 1`` and ``ė = 0``; both are read from the leaf's flags, so they are required
+    here instead of being assumed.
+    """
+    where = f"S1 '{name}'" if name is not None else "S1"
+    hint = "build it as Vector('e_3', attr=['Constant', 'UnitNorm'])"
+    if axis is None:
+        raise TypeError(
+            f"{where}: an axis is required (the normal of the plane of the circle); {hint}"
+        )
+    if not isinstance(axis, Vector) or isinstance(axis, S2) or getattr(axis, "nodes", None):
+        got = f"{type(axis).__name__} {_short_repr(axis)}"
+        raise TypeError(f"{where}: axis must be a Vector leaf, got {got}; {hint}")
+    if isinstance(axis, S1):
+        raise TypeError(f"{where}: axis must be a constant Vector leaf, not the S1 point '{axis}'")
+    if tuple(axis.size) != (3,):
+        raise ValueError(f"{where}: axis '{axis}' must have size (3,), got {axis.size}")
+    if not axis.is_constant or axis.is_zero:
+        raise ValueError(f"{where}: axis '{axis}' must be a nonzero constant vector; {hint}")
+    if not axis.is_unit_norm:
+        raise ValueError(
+            f"{where}: axis '{axis}' must carry the 'UnitNorm' attribute (the S¹ identities"
+            f" assume |e| = 1); {hint}"
+        )
+    if axis.name == name:
+        raise ValueError(f"{where}: the axis has the same name as the point")
+
+
+@dataclass(eq=False, repr=False, frozen=True)
+class S1(Vector):
+    """S1 manifold: the unit circle ``{q : |q| = 1, q·e = 0}`` in the plane through the
+    origin normal to the constant unit axis ``e``.
+
+    The kinematics are those of Lee et al. ch. 4 with the planar rotation ``S`` by π/2
+    written as ``e × (·)``: ``q̇ = ω e × q`` with a scalar angular velocity ``ω``, and the
+    variation is ``δq = γ e × q`` with a scalar ``γ`` (eq. 4.10). ``axis`` is a constant
+    ``Vector`` leaf with the ``UnitNorm`` attribute.
+    """
+
+    manifold_info: ManifoldInfo = field(init=False, repr=False)
+    #: the constant unit normal of the plane of the circle
+    axis: Any = field(default=None, init=False, repr=False)
+
+    def __init__(self, s=None, *, axis=None, size=(3,), value=None, attr=None):
+        _check_s1_axis(axis, s)
+        attr = _attr_list(attr, s) or []  # copy: the caller's list is not mutated
+        attr.append("Manifold")
+        attr.append("UnitNorm")
+        super().__init__(s, size=size, value=value, attr=attr)
+        info = ManifoldInfo(
+            tangent_vector_name=f"\\omega_{{{self.name}}}",
+            variation_vector_name=f"\\gamma_{{{self.name}}}",
+        )
+        _set_fields(self, manifold_info=info, axis=axis)
+
+    def delta(self) -> Expr:
+        from geomech.core.operations import Cross, SVMul
+
+        return SVMul(Cross(self.axis, self), self.get_variation_vector())
+
+    def get_tangent_vector(self) -> Expr:
+        return TS1(self.manifold_info.tangent_vector_name, S1=self)
+
+    def get_variation_vector(self) -> Expr:
+        return TS1(self.manifold_info.variation_vector_name, S1=self)
+
+    def t_diff(self) -> Expr:
+        from geomech.core.operations import Cross, SVMul
+
+        return SVMul(Cross(self.axis, self), self.get_tangent_vector())
+
+
+def manifold_point_of(leaf):
+    """The manifold point of a tangent leaf (``TS1``/``TS2``/``TSO3``), else ``None``."""
+    if isinstance(leaf, TS1):
+        return leaf.S1
+    if isinstance(leaf, TS2):
+        return leaf.S2
+    if isinstance(leaf, TSO3):
+        return leaf.SO3
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Matrix
 # ---------------------------------------------------------------------------
@@ -703,6 +802,11 @@ class SO3(Matrix):
         from geomech.core.operations import Hat, MMMul
 
         return MMMul(self, Hat(self.get_tangent_vector()))
+
+
+#: The manifold point leaves and their tangent-coordinate leaves, for ``isinstance``.
+MANIFOLD_POINTS = (S1, S2, SO3)
+TANGENT_LEAVES = (TS1, TS2, TSO3)
 
 
 # ---------------------------------------------------------------------------

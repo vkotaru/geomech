@@ -106,7 +106,8 @@ class System:
             symbol (``float`` for a scalar, ``(3,)`` for a vector, ``(3, 3)`` for a matrix);
             the ``p`` of ``simulate``. A read-only mapping of read-only arrays, owned by
             this system: change a value on a copy, ``p = dict(sys.params); p["m"] = 2.0``.
-        x0: a consistent initial state (``|q| = 1``, ``q·ω = 0``, ``R ∈ SO(3)``), packed with
+        x0: a consistent initial state (``|q| = 1``, ``q·ω = 0``, ``q·e = 0`` on S¹,
+            ``R ∈ SO(3)``), packed with
             ``StateLayout.pack``.
         reference: the source of the model (``Reference``).
         symbols: the leaves and point expressions a user may want (``sys.symbols["xQ"]``), a
@@ -133,10 +134,13 @@ class System:
 
     @property
     def dof(self) -> int:
-        """Degrees of freedom: 1 per scalar, 3 per vector, 2 per S² point, 3 per SO(3)."""
+        """Degrees of freedom: 1 per scalar, 3 per vector, 1 per S¹ point, 2 per S² point, 3
+        per SO(3)."""
+        from geomech.core.base import S1  # not at import time: see geomech.systems.circles
+
         v = self.variables
         n = len(v.scalars) + 3 * len(v.matrices)
-        n += sum(2 if isinstance(q, S2) else 3 for q in v.vectors)
+        n += sum(1 if isinstance(q, S1) else 2 if isinstance(q, S2) else 3 for q in v.vectors)
         return n
 
     @property
@@ -189,12 +193,15 @@ class SystemInfo(NamedTuple):
 ORDER = (
     "point_mass",
     "spring_mass",
+    "planar_pendulum",
+    "double_planar_pendulum",
     "spherical_pendulum",
     "particle_on_rotating_sphere",
     "double_spherical_pendulum",
     "n_link_spherical_chain",
     "elastic_spherical_pendulum",
     "cart_spherical_pendulum",
+    "cart_planar_pendulum",
     "free_rigid_body",
     "heavy_top",
     "rigid_pendulum",
@@ -203,6 +210,8 @@ ORDER = (
     "two_rigid_bodies_spherical_joint",
     "rigid_body",
     "spacecraft_reaction_wheels",
+    "spacecraft_reaction_wheels_s1",
+    "spacecraft_solar_arrays",
     "biped_3d",
     "quadrotor",
     "quadrotor_offset_com",

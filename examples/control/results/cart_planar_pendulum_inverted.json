@@ -1,0 +1,42 @@
+{
+ "name": "cart_planar_pendulum_inverted",
+ "system": "cart_planar_pendulum",
+ "kwargs": {},
+ "description": "Planar cart-pole upright with the rail force only: the start, weights and horizon of cart_spherical_pendulum_inverted_in_plane. Fully controllable (rank 4 of 4), so the library's LQR applies.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0
+ ],
+ "n_reduced": 4,
+ "dropped": [],
+ "controllability_rank": 4,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -1.5118681858865828,
+ "closed_loop_min_damping": 0.7913095024504048,
+ "closed_loop_fastest": 4.785563628370994,
+ "library_lqr": true,
+ "horizon": 6.0,
+ "dt": 0.001,
+ "derive_seconds": 0.006755404639989138,
+ "initial_error": {
+  "position": 0.3,
+  "attitude": 0.17453292519943295,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 1.8914078981615603,
+ "final_normalized_error": 0.00021551814609481611,
+ "max_normalized_error": 1.0,
+ "settling_time": 3.0100000000000002,
+ "converged": true,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 21.39095237982363,
+   "peak_abs": 21.39095237982363,
+   "unit": "N"
+  }
+ },
+ "constraint_drift": 1.1102230246251565e-16,
+ "energy_change": 0.05961437772697087
+}

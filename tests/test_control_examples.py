@@ -57,6 +57,8 @@ NOT_CONTROLLABLE = {
     ],
     # the three components of the conserved angular momentum
     "spacecraft_reaction_wheels_slew": lambda p: [0.0, 0.0, 0.0],
+    "spacecraft_reaction_wheels_s1_slew": lambda p: [0.0, 0.0, 0.0],
+    "spacecraft_solar_arrays_slew": lambda p: [0.0, 0.0, 0.0],
 }
 EXPECTED_TO_FAIL = {"cart_spherical_pendulum_out_of_plane"}
 
@@ -137,6 +139,33 @@ def test_readme_table_is_the_stored_results():
         assert f"`{ex.name}`" in readme
 
 
+def test_planar_cart_pole_is_controllable_and_matches_the_3d_in_plane_design():
+    """The planar cart-pole (R × S¹) is fully controllable, rank 4 of 4, and designed with
+    the library's ``lqr``; its closed-loop eigenvalues are the controlled ones of the 3-D
+    cart-pole's design on its controllable (in-plane) subspace, with the same weights.
+    The stored runs settle at the same time."""
+    import json
+
+    _, _, _, dp = designed("cart_planar_pendulum_inverted")
+    assert dp.n_reduced == 4 and dp.rank == 4 and not dp.uncontrollable
+    assert dp.used_library_lqr
+    _, _, _, ds = designed("cart_spherical_pendulum_inverted_in_plane")
+    assert ds.n_reduced == 6 and ds.rank == 4
+    cp, cs = dp.ctrl, ds.ctrl
+    eig_p = np.linalg.eigvals(cp.A - cp.B @ cp.K)
+    eig_s = np.linalg.eigvals(ds.V.T @ (cs.A - cs.B @ cs.K) @ ds.V)
+    key = lambda z: (round(z.real, 8), round(z.imag, 8))
+    assert np.allclose(sorted(eig_p, key=key), sorted(eig_s, key=key), atol=1e-8)
+    assert np.max(eig_p.real) < 0
+    a, b = (
+        json.loads((HERE / "results" / f"{n}.json").read_text())
+        for n in ("cart_planar_pendulum_inverted", "cart_spherical_pendulum_inverted_in_plane")
+    )
+    assert a["controllability_rank"] == a["n_reduced"] == 4 and a["converged"]
+    assert a["settling_time"] == pytest.approx(b["settling_time"], abs=1e-9)
+    assert a["closed_loop_max_real"] == pytest.approx(b["closed_loop_max_real"], rel=1e-9)
+
+
 tracking = _load("tracking", "control_examples_tracking")
 
 
@@ -162,3 +191,50 @@ def test_tracking_suspended_load_smoke():
     assert full < 1e-5 and full < 1e-2 * errs["equilibrium reduction only"]
     m = tracking.suspended_load_circle(horizon=6.0, dt=5e-3, save=False, validate=False)
     assert m["final_position_error"] < 0.1 * m["initial_position_error"]
+
+
+def test_s1_spacecraft_slew_matches_the_r3_slew():
+    """The S¹ wheel model's slew has the R³ model's closed loop: same eigenvalues, and the
+    same settling time and normalized error, both in the stored results and in a run."""
+    import json
+
+    a, b = (
+        json.loads((HERE / "results" / f"{n}.json").read_text())
+        for n in ("spacecraft_reaction_wheels_slew", "spacecraft_reaction_wheels_s1_slew")
+    )
+    for key in ("settling_time", "closed_loop_max_real", "closed_loop_min_damping"):
+        assert a[key] == pytest.approx(b[key], rel=1e-9, abs=1e-12), key
+    assert b["final_normalized_error"] == pytest.approx(a["final_normalized_error"], rel=1e-6)
+    runs = [
+        helper.run(examples.BY_NAME[n], horizon=12.0, dt=5e-3, save=False)
+        for n in ("spacecraft_reaction_wheels_slew", "spacecraft_reaction_wheels_s1_slew")
+    ]
+    assert runs[0]["settling_time"] == runs[1]["settling_time"]
+    assert runs[1]["final_normalized_error"] == pytest.approx(
+        runs[0]["final_normalized_error"], rel=1e-6
+    )
+
+
+def test_solar_arrays_slew_ends_at_the_commanded_panel_angle():
+    """The panels end at the commanded sun-pointing angle about b₁ and the bus at R = I,
+    with the wheel torques below 0.2 N·m and the drive torques below 0.02 N·m."""
+    import json
+
+    name = "spacecraft_solar_arrays_slew"
+    ex = examples.BY_NAME[name]
+    sys_, layout, plant, _, _ = helper.build(ex.system, ex.kwargs)
+    from geomech.simulation import simulate
+
+    _, _, _, d = designed(name)
+    x0 = ex.perturbation(sys_, layout, layout.pack(**ex.equilibrium(sys_, layout)))
+    traj = simulate(plant, x0, ex.horizon, dict(sys_.params), u=d.ctrl, dt=5e-3)
+    b1 = np.asarray(sys_.params["b1"])
+    for k in (1, 2):
+        n = traj[f"n_{k}"][-1]
+        angle = np.degrees(np.arctan2(np.cross(helper.UP, n) @ b1, n @ helper.UP))
+        assert abs(angle - examples.SUN_ANGLE) < 0.05, (k, angle)
+    assert np.allclose(traj["R"][-1], np.eye(3), atol=1e-3)
+    m = json.loads((HERE / "results" / f"{name}.json").read_text())
+    peaks = {k: v["peak_deviation"] for k, v in m["peak_inputs"].items()}
+    assert max(peaks[f"\\tau_{i}"] for i in (1, 2, 3)) < 0.2
+    assert max(peaks[f"\\mu_{k}"] for k in (1, 2)) < 0.02

@@ -21,7 +21,7 @@ from typing import Callable
 
 from geomech.codegen.layout import StateLayout
 from geomech.codegen.source import function_source, get_target, namespace
-from geomech.core.base.expressions import S2, SO3, Expr
+from geomech.core.base.expressions import MANIFOLD_POINTS, Expr
 from geomech.core.base.types import ExprType
 from geomech.core.math.extract import extract_linear_coeff
 from geomech.core.operations.geometry import Dot
@@ -37,7 +37,7 @@ __all__ = ["momenta", "energy_expr", "energy_function", "energy_source"]
 
 
 def _velocity(var):
-    if isinstance(var, (S2, SO3)):
+    if isinstance(var, MANIFOLD_POINTS):
         return var.get_tangent_vector()
     return var.t_diff()
 
@@ -45,8 +45,8 @@ def _velocity(var):
 def momenta(L: Expr, variables: SystemVariables) -> dict[str, tuple[Expr, Expr]]:
     """``{str(v): (v, ∂L/∂v)}`` for the velocity ``v`` of every configuration variable.
 
-    ``∂L/∂v`` is a scalar for a scalar variable and a column vector otherwise (for S², the
-    full gradient in ``ω``, which may have a component along ``q``).
+    ``∂L/∂v`` is a scalar for a scalar variable or an S¹ point and a column vector
+    otherwise (for S², the full gradient in ``ω``, which may have a component along ``q``).
     """
     check_variables(variables, caller="momenta")
     cfg_vars, cfg_perts, vel_perts = perturbation_variables(variables)

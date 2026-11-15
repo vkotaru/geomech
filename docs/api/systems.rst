@@ -30,6 +30,12 @@ Points, springs and pendulums: ``geomech.systems.spheres``
              double_spherical_pendulum, n_link_spherical_chain, elastic_spherical_pendulum,
              cart_spherical_pendulum
 
+Planar pendulums: ``geomech.systems.circles``
+---------------------------------------------
+
+.. automodule:: geomech.systems.circles
+   :members: planar_pendulum, double_planar_pendulum, cart_planar_pendulum
+
 Rigid bodies: ``geomech.systems.rigid``
 ---------------------------------------
 
@@ -50,4 +56,5 @@ Multibody systems: ``geomech.systems.multibody``
 ------------------------------------------------
 
 .. automodule:: geomech.systems.multibody
-   :members: spacecraft_reaction_wheels, biped_3d
+   :members: spacecraft_reaction_wheels, spacecraft_reaction_wheels_s1,
+             spacecraft_solar_arrays, biped_3d

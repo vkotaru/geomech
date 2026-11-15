@@ -176,11 +176,11 @@ def uncontrollable_eigenvalues(A, V) -> list:
 
 
 def label_group(label: str) -> str:
-    """``"velocity"``, ``"attitude"`` (S² and SO(3) configuration errors, rad) or
+    """``"velocity"``, ``"attitude"`` (S¹, S² and SO(3) configuration errors, rad) or
     ``"position"`` (R³ and R configuration errors, m) for a reduced coordinate."""
     if is_velocity(label):
         return "velocity"
-    if label.startswith(("xi_", "eta_")):
+    if label.startswith(("gamma_", "xi_", "eta_")):
         return "attitude"
     return "position"
 
@@ -259,7 +259,9 @@ def design(ex: Example, sys_, layout, plant, plant_lin, x_eq, u_eq) -> Design:
         Kc = np.linalg.solve(Rm, Bc.T @ P) @ V.T
         K_full = np.zeros((n_u, len(labels)))
         K_full[:, keep] = Kc
-        ctrl = LQRController(K_full, P, A, B, T, x_eq, u_eq, labels, model_of(plant_lin), bases)
+        model = model_of(plant_lin)
+        axes = {v.key: model.axis(v, p, "lqr") for v in model.s1}  # S¹ errors: angles
+        ctrl = LQRController(K_full, P, A, B, T, x_eq, u_eq, labels, model, bases, axes)
         library = False
     eig = np.linalg.eigvals(Ak - Bk @ K_full[:, keep])
     eig_c = np.linalg.eigvals(V.T @ (Ak - Bk @ K_full[:, keep]) @ V)  # controlled modes

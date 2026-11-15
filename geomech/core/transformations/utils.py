@@ -14,7 +14,7 @@ product chains apart and put them back together; the simplifier, integration by 
 from __future__ import annotations
 
 from geomech.core.base.constants import zero_of
-from geomech.core.base.expressions import S2, SO3, Expr
+from geomech.core.base.expressions import MANIFOLD_POINTS, Expr
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
@@ -66,12 +66,12 @@ def calculus_node(cls, operand):
     """``cls(operand)`` for a calculus class, in eager form over a manifold point.
 
     A rewrite of the operand of ``TimeDerivative``/``Variation`` can reduce it to a bare
-    ``S2``/``SO3`` leaf (``d/dt(q·(q·q))`` → ``d/dt(q)``). The tree never holds that node
+    ``S1``/``S2``/``SO3`` leaf (``d/dt(q·(q·q))`` → ``d/dt(q)``). The tree never holds that node
     (the constructor rejects it), so the leaf's own kinematics are returned instead:
     ``q.t_diff()``/``R.t_diff()`` for ``TimeDerivative`` and ``q.delta()``/``R.delta()`` for
     ``Variation``. Any other operand gives ``cls(operand)``.
     """
-    if isinstance(operand, (S2, SO3)):
+    if isinstance(operand, MANIFOLD_POINTS):
         if cls is TimeDerivative:
             return operand.t_diff()
         if cls is Variation:
