@@ -40,7 +40,7 @@ linearization $M\,\delta\dot x = A\,\delta x + B\,\delta u$ along an arbitrary t
 [@andersson2019casadi] modules; simulation with a fourth-order Runge–Kutta–Munthe-Kaas
 integrator on the Lie group [@munthekaas1999high] and LQR design from the
 linearization; reports in a single HTML file with a 3-D animation, the equations and the
-verification numbers; a library of 28 ready-made systems, from a spherical pendulum, a
+verification numbers; a library of 29 ready-made systems, from a spherical pendulum, a
 spacecraft with reaction wheels and a 3-D biped (single-support phase) to teams of
 quadrotors carrying a rigid load; and an agent skill that walks a coding
 assistant through the whole procedure. NumPy is the only required dependency; SciPy and CasADi are optional.
@@ -139,7 +139,7 @@ orthogonal to $q$, as for every pendulum example, so string tests pinned against
 textbook passed; the oracle exposed that gyroscopic and coupling terms otherwise came
 out at half strength. Such systems are now in the test suite.
 
-The `systems` library makes these checks reusable. Each of its 28 systems carries its
+The `systems` library makes these checks reusable. Each of its 29 systems carries its
 Lagrangian, virtual work, default parameters, an initial state and its source, and the
 test suite checks each one with the oracle; its Lagrangian and virtual work against
 an independent numeric model of its bodies (positions, kinetic energy by finite
@@ -154,8 +154,8 @@ documented state layout and writes modules that need only NumPy (or CasADi), and
 tests compare the generated functions with direct evaluation of the tree on every
 pinned system.
 `simulation` integrates generated modules on the manifold and designs LQR gains from
-the generated linearization, which the repository's control examples apply to 23
-equilibria of the library systems (21 stabilizable) and two tracking problems; `viz` evaluates scene geometry through the same generated
+the generated linearization, which the repository's control examples apply to 24
+equilibria of the library systems (22 stabilizable) and two tracking problems; `viz` evaluates scene geometry through the same generated
 code, so the animation has no kinematics of its own.
 
 # Research impact statement
