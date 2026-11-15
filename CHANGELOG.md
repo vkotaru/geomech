@@ -57,6 +57,18 @@ All notable changes to `geomech` are recorded here. The format follows
   torques, ending with the panels at a commanded sun-pointing angle). The examples' LQR
   on the controllable subspace now passes the S¹ axes to `LQRController`, and the S¹
   angle errors count as attitude errors in the reports.
+- `cart_planar_pendulum` in `geomech.systems` (R × S¹, 2 dof): the classic planar
+  cart-pole, `cart_spherical_pendulum` with the pendulum on the circle normal to the
+  horizontal axis e₂ (the normal of the rail's vertical plane); same parameters, rail
+  force as the only input. Verified by `check_eom`, by an independent model of the bodies,
+  against the textbook cart-pole in the angle from upright, and against
+  `cart_spherical_pendulum` at in-plane states (equations and simulation); golden file
+  `tests/golden/cart_planar_pendulum.json`.
+- Control example `cart_planar_pendulum_inverted` in `examples/control/`: LQR at the
+  upright equilibrium with the start and weights of
+  `cart_spherical_pendulum_inverted_in_plane`. Fully controllable (rank 4 of 4), unlike
+  the 3-D cart-pole whose linearization is not stabilizable; t_s = 3.01 s, final
+  ν = 2.2e-4, the closed-loop eigenvalues of the 3-D design's controllable part.
 - `geomech.simulation.reduced_linearization(lin_module, x, u, p, *, a=None, basis=...)`
   and `ReducedLinearization`: the reduced linearization that `lqr` designs with (`A`, `B`,
   `T`, labels, S² bases and the full matrices), without solving a Riccati equation; `lqr`

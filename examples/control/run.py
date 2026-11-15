@@ -131,6 +131,7 @@ def units(system: str, layout_inputs) -> dict:
     """The unit of each input of *system*: forces in N, moments and torques in N·m."""
     force = {
         "cart_spherical_pendulum": {"f"},
+        "cart_planar_pendulum": {"f"},
         "rigid_body": {"F"},
         "two_rigid_bodies_spherical_joint": {"F"},
         "elastic_spherical_pendulum": {"f_l"},
@@ -195,6 +196,18 @@ EXAMPLES = [
         8.0,
         description="Upright elastic pendulum at the compressed spring length"
         " l = l₀ − m g / k; inputs f_l (along the rod) and f_q (moment); 20° tilt, +0.1 m.",
+    ),
+    Example(
+        "cart_planar_pendulum_inverted",
+        "cart_planar_pendulum",
+        rest(s=0.0, q=UP),
+        perturbed(s=0.3, q=tilt(UP, 10, (0, 1, 0))),
+        weights(10, 1),
+        0.1,
+        6.0,
+        description="Planar cart-pole upright with the rail force only: the start, weights"
+        " and horizon of cart_spherical_pendulum_inverted_in_plane. Fully controllable"
+        " (rank 4 of 4), so the library's LQR applies.",
     ),
     Example(
         "cart_spherical_pendulum_inverted_in_plane",

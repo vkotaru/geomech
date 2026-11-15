@@ -421,6 +421,36 @@ def test_spacecraft_reaction_wheels_s1_eqs_9_61_9_62():
             assert_same(name, np.atleast_1d(val(lib_equation(eom, q))), np.atleast_1d(ref))
 
 
+def test_cart_planar_pendulum_in_the_angle_from_upright():
+    """The planar cart-pole against the textbook cart-pole (not from Lee et al.; it is not
+    a ``Reference.equation``). With ``q = (sin φ, 0, cos φ)`` from upright, ``e₂ × q =
+    ∂q/∂φ``, so ``ω = φ̇`` and ``γ = δφ``. From ``L = ½ (M + m) ṡ² + m l ṡ φ̇ cos φ
+    + ½ m l² φ̇² − m g l cos φ`` (horizontal rail),
+
+    ``EL_s = (M + m) s̈ + m l (φ̈ cos φ − φ̇² sin φ)``,
+    ``EL_φ = m l s̈ cos φ + m l² φ̈ − m g l sin φ``,
+
+    and the library's equations are ``E_s = −EL_s + f`` and ``E_γ = −EL_φ``."""
+    name = "cart_planar_pendulum"
+    s = derived(name)[0]
+    sym = s.symbols
+    for eom, val in s1_states(name):
+        q, w, wd = w_s1(sym["q"])
+        qv = val(q)
+        assert abs(qv[1]) < 1e-12
+        phi, dphi, ddphi = np.arctan2(qv[0], qv[2]), float(val(w)), float(val(wd))
+        sdd = float(val(sym["s"].t_diff().t_diff()))
+        M, m, g, l = (val(k) for k in ("M", "m", "g", "l"))
+        c, sn = np.cos(phi), np.sin(phi)
+        el_s = (M + m) * sdd + m * l * (ddphi * c - dphi**2 * sn)
+        el_phi = m * l * sdd * c + m * l * l * ddphi - m * g * l * sn
+        ref_s = -el_s + float(val(sym["f"]))
+        got_s = val(lib_equation(eom, sym["s"]))
+        assert_same(name, np.atleast_1d(got_s), np.atleast_1d(ref_s))
+        got_q = val(lib_equation(eom, sym["q"]))
+        assert_same(name, np.atleast_1d(got_q), np.atleast_1d(-el_phi))
+
+
 #: (system, builder kwargs) → the equation its test above compares with; every system
 #: whose ``reference.equation`` is not empty must be listed here with that equation.
 COVERED = {

@@ -30,6 +30,7 @@ EXPECTED = {
     "n_link_spherical_chain": 6,
     "elastic_spherical_pendulum": 3,
     "cart_spherical_pendulum": 3,
+    "cart_planar_pendulum": 2,
     "free_rigid_body": 3,
     "heavy_top": 3,
     "rigid_pendulum": 3,
