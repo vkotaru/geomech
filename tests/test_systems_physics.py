@@ -6,13 +6,15 @@ from the system's physical description, without the library's expressions:
 
 - the positions of the point masses and centres of mass as functions of the
   configuration; the kinetic energy is ``Σ ½ m |ẋ|²`` with ``ẋ`` by central differences
-  along the trajectory through the state (``q(t) = exp(t ω̂) q``, ``R(t) = R exp(t Ω̂)``,
-  ``x(t) = x + t ẋ``), plus ``½ Ωᵀ J_c Ω`` per rigid body with ``J_c`` about its centre of
-  mass (a pivot inertia is shifted to the centre of mass with the parallel-axis theorem);
+  along the trajectory through the state (``q(t) = exp(t ω̂) q`` on S²,
+  ``q(t) = exp(t ω ê) q`` on S¹, ``R(t) = R exp(t Ω̂)``, ``x(t) = x + t ẋ``), plus
+  ``½ Ωᵀ J_c Ω`` per rigid body with ``J_c`` about its centre of mass (a pivot inertia is
+  shifted to the centre of mass with the parallel-axis theorem);
 - the potential: ``Σ m g (height)`` with gravity along −e₃, plus the springs;
 - the virtual work: each force times the central difference of its application point
-  along a random admissible variation (``δq = ξ × q``, ``δR = R η̂``), each body moment
-  ``M·η`` and each moment about a pivot ``f·ξ`` (the work of a moment on the rotation ξ).
+  along a random admissible variation (``δq = ξ × q``, ``δq = γ e × q``, ``δR = R η̂``),
+  each body moment ``M·η`` and each moment about a pivot ``f·ξ`` (the work of a moment on
+  the rotation ξ).
 
 At random admissible states and the default parameters, ``L`` and ``δW`` evaluated with
 ``geomech.numeric.Evaluator`` agree with the model to 1e-8 relative to ``max(1, |model|)``.
@@ -23,7 +25,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from geomech.core.base import S2, SO3, Scalar
+from geomech.core.base import S1, S2, SO3, Scalar
 from geomech.numeric import Evaluator, expm_so3, sample_state
 from geomech.systems import get, names
 
@@ -50,7 +52,7 @@ def kinematic_keys(variables):
     for v in variables.scalars:
         out.append((v, str(v), str(v.t_diff())))
     for v in variables.vectors:
-        vel = v.get_tangent_vector() if isinstance(v, S2) else v.t_diff()
+        vel = v.get_tangent_vector() if isinstance(v, (S1, S2)) else v.t_diff()
         out.append((v, str(v), str(vel)))
     for v in variables.matrices:
         out.append((v, str(v), str(v.get_tangent_vector())))
@@ -64,6 +66,8 @@ def flow(keys, env, t, direction=None):
         d = env[kv] if direction is None else direction[kq]
         if isinstance(var, Scalar):
             cfg[kq] = float(env[kq]) + t * float(d)
+        elif isinstance(var, S1):  # the rotation about the axis by the angle t·ω (or t·γ)
+            cfg[kq] = expm_so3(t * float(d) * col(env[str(var.axis)])) @ col(env[kq])
         elif isinstance(var, S2):
             cfg[kq] = expm_so3(t * col(d)) @ col(env[kq])
         elif isinstance(var, SO3):
@@ -103,7 +107,7 @@ class Model:
     def body_moment(self, *pairs):
         self.moments = lambda u: [(u[m], k) for m, k in pairs]
 
-    # ---- R, R³, S²
+    # ---- R, R³, S¹, S²
     def point_mass(self, n):
         self.points = lambda c, t: [(self.v("m"), c["x"])]
         self.forces = lambda c, u: [(u["F"], lambda c: c["x"])]
@@ -112,6 +116,15 @@ class Model:
         self.points = lambda c, t: [(self.v("m"), c["x"] * np.array([1.0, 0, 0]))]
         self.springs = lambda c: 0.5 * self.v("k") * c["x"] ** 2
         self.scalar_forces = lambda u: [(u["f"], "x")]
+
+    def planar_pendulum(self, n):
+        # τ is the moment about the pivot axis: its work on the rotation γ e₂ is τ γ
+        self.points = lambda c, t: [(self.v("m"), self.v("l") * c["q"])]
+        self.scalar_forces = lambda u: [(u["\\tau"], "q")]
+
+    def double_planar_pendulum(self, n):
+        self.points = self._chain(2)
+        self.scalar_forces = lambda u: [(u["\\tau_1"], "q1"), (u["\\tau_2"], "q2")]
 
     def spherical_pendulum(self, n):
         self.points = lambda c, t: [(self.v("m"), self.v("l") * c["q"])]
@@ -251,7 +264,7 @@ class Model:
         )
 
         def wheel(c, i):
-            return c["R"] @ expm_so3(c[f"\\theta_{i}"] * bs[i - 1])
+            return c["R"] @ expm_so3(self.wheel_angle(c, i) * bs[i - 1])
 
         def body_rate(Rp, Rm):  # body-frame angular velocity (or variation) by differences
             Rd = (Rp - Rm) / (2 * H)
@@ -278,6 +291,21 @@ class Model:
             return W
 
         self.extra_T, self.extra_W = extra_T, extra_W
+
+    def wheel_angle(self, c, i):
+        """θᵢ of the R³ model, or the angle about bᵢ of the S¹ point qᵢ from a fixed
+        reference direction rᵢ ⊥ bᵢ (any rᵢ: the wheel is axisymmetric about bᵢ)."""
+        if f"\\theta_{i}" in c:
+            return c[f"\\theta_{i}"]
+        b, q = self.v(f"b{i}"), col(c[f"q_{i}"])
+        r = np.cross(b, [0.3, -0.5, 0.8])
+        r /= np.linalg.norm(r)
+        return np.arctan2(b @ np.cross(r, q), r @ q)
+
+    def spacecraft_reaction_wheels_s1(self, n):
+        """The bodies of ``spacecraft_reaction_wheels``; wheel i turned by the angle of
+        its S¹ point ``q_i`` about bᵢ (``wheel_angle``)."""
+        self.spacecraft_reaction_wheels(n)
 
     def biped_3d(self, n):
         """Hip point mass at the top of the stance leg, legs of length l along their body
@@ -375,7 +403,9 @@ def errors(s, name, seed):
     """Relative errors of L and δW against the model at one random admissible state."""
     rng = np.random.default_rng(seed)
     keys = kinematic_keys(s.variables)
-    env = sample_state(s.variables, list(s.inputs), rng)
+    # an S¹ point is drawn in the plane of its default axis; for the other systems the base
+    # env changes no random draw
+    env = sample_state(s.variables, list(s.inputs), rng, env=dict(s.params))
     for k, val in s.params.items():
         env[k] = float(val) if np.isscalar(val) else np.asarray(val, float).reshape(np.shape(val))
         if np.ndim(val) == 1:
@@ -398,6 +428,9 @@ def errors(s, name, seed):
         if isinstance(var, Scalar):
             d = float(rng.normal())
             venv[str(var.delta())] = d
+        elif isinstance(var, S1):  # δq = γ e × q
+            d = float(rng.normal())
+            venv[str(var.get_variation_vector())] = d
         else:
             d = rng.normal(size=3)
             if isinstance(var, S2):

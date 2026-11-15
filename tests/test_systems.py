@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 EXPECTED = {
     "point_mass": 3,
     "spring_mass": 1,
+    "planar_pendulum": 1,
+    "double_planar_pendulum": 2,
     "spherical_pendulum": 2,
     "particle_on_rotating_sphere": 2,
     "double_spherical_pendulum": 4,
@@ -36,6 +38,7 @@ EXPECTED = {
     "two_rigid_bodies_spherical_joint": 9,
     "rigid_body": 6,
     "spacecraft_reaction_wheels": 6,
+    "spacecraft_reaction_wheels_s1": 6,
     "biped_3d": 6,
     "quadrotor": 6,
     "quadrotor_offset_com": 6,

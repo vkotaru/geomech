@@ -12,7 +12,7 @@ Documentation: https://geomech.readthedocs.io
 
 Given a Lagrangian and virtual work, `geomech` automatically derives
 globally valid, singularity-free equations of motion on smooth manifolds
-(SO(3), S2) using Hamilton's principle and variational calculus --
+(SO(3), S2, S1) using Hamilton's principle and variational calculus --
 no Euler angles or quaternions required.
 
 The pipeline:
@@ -213,6 +213,7 @@ More examples in [`examples/`](https://github.com/vkotaru/geomech/blob/main/exam
 | `Scalar` | Symbolic scalar             | `Scalar('m', attr=['Constant'])` |
 | `Vector` | Column vector (default 3x1) | `Vector('x')`                    |
 | `Matrix` | Square matrix (default 3x3) | `Matrix('J', attr=['Constant'])` |
+| `S1`     | Unit vector on the circle normal to a constant unit axis | `S1('q', axis=e)` |
 | `S2`     | Unit vector on the 2-sphere | `S2('q')`                        |
 | `SO3`    | Rotation matrix on SO(3)    | `SO3('R')`                       |
 

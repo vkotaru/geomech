@@ -44,7 +44,12 @@ from geomech.systems.aerial import (
     quadrotor_offset_com,
     quadrotor_suspended_load,
 )
-from geomech.systems.multibody import biped_3d, spacecraft_reaction_wheels
+from geomech.systems.circles import double_planar_pendulum, planar_pendulum
+from geomech.systems.multibody import (
+    biped_3d,
+    spacecraft_reaction_wheels,
+    spacecraft_reaction_wheels_s1,
+)
 from geomech.systems.rigid import (
     double_rigid_pendulum,
     free_rigid_body,
@@ -78,6 +83,8 @@ __all__ = [
     "systems_table",
     "point_mass",
     "spring_mass",
+    "planar_pendulum",
+    "double_planar_pendulum",
     "spherical_pendulum",
     "particle_on_rotating_sphere",
     "double_spherical_pendulum",
@@ -92,6 +99,7 @@ __all__ = [
     "two_rigid_bodies_spherical_joint",
     "rigid_body",
     "spacecraft_reaction_wheels",
+    "spacecraft_reaction_wheels_s1",
     "biped_3d",
     "quadrotor",
     "quadrotor_offset_com",

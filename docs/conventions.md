@@ -23,6 +23,18 @@ body gives `E = −J Ω̇ − Ω × JΩ + M` (Eq. 6.16 with every term moved to 
 positive: `δE = −M δv̇ + A δx + B δu`, i.e. `M[δv̇] = −coeff(δv̇, δE)`, and the result reads
 `M δẋ = A δx + B δu` ([Linearization](vbl.md#sign-convention)).
 
+## S¹ points live on a circle normal to an axis
+
+`S1("q", axis=e)` is the unit circle `{q : |q| = 1, q·e = 0}` in R³, with `e` a constant
+`Vector` leaf flagged `UnitNorm` (required: `Vector("e", attr=["Constant", "UnitNorm"])`).
+In that plane `e × ·` is the rotation `S` by π/2 of Lee et al. ch. 4, so `q̇ = ω e × q`,
+`δq = γ e × q` (scalar `ω`, `γ`) and `pᵀ S r` is printed `Dot(p,Cross(e,r))`. Each S¹
+point has one scalar equation `E = −(d/dt ∂L/∂ω) + (e × q)·∂L/∂q + forcing` (eq. 4.12
+in the library's sign), keyed by `\gamma_{q}`, with no projection: unlike S², it has no
+normal component. The axis is a parameter of the generated code (`p[str(e)]`). Write the
+Lagrangian in `ω` (the modified Lagrangian of the book) or in `q.t_diff()`; the S¹
+identities reduce `q̇·q̇` to `ω²`.
+
 ## S² equations live on the tangent plane
 
 For a point `q ∈ S²` the variation is `δq = ξ × q` with `ξ ⊥ q`, so only the part of `E`
@@ -131,13 +143,15 @@ non-calculus operand; hashing uses `str`. `expr.has(x)` uses the same `==`. Henc
 
 ## Glossary
 
-- **configuration variable**: A leaf listed in `SystemVariables`: a `Scalar`, a `Vector`, an `S2` point or an `SO3`
-  point. Hamilton's principle varies it; each one gets an equation.
-- **tangent vector**: The velocity coordinate of a manifold point: `ω_q` for `S2("q")` (`q̇ = ω × q`,
+- **configuration variable**: A leaf listed in `SystemVariables`: a `Scalar`, a `Vector`, an `S1` point, an `S2`
+  point or an `SO3` point. Hamilton's principle varies it; each one gets an equation.
+- **tangent vector**: The velocity coordinate of a manifold point: the scalar `ω_q` for `S1("q", axis=e)`
+  (`q̇ = ω e × q`, a `TS1` leaf), `ω_q` for `S2("q")` (`q̇ = ω × q`,
   `ω ⊥ q`) and `Ω_R` for `SO3("R")` (`Ṙ = R Hat(Ω)`, body frame). Obtained with
-  `q.get_tangent_vector()`; a `TS2`/`TSO3` leaf that remembers its point.
+  `q.get_tangent_vector()`; a `TS1`/`TS2`/`TSO3` leaf that remembers its point.
 - **variation vector**: The free variation of a configuration variable, whose coefficient is the equation:
-  `δx` for a `Scalar`/`Vector`, `ξ_q` for `S2` (`δq = ξ × q`, `ξ ⊥ q`) and `η_R` for
+  `δx` for a `Scalar`/`Vector`, the scalar `γ_q` for `S1` (`δq = γ e × q`), `ξ_q` for
+  `S2` (`δq = ξ × q`, `ξ ⊥ q`) and `η_R` for
   `SO3` (`δR = R Hat(η)`). The keys of the `compute_eom` result are the printed variation
   vectors. Used on the EOM side.
 - **perturbation**: A variable of the linearization (VBL side): the configuration perturbations (`δx`,

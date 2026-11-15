@@ -7,6 +7,41 @@ All notable changes to `geomech` are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- **S¹ as a configuration manifold** (Lee et al. ch. 4). `S1("q", axis=e)` is the unit
+  circle in the plane normal to a constant unit axis `e` (a `Vector` leaf with
+  `attr=["Constant", "UnitNorm"]`, required): `q.t_diff()` is `(e × q) ω` and `q.delta()`
+  is `(e × q) γ` with the scalar tangent coordinates `ω_q`, `γ_q` (`TS1`, a `Scalar`).
+  In that plane `e × ·` is the book's rotation `S` by π/2, so the derived equations are
+  those of eq. 4.12; each S¹ point gives one scalar equation, keyed by `\gamma_{q}`. List
+  S¹ points in `SystemVariables(vectors=[...])`.
+  - Manifold rule `manifold.s1_variation_omega`: `δω → γ̇` (eq. 4.11; derivation in the
+    `manifold_rules` docstring).
+  - Vector identities, each with its hypothesis in the `vector_identities` docstring:
+    `vector.s1_axis_orthogonal` (`e·q = 0`), `vector.s1_axis_double_cross`
+    (`e × (e × q) = −q`), `vector.s1_axis_recovery` (`q × (e × q) = e`),
+    `vector.s1_rotated_dot` (`(e × a)·(e × b) = a·b`, so `|e × q| = 1`) and
+    `vector.s1_planar_triple` (the book's `pᵀSr` of two points of one circle in one
+    canonical form).
+  - Wired through `compute_eom` validation, `to_standard_form` (acceleration `ω̇`, a
+    scalar), `linearize` (kinematic row `γ̇ = δω`), `check_eom`/`sample_state` (an S¹
+    point is drawn on the circle of its axis; `sample_state(..., env=params)` takes the
+    axis values), `StateLayout` (configuration slot of 3 with `axis`, velocity and
+    acceleration slots of 1; `collect_params` always lists the axis), generated
+    `kinematics(state, p)` for a layout with an S¹ point, `simulate` (RKMK4 rotates `q`
+    about its axis by the angle `ω h` and re-projects it onto the circle; `check_state`,
+    `project_state` and `constraint_drift` take the axis from `p`), `lqr` (the S¹ error is
+    the angle about the axis), printing (`S1:q`), `check_tree` and `latex_names`
+    (`\omega_1`, `\gamma_1`). `scripts/engine_fuzz.py` samples S¹ points as exact jets
+    on their circle.
+- Three systems on S¹ in `geomech.systems`:
+  - `planar_pendulum` (S¹, 1 dof), compared with Lee et al. eq. 4.33;
+  - `double_planar_pendulum` (S¹ × S¹, 2 dof), compared with eq. 4.62 with its velocity
+    terms corrected (the book prints `ω₂(ω₂ − ω₁)` and `ω₁(ω₁ − ω₂)`; eq. 4.12 gives `ω₂²`
+    and `ω₁²`, the textbook double pendulum, which a test also checks in angles);
+  - `spacecraft_reaction_wheels_s1` (SO(3) × (S¹)³, 6 dof): the spacecraft with its wheel
+    angles on S¹, as in Lee et al. §9.10; its equations print as those of
+    `spacecraft_reaction_wheels` after renaming `θ̇ᵢ → ωᵢ`, and the two simulate to the
+    same trajectory.
 - `geomech.simulation.reduced_linearization(lin_module, x, u, p, *, a=None, basis=...)`
   and `ReducedLinearization`: the reduced linearization that `lqr` designs with (`A`, `B`,
   `T`, labels, S² bases and the full matrices), without solving a Riccati equation; `lqr`

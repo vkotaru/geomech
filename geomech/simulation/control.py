@@ -12,12 +12,16 @@ The perturbation coordinates are those of ``linearize`` (``docs/vbl.md``):
 Variable    Configuration error         Velocity error
 ==========  ==========================  =========================================
 R, R³       ``x − x_eq``                ``ẋ − ẋ_eq``
+S¹          ``atan2(e·(q_eq × q),       ``ω − ω_eq`` (1-D)
+            q_eq·q)`` (1-D)
 S²          ``Bᵀ (q_eq × q)`` (2-D)     ``Bᵀ (ω − ω_eq)`` (2-D)
 SO(3)       ``vee(log(R_eqᵀ R))``       ``Ω − Ω_eq``
 ==========  ==========================  =========================================
 
 ``δq = ξ × q`` with ``ξ ⊥ q``, so ``ξ = q_eq × q`` to first order, and ``δR = R η̂`` so
-``R = R_eq exp(η̂)``. ``B = [b₁ b₂]`` is an orthonormal basis of the tangent plane at
+``R = R_eq exp(η̂)``. On S¹ ``δq = γ e × q`` already has one coordinate, the angle ``γ``
+from ``q_eq`` to ``q`` about the axis ``e`` (its tangent basis is ``e × q``, of size 1),
+so ``T`` is the identity there. ``B = [b₁ b₂]`` is an orthonormal basis of the tangent plane at
 ``q_eq`` (``tangent_basis``).
 
 scipy (``scipy.linalg.solve_continuous_are``) is imported only when ``lqr`` is called.
@@ -80,6 +84,7 @@ class LQRController:
             perturbations, the tangent basis ``B_q`` at ``q_eq`` for each S² ``ξ`` and ``δω``.
         x_eq, u_eq: the equilibrium.
         labels: the name of each reduced coordinate (``"xi_q[0]"``, ``"eta_R[2]"``, …).
+        axes: ``{printed S¹ symbol: unit axis}`` from the ``p`` of ``lqr``.
     """
 
     K: np.ndarray
@@ -92,6 +97,7 @@ class LQRController:
     labels: list
     model: Model = field(repr=False)
     bases: dict = field(repr=False, default_factory=dict)
+    axes: dict = field(repr=False, default_factory=dict)
 
     @property
     def closed_loop_eigenvalues(self) -> np.ndarray:
@@ -109,6 +115,11 @@ class LQRController:
                 Bq = self.bases[var.key]
                 cfg.append(Bq.T @ np.cross(xe[var.cfg], x[var.cfg]))
                 vel.append(Bq.T @ (x[var.vel] - xe[var.vel]))
+            elif var.manifold == "S1":  # the angle from q_eq to q about e
+                qe, q = xe[var.cfg], x[var.cfg]
+                e = self.axes[var.key]
+                cfg.append(np.array([np.arctan2(e @ np.cross(qe, q), qe @ q)]))
+                vel.append(x[var.vel] - xe[var.vel])
             elif var.manifold == "SO3":
                 Re, R = xe[var.cfg].reshape(3, 3), x[var.cfg].reshape(3, 3)
                 cfg.append(log_so3(Re.T @ R))
@@ -154,6 +165,7 @@ def lqr(
     forms ``Ā = Mr⁻¹ Ar``, ``B̄ = Mr⁻¹ Br``, solves ``scipy.linalg.solve_continuous_are``
     and returns ``K = R⁻¹ B̄ᵀ P`` in an ``LQRController``.
 
+    An S¹ point needs no reduction: its perturbations ``γ`` and ``δω`` are scalars.
     The S² reduction: the 3-D perturbations ``ξ`` and ``δω`` of an S² point satisfy
     ``ξ · q = δω · q = 0`` at an equilibrium (where ``ω = 0``), so each has 2 degrees of
     freedom. In 3-D the normal direction is an uncontrollable mode with a zero
@@ -207,7 +219,7 @@ def lqr(
     lin = getattr(lin_module, "LINEARIZATION", None)
     if not isinstance(lin, dict):
         raise TypeError("lqr: the module has no LINEARIZATION; generate it from linearize")
-    x_eq = check_state(lin_module, x_eq, tol=tol, what="x_eq")
+    x_eq = check_state(lin_module, x_eq, tol=tol, what="x_eq", p=p)
     u_eq = model.as_input(u_eq, "u_eq")
     a_eq = np.zeros(model.n_accel) if a_eq is None else np.asarray(a_eq, float).reshape(-1)
     if module is not None:
@@ -231,7 +243,8 @@ def lqr(
         _check_equilibrium(model, module, x_eq, u_eq, a_eq, p, tol, eq_tol, A @ T)
     P = solve_continuous_are(Abar, Bbar, Qm, Rm)
     K = np.linalg.solve(Rm, Bbar.T @ P)
-    return LQRController(K, P, Abar, Bbar, T, x_eq, u_eq, labels, model, bases)
+    axes = {v.key: model.axis(v, p, "lqr") for v in model.s1}
+    return LQRController(K, P, Abar, Bbar, T, x_eq, u_eq, labels, model, bases, axes)
 
 
 @dataclass
@@ -295,7 +308,7 @@ def reduced_linearization(
         raise TypeError(
             "reduced_linearization: the module has no LINEARIZATION; generate it from linearize"
         )
-    x = check_state(lin_module, x, tol=tol, what="x")
+    x = check_state(lin_module, x, tol=tol, what="x", p=p)
     u = model.as_input(u, "u")
     a = np.zeros(model.n_accel) if a is None else np.asarray(a, float).reshape(-1)
     return _reduce(lin_module, model, lin, x, a, u, p, "reduced_linearization", basis)

@@ -64,8 +64,9 @@ def _indexed(name: str):
     return base, m.group(2)
 
 
-# the tangent/variation vector names of an S2/SO3 point: \omega_{q}, \xi_{q}, \Omega_{R}, \eta_{R}
-_TANGENT = re.compile(r"^(\\(?:omega|xi|Omega|eta))_\{(.+)\}$")
+# the tangent/variation names of an S1/S2/SO3 point: \omega_{q}, \gamma_{q}, \xi_{q},
+# \Omega_{R}, \eta_{R}
+_TANGENT = re.compile(r"^(\\(?:omega|gamma|xi|Omega|eta))_\{(.+)\}$")
 
 
 def _subscript(base: str, index: str) -> str:
@@ -75,7 +76,7 @@ def _subscript(base: str, index: str) -> str:
 def pretty_name(name: str, point: str | None = None) -> str:
     r"""The LaTeX of one leaf name (see the module docstring for the rules).
 
-    *point* is the name of the S² or SO(3) point when the leaf is its tangent or variation
+    *point* is the name of the S¹, S² or SO(3) point when the leaf is its tangent or variation
     vector (``\Omega_{R1}`` of ``R1``); the vector then takes the point's index
     (``\Omega_1``). Without *point* such a name is left as it is.
     """
@@ -103,13 +104,9 @@ def _leaves(expr, out: dict):
 
 
 def _point_of(leaf) -> str | None:
-    from geomech.core.base.expressions import TS2, TSO3
+    from geomech.core.base.expressions import TANGENT_LEAVES, manifold_point_of
 
-    point = None
-    if isinstance(leaf, TS2):
-        point = leaf.S2
-    elif isinstance(leaf, TSO3):
-        point = leaf.SO3
+    point = manifold_point_of(leaf) if isinstance(leaf, TANGENT_LEAVES) else None
     return getattr(point, "name", None) if point is not None else None
 
 
@@ -138,18 +135,18 @@ def latex_names(*objs: Iterable) -> dict[str, str]:
 
     *objs* are expressions, the dicts of ``compute_eom`` or ``to_standard_form``, the
     ``SystemVariables`` lists or any list of these. The tangent and variation vectors of
-    each S² and SO(3) point in *objs* are included. A name is left out when its pretty
+    each S¹, S² and SO(3) point in *objs* are included. A name is left out when its pretty
     form would collide with another leaf's name or pretty form, so the map is one-to-one
     on the leaves it sees. Pass the result to ``to_latex(expr, names=...)``.
     """
-    from geomech.core.base.expressions import S2, SO3
+    from geomech.core.base.expressions import MANIFOLD_POINTS
 
     leaves: dict = {}
     for obj in objs:
         _gather(obj, leaves)
     # the velocity and variation vectors of every manifold point, whether or not they occur
     for leaf in list(leaves.values()):
-        if isinstance(leaf, (S2, SO3)):
+        if isinstance(leaf, MANIFOLD_POINTS):
             for vec in (leaf.get_tangent_vector(), leaf.get_variation_vector()):
                 leaves.setdefault(str(vec), vec)
     proposed = {name: pretty_name(name, _point_of(leaf)) for name, leaf in leaves.items()}

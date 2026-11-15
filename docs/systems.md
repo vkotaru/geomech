@@ -49,6 +49,8 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 |---|---|---|---|---|
 | `point_mass` | R³ | 3 | Lee et al. §3.2 | — |
 | `spring_mass` | R | 1 | elementary | — |
+| `planar_pendulum` | S¹ | 1 | Lee et al. §4.6.1; general form eq. 4.12 | Lee et al. eq. 4.33 |
+| `double_planar_pendulum` | S¹ × S¹ | 2 | Lee et al. §4.6.4 | Lee et al. eq. 4.62 |
 | `spherical_pendulum` | S² | 2 | Lee et al. §5.6.1; general form eq. 5.14 | Lee et al. eq. 5.38 |
 | `particle_on_rotating_sphere` | S² | 2 | Lee et al. §5.6.2 | Lee et al. eq. 5.43 |
 | `double_spherical_pendulum` | S² × S² | 4 | Lee et al. §5.6.5 | Lee et al. eq. 5.71 |
@@ -63,6 +65,7 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 | `two_rigid_bodies_spherical_joint` | R³ × SO(3) × SO(3) | 9 | — | — |
 | `rigid_body` | R³ × SO(3) | 6 | Lee et al. §7.6.1 | Lee et al. eqs. 7.39–7.40 |
 | `spacecraft_reaction_wheels` | SO(3) × R³ | 6 | Lee et al. §9.10 | Lee et al. eqs. 9.61–9.62 |
+| `spacecraft_reaction_wheels_s1` | SO(3) × (S¹)³ | 6 | Lee et al. §9.10 | Lee et al. eqs. 9.61–9.62 |
 | `biped_3d` | SO(3) × SO(3) | 6 | — | — |
 | `quadrotor` | R³ × SO(3) | 6 | Lee, Leok, McClamroch (2010) | — |
 | `quadrotor_offset_com` | R³ × SO(3) | 6 | — | — |
@@ -77,7 +80,18 @@ Each builder's docstring, in the [API reference](api/systems.rst), states the La
 the virtual work and the inputs. The conventions are those of the rest of the package
 ([Conventions](conventions.md)): gravity acts along −e₃ (`V = m g e₃·x`), a pendulum or
 cable direction `q` points from the pivot (or quadrotor) to the mass, so `q = −e₃`
-hangs down, and Ω is the body-frame angular velocity.
+hangs down, and Ω is the body-frame angular velocity. The planar pendulums
+(`planar_pendulum`, `double_planar_pendulum`) swing in the vertical plane normal to the
+S¹ axis `e2 = (0, 1, 0)`, a parameter like `e3`.
+
+`double_planar_pendulum` is compared with Lee et al. eq. 4.62 with its velocity terms
+corrected: the book prints `m₂L₁L₂ ω₂(ω₂ − ω₁) q₁ᵀSq₂` and `m₂L₁L₂ ω₁(ω₁ − ω₂) q₂ᵀSq₁`,
+which is `d/dt ∂L̃/∂ωᵢ` alone; the term `qᵢᵀS ∂L̃/∂qᵢ` of eq. 4.12 adds
+`m₂L₁L₂ ω₁ω₂ qᵢᵀSqⱼ` and leaves `ω₂²` and `ω₁²`, the textbook double pendulum
+(`tests/test_systems_book.py` checks the corrected form against both eq. 4.62 and the
+equations in the angles θᵢ). `spacecraft_reaction_wheels_s1` is
+`spacecraft_reaction_wheels` with the wheel angles on S¹; its equations print the same
+after renaming `θ̇ᵢ → ωᵢ` and its trajectories agree (`tests/test_s1_manifold.py`).
 
 **Sources.** "Lee et al." is the book *Global Formulations of Lagrangian and Hamiltonian
 Dynamics on Manifolds* (`lee2018global` in
@@ -93,8 +107,8 @@ the numeric oracle ([Numeric verification](numeric-verification.md)) and the Lag
 the independent model below.
 
 **Two multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles θᵢ as
-scalars in R (the book uses S¹, which the engine does not support; the angle is cyclic, so
-the equations are the same); a test also checks that the inertial angular momentum is
+scalars in R; `spacecraft_reaction_wheels_s1` puts them on S¹ as the book does (the angle
+is cyclic, so the equations are the same); a test also checks that the inertial angular momentum is
 conserved without input. `biped_3d` is only the continuous single-support (swing) phase
 of a compass-gait walker: impacts, the switch of the stance foot and the ground contact
 are not modelled, so it is not a walking model.
@@ -124,8 +138,8 @@ parametric system also at sizes 1 and 2:
   `generate_module` write an importable module;
 - `simulate` runs 1 s from `x0` without input and conserves the energy to 1e-8;
 - the scene renders through `Report`;
-- the equations of the systems with a closed form in Lee et al. (eqs. 5.38, 5.43, 5.71,
-  6.16, 6.20, 7.39–7.40, 9.61–9.62) agree with it at random admissible states;
+- the equations of the systems with a closed form in Lee et al. (eqs. 4.33, 4.62, 5.38,
+  5.43, 5.71, 6.16, 6.20, 7.39–7.40, 9.61–9.62) agree with it at random admissible states;
 - the Lagrangian and the virtual work agree (to 1e-8) with an independent model of the
   system's bodies, written in NumPy from its physical description (positions of the point
   masses and centres of mass, inertias about the centres of mass, heights, springs and
