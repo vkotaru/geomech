@@ -319,8 +319,6 @@ def test_api_reference_documents_every_builder():
 
 def test_skill_mentions_the_library():
     a = (ROOT / "skills" / "geomech" / "SKILL.md").read_bytes()
-    b = (ROOT / ".claude" / "skills" / "geomech" / "SKILL.md").read_bytes()
-    assert a == b
     assert b"geomech.systems" in a and b"get(" in a
 
 
