@@ -214,6 +214,32 @@ print_eom(eqs)
 
 More examples in [`examples/`](https://github.com/vkotaru/geomech/blob/main/examples/).
 
+## Using geomech with AI coding agents
+
+The repository includes an [Agent Skills](https://agentskills.io/specification) skill,
+[`skills/geomech`](skills/geomech), that walks an agent through deriving, verifying,
+linearizing, simulating and visualizing a system with this package. The same folder
+works in Claude Code, Codex and Gemini CLI. Copy it (or symlink it) into the directory
+your agent reads:
+
+| Agent | In one project | For all your projects |
+| ----- | -------------- | --------------------- |
+| Claude Code | `.claude/skills/geomech/` | `~/.claude/skills/geomech/` |
+| Codex | `.agents/skills/geomech/` | `~/.agents/skills/geomech/` |
+| Gemini CLI | `.agents/skills/geomech/` (or `.gemini/skills/`) | `~/.agents/skills/geomech/` (or `~/.gemini/skills/`) |
+
+For example, from the root of your project:
+
+```bash
+git clone --depth 1 https://github.com/vkotaru/geomech /tmp/geomech
+mkdir -p .agents/skills && cp -r /tmp/geomech/skills/geomech .agents/skills/
+pip install geomech
+```
+
+Then ask the agent, for instance, to "derive the equations of motion of a double
+spherical pendulum and check them". The skill's `Setup` section installs the package if
+it is missing.
+
 ## Expression types
 
 | Type     | Description                 | Constructor                      |
