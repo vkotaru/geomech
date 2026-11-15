@@ -15,7 +15,7 @@ Both are handled by peeling the matrix off the side that holds the target,
 Hand derivations use the body-frame form on SO(3): with p = ∂L/∂Ω, δΩ = η̇ + Ω × η and
 δR = R η̂, the coefficient of η is E = −ṗ + p × Ω + (q-terms) + M, where the q-terms come from
 δ(Rᵀe₃) = (Rᵀe₃) × η and d/dt(Rᵀe₃) = (Rᵀe₃) × Ω.  Every pinned equation is also checked
-against the finite-difference Euler-Lagrange oracle (``geomech.numeric.assert_eom``).
+with the finite-difference Euler-Lagrange check (``geomech.numeric.assert_eom``).
 """
 
 import numpy as np

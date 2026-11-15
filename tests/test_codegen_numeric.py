@@ -1,8 +1,8 @@
 """Generated NumPy code equals ``geomech.numeric.evaluate`` of the symbolic blocks.
 
 Spec ``specs/codegen.md``, verification item 1: for every system of
-``tests/vbl_systems.py``, ``tests/phase1_systems.py`` and the oracle gate, each block of the
-generated module (standard form ``M``/``f``/``G``, the ``compute_eom`` equations, the
+``tests/vbl_systems.py``, ``tests/phase1_systems.py`` and the numerical check gate, each block of
+the generated module (standard form ``M``/``f``/``G``, the ``compute_eom`` equations, the
 linearization ``M``/``A``/``B`` and the kinematics) is compared with the ``Evaluator`` value
 of the symbolic block at 20 random admissible states (``sample_state``), to 1e-12 relative
 (``|generated − evaluate| ≤ 1e-12 · max(1, |evaluate|)``).

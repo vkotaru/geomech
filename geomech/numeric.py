@@ -7,7 +7,7 @@ Three layers, each built on the previous one:
 2. ``Evaluator`` / ``evaluate``: evaluate any expression tree given values for its leaves.
    Leaves are keyed by their printed name, ``str(leaf)``; velocities and accelerations by
    ``str(TimeDerivative(leaf))`` and so on. Unlisted leaves are drawn at random.
-3. Two finite-difference oracles that need no closed-form reference:
+3. Two finite-difference checks that need no closed-form reference:
 
    - ``check_eom`` / ``assert_eom`` compare the output of ``compute_eom`` with the
      Euler-Lagrange residual of the *numeric* Lagrangian at random trajectory points.
@@ -542,7 +542,7 @@ def finite_difference_check(
 
 
 # ---------------------------------------------------------------------------
-# Euler-Lagrange oracle for compute_eom
+# Numerical Euler-Lagrange check for compute_eom
 # ---------------------------------------------------------------------------
 
 

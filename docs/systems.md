@@ -113,7 +113,7 @@ eq. 5.71 at `n_links=2` only. For the quadrotor and the quadrotor with a suspend
 source is the paper the model is taken from (`lee2010geometric`, `sreenath2013geometric`;
 e₃ points up here, down in the first); their equations are not compared with the papers.
 A "—" in the last column means no closed form is compared: the equations are verified by
-the numeric oracle ([Numeric verification](numeric-verification.md)) and the Lagrangian by
+the numerical check ([Numeric verification](numeric-verification.md)) and the Lagrangian by
 the independent model below.
 
 **Multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles θᵢ as

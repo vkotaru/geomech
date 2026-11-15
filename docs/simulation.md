@@ -93,7 +93,7 @@ accelerations) by
 
 with `P_q = I − q qᵀ`. Multiplying the new rows by `qᵀ` gives `q · ω̇ = 0`; multiplying
 by `P_q` gives the tangent-plane equation. The test suite checks both (to 1e-12 and
-1e-10) on every S² system of the oracle gate, including the two of the table.
+1e-10) on every S² system of the numerical check gate, including the two of the table.
 
 **Scaling.** The result must not depend on the units. The stabiliser weight is
 `s = ‖P_q D‖_F / √2`, with `D` the row's own diagonal mass block. Both forms in the table

@@ -4,7 +4,7 @@
  "kwargs": {},
  "description": "The rest-to-rest 60\u00b0 slew of spacecraft_reaction_wheels_slew on the S\u00b9 model (wheel directions q\u1d62 on circles): same weights, same input weight, same horizon.",
  "notes": "The S\u00b9 wheel angles are cyclic like \u03b8\u1d62 and dropped; the design and the closed loop are those of the R\u00b3 model up to the order of the coordinates, so t_s and \u03bd match it.",
- "stabilizable": true,
+ "stabilizable": false,
  "equilibrium_residual": 0.0,
  "u_eq": [
   0.0,

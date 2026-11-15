@@ -102,8 +102,8 @@ Solving with the tangency constraint q·ω̇ = 0 belongs to the simulation featu
 
 ## Verification (definition of done)
 
-1. For every system in `tests/vbl_systems.py`, `tests/phase1_systems.py` and the oracle
-   systems: each generated NumPy block equals `geomech.numeric.evaluate` of the symbolic
+1. For every system in `tests/vbl_systems.py`, `tests/phase1_systems.py` and the numerical
+   check systems: each generated NumPy block equals `geomech.numeric.evaluate` of the symbolic
    block at 20 random admissible states (`sample_state`) to 1e-12 relative.
 2. CasADi target equals NumPy target on the same states (skipped if `casadi` is absent;
    CI installs it in one job).

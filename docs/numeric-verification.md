@@ -88,7 +88,7 @@ of magnitude for such systems; it is **not** unconditional, see "Resolution" bel
 `compute_eom` returns, for each configuration variable, the coefficient $E$ of its
 variation vector in $\delta\!\int L\,dt + \int \delta W\,dt$ after integration by parts,
 so the equation of motion is $E = 0$ and $E = -(\text{Euler–Lagrange}) + \text{forcing}$
-(for a point mass, $E = -m\ddot x + f$). The oracle evaluates the *numeric* Lagrangian
+(for a point mass, $E = -m\ddot x + f$). `check_eom` evaluates the *numeric* Lagrangian
 with `Evaluator` and forms the Euler–Lagrange residual $g$ by central differences:
 
 - $\mathbb{R}$, $\mathbb{R}^3$: $g = \frac{d}{dt}\frac{\partial L}{\partial v} -
@@ -119,7 +119,7 @@ term $m g\, e_3$ is of order one, a flipped gravity term moves the error by
 $\approx 4 \cdot 10^{-7}$, and `check_eom` returns `~1e-9` for the correct and
 `~1e-7` for the wrong equation: both pass at `1e-5`. The finite-difference noise scales
 with $|L|$ as well (it is `6e-3` to `2e-2` in absolute terms for that system at the
-default step), so this is a limit of the finite-difference oracle, not of the
+default step), so this is a limit of the finite-difference check, not of the
 normalisation alone.
 
 `assert_eom` therefore checks the resolution of every additive term of each equation

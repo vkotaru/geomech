@@ -1,5 +1,5 @@
 """Systems on S¹ and its products for the pipeline tests (``tests/test_s1_manifold.py``) and
-the Euler–Lagrange oracle (``tests/test_eom_oracle.py``).
+the numerical Euler–Lagrange check (``tests/test_eom_oracle.py``).
 
 Each builder returns a ``tests.vbl_systems.System``. The planar frame of Lee et al. ch. 4 is
 embedded as the plane normal to a constant unit axis ``n``: the book's ``S`` is ``n × ·``.

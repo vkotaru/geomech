@@ -4,8 +4,8 @@ adversarial systems of the phase-1 review, with the helpers the phase-1 tests sh
 Each builder returns ``System(L, dW, variables, inputs, symbols)`` like ``tests/vbl_systems``.
 They are shared by the pinned-equation tests (``tests/test_s2_variation_fix.py``,
 ``tests/test_collect_fix.py``), the review tests (``tests/test_phase1_adversarial.py``) and
-the numeric oracle gate (``tests/test_eom_oracle.py``); ``derive`` and ``equation`` are the
-"derive and check against the oracle" helpers of the pinned-equation tests.
+the numerical check gate (``tests/test_eom_oracle.py``); ``derive`` and ``equation`` are the
+"derive and check numerically" helpers of the pinned-equation tests.
 
 Every S² Lagrangian in the pinned sections has ``∂L/∂ω`` with a component along ``q`` or a
 velocity nested under a matrix inside a ``Dot``, which is exactly what the pre-fix engine
@@ -38,7 +38,7 @@ TOL = 1e-5
 
 
 def derive(build):
-    """``(system, eom, error)``: derive the system and check it against the oracle."""
+    """``(system, eom, error)``: derive the system and check it with ``check_eom``."""
     s = build()
     eom = compute_eom(s.L, s.dW, s.variables)
     err = assert_eom(s.L, s.dW, s.variables, eom, inputs=s.inputs, rtol=TOL)
@@ -554,7 +554,7 @@ ADVERSARIAL_SYSTEMS = [
 
 
 # ---------------------------------------------------------------------------
-# Reproducers that are not oracle systems
+# Reproducers that are not numerical-check systems
 # ---------------------------------------------------------------------------
 
 

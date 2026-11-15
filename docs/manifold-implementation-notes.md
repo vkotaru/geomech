@@ -114,7 +114,7 @@ component along q: with `L = ½ m l² ω·ω + c·ω − m g l q·e₃` the true
 terms came out at half strength** (likewise for `½ ω·Aω`, a rotating frame
 `|ω + W₀|²`, R³×S² couplings `ẋ·ω` and S²×SO(3) couplings `ω·Ω`, `ω·(Rᵀe₃)`). The
 regression tests are in `tests/test_s2_variation_fix.py`; each pinned equation is also
-checked against the finite-difference Euler–Lagrange oracle in `geomech.numeric`.
+checked with the finite-difference Euler–Lagrange check in `geomech.numeric`.
 
 ### SO(3) variation rule
 
@@ -181,5 +181,5 @@ their modules; the ones that depend on S² or SO(3) are:
 - `tests/test_manifold_pipelines.py` — end-to-end pipelines against Lee et al.
 - `tests/test_s2_variation_fix.py` — systems with `∂L/∂ω` not orthogonal to q
 - `tests/test_collect_fix.py` — velocities nested under matrices inside a `Dot`
-- `tests/test_eom_oracle.py` — every pinned system against the numeric Euler–Lagrange
-  oracle
+- `tests/test_eom_oracle.py` — every pinned system against the numerical
+  Euler–Lagrange check
