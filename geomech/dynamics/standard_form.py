@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Sequence
 
 from geomech.core.base.constants import zero_like
-from geomech.core.base.expressions import S2, SO3, Expr
+from geomech.core.base.expressions import S1, S2, SO3, Expr
 from geomech.core.math.extract import extract_linear_coeff, has_algebraic
 from geomech.core.operations.calculus import TimeDerivative
 from geomech.core.transformations.expansion import expand
@@ -128,6 +128,7 @@ def _get_accel_vars(variables: SystemVariables):
 
     - Scalar x  →  d²x/dt²  =  TimeDerivative(TimeDerivative(x))
     - Vector x  →  d²x/dt²  =  TimeDerivative(TimeDerivative(x))
+    - S1 q      →  dω/dt    =  TimeDerivative(ω_q)   (scalar)
     - S2 q      →  dω/dt    =  TimeDerivative(ω_q)
     - SO3 R     →  dΩ/dt    =  TimeDerivative(Ω_R)
     """
@@ -135,7 +136,7 @@ def _get_accel_vars(variables: SystemVariables):
     for s in variables.scalars:
         accels.append(s.t_diff().t_diff())
     for v in variables.vectors:
-        if isinstance(v, S2):
+        if isinstance(v, (S1, S2)):
             accels.append(v.get_tangent_vector().t_diff())
         else:
             accels.append(v.t_diff().t_diff())

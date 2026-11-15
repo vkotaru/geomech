@@ -19,6 +19,9 @@ their constraints to all orders:
 
   S2  q      : q = p / |p| for a random jet p; omega := q x dq/dt, xi := q x dq/deps
                so that dq/dt = omega x q and dq/deps = xi x q hold exactly.
+  S1  q      : axis e a constant unit jet; q = P p / |P p| with P = I - e e^T, so q.e = 0
+               to all orders; omega := (e x q).dq/dt, gamma := (e x q).dq/deps (scalars),
+               so that dq/dt = omega e x q and dq/deps = gamma e x q hold exactly.
   SO3 R      : R = R0 (I - A)^-1 (I + A) (Cayley) with A = hat(d), d a nilpotent jet;
                Omega := vee(R^T dR/dt), eta := vee(R^T dR/deps).
   UnitNorm v : normalised jet.   Symmetric J : A + A^T.   Orthogonal Q : Cayley.
@@ -57,8 +60,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(__file__, *[os.pardir] * 2)))
 
 import geomech as _geomech  # noqa: E402
 from geomech import (  # noqa: E402
+    S1,
     S2,
     SO3,
+    TS1,
     TS2,
     TSO3,
     Add,
@@ -346,6 +351,26 @@ class JetEvaluator:
             self.env[xname] = rand_jet(self.rng, (3, 1))
         return q
 
+    def _sample_s1(self, node):
+        key = str(node)
+        if key in self.env:
+            return self.env[key]
+        e = self.leaf(node.axis)
+        wname = node.manifold_info.tangent_vector_name
+        gname = node.manifold_info.variation_vector_name
+        if self.mode == "consistent":
+            p = rand_jet(self.rng, (3, 1))
+            q = jnormalize(p - jsmul(jdot(e, p), e))
+            t = jcross(e, q)
+            self.env[wname] = jdot(t, q.dt())
+            self.env[gname] = jdot(t, q.de())
+        else:
+            q = rand_jet(self.rng, (3, 1))
+            self.env[wname] = rand_jet(self.rng, (1, 1))
+            self.env[gname] = rand_jet(self.rng, (1, 1))
+        self.env[key] = q
+        return q
+
     def _sample_so3(self, node):
         key = str(node)
         if key in self.env:
@@ -362,6 +387,11 @@ class JetEvaluator:
         return R
 
     def leaf(self, node):
+        if isinstance(node, S1):
+            return self._sample_s1(node)
+        if isinstance(node, TS1) and node.S1 is not None:
+            self._sample_s1(node.S1)
+            return self.env[str(node)]
         if isinstance(node, S2):
             return self._sample_s2(node)
         if isinstance(node, SO3):
@@ -478,6 +508,9 @@ def contains_variation(expr):
     if isinstance(expr, TS2) and expr.S2 is not None:
         if expr.name == expr.S2.manifold_info.variation_vector_name:
             return True
+    if isinstance(expr, TS1) and expr.S1 is not None:
+        if expr.name == expr.S1.manifold_info.variation_vector_name:
+            return True
     if isinstance(expr, TSO3) and expr.SO3 is not None:
         if expr.name == expr.SO3.manifold_info.variation_vector_name:
             return True
@@ -500,7 +533,7 @@ def tree_size(expr):
 def tdepth(expr):
     """Nested d/dt depth; tangent/variation vectors of manifold leaves count as one level
     because their jets are derived from the manifold point's jet."""
-    if isinstance(expr, (TS2, TSO3)):
+    if isinstance(expr, (TS1, TS2, TSO3)):
         return 1
     base = 1 if isinstance(expr, TimeDerivative) else 0
     kids = getattr(expr, "nodes", None) or []
@@ -534,6 +567,14 @@ class Leaves:
         self.R = SO3("R")
         self.Om = self.R.get_tangent_vector()
         self.eta = self.R.get_variation_vector()
+        # two S1 points on the circle normal to n, and a third on another circle
+        self.n = Vector("n", attr=["Constant", "UnitNorm"])
+        self.z1 = S1("z_1", axis=self.n)
+        self.z2 = S1("z_2", axis=self.n)
+        self.m3 = Vector("m_3", attr=["Constant", "UnitNorm"])
+        self.z3 = S1("z_3", axis=self.m3)
+        self.wz1, self.gz1 = self.z1.get_tangent_vector(), self.z1.get_variation_vector()
+        self.wz2, self.gz2 = self.z2.get_tangent_vector(), self.z2.get_variation_vector()
         from geomech import I as Ident
 
         self.Ident = Ident
@@ -549,6 +590,10 @@ class Leaves:
             Zero,
             One,
         ]
+        # S1 leaves: the scalars are kept apart (drawn by Gen only while the S1 points are
+        # in the vector pool, see Gen.s1_on), so a caller that replaces the pools of
+        # vectors (tests/test_codegen_adversarial.py) gets no S1 symbol it cannot place
+        self.s1_scalars = [self.wz1, self.gz1, self.wz2]
         self.vectors = [
             self.a,
             self.b,
@@ -559,9 +604,13 @@ class Leaves:
             self.w,
             self.xi,
             ZeroVector,
+            self.n,
+            self.z1,
+            self.z2,
+            self.z3,
         ]
         self.matrices = [self.M, self.N, self.J, self.K, self.Q, self.R, self.Ident, ZeroMatrix]
-        self.variation_leaves = {self.xi, self.xip, self.eta}
+        self.variation_leaves = {self.xi, self.xip, self.eta, self.gz1, self.gz2}
 
 
 class Gen:
@@ -593,8 +642,14 @@ class Gen:
         return self.rng.random() < p
 
     # -- leaves ------------------------------------------------------------
+    @property
+    def s1_on(self):
+        """S1 points, coordinates and motifs are drawn while ``L.z1`` is in ``L.vectors``."""
+        return any(v is self.L.z1 for v in self.L.vectors)
+
     def scalar_leaf(self):
-        s = self.pick(self.L.scalars)
+        pool = list(self.L.scalars) + (self.L.s1_scalars if self.s1_on else [])
+        s = self.pick(pool)
         return self.maybe_calc(s)
 
     def vector_leaf(self):
@@ -611,7 +666,7 @@ class Gen:
     def maybe_calc(self, leaf):
         if not self.calc or leaf.is_constant or self.chance(0.65):
             return leaf
-        if isinstance(leaf, (S2, SO3)):
+        if isinstance(leaf, (S1, S2, SO3)):
             # manifold leaves are eager: use their kinematic trees
             return leaf.t_diff() if self.chance(0.5) else leaf.delta()
         if leaf in self.L.variation_leaves:
@@ -629,7 +684,7 @@ class Gen:
 
     def wrap_calc(self, e):
         """Wrap a subtree in TimeDerivative or Variation when legal."""
-        if isinstance(e, (S2, SO3)):
+        if isinstance(e, (S1, S2, SO3)):
             # a calculus node over a manifold leaf is rejected at construction (phase 2);
             # the eager kinematic trees are what .delta()/.t_diff() give a user
             if self.variation and self.chance(0.5):
@@ -645,7 +700,7 @@ class Gen:
             v = self.vector(depth)
             if not isinstance(v, Transpose):
                 return v
-        return self.pick([self.L.a, self.L.b, self.L.c])
+        return self.pick([self.L.a, self.L.b, self.L.z1])
 
     # -- typed trees ---------------------------------------------------------
     def scalar(self, depth):
@@ -681,6 +736,25 @@ class Gen:
                 lambda: Dot(SVMul(L.q, self.scalar(d)), SVMul(L.q, self.scalar(d))),
                 lambda: Mul(Dot(L.q, L.q), Dot(L.w, L.q)),
             ]
+            s1_motifs = [
+                # S1: axis orthogonality, |n x c| = 1, the rotated dot, the planar triple
+                lambda: Dot(L.n, L.z1),
+                lambda: Dot(L.z1, L.n),
+                lambda: Dot(Cross(L.n, L.z1), Cross(L.n, L.z1)),
+                lambda: Dot(Cross(L.n, L.z1), Cross(L.n, L.z2)),
+                lambda: Dot(Cross(L.z1, L.n), Cross(L.n, L.z2)),
+                lambda: Dot(Cross(L.z1, L.n), Cross(L.z2, L.n)),
+                lambda: Dot(Cross(L.n, L.z1), L.z2),
+                lambda: Dot(L.z2, Cross(L.n, L.z1)),
+                lambda: Dot(L.z1, Cross(L.n, L.z2)),
+                lambda: Dot(Cross(L.n, L.z1), Cross(L.m3, L.z3)),  # two circles: no rule
+                lambda: Dot(L.z3, L.n),  # z_3 lies on another circle: no rule
+                lambda: Dot(Cross(L.n, L.a), Cross(L.n, L.z1)),  # a generic: no rule
+                lambda: Dot(SVMul(Cross(L.n, L.z1), L.wz1), SVMul(Cross(L.n, L.z1), L.wz1)),
+                lambda: Dot(L.z1.t_diff(), L.z2.t_diff()),
+            ]
+            if self.s1_on:
+                motifs += s1_motifs
             return self.pick(motifs)()
         return Dot(self.vector(d), self.vector(d))
 
@@ -738,6 +812,26 @@ class Gen:
                 lambda: SVMul(L.q, Dot(L.q, self.vector(d))),
                 lambda: Cross(L.q, Cross(L.a, L.a)),
             ]
+            s1_motifs = [
+                # S1: the axis double cross and the axis recovery, then near misses
+                lambda: Cross(L.n, Cross(L.n, L.z1)),
+                lambda: Cross(L.n, Cross(L.z1, L.n)),
+                lambda: Cross(Cross(L.z1, L.n), L.n),
+                lambda: Cross(Cross(L.n, L.z1), L.n),
+                lambda: Cross(L.z1, Cross(L.n, L.z1)),
+                lambda: Cross(L.z1, Cross(L.z1, L.n)),
+                lambda: Cross(Cross(L.z1, L.n), L.z1),
+                lambda: Cross(Cross(L.n, L.z1), L.z1),
+                lambda: Cross(L.n, Cross(L.n, L.z3)),  # z_3 on another circle
+                lambda: Cross(L.n, Cross(L.n, self.vector(d))),  # generic: no rule
+                lambda: Cross(L.u, Cross(L.u, L.z1)),  # unit norm, not the axis
+                lambda: Cross(L.z1, Cross(L.n, L.z2)),  # z_2 is not z_1
+                lambda: L.z1.t_diff(),
+                lambda: L.z1.delta(),
+                lambda: TimeDerivative(L.z1.t_diff()),
+            ]
+            if self.s1_on:
+                motifs += s1_motifs
             return self.pick(motifs)()
         return Cross(self.vector(d), self.vector(d))
 
@@ -1103,7 +1197,7 @@ def fuzz_delta_tdiff2(n_cases, seed):
     for i in range(n_cases):
         depth = int(rng.integers(1, 5))
         expr = gen.any(depth)
-        if contains_variation(expr) or isinstance(expr, (S2, SO3)):
+        if contains_variation(expr) or isinstance(expr, (S1, S2, SO3)):
             continue  # Variation(q)/TimeDerivative(q) of a manifold leaf is rejected (phase 2)
         run_transform_case("delta-rule", _delta_of_node, Variation(expr), rng)
         run_transform_case("t_diff-rule", _tdiff_of_node, TimeDerivative(expr), rng)
@@ -1113,7 +1207,7 @@ def fuzz_manifold_rules(n_cases, seed):
     rng = np.random.default_rng(seed)
     L = Leaves()
     gen = Gen(rng, L, calc=True, variation=True)
-    variables = SystemVariables(vectors=[L.q, L.p], matrices=[L.R])
+    variables = SystemVariables(vectors=[L.q, L.p, L.z1, L.z2], matrices=[L.R])
 
     def tr(e):
         return apply_manifold_rules(e, variables)
@@ -1134,6 +1228,12 @@ def fuzz_manifold_rules(n_cases, seed):
                 TimeDerivative(Variation(L.w))
                 if rng.random() < 0.5
                 else VAdd(Variation(L.wp), gen.vector(depth))
+            )
+        elif r < 0.6:  # S1: delta(omega) = gamma_dot
+            expr = (
+                Mul(Variation(L.wz1), gen.scalar(depth))
+                if rng.random() < 0.5
+                else Add(TimeDerivative(Variation(L.wz2)), Variation(L.wz1))
             )
         # reference: the exact delta(omega) = xi_dot - 2 omega x xi (fix plan 1.1); the
         # "tangential" gauge is the pre-fix formula and is no longer a valid reference.
@@ -1752,6 +1852,14 @@ def selftest(seed=1):
         f" == xi_dot - 2 omega x xi: {two_ok}; tangential part == xi_dot - omega x xi: {tang_ok}"
     )
     assert values_close(Om.de(), eta.dt() + jcross(Om, eta))[0]
+    # S1: q.n = 0, |q| = 1, dq/dt = omega n x q, dq/deps = gamma n x q, delta(omega) = gamma_dot
+    z, n = ev(L.z1), ev(L.n)
+    wz, gz = ev(L.wz1), ev(L.gz1)
+    assert low_orders_close(jdot(z, n), jconst([[0.0]]))
+    assert low_orders_close(jdot(z, z), jconst([[1.0]]))
+    assert low_orders_close(z.dt(), jsmul(wz, jcross(n, z)))
+    assert low_orders_close(z.de(), jsmul(gz, jcross(n, z)))
+    assert values_close(wz.de(), gz.dt())[0]
     # a unit-norm flagged vector, a symmetric and an orthogonal matrix
     u, J, Q = ev(L.u), ev(L.J), ev(L.Q)
     assert low_orders_close(jdot(u, u), jconst([[1.0]]))

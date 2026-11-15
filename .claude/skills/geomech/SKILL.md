@@ -1,24 +1,27 @@
 ---
 name: geomech
-description: Derive, verify, linearize, generate code for, simulate and visualize the equations of motion of mechanical systems on R, R³, S², SO(3) and their products (rigid bodies, pendulums, multi-link chains, aerial vehicles with cable-suspended loads) with the geomech Python package. Use when asked to "derive the equations of motion of X", to check or linearize such equations, to generate NumPy/CasADi code for them, to simulate them, or to show them as a 3-D report.
+description: Derive, verify, linearize, generate code for, simulate and visualize the equations of motion of mechanical systems on R, R³, S¹, S², SO(3) and their products (rigid bodies, planar and spherical pendulums, multi-link chains, reaction wheels, aerial vehicles with cable-suspended loads) with the geomech Python package. Use when asked to "derive the equations of motion of X", to check or linearize such equations, to generate NumPy/CasADi code for them, to simulate them, or to show them as a 3-D report.
 ---
 
 # geomech: equations of motion on manifolds
 
 Use this procedure whenever a task asks for the dynamics of a mechanical system whose
-configuration lives on R (scalars), R³ (positions), S² (unit vectors: pendulums,
-cable directions) or SO(3) (attitudes), or a product of these. SE(3) is R³ × SO(3).
+configuration lives on R (scalars), R³ (positions), S¹ (angles without wrap-around:
+planar pendulums, wheels, joints about a fixed axis), S² (unit vectors: pendulums, cable
+directions) or SO(3) (attitudes), or a product of these. SE(3) is R³ × SO(3).
 Do not derive by hand and do not use Euler angles: geomech derives coordinate-free
 equations (Lee et al., *Global Formulations of Lagrangian and Hamiltonian Dynamics on
 Manifolds*).
 
 ## Known systems: start from the library
 
-If the system is one of `geomech.systems.list_systems()` (point mass, spring, spherical,
+If the system is one of `geomech.systems.list_systems()` (point mass, spring, planar and
+double planar pendulums on S¹, spherical,
 double spherical and n-link spherical pendulums, particle on a rotating sphere, elastic
 pendulum, 3-D cart-pole, free rigid body, heavy top, rigid and double rigid pendulums,
 n-link rigid chain,
-two bodies with a spherical joint, 6-DOF rigid body, spacecraft with reaction wheels,
+two bodies with a spherical joint, 6-DOF rigid body, spacecraft with reaction wheels
+(wheel angles on R³ or on (S¹)³),
 3-D compass-gait biped (swing phase), quadrotor, quadrotor with an offset
 centre of mass, with a suspended, elastic or flexible-cable load, several quadrotors
 carrying a point mass or a rigid body), start from `sys = geomech.systems.get(name)`
@@ -35,11 +38,19 @@ error messages.
 
 1. **Define symbols and variables.** Constants need `attr=["Constant"]` (case-sensitive);
    inertias also `"SymmetricMatrix"`. Configuration variables: `Scalar("s")`,
-   `Vector("x")`, `S2("q")`, `SO3("R")`. Velocities: `x.t_diff()`,
-   `q.get_tangent_vector()` (ω, `q̇ = ω × q`), `R.get_tangent_vector()` (Ω, body frame).
-   Variations: `x.delta()`, `q.get_variation_vector()` (ξ), `R.get_variation_vector()` (η).
-   List every configuration variable in `SystemVariables(scalars=[…], vectors=[…],
-   matrices=[…])` (S² points go in `vectors`, SO(3) in `matrices`).
+   `Vector("x")`, `S1("q", axis=e)`, `S2("q")`, `SO3("R")`. Velocities: `x.t_diff()`,
+   `q.get_tangent_vector()` (ω, `q̇ = ω × q` on S²; a **scalar** ω with `q̇ = ω e × q` on
+   S¹), `R.get_tangent_vector()` (Ω, body frame). Variations: `x.delta()`,
+   `q.get_variation_vector()` (ξ on S²; the scalar γ on S¹, `δq = γ e × q`),
+   `R.get_variation_vector()` (η). List every configuration variable in
+   `SystemVariables(scalars=[…], vectors=[…], matrices=[…])` (S¹ and S² points go in
+   `vectors`, SO(3) in `matrices`).
+   **S¹** is the unit circle in the plane normal to a constant unit axis `e`, which must
+   be built as `e = Vector("e", attr=["Constant", "UnitNorm"])` (an angle θ about `e`;
+   the axis is a parameter, `p["e"]`, of the generated code). Several S¹ points may share
+   one axis (a planar chain) or have their own (three reaction wheels on `b1`, `b2`, `b3`:
+   `S1("q_1", axis=b1)`, …). Each S¹ point gives one scalar equation. A moment `τ` about
+   the axis acting on an S¹ point enters as `γ * τ`.
 2. **Write L and δW.** `L = T − V` with `Dot`, `Cross`, `*`; a half is
    `Scalar("0.5", value=0.5, attr=["Constant"])`. Forces enter as `Dot(variation, force)`.
    A force at a point enters as `Dot(δ(point), force)`, where `δ(point)` is the
@@ -62,8 +73,10 @@ error messages.
    lagrangian=L), "name")` (or `generate_module(sf, layout, "file.py", lagrangian=L)`).
 8. **Simulate:** `traj = simulate(plant, layout.pack(...), t_final, p)`; check
    `traj.energy()` drift and `traj.max_drift()`. The `pack` keys are the configuration
-   names and `x_dot`, `omega_<name>`, `Omega_<name>` (`omega_q1` for `S2("q1")`,
-   `Omega_R2` for `SO3("R2")`); `layout.slot_names()` lists them. Energy is conserved
+   names and `x_dot`, `omega_<name>`, `Omega_<name>` (`omega_q1` for `S2("q1")` or
+   `S1("q1", …)`, a scalar for S¹, `Omega_R2` for `SO3("R2")`); `layout.slot_names()`
+   lists them. An S¹ point must start on its circle (`|q| = 1`, `q·e = 0`), and `p` must
+   hold its axis. Energy is conserved
    only without inputs: with nonzero inputs (`u=`, recorded in `traj.u`) `E(t) − E(0)`
    is the work the inputs did, not an integrator error; call it "energy change", never
    "drift". For a forced run, also simulate once from the same `x0` over the same
@@ -86,6 +99,9 @@ error messages.
 - In the standard form **M = −(physical inertia)** (`M[ẍ] = −m I`, `M[Ω̇] = −J`).
 - **S² equations hold on the tangent plane** of their point: only `(I − qqᵀ) E = 0` is
   an equation; the S² mass block can be singular, which is expected.
+- **An S¹ equation is a scalar**, `E = −d/dt(∂L/∂ω) + (e × q)·∂L/∂q + forcing` (Lee et al.
+  eq. 4.12); the book's `S x` is printed `Cross(e,x)`, so its `pᵀ S r` is
+  `Dot(p,Cross(e,r))`.
 - `print_eom(eom)` prints each equation as LaTeX source (`\int \xi_{q} \cdot (… -m l …)
   dt`), like `to_latex(expr)`; `str(expr)` (and `print(expr)`) is the plain form, where
   products are written with `*` (`m*l*l*(-1)`). Say which one you show.

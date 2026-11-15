@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from geomech.codegen.layout import Slot, StateLayout, base_symbol, is_literal_leaf
-from geomech.core.base.expressions import TS2, TSO3, Matrix, Scalar, Vector
+from geomech.core.base.expressions import TANGENT_LEAVES, Matrix, Scalar, Vector
 from geomech.core.base.types import ExprType
 from geomech.core.operations.addition import Add, MAdd, VAdd
 from geomech.core.operations.calculus import TimeDerivative, TimeIntegral, Variation
@@ -264,7 +264,7 @@ class Emitter:
     def _leaf(self, node) -> Code:
         if is_literal_leaf(node):
             return self.target.literal(node)
-        if self.layout.slot(node) is None and isinstance(node, (TS2, TSO3)):
+        if self.layout.slot(node) is None and isinstance(node, TANGENT_LEAVES):
             raise ValueError(
                 f"codegen: {self.what} contains '{node}', a tangent or variation vector that"
                 " is not a velocity of the layout; only configuration, velocity,"

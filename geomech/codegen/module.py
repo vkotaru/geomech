@@ -6,7 +6,8 @@ Standard form (``to_standard_form``)::
     mass(state, p)          -> (n, n_a)     # block matrix of M[aⱼ] per equation
     bias(state, p)          -> (n,)         # stacked f
     input_matrix(state, p)  -> (n, n_u)     # block matrix of G[uₖ]
-    kinematics(state)       -> (n_config,)  # ṡ, ẋ, ω × q, R hat(Ω) (row-major)
+    kinematics(state)       -> (n_config,)  # ṡ, ẋ, ω e × q, ω × q, R hat(Ω) (row-major);
+                                            # kinematics(state, p) with an S¹ point
 
 so that ``mass @ a + bias + input_matrix @ u = 0``. ``compute_eom`` output gives
 ``residual(state, a, u, p)`` (the stacked equations ``E``) and ``kinematics``; a
@@ -26,7 +27,7 @@ from geomech.codegen.emitter import Code, Emitter
 from geomech.codegen.energy import energy_source
 from geomech.codegen.layout import StateLayout
 from geomech.codegen.source import function_source, get_target, namespace, pyliteral
-from geomech.core.base.expressions import S2, SO3, Expr
+from geomech.core.base.expressions import MANIFOLD_POINTS, SO3, Expr
 from geomech.core.base.types import ExprType
 from geomech.dynamics.standard_form import StandardFormEquation
 from geomech.dynamics.vbl import LinearizedSystem, perturbation_variables
@@ -38,7 +39,7 @@ _FULL = ("state", "a", "u", "p")
 
 
 def _variation_key(var) -> str:
-    if isinstance(var, (S2, SO3)):
+    if isinstance(var, MANIFOLD_POINTS):
         return str(var.get_variation_vector())
     return str(var.delta())
 
@@ -103,6 +104,8 @@ def _stack_function(name, args, doc, layout, tgt, parts, n, kinds, flatten=()):
 
 
 def _kinematics(layout: StateLayout, tgt) -> str:
+    """``kinematics(state)``, or ``kinematics(state, p)`` when the layout has an S¹ point:
+    its rate ``ω e × q`` needs the axis ``e``, a parameter."""
     parts, flatten = [], set()
     for k, (var, slot) in enumerate(zip(layout.config_variables, layout.configuration)):
         if isinstance(var, SO3):
@@ -110,8 +113,16 @@ def _kinematics(layout: StateLayout, tgt) -> str:
         parts.append((slot.start, slot.size, var.t_diff()))
     doc = "Configuration rates: ds/dt, dx/dt, omega x q, R hat(Omega) (row-major)."
     kinds = {"configuration", "velocity"}
+    args: tuple[str, ...] = ("state",)
+    if any(slot.manifold == "S1" for slot in layout.configuration):
+        doc = (
+            "Configuration rates: ds/dt, dx/dt, omega e x q (S1), omega x q (S2), R hat(Omega)"
+            " (row-major)."
+        )
+        kinds.add("param")
+        args = ("state", "p")
     return _stack_function(
-        "kinematics", ("state",), doc, layout, tgt, parts, layout.n_config, kinds, flatten
+        "kinematics", args, doc, layout, tgt, parts, layout.n_config, kinds, flatten
     )
 
 
@@ -132,7 +143,15 @@ def _eom_rows(system: dict, layout: StateLayout) -> list[tuple[str, Any]]:
 
 
 def _row_spans(layout: StateLayout):
-    return _spans(_size(v.type) for v in layout.config_variables)
+    """One block row per equation, of the size of its variation: 1 for a scalar and for
+    an S¹ point (γ), 3 otherwise."""
+    return _spans(_size(_variation_type(v)) for v in layout.config_variables)
+
+
+def _variation_type(var):
+    if isinstance(var, MANIFOLD_POINTS):
+        return var.get_variation_vector().type
+    return var.type
 
 
 def _standard_form(sf: dict, layout: StateLayout, tgt) -> list[str]:

@@ -7,6 +7,7 @@ Variable                    Configuration slot   Velocity slot      Acceleration
 ==========================  ===================  =================  ====================
 ``s: Scalar`` (R)           ``s`` (1)            ``ṡ`` (1)          ``s̈``
 ``x: Vector`` (R³)          ``x`` (3)            ``ẋ`` (3)          ``ẍ``
+``q: S1``                   ``q`` (3, unit, ⊥ e) ``ω`` (1)          ``ω̇``
 ``q: S2``                   ``q`` (3, unit)      ``ω`` (3, ⊥ q)     ``ω̇``
 ``R: SO3``                  ``R`` (9, row-major) ``Ω`` (3)          ``Ω̇``
 ==========================  ===================  =================  ====================
@@ -14,7 +15,9 @@ Variable                    Configuration slot   Velocity slot      Acceleration
 ``state`` holds every configuration slot in variable order (``SystemVariables`` order:
 scalars, vectors, matrices), then every velocity slot in the same order. ``a`` stacks the
 accelerations in the same order, ``u`` the inputs in the given order (scalars 1, vectors 3)
-and ``p`` is a ``dict`` keyed by ``str(symbol)`` of every parameter.
+and ``p`` is a ``dict`` keyed by ``str(symbol)`` of every parameter. The axis ``e`` of an
+S¹ point is a parameter (``collect_params`` always lists it): ``simulate`` rotates ``q``
+about it.
 """
 
 from __future__ import annotations
@@ -27,10 +30,10 @@ from typing import Any, Sequence
 import numpy as np
 
 from geomech.core.base.expressions import (
+    S1,
     S2,
     SO3,
-    TS2,
-    TSO3,
+    TANGENT_LEAVES,
     Expr,
     Matrix,
     Scalar,
@@ -58,7 +61,9 @@ class Slot:
     ``start:stop`` its entries there (``None`` for a parameter), ``shape`` its numeric
     shape (``()``, ``(3,)``, ``(3, 3)``; an SO(3) point occupies 9 row-major entries) and
     ``name`` the Python identifier the generated code binds it to. ``manifold`` is
-    ``"R"``, ``"R3"``, ``"S2"`` or ``"SO3"`` for the slots of a configuration variable.
+    ``"R"``, ``"R3"``, ``"S1"``, ``"S2"`` or ``"SO3"`` for the slots of a configuration
+    variable; ``axis`` is the printed axis of an S¹ point (its ``p`` key) on that point's
+    configuration slot, else ``""``.
     """
 
     symbol: Expr
@@ -70,6 +75,7 @@ class Slot:
     start: int | None = None
     stop: int | None = None
     manifold: str = ""
+    axis: str = ""
 
     @property
     def size(self) -> int:
@@ -85,6 +91,8 @@ class Slot:
         out: dict[str, Any] = {"symbol": self.key, "name": self.name, "kind": self.kind}
         if self.manifold:
             out["manifold"] = self.manifold
+        if self.axis:
+            out["axis"] = self.axis
         out["shape"] = list(self.shape)
         if self.start is not None:
             out["slice"] = [self.start, self.stop]
@@ -120,6 +128,9 @@ def base_symbol(sym):
 
 def _kinematic_symbols(var):
     """(manifold, velocity symbol, acceleration symbol) of a configuration variable."""
+    if isinstance(var, S1):
+        w = var.get_tangent_vector()
+        return "S1", w, w.t_diff()
     if isinstance(var, S2):
         w = var.get_tangent_vector()
         return "S2", w, w.t_diff()
@@ -192,7 +203,7 @@ class StateLayout:
         self._names.add(name)
         return name
 
-    def _add(self, sym, kind, array, start, manifold="", name=None) -> Slot:
+    def _add(self, sym, kind, array, start, manifold="", name=None, axis="") -> Slot:
         key = str(sym)
         if key in self._slots:
             other = self._slots[key]
@@ -213,6 +224,7 @@ class StateLayout:
             start=start,
             stop=stop,
             manifold=manifold,
+            axis=axis,
         )
         self._slots[key] = slot
         return slot
@@ -222,18 +234,19 @@ class StateLayout:
         offset = 0
         for var in cfg_vars:
             manifold = _kinematic_symbols(var)[0]
-            slot = self._add(var, "configuration", "state", offset, manifold)
+            axis = str(var.axis) if isinstance(var, S1) else ""
+            slot = self._add(var, "configuration", "state", offset, manifold, axis=axis)
             self.configuration.append(slot)
             offset += slot.size
         self.n_config = offset
         acc_offset = 0
         for var, cfg in zip(cfg_vars, self.configuration):
             manifold, vel, acc = _kinematic_symbols(var)
-            vname = None if manifold in ("S2", "SO3") else cfg.name + "_dot"
+            vname = None if manifold in ("S1", "S2", "SO3") else cfg.name + "_dot"
             vslot = self._add(vel, "velocity", "state", offset, manifold, name=vname)
             self.velocity.append(vslot)
             offset += vslot.size
-            aname = vslot.name + ("_dot" if manifold in ("S2", "SO3") else "")
+            aname = vslot.name + ("_dot" if manifold in ("S1", "S2", "SO3") else "")
             if manifold in ("R", "R3"):
                 aname = cfg.name + "_ddot"
             aslot = self._add(acc, "acceleration", "a", acc_offset, manifold, name=aname)
@@ -266,7 +279,7 @@ class StateLayout:
                     f"StateLayout: parameter '{sym}' is a numeric literal or a zero/identity"
                     " constant; literals are inlined in the generated code, not parameters"
                 )
-            if isinstance(sym, (TS2, TSO3)):
+            if isinstance(sym, TANGENT_LEAVES):
                 raise ValueError(
                     f"StateLayout: parameter '{sym}' is a tangent or variation vector of a"
                     " configuration variable; it is part of the state or of the perturbation"
@@ -381,8 +394,8 @@ class StateLayout:
     def slot_names(self) -> list[str]:
         """The keys ``pack`` takes and ``unpack`` returns, in state order: every
         configuration slot, then every velocity slot. Velocity names follow the
-        variable's name: ``x_dot``, ``omega_q1`` for ``S2("q1")``, ``Omega_R2`` for
-        ``SO3("R2")``, ``s_dot`` for ``Scalar("s")``."""
+        variable's name: ``x_dot``, ``omega_q1`` for ``S2("q1")`` or ``S1("q1", ...)``,
+        ``Omega_R2`` for ``SO3("R2")``, ``s_dot`` for ``Scalar("s")``."""
         return [s.name for s in self.configuration + self.velocity]
 
     def pack(self, values: dict | None = None, /, **slots) -> np.ndarray:
@@ -539,15 +552,19 @@ def collect_params(exprs, variables: SystemVariables, inputs: Sequence[Expr] = (
     are the configuration, velocity and acceleration symbols of *variables*, their
     tangent and variation vectors (``ω``, ``ξ``, ``Ω``, ``η``, which ``δW`` and
     ``compute_eom`` hold) and the *inputs*. The rest, sorted by printed name, are the
-    parameters to pass as ``params``.
+    parameters to pass as ``params``. The axis of every S¹ point of *variables* is always a
+    parameter, even when *exprs* do not hold it: ``simulate`` rotates the point about it.
     """
     known = StateLayout(variables, inputs)
     found: dict[str, Expr] = {}
     _walk(exprs, found)
+    for var in variables.vectors:
+        if isinstance(var, S1):
+            found.setdefault(str(var.axis), var.axis)
     return [
         sym
         for key, sym in sorted(found.items())
         if known.slot(key) is None
         and not is_literal_leaf(sym)
-        and not isinstance(sym, (TS2, TSO3))
+        and not isinstance(sym, TANGENT_LEAVES)
     ]

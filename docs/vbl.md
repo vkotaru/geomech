@@ -32,10 +32,12 @@ the linearized system.
 |---|---|---|
 | `s: Scalar` ($\mathbb{R}$) | $\delta s$ = `Variation(s)` | $\delta\dot s$ = `TimeDerivative(Variation(s))` |
 | `x: Vector` ($\mathbb{R}^3$) | $\delta x$ = `Variation(x)` | $\delta\dot x$ = `TimeDerivative(Variation(x))` |
+| `q: S1` | $\gamma$ = `q.get_variation_vector()` (scalar) | $\delta\omega$ = `Variation(ω)`, $\omega$ = `q.get_tangent_vector()` (scalar) |
 | `q: S2` | $\xi$ = `q.get_variation_vector()`, $\xi \perp q$ | $\delta\omega$ = `Variation(ω)`, $\omega$ = `q.get_tangent_vector()` |
 | `R: SO3` | $\eta$ = `R.get_variation_vector()` | $\delta\Omega$ = `Variation(Ω)`, $\Omega$ = `R.get_tangent_vector()` |
 
-The engine produces $\delta q = \xi \times q$ and $\delta R = R\,\hat\eta$ eagerly,
+The engine produces $\delta q = \gamma\, e \times q$ (S¹), $\delta q = \xi \times q$ (S²) and
+$\delta R = R\,\hat\eta$ eagerly,
 $\delta(\text{constant}) = 0$, and canonicalises $\delta(\dot v)$ as
 `TimeDerivative(Variation(v))`. Each input $u$ (a `Scalar` or `Vector`) contributes
 $\delta u$ = `Variation(u)`.
@@ -58,6 +60,10 @@ kinematics:
   $\mathbf{M}[\tfrac{d}{dt}\delta x] = I$, $\mathbf{A}[\delta\dot x] = I$ (the two symbols print
   identically, `TimeDerivative(Variation(x))`; the row is an identity included so that every
   configuration variable has a kinematic row).
+- $S^1$ ($\dot q = \omega\, e\times q$, $\delta q = \gamma\, e \times q$, scalar $\omega$,
+  $\gamma$): $\delta\omega = \dot\gamma$ (Lee et al. eq. 4.11), so $\dot\gamma = \delta\omega$,
+  $\mathbf{M}[\dot\gamma] = 1$, $\mathbf{A}[\delta\omega] = 1$: one scalar tangent
+  coordinate, like $\mathbb{R}$.
 - $S^2$ ($\dot q = \omega\times q$, $\omega\perp q$):
   $\dot\xi = q q^\top \hat\omega\, \xi + (I - q q^\top)\,\delta\omega$, so
   $\mathbf{M}[\dot\xi] = I$, $\mathbf{A}[\xi] = q q^\top \hat\omega$,

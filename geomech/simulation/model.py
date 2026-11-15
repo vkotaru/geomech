@@ -17,7 +17,7 @@ from numpy.typing import ArrayLike
 
 __all__ = ["accelerations", "check_state", "Model", "model_of"]
 
-#: Tolerance of ``check_state``: |q| = 1, q·ω = 0, RᵀR = I and det R = 1.
+#: Tolerance of ``check_state``: |q| = 1, q·ω = 0 (S²), q·e = 0 (S¹), RᵀR = I and det R = 1.
 STATE_TOL = 1e-9
 
 #: ``accelerations`` raises above this condition number of the (projected, scaled and
@@ -31,10 +31,11 @@ class _Var:
 
     key: str  # printed configuration symbol (``q``, ``R``, ``x``)
     vel_key: str  # printed velocity symbol (``\\omega_{q}``, ``\\Omega_{R}``, ``\\dot x``)
-    manifold: str  # "R", "R3", "S2", "SO3"
+    manifold: str  # "R", "R3", "S1", "S2", "SO3"
     cfg: slice
     vel: slice
     acc: slice
+    axis: str = ""  # printed axis of an S1 point (its key in p)
 
 
 class Model:
@@ -66,12 +67,35 @@ class Model:
                 cfg=slice(*c["slice"]),
                 vel=slice(*v["slice"]),
                 acc=slice(*a["slice"]),
+                axis=c.get("axis", ""),
             )
             for c, v, a in zip(layout["configuration"], layout["velocity"], layout["acceleration"])
         ]
+        self.s1 = [v for v in self.variables if v.manifold == "S1"]
         self.s2 = [v for v in self.variables if v.manifold == "S2"]
         self.so3 = [v for v in self.variables if v.manifold == "SO3"]
         self.euclid = [v for v in self.variables if v.manifold in ("R", "R3")]
+
+    def axis(self, var: _Var, p: dict | None, what: str = "simulation") -> np.ndarray:
+        """The unit axis of the S¹ point *var*: ``p[var.axis]`` normalised. Raises
+        ``KeyError`` naming the parameter when *p* lacks it and ``ValueError`` when it is
+        not a nonzero finite 3-vector."""
+        if p is None or var.axis not in p:
+            raise KeyError(f"{what}: the S1 point '{var.key}' needs its axis '{var.axis}' in p")
+        e = np.asarray(p[var.axis], dtype=float).reshape(-1)
+        n = float(np.linalg.norm(e)) if e.size == 3 else 0.0
+        if not (np.isfinite(n) and n > 0):
+            raise ValueError(
+                f"{what}: the axis '{var.axis}' of the S1 point '{var.key}' must be a nonzero"
+                f" 3-vector, got {np.array2string(e, precision=6)}"
+            )
+        return e / n
+
+    def kinematics(self, state, p) -> np.ndarray:
+        """The module's ``kinematics`` at *state* (with *p* when it has an S¹ point)."""
+        if self.s1:
+            return self.module.kinematics(state, p)
+        return self.module.kinematics(state)
 
     def as_state(self, state, what="state") -> np.ndarray:
         x = np.asarray(state, dtype=float).reshape(-1)
@@ -230,18 +254,37 @@ def accelerations(
 
 
 def check_state(
-    module: Any, state: ArrayLike, tol: float = STATE_TOL, what: str = "x0"
+    module: Any,
+    state: ArrayLike,
+    tol: float = STATE_TOL,
+    what: str = "x0",
+    p: dict | None = None,
 ) -> np.ndarray:
     """Check that *state* lies on the state manifold of *module* and return it flat.
 
-    Each S² point has unit norm and its velocity ``ω`` is orthogonal to it; each SO(3)
-    point is orthogonal with determinant +1; every entry is finite. The tolerance is
-    *tol* (1e-9). Raises ``ValueError`` naming the slot otherwise.
+    Each S² point has unit norm and its velocity ``ω`` is orthogonal to it; each S¹ point
+    has unit norm and, when *p* holds its axis ``e``, ``q·e = 0``; each SO(3) point is
+    orthogonal with determinant +1; every entry is finite. The tolerance is *tol* (1e-9).
+    Raises ``ValueError`` naming the slot otherwise.
     """
     model = model_of(module)
     x = model.as_state(state, what)
     if not np.all(np.isfinite(x)):
         raise ValueError(f"{what}: non-finite entries {np.flatnonzero(~np.isfinite(x))}")
+    for var in model.s1:
+        q = x[var.cfg]
+        if abs(np.linalg.norm(q) - 1.0) > tol:
+            raise ValueError(
+                f"{what}: the S1 slot '{var.key}' must have unit norm, got"
+                f" |{var.key}| = {np.linalg.norm(q):.12g}"
+            )
+        if p is not None and var.axis in p:
+            e = model.axis(var, p, what)
+            if abs(q @ e) > tol:
+                raise ValueError(
+                    f"{what}: the S1 slot '{var.key}' must be orthogonal to its axis"
+                    f" '{var.axis}', got {var.key}·{var.axis} = {q @ e:.3g}"
+                )
     for var in model.s2:
         q, w = x[var.cfg], x[var.vel]
         if abs(np.linalg.norm(q) - 1.0) > tol:

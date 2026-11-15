@@ -33,6 +33,29 @@ Rules (name, identity, hypothesis the code checks):
                                    q an S2 point, a tangent to q (as above)
   vector.hat_zero                  Hat(0) = 0 (matrix)
                                    the operand is flagged zero
+  vector.s1_axis_orthogonal        Dot(e, q) = Dot(q, e) = 0
+                                   q an S1 point whose axis equals e by name
+  vector.s1_axis_double_cross      Cross(e, Cross(e, q)) = -q, Cross(Cross(q, e), e) = -q,
+                                   Cross(e, Cross(q, e)) = q, Cross(Cross(e, q), e) = q
+                                   q an S1 point with axis e (|e| = 1, q · e = 0)
+  vector.s1_axis_recovery          Cross(q, Cross(e, q)) = e, Cross(Cross(q, e), q) = e,
+                                   Cross(q, Cross(q, e)) = -e, Cross(Cross(e, q), q) = -e
+                                   q an S1 point with axis e (|q| = 1, q · e = 0)
+  vector.s1_rotated_dot            Dot(Cross(e, a), Cross(e, b)) = Dot(a, b), and -Dot(a, b)
+                                   when one Cross has its operands swapped
+                                   a, b S1 points with the same axis e (|e| = 1,
+                                   a · e = b · e = 0); a = b gives |e × q| = 1
+  vector.s1_planar_triple          Dot(Cross(e, a), b) = Dot(b, Cross(e, a)) and
+                                   Dot(b, Cross(e, a)) = -Dot(a, Cross(e, b)): the triple
+                                   product e·(a × b) of two points of one circle is written
+                                   Dot(p, Cross(e, r)) with str(p) < str(r) (the book's
+                                   pᵀ S r); a, b distinct S1 points with the same axis e
+
+The S1 identities are the planar rotation S of Lee et al. ch. 4 written as e × (·): for
+q in the plane normal to the unit vector e, BAC-CAB gives e × (e × q) = e (e·q) - q (e·e)
+= -q, q × (e × q) = e (q·q) - q (q·e) = e, and the Lagrange identity
+(e × a)·(e × b) = (e·e)(a·b) - (e·b)(a·e) = a·b. The axis is a constant ``UnitNorm`` leaf
+(the ``S1`` constructor requires it) and is compared with ``q.axis`` by name.
 
 Before 5.1 the pass stopped at ``Dot`` operands, ``Hat``, ``MVMul`` and the calculus
 nodes, so ``Dot(v, q×(ω×q))``, ``Hat(a×a)`` or ``J(a×a)`` survived ``full_simplify``.
@@ -42,7 +65,7 @@ on S² but needs a constraint system to prove, so ``Cross(q, Cross(ω̇, q))`` i
 """
 
 from geomech.core.base.constants import NEG_ONE
-from geomech.core.base.expressions import S2, TS2, One, Zero, ZeroMatrix, ZeroVector
+from geomech.core.base.expressions import S1, S2, TS2, One, Zero, ZeroMatrix, ZeroVector
 from geomech.core.operations.geometry import Cross, Dot, Hat
 from geomech.core.operations.multiplication import Mul, SVMul
 from geomech.core.transformations.utils import map_children
@@ -122,6 +145,76 @@ def _try_s2_cross_reduction(expr):
     return None
 
 
+def _on_circle_of(q, axis):
+    """True when *q* is an S1 point whose axis equals *axis* (type + printed name)."""
+    return isinstance(q, S1) and q.axis == axis
+
+
+def _try_s1_dot(expr):
+    """The S1 ``Dot`` identities of the module docstring at ``expr`` (a ``Dot``), or None."""
+    l, r = expr.left, expr.right
+    if _on_circle_of(r, l) or _on_circle_of(l, r):
+        return rule("vector.s1_axis_orthogonal", expr, Zero)
+    if isinstance(l, Cross) and isinstance(r, Cross):
+        # orient each Cross as (e, point): sign -1 per swapped Cross
+        def split(c):
+            if isinstance(c.right, S1) and c.left == c.right.axis:
+                return c.left, c.right, 1
+            if isinstance(c.left, S1) and c.right == c.left.axis:
+                return c.right, c.left, -1
+            return None
+
+        a, b = split(l), split(r)
+        if a is not None and b is not None and a[0] == b[0]:
+            out = Dot(a[1], b[1])
+            if a[2] * b[2] < 0:
+                out = Mul(out, NEG_ONE)
+            return rule("vector.s1_rotated_dot", expr, out)
+    # e·(a × b) of two points of one circle, written Dot(p, Cross(e, r)), str(p) < str(r)
+    if isinstance(l, Cross) and not isinstance(r, Cross):
+        l, r = r, l  # Dot(Cross(e, a), b) = Dot(b, Cross(e, a))
+    if isinstance(r, Cross) and isinstance(l, S1) and isinstance(r.right, S1):
+        e, a, b = r.left, r.right, l
+        if a != b and _on_circle_of(a, e) and _on_circle_of(b, e):
+            if str(b) < str(a):
+                out = Dot(b, r)
+            else:  # b·(e × a) = e·(a × b) = -a·(e × b)
+                out = Mul(Dot(a, Cross(e, b)), NEG_ONE)
+            if out != expr:
+                return rule("vector.s1_planar_triple", expr, out)
+    return None
+
+
+def _try_s1_cross_reduction(expr):
+    """The S1 ``Cross`` identities of the module docstring at ``expr``, or None."""
+    l, r = expr.left, expr.right
+    # e × (e × q) = -q ; e × (q × e) = q
+    if isinstance(r, Cross):
+        if _on_circle_of(r.right, l) and r.left == l:
+            return rule("vector.s1_axis_double_cross", expr, SVMul(r.right, NEG_ONE))
+        if _on_circle_of(r.left, l) and r.right == l:
+            return rule("vector.s1_axis_double_cross", expr, r.left)
+    # (q × e) × e = -q ; (e × q) × e = q
+    if isinstance(l, Cross):
+        if _on_circle_of(l.left, r) and l.right == r:
+            return rule("vector.s1_axis_double_cross", expr, SVMul(l.left, NEG_ONE))
+        if _on_circle_of(l.right, r) and l.left == r:
+            return rule("vector.s1_axis_double_cross", expr, l.right)
+    # q × (e × q) = e ; q × (q × e) = -e
+    if isinstance(l, S1) and isinstance(r, Cross):
+        if r.right == l and r.left == l.axis:
+            return rule("vector.s1_axis_recovery", expr, r.left)
+        if r.left == l and r.right == l.axis:
+            return rule("vector.s1_axis_recovery", expr, SVMul(r.right, NEG_ONE))
+    # (q × e) × q = e ; (e × q) × q = -e
+    if isinstance(r, S1) and isinstance(l, Cross):
+        if l.left == r and l.right == r.axis:
+            return rule("vector.s1_axis_recovery", expr, l.right)
+        if l.right == r and l.left == r.axis:
+            return rule("vector.s1_axis_recovery", expr, SVMul(l.left, NEG_ONE))
+    return None
+
+
 def _is_tangent_to_s2(expr, s2):
     """Check if expr is a tangent vector to the given S2 manifold.
 
@@ -178,7 +271,8 @@ def _at_node(expr):
                     return rule("vector.dot_tangent_orthogonal", expr, Zero)
 
                 case _:
-                    return expr
+                    reduced = _try_s1_dot(expr)
+                    return expr if reduced is None else reduced
 
         # --- Cross product rules ---
         case Cross() if expr.left == expr.right:
@@ -194,9 +288,11 @@ def _at_node(expr):
         case Cross() if isinstance(expr.left, SVMul) and expr.left.left == expr.right:
             return rule("vector.cross_scaled_self", expr, ZeroVector)
 
-        # S2 BAC-CAB identity with tangent orthogonality
+        # S2 BAC-CAB identity with tangent orthogonality, then the S1 axis identities
         case Cross():
             reduced = _try_s2_cross_reduction(expr)
+            if reduced is None:
+                reduced = _try_s1_cross_reduction(expr)
             return expr if reduced is None else reduced
 
         # --- Hat rules ---

@@ -1,5 +1,5 @@
-"""Multibody systems on SO(3) and its products: a spacecraft with reaction wheels and the
-swing phase of a three-dimensional compass-gait biped.
+"""Multibody systems on SO(3) and its products: a spacecraft with reaction wheels (wheel
+angles on R³ or on (S¹)³) and the swing phase of a three-dimensional compass-gait biped.
 
 Ω is the body-frame angular velocity (``Ṙ = R Ω̂``), η the variation (``δR = R η̂``); a
 body-frame moment ``M`` on ``R`` enters as ``η·M`` and an inertial-frame moment ``M`` as
@@ -27,6 +27,47 @@ J_LEG = frozen_array(np.diag([0.42, 0.42, 0.005]))
 
 def _inertia(name):
     return Matrix(name, attr=["Constant", "SymmetricMatrix"])
+
+
+def _spacecraft_scene(R, bs, markers=()):
+    """The bus (a box with two solar panels) and a cylinder per wheel centred at ``0.3 bᵢ``
+    with its disc normal along the body axis e₁, e₂ or e₃; *markers* are body-frame points
+    drawn as small spheres (the rim mark of an S¹ wheel)."""
+
+    def scene(layout, s):
+        from geomech.viz import Box, Cylinder, PointMass, RigidBody, Scene
+
+        sc = Scene(layout)
+        sc.add(RigidBody(R, ZeroVector, Box(0.5, 0.4, 0.35), color="link1", name="bus"))
+        for side in (1, -1):
+            sc.add(
+                RigidBody(
+                    R,
+                    ZeroVector,
+                    Box(0.9, 0.35, 0.015),
+                    offset=[side * 0.72, 0, 0],
+                    axes=False,
+                    color="link2",
+                    name=f"panel {'+' if side > 0 else '-'}",
+                )
+            )
+        for i, (axis, b) in enumerate(zip("xyz", bs), 1):
+            sc.add(
+                RigidBody(
+                    R,
+                    ZeroVector,
+                    Cylinder(0.09, 0.04, axis),
+                    offset=b * 0.3,
+                    axes=False,
+                    color="rotor",
+                    name=f"wheel {i}",
+                )
+            )
+        for point in markers:
+            sc.add(PointMass(MVMul(R, point), radius=0.02))
+        return sc
+
+    return scene
 
 
 @register("SO(3) × R³")
@@ -77,37 +118,7 @@ def spacecraft_reaction_wheels():
         L = L + HALF * I_i * spin * spin
         term = tau * (th.delta() + Dot(b, eta)) - tau * Dot(b, eta)
         dW = term if dW is None else dW + term
-
-    def scene(layout, s):
-        from geomech.viz import Box, Cylinder, RigidBody, Scene
-
-        sc = Scene(layout)
-        sc.add(RigidBody(R, ZeroVector, Box(0.5, 0.4, 0.35), color="link1", name="bus"))
-        for side in (1, -1):
-            sc.add(
-                RigidBody(
-                    R,
-                    ZeroVector,
-                    Box(0.9, 0.35, 0.015),
-                    offset=[side * 0.72, 0, 0],
-                    axes=False,
-                    color="link2",
-                    name=f"panel {'+' if side > 0 else '-'}",
-                )
-            )
-        for i, (axis, b) in enumerate(zip("xyz", bs), 1):
-            sc.add(
-                RigidBody(
-                    R,
-                    ZeroVector,
-                    Cylinder(0.09, 0.04, axis),
-                    offset=b * 0.3,
-                    axes=False,
-                    color="rotor",
-                    name=f"wheel {i}",
-                )
-            )
-        return sc
+    scene = _spacecraft_scene(R, bs)
 
     return make_system(
         "spacecraft_reaction_wheels",
@@ -144,6 +155,81 @@ def spacecraft_reaction_wheels():
         },
         symbols=dict(R=R, J_b=Jb, I=tuple(Is), b=tuple(bs), theta=tuple(thetas), tau=tuple(taus)),
         scene=scene,
+    )
+
+
+@register("SO(3) × (S¹)³")
+def spacecraft_reaction_wheels_s1():
+    """The spacecraft of ``spacecraft_reaction_wheels`` with each wheel angle on S¹, on
+    SO(3) × (S¹)³: attitude R, body angular velocity Ω, wheel directions qᵢ.
+
+    ``qᵢ`` is a wheel-fixed direction orthogonal to the wheel axis bᵢ, written in the body
+    frame: an ``S1`` point with axis ``bᵢ``, so ``q̇ᵢ = ωᵢ bᵢ × qᵢ`` with ``ωᵢ`` the spin rate
+    of the wheel relative to the bus (``θ̇ᵢ`` of the R³ model) and ``δqᵢ = γᵢ bᵢ × qᵢ``.
+    ``L = ½ Ω·J_bΩ + Σ ½ Iᵢ (ωᵢ + bᵢ·Ω)²`` (no potential) and
+    ``δW = Σ τᵢ (γᵢ + bᵢ·η) − Σ τᵢ bᵢ·η``, inputs ``[τ₁, τ₂, τ₃]``. The equations are those of
+    ``spacecraft_reaction_wheels`` with ``θ̇ᵢ → ωᵢ``, ``θ̈ᵢ → ω̇ᵢ`` and ``δθᵢ → γᵢ``
+    (``tests/test_s1_systems.py`` checks this numerically, and that both simulate to the
+    same trajectory). This is the configuration space of Lee et al. §9.10, SE(3) × (S¹)ⁿ,
+    without the translation; ``qᵢ`` is a global coordinate of the wheel angle (no 2π
+    wrap-around).
+
+    Scene: the bus and wheels of ``spacecraft_reaction_wheels``, with a rim mark at
+    ``0.3 bᵢ + 0.09 qᵢ`` on each wheel, which turns with it.
+    """
+    from geomech.core.base import S1  # not at import time: see geomech.systems.circles
+
+    R = SO3("R")
+    Om, eta = R.get_tangent_vector(), R.get_variation_vector()
+    Jb = _inertia("J_b")
+    Is = getScalars("I_1 I_2 I_3", attr=["Constant"])
+    bs = [Vector(f"b{i}", attr=["Constant", "UnitNorm"]) for i in (1, 2, 3)]
+    qs = [S1(f"q_{i}", axis=b) for i, b in zip((1, 2, 3), bs)]
+    taus = [Scalar(f"\\tau_{i}") for i in (1, 2, 3)]
+    L = HALF * Dot(Om, Jb * Om)
+    dW = None
+    for I_i, b, q, tau in zip(Is, bs, qs, taus):
+        spin = q.get_tangent_vector() + Dot(b, Om)  # absolute spin rate of the wheel about b
+        L = L + HALF * I_i * spin * spin
+        term = tau * (q.get_variation_vector() + Dot(b, eta)) - tau * Dot(b, eta)
+        dW = term if dW is None else dW + term
+    marks = [b * 0.3 + q * 0.09 for b, q in zip(bs, qs)]
+
+    return make_system(
+        "spacecraft_reaction_wheels_s1",
+        "SO(3) × (S¹)³",
+        L,
+        dW,
+        SystemVariables(vectors=qs, matrices=[R]),
+        taus,
+        {
+            "J_b": J_BUS,
+            "I_1": 0.02,
+            "I_2": 0.02,
+            "I_3": 0.02,
+            "b1": np.array([1.0, 0.0, 0.0]),
+            "b2": np.array([0.0, 1.0, 0.0]),
+            "b3": np.array([0.0, 0.0, 1.0]),
+        },
+        Reference(
+            LEE,
+            equation="eqs. 9.61–9.62",
+            section="§9.10",
+            note="spacecraft_reaction_wheels with the wheel angles on S¹ (the configuration"
+            " space of §9.10 without translation); same equations.",
+        ),
+        x0={
+            "R": rot([0.1, 0.2, 0.3]),
+            "Omega_R": [0.05, -0.1, 0.08],
+            "q_1": [0.0, 1.0, 0.0],
+            "q_2": [0.0, 0.0, 1.0],
+            "q_3": [1.0, 0.0, 0.0],
+            "omega_q_1": 30.0,
+            "omega_q_2": -20.0,
+            "omega_q_3": 10.0,
+        },
+        symbols=dict(R=R, J_b=Jb, I=tuple(Is), b=tuple(bs), q=tuple(qs), tau=tuple(taus)),
+        scene=_spacecraft_scene(R, bs, marks),
     )
 
 

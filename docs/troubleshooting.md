@@ -198,7 +198,7 @@ ones of the example). Every message starts with the function or node that raised
 | a `Constant` variable | `ValueError: compute_eom: SystemVariables.vectors entry 'e3' is constant: its variation vanishes, so it cannot be a configuration variable` |
 | `ω` listed as a variable | `TypeError: compute_eom: SystemVariables.vectors entry '\omega_{q}' is a tangent or variation vector, not a configuration variable; list the manifold point 'q' instead` |
 | `ẋ` listed | `TypeError: compute_eom: SystemVariables.vectors entry '\frac{d}{dt}(x)' is a TimeDerivative node, not a configuration variable; list the underlying variable 'x' instead` |
-| `x + y` listed | `TypeError: compute_eom: SystemVariables.vectors entry '(x+y)' is a VAdd expression, not a single symbol; a configuration variable is one Scalar, Vector, S2 or SO3 leaf (list the symbols it is built from instead)` |
+| `x + y` listed | `TypeError: compute_eom: SystemVariables.vectors entry '(x+y)' is a VAdd expression, not a single symbol; a configuration variable is one Scalar, Vector, S1, S2 or SO3 leaf (list the symbols it is built from instead)` |
 | a plain `Matrix` in `matrices` | `TypeError: compute_eom: SystemVariables.matrices entry 'A' is a general Matrix; only SO3 rotation matrices are supported as matrix configuration variables` |
 | a name listed twice | `ValueError: compute_eom: SystemVariables: the name 'x' is listed more than once (twice in SystemVariables.vectors); configuration variables must be distinct symbols` |
 | a variable named like `ω_q` | `ValueError: compute_eom: SystemVariables.vectors entry '\omega_{q}' has the printed name of the tangent vector of 'q'; configuration variables must be distinct symbols (rename it)` |

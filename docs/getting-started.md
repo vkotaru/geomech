@@ -82,6 +82,7 @@ printing conventions.
 | `Scalar` | Symbolic scalar | `Scalar('m', attr=['Constant'])` |
 | `Vector` | Column vector (default 3x1) | `Vector('x')` |
 | `Matrix` | Square matrix (default 3x3) | `Matrix('J', attr=['Constant'])` |
+| `S1` | Unit vector on the circle normal to the constant unit axis `e` (`attr=['Constant', 'UnitNorm']`); scalar ω, γ | `S1('q', axis=e)` |
 | `S2` | Unit vector on the 2-sphere | `S2('q')` |
 | `SO3` | Rotation matrix on $SO(3)$ | `SO3('R')` |
 

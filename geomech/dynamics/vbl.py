@@ -22,17 +22,24 @@ velocity symbol and are **not** substituted by the EOM manifold rules
     configuration      config. perturbation          velocity perturbation
     s : Scalar (R)     δs  = Variation(s)            δṡ = TimeDerivative(Variation(s))
     x : Vector (R³)    δx  = Variation(x)            δẋ = TimeDerivative(Variation(x))
+    q : S1             γ   = q.get_variation_vector  δω = Variation(ω),  ω = q.get_tangent_vector()
     q : S2             ξ   = q.get_variation_vector  δω = Variation(ω),  ω = q.get_tangent_vector()
     R : SO3            η   = R.get_variation_vector  δΩ = Variation(Ω),  Ω = R.get_tangent_vector()
 
-δ(constant) = 0, δq = ξ × q and δR = R·Hat(η) are produced eagerly by the leaf
-types, and δ(v̇) is canonicalised to ``TimeDerivative(Variation(v))``.
+δ(constant) = 0, δq = (e × q) γ on S¹, δq = ξ × q on S² and δR = R·Hat(η) are produced
+eagerly by the leaf types, and δ(v̇) is canonicalised to ``TimeDerivative(Variation(v))``.
 
 Kinematic rows (one per configuration variable)
 ------------------------------------------------
 
 - R and R³: d/dt(δs) = δṡ and d/dt(δx) = δẋ (identities between the same
   symbols, included so that the block structure is uniform).
+- S¹ with q̇ = ω e × q and δq = γ e × q (scalar ω, γ): δω = γ̇ exactly (Lee et al.
+  eq. 4.11; derivation in ``manifold_rules``), so
+
+      γ̇ = δω
+
+  and ``M[γ̇] = 1``, ``A[δω] = 1``: one scalar tangent coordinate, like R.
 - S² with q̇ = ω × q, ω ⊥ q, δq = ξ × q, ξ ⊥ q: equating δ(q̇) with d/dt(δq)
   and using the tangency constraint d/dt(ξ·q) = 0 gives
 
@@ -83,6 +90,7 @@ from typing import Sequence
 
 from geomech.core.base.constants import negate
 from geomech.core.base.expressions import (
+    S1,
     S2,
     SO3,
     Expr,
@@ -359,13 +367,16 @@ class _Blocks:
 
 def _kinematic_row(blocks, var, cfg, vel, dcfg):
     """The kinematic row of the configuration variable *var*: ``δẋ = δv`` for a scalar or
-    vector, ``ξ̇ = (q qᵀ) ω̂ ξ + (I − q qᵀ) δω`` on S², ``η̇ = −Ω̂ η + δΩ`` on SO(3)."""
+    vector, ``γ̇ = δω`` on S¹, ``ξ̇ = (q qᵀ) ω̂ ξ + (I − q qᵀ) δω`` on S², ``η̇ = −Ω̂ η + δΩ``
+    on SO(3)."""
     label = "kin:" + str(var)
     row_type = cfg.type
     blocks.add_row(label, row_type)
     A = blocks.A[label]
     blocks.M[label][str(dcfg)] = One if row_type == ExprType.SCALAR else IdentityMatrix
-    if isinstance(var, S2):
+    if isinstance(var, S1):  # γ̇ = δω (Lee et al. eq. 4.11)
+        A[str(vel)] = One
+    elif isinstance(var, S2):
         omega = var.get_tangent_vector()
         qqT = VVMul(var, Transpose(var))
         A[str(cfg)] = MMMul(qqT, Hat(omega))
@@ -479,7 +490,7 @@ def perturbation_variables(variables):
         vel_perts.append(s.t_diff().delta())
     for v in variables.vectors:
         cfg_vars.append(v)
-        if isinstance(v, S2):
+        if isinstance(v, (S1, S2)):
             cfg_perts.append(v.get_variation_vector())
             vel_perts.append(Variation(v.get_tangent_vector()))
         else:

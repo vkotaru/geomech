@@ -43,6 +43,7 @@ order, then every velocity slot.
 |---|---|---|---|
 | `s: Scalar` | `s` (1) | `ṡ` (1) | |
 | `x: Vector` | `x` (3) | `ẋ` (3) | |
+| `q: S1` | `q` (3) | `ω` (1) | `‖q‖ = 1`, `q · e = 0` (`q̇ = ω e × q`, axis `e` in `p`) |
 | `q: S2` | `q` (3) | `ω` (3) | `‖q‖ = 1`, `q · ω = 0` (`q̇ = ω × q`) |
 | `R: SO3` | `R` (9, row-major) | `Ω` (3, body frame) | `RᵀR = I`, `det R = 1` (`Ṙ = R Ω̂`) |
 
@@ -50,7 +51,8 @@ order, then every velocity slot.
 `ValueError` naming the slot, for example
 `x0: the S2 slot 'q' must have unit norm, got |q| = 1.01` or
 `x0: the velocity slot '\omega_{q}' must be orthogonal to 'q'`. `check_state(module,
-state, tol)` runs the same check. A trajectory gives the values of a slot by its printed
+state, tol, p=p)` runs the same check (`q · e` of an S¹ point only when `p` holds its
+axis). A trajectory gives the values of a slot by its printed
 symbol or its generated name: `traj["q"]` is `(N, 3)`, `traj["R"]` is `(N, 3, 3)`,
 `traj["omega_q"]` is `(N, 3)`. The `StateLayout` the module was generated from builds a
 state from named slots and splits one
@@ -119,6 +121,10 @@ A fixed-step Lie-group integrator. The state is moved by a group element
 `exp(U)` of the product group that acts on it:
 
 - each S² point by a rotation from the left, `q ← expm(u) q` (so `q̇ = ω × q` has generator `ω`);
+- each S¹ point by a rotation about its axis `e`, `q ← expm(u) q` with `u` a multiple of
+  `e` (generator `ω e`; the axis is read from `p`). These rotations commute, so the step
+  turns `q` by the RK4 average of `ω h` exactly; `q` is then re-projected onto the circle
+  (`q ← q − (q·e) e`, normalised), a round-off correction;
 - each SO(3) point by a rotation from the right, `R ← R expm(u)` (generator `Ω`);
 - every other slot (R, R³ configuration and all velocities) by a translation.
 
@@ -156,7 +162,8 @@ quadrotor with a load at `dt = 1e-3` is about 190 MB in full).
 `scipy.integrate.solve_ivp` (`ivp_method="DOP853"` by default, `rtol`/`atol` passed
 through) on the embedded state with `ẏ = (kinematics(y), accelerations(y))`. The solver
 does not know the manifold, so the outputs (at spacing `dt`, thinned by `output_every`)
-are projected onto it: `q/|q|`, `ω` made tangent (`ω − (q·ω) q`), and the polar factor
+are projected onto it: `q/|q|`, `ω` made tangent (`ω − (q·ω) q`), an S¹ point moved into
+the plane of its axis before normalising, and the polar factor
 of `R` (`U Vᵀ` of its SVD). `traj.constraint_drift` reports the drift *before*
 projection: `|q|−1` reaches about 3e-10 over 10 s at `rtol = 1e-10`.
 
@@ -264,6 +271,7 @@ The state error uses the perturbation coordinates of `linearize`:
 |---|---|---|
 | R, R³ | `x − x_eq` | `ẋ − ẋ_eq` |
 | SO(3) | `η = vee(log(R_eqᵀ R))` (`geomech.numeric.log_so3`) | `Ω − Ω_eq` |
+| S¹ | `atan2(e·(q_eq × q), q_eq·q)`, the angle about `e` (1 entry) | `ω − ω_eq` (1 entry) |
 | S² | `Bᵀ (q_eq × q)` (2 entries) | `Bᵀ (ω − ω_eq)` (2 entries) |
 
 The SO(3) error follows from `δR = R η̂`: `R = R_eq exp(η̂)`. On S², `δq = ξ × q` with

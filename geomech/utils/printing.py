@@ -101,12 +101,15 @@ def tree_str(expr, indent: int = 0, label: str = "", style: str = "topdown") -> 
 
 
 def _leaf_prefix(expr):
-    """Type prefix of a leaf in ``repr`` and the compact tree: ``v:``, ``M:``, ``S2:``, ``SO3:``.
+    """Type prefix of a leaf in ``repr`` and the compact tree: ``v:``, ``M:``, ``S1:``, ``S2:``,
+    ``SO3:``.
 
     Scalars have none, so ``repr(Scalar("m")) != repr(Vector("m"))``.
     """
-    from geomech.core.base.expressions import S2, SO3, Matrix, Vector
+    from geomech.core.base.expressions import S1, S2, SO3, Matrix, Vector
 
+    if isinstance(expr, S1):
+        return "S1:"
     if isinstance(expr, S2):
         return "S2:"
     if isinstance(expr, SO3):
@@ -370,11 +373,15 @@ def _render_topdown(expr, gap=3):
 def _point_labels(expr):
     """``{id(point): "#k"}`` for manifold points that share a printed name with another.
 
-    Collects the ``S2``/``SO3`` leaves of *expr* and the points of its tangent and
+    Collects the ``S1``/``S2``/``SO3`` leaves of *expr* and the points of its tangent and
     variation vectors in order of first appearance. A name used by one object gets no
     label; a name used by several distinct objects numbers them ``#1``, ``#2``, … .
     """
-    from geomech.core.base.expressions import S2, SO3, TS2, TSO3
+    from geomech.core.base.expressions import (
+        MANIFOLD_POINTS,
+        TANGENT_LEAVES,
+        manifold_point_of,
+    )
 
     by_name = {}
 
@@ -388,12 +395,10 @@ def _point_labels(expr):
         if nodes:
             for n in nodes:
                 walk(n)
-        elif isinstance(node, (S2, SO3)):
+        elif isinstance(node, MANIFOLD_POINTS):
             add(node)
-        elif isinstance(node, TS2) and node.S2 is not None:
-            add(node.S2)
-        elif isinstance(node, TSO3) and node.SO3 is not None:
-            add(node.SO3)
+        elif isinstance(node, TANGENT_LEAVES) and manifold_point_of(node) is not None:
+            add(manifold_point_of(node))
 
     walk(expr)
     return {
@@ -441,11 +446,12 @@ _LEAF_FLAGS = (
 def _leaf_detail(expr, points=None):
     """Format the detail string for a leaf node.
 
-    Name, value, every flag that is set, and for a ``TS2``/``TSO3`` the manifold point it
-    belongs to (``of=SO3 'R'``). *points* (from ``_point_labels``) numbers distinct point
-    objects that share a name (``of=SO3 'R' #2``).
+    Name, value, every flag that is set, and for a ``TS1``/``TS2``/``TSO3`` the manifold
+    point it belongs to (``of=SO3 'R'``); for an ``S1`` point its axis (``axis='e'``).
+    *points* (from ``_point_labels``) numbers distinct point objects that share a name
+    (``of=SO3 'R' #2``).
     """
-    from geomech.core.base.expressions import TS2, TSO3
+    from geomech.core.base.expressions import S1, TANGENT_LEAVES, manifold_point_of
 
     points = points or {}
     parts = []
@@ -461,11 +467,9 @@ def _leaf_detail(expr, points=None):
         active = [f for f in _LEAF_FLAGS if getattr(flags, f, False)]
         if active:
             parts.append(", ".join(active))
-    parent = None
-    if isinstance(expr, TS2):
-        parent = expr.S2
-    elif isinstance(expr, TSO3):
-        parent = expr.SO3
+    if isinstance(expr, S1):
+        parts.append(f"axis='{expr.axis}'")
+    parent = manifold_point_of(expr) if isinstance(expr, TANGENT_LEAVES) else None
     if parent is not None:
         mark = points.get(id(parent))
         parts.append(f"of={type(parent).__name__} '{parent}'" + (f" {mark}" if mark else ""))

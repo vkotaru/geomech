@@ -15,8 +15,9 @@ Three layers, each built on the previous one:
      difference of the equations along a constraint-respecting perturbation.
 
 All vectors are column arrays of shape ``(3, 1)``, matrices are ``(3, 3)`` and scalars are
-Python floats; the conventions follow Lee et al. (``S2.t_diff()`` is ``ω × q`` and
-``SO3.t_diff()`` is ``R Ω̂``).
+Python floats; the conventions follow Lee et al. (``S2.t_diff()`` is ``ω × q``,
+``S1.t_diff()`` is ``ω e × q`` with a scalar ω, and ``SO3.t_diff()`` is ``R Ω̂``). An S¹
+point is drawn in the plane normal to the value of its axis ``e``, a unit vector.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from typing import TYPE_CHECKING, Any, Sequence
 
 import numpy as np
 
-from geomech.core.base import S2, SO3, Expr, Matrix, Scalar, Vector
+from geomech.core.base import S1, S2, SO3, Expr, Matrix, Scalar, Vector
 from geomech.core.operations import (
     Add,
     Cross,
@@ -134,6 +135,44 @@ def _cross(a, b):
     return np.cross(np.asarray(a).reshape(3), np.asarray(b).reshape(3)).reshape(3, 1)
 
 
+def _circle_basis(e):
+    """``(u, w)``: an orthonormal basis of the plane normal to the unit vector *e* with
+    ``w = e × u``, so ``cos θ u + sin θ w`` runs over the circle in the S¹ convention."""
+    e = np.asarray(e, dtype=float).reshape(3, 1)
+    k = int(np.argmin(np.abs(e[:, 0])))
+    u = np.zeros((3, 1))
+    u[k, 0] = 1.0
+    u = u - e * float(e[k, 0])
+    u /= np.linalg.norm(u)
+    return u, _cross(e, u)
+
+
+def _circle_point(e, rng):
+    """A random unit vector orthogonal to the unit vector *e* (a point of its S¹)."""
+    u, w = _circle_basis(e)
+    theta = float(rng.uniform(-np.pi, np.pi))
+    return np.cos(theta) * u + np.sin(theta) * w
+
+
+def rot_axis(e, angle) -> np.ndarray:
+    """The rotation by *angle* about the unit vector *e*, ``expm(angle ê)``."""
+    return expm_so3(np.asarray(e, dtype=float).reshape(3) * float(angle))
+
+
+def _axis_value(var, env, rng):
+    """The value of the axis of the S1 point *var*: ``env[str(axis)]`` when present (made
+    unit), otherwise a random unit vector stored in *env* so that every later evaluation
+    sees the same axis."""
+    key = str(var.axis)
+    if key in env:
+        e = np.asarray(env[key], dtype=float).reshape(3, 1)
+        return e / np.linalg.norm(e)
+    e = rng.normal(size=(3, 1))
+    e /= np.linalg.norm(e)
+    env[key] = e
+    return e
+
+
 def _perp(v, q, rng):
     """A random vector orthogonal to the unit vector *q* (or *v* projected if given)."""
     if v is None:
@@ -157,7 +196,8 @@ class Evaluator:
 
     Random draws respect the leaf's declared structure, because the engine does: a
     ``Scalar`` with a ``value`` takes that value; ``SO3`` and ``OrthogonalMatrix`` leaves are
-    rotations; ``S2`` and ``UnitNorm`` vectors have unit norm; ``SymmetricMatrix`` and
+    rotations; ``S2`` and ``UnitNorm`` vectors have unit norm, an ``S1`` point is a unit
+    vector orthogonal to the value of its axis; ``SymmetricMatrix`` and
     ``SkewSymmetricMatrix`` leaves are (skew-)symmetric; the zero and identity constants
     are resolved by type.
     """
@@ -181,7 +221,9 @@ class Evaluator:
         if key in self.env:
             return self.env[key]
         rng = self.rng
-        if isinstance(node, Scalar):
+        if isinstance(node, S1):  # in the plane normal to its (unit) axis
+            val = _circle_point(np.asarray(self.leaf(node.axis), dtype=float), rng)
+        elif isinstance(node, Scalar):
             val = float(node.value) if node.value is not None else float(rng.normal())
         elif isinstance(node, SO3) or (isinstance(node, Matrix) and node.flags.is_orthogonal):
             val = rand_rot(rng)
@@ -289,7 +331,7 @@ def _kinematic_symbols(variables):
     for s in variables.scalars:
         out.append((s, [str(s), str(s.t_diff()), str(s.t_diff().t_diff())]))
     for v in variables.vectors:
-        if isinstance(v, S2):
+        if isinstance(v, (S1, S2)):
             w = v.get_tangent_vector()
             out.append((v, [str(v), str(w), str(w.t_diff())]))
         else:
@@ -301,17 +343,28 @@ def _kinematic_symbols(variables):
 
 
 def sample_state(
-    variables: SystemVariables, inputs: Sequence[Expr], rng: np.random.Generator
+    variables: SystemVariables,
+    inputs: Sequence[Expr],
+    rng: np.random.Generator,
+    *,
+    env: dict | None = None,
 ) -> dict[str, Any]:
-    """Random trajectory point on the manifold: |q| = 1, q·ω = 0, q·ω̇ = 0, R ∈ SO(3).
+    """Random trajectory point on the manifold: |q| = 1, q·ω = 0, q·ω̇ = 0, R ∈ SO(3), and
+    on S¹ q ⊥ e with scalar ω, ω̇.
 
     Returns an ``env`` for ``Evaluator`` holding the configuration, velocity and
-    acceleration of every configuration variable and a value for every input.
+    acceleration of every configuration variable, the axis of every S¹ point and a value
+    for every input. *env* (keyword only) is a starting env, copied: an S¹ point is drawn
+    in the plane of the axis value it holds (a system's ``params``), and only an axis
+    missing from it is drawn at random.
     """
-    env: dict[str, Any] = {}
+    env = dict(env or {})
     for var, (kq, kv, ka) in _kinematic_symbols(variables):
         if isinstance(var, Scalar):
             env[kq], env[kv], env[ka] = (float(rng.normal()) for _ in range(3))
+        elif isinstance(var, S1):
+            env[kq] = _circle_point(_axis_value(var, env, rng), rng)
+            env[kv], env[ka] = float(rng.normal()), float(rng.normal())
         elif isinstance(var, S2):
             q = rng.normal(size=(3, 1))
             q /= np.linalg.norm(q)
@@ -335,7 +388,8 @@ def sample_direction(
     """Random perturbation direction tangent to the constraints.
 
     Returns ``(raw, pert)``. ``raw`` holds the generators used by ``perturbed_state``
-    (ξ, w, a for S²; η, δΩ, δΩ̇ for SO(3); δx, δẋ, δẍ for R³; δs, δṡ, δs̈ for R; δu).
+    (γ, δω, δω̇ for S¹; ξ, w, a for S²; η, δΩ, δΩ̇ for SO(3); δx, δẋ, δẍ for R³; δs, δṡ, δs̈
+    for R; δu).
     ``pert`` maps the printed perturbation symbols of ``linearize`` (states, velocity
     dstates and input variations) to their numeric values; for S² the induced
     velocity direction is δω = ξ × ω + w and δω̇ = ξ × ω̇ + a.
@@ -348,6 +402,13 @@ def sample_direction(
             raw[kq] = (ds, dv, da)
             d = var.delta()
             pert[str(d)], pert[str(d.t_diff())], pert[str(d.t_diff().t_diff())] = ds, dv, da
+        elif isinstance(var, S1):
+            gam, dw, dwd = (float(rng.normal()) for _ in range(3))
+            raw[kq] = (gam, dw, dwd)
+            omega = var.get_tangent_vector()
+            pert[str(var.get_variation_vector())] = gam
+            pert[str(Variation(omega))] = dw
+            pert[str(Variation(omega).t_diff())] = dwd
         elif isinstance(var, S2):
             q = env[kq]
             xi, w, a = (_perp(None, q, rng) for _ in range(3))
@@ -381,12 +442,17 @@ def perturbed_state(
     """Copy of *env* moved by *eps* along *raw* while staying on the manifold.
 
     R, R³: linear; SO(3): R exp(ε η̂), Ω + ε δΩ, Ω̇ + ε δΩ̇;
+    S¹: q(ε) = exp(ε γ ê) q, ω + ε δω, ω̇ + ε δω̇;
     S²: q(ε) = exp(ε ξ̂) q, ω(ε) = exp(ε ξ̂)(ω + ε w), ω̇(ε) = exp(ε ξ̂)(ω̇ + ε a).
     """
     out = dict(env)
     for var, (kq, kv, ka) in _kinematic_symbols(variables):
         g0, g1, g2 = raw[kq]
-        if isinstance(var, S2):
+        if isinstance(var, S1):
+            out[kq] = rot_axis(_axis_value(var, out, None), eps * g0) @ env[kq]
+            out[kv] = env[kv] + eps * g1
+            out[ka] = env[ka] + eps * g2
+        elif isinstance(var, S2):
             E = expm_so3(eps * g0)
             out[kq] = E @ env[kq]
             out[kv] = E @ (env[kv] + eps * g1)
@@ -411,7 +477,9 @@ def _dstate_values(lin, variables, env, pert):
     for i, (cfg, dcfg) in enumerate(zip(lin.states[:n_cfg], lin.dstates[:n_cfg])):
         vel = lin.states[n_cfg + i]
         var = (variables.scalars + variables.vectors + variables.matrices)[i]
-        if isinstance(var, S2):
+        if isinstance(var, S1):  # d/dt(γ) = δω (Lee et al. eq. 4.11)
+            vals[str(dcfg)] = pert[str(vel)]
+        elif isinstance(var, S2):
             q, w = env[str(var)], env[str(var.get_tangent_vector())]
             P = q @ q.T
             vals[str(dcfg)] = P @ hat(w) @ pert[str(cfg)] + (np.eye(3) - P) @ pert[str(vel)]
@@ -492,14 +560,19 @@ def _config_vars(variables):
 
 def _variation_key(var):
     """Printed name of the variation vector that keys the equation of *var* in ``eom``."""
-    if isinstance(var, (S2, SO3)):
+    if isinstance(var, (S1, S2, SO3)):
         return str(var.get_variation_vector())
     return str(var.delta())
 
 
+def _scalar_variation(var):
+    """True when the variation of *var* is a scalar: a ``Scalar`` or an ``S1`` point (γ)."""
+    return isinstance(var, (Scalar, S1))
+
+
 def _zero_variations(variables):
     return {
-        _variation_key(v): 0.0 if isinstance(v, Scalar) else np.zeros((3, 1)) for v in variables
+        _variation_key(v): 0.0 if _scalar_variation(v) else np.zeros((3, 1)) for v in variables
     }
 
 
@@ -518,7 +591,9 @@ class _Coordinates:
 
     ``state`` maps ``("q", var)`` and ``("v", var)`` to the coordinates the finite
     differences act on: ``(s, ṡ)`` on R, ``(x, ẋ)`` on R³, ``(q, q̇)`` on S² with ``|q| = 1``
-    and ``q · q̇ = 0``, ``(R, Ω)`` on SO(3), and ``(p, ṗ)`` for a prescribed parameter.
+    and ``q · q̇ = 0``, ``(q, q̇)`` on S¹ with also ``q · e = 0`` and ``q̇ = ω e × q``,
+    ``(R, Ω)`` on SO(3), and ``(p, ṗ)`` for a prescribed parameter. ``axes`` holds the
+    value of the axis of every S¹ point (a random unit vector, drawn once).
     ``rate`` maps the same keys to their time derivative at the point, so that
     ``d/dt f = (f(state + h·rate) − f(state − h·rate)) / 2h``. ``accel`` holds the
     acceleration leaves the library equation refers to (``ω̇``, ``Ω̇``, ``s̈``, ``ẍ``, ``p̈``).
@@ -527,13 +602,21 @@ class _Coordinates:
     def __init__(self, variables, params, rng):
         self.vars = _config_vars(variables)
         self.params = list(params)
-        self.state, self.rate, self.accel = {}, {}, {}
+        self.state, self.rate, self.accel, self.axes = {}, {}, {}, {}
         for var in self.vars + self.params:
             self._sample(var, rng)
 
     def _sample(self, var, rng):
         kq, kv = ("q", var), ("v", var)
-        if isinstance(var, S2):
+        if isinstance(var, S1):
+            e = _axis_value(var, self.axes, rng)
+            q = _circle_point(e, rng)
+            w, wd = float(rng.normal()), float(rng.normal())
+            t = _cross(e, q)
+            self.state[kq], self.state[kv] = q, w * t
+            self.rate[kq], self.rate[kv] = w * t, wd * t - w * w * q
+            self.accel[_dkey(var.get_tangent_vector())] = wd
+        elif isinstance(var, S2):
             q = rng.normal(size=(3, 1))
             q /= np.linalg.norm(q)
             w, wd = _perp(None, q, rng), _perp(None, q, rng)
@@ -553,10 +636,14 @@ class _Coordinates:
 
     def env(self, state):
         """``Evaluator`` env (printed-name keys) of the configuration and velocity leaves."""
-        env = {}
+        env = dict(self.axes)
         for var in self.vars + self.params:
             q, v = state[("q", var)], state[("v", var)]
-            if isinstance(var, S2):
+            if isinstance(var, S1):  # ω = (e × q) · q̇
+                e = self.axes[str(var.axis)]
+                env[str(var)] = q
+                env[str(var.get_tangent_vector())] = float((_cross(e, q).T @ v)[0, 0])
+            elif isinstance(var, S2):
                 env[str(var)], env[str(var.get_tangent_vector())] = q, _cross(q, v)
             elif isinstance(var, SO3):
                 env[str(var)], env[str(var.get_tangent_vector())] = q, v
@@ -631,12 +718,13 @@ def _forcing(inf_work, consts, co, var, rng):
     if not _is_expr(inf_work):
         return 0.0
     key = _variation_key(var)
-    basis = [1.0] if isinstance(var, Scalar) else [np.eye(3)[:, [k]] for k in range(3)]
+    scalar = _scalar_variation(var)
+    basis = [1.0] if scalar else [np.eye(3)[:, [k]] for k in range(3)]
     f = []
     for b in basis:
         env = {**consts, **_zero_variations(co.vars), key: b}
         f.append(float(Evaluator(env=env, rng=rng)(inf_work)))
-    return f[0] if isinstance(var, Scalar) else np.array(f).reshape(3, 1)
+    return f[0] if scalar else np.array(f).reshape(3, 1)
 
 
 def _euler_lagrange(lnum, co, var, h):
@@ -645,6 +733,8 @@ def _euler_lagrange(lnum, co, var, h):
     R, R³: ``g = d/dt ∂L/∂v − ∂L/∂q``;
     S²:    ``g`` of the constrained Lagrangian ``L̃(q, q̇) = L(q, q × q̇)``, mapped to the
            coefficient of ``ξ`` by ``−q × g`` and compared on the tangent plane;
+    S¹:    ``g`` of ``L̃(q, q̇) = L(q, (e × q)·q̇)``, mapped to the coefficient of ``γ`` by
+           ``−(e × q)·g`` (``δq = γ e × q``), a scalar;
     SO(3): ``g = d/dt ∂L/∂Ω − (∂L/∂Ω) × Ω − vee(A − Aᵀ)`` with ``A = Rᵀ ∂L/∂R``.
     """
     kq, kv = ("q", var), ("v", var)
@@ -655,6 +745,9 @@ def _euler_lagrange(lnum, co, var, h):
         g = _ddt(dL_dv, co, h) - _cross(dL_dv(co.state), Om) - vee(A - A.T)
         return -g, np.eye(3)
     g = _ddt(dL_dv, co, h) - _grad(lnum, co.state, kq, h)
+    if isinstance(var, S1):
+        t = _cross(co.axes[str(var.axis)], co.state[kq])
+        return -float((t.T @ g)[0, 0]), 1.0
     if isinstance(var, S2):
         q = co.state[kq]
         return -_cross(q, g), np.eye(3) - q @ q.T
