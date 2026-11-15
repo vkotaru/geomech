@@ -1,0 +1,50 @@
+{
+ "name": "quadrotor_hover",
+ "system": "quadrotor",
+ "kwargs": {},
+ "description": "Hover at the origin from a 1.9 m offset and a 60\u00b0 yaw error.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  19.62,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 12,
+ "dropped": [],
+ "controllability_rank": 12,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.9236175696910998,
+ "closed_loop_min_damping": 0.706567891437243,
+ "closed_loop_fastest": 50.025445617078915,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.0029373248107731342,
+ "initial_error": {
+  "position": 1.8708286933869707,
+  "attitude": 1.0471975511965976,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 2.7634618980810046,
+ "final_normalized_error": 5.984501616025211e-05,
+ "max_normalized_error": 1.0,
+ "settling_time": 3.7800000000000002,
+ "converged": true,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 1.581138830084189,
+   "peak_abs": 20.76018143701866,
+   "unit": "N"
+  },
+  "M": {
+   "peak_deviation": 4.756221259385211,
+   "peak_abs": 4.756221259385211,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 9.524715990770979e-14,
+ "energy_change": -9.812459880843313
+}

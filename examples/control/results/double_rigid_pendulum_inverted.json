@@ -1,0 +1,52 @@
+{
+ "name": "double_rigid_pendulum_inverted",
+ "system": "double_rigid_pendulum",
+ "kwargs": {},
+ "description": "Both links upright; body moments M\u2081, M\u2082; 10\u00b0 and 15\u00b0 rotations.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 12,
+ "dropped": [],
+ "controllability_rank": 12,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -2.9742556991129723,
+ "closed_loop_min_damping": 0.9968402997870258,
+ "closed_loop_fastest": 909.0854090077192,
+ "library_lqr": true,
+ "horizon": 8.0,
+ "dt": 0.001,
+ "derive_seconds": 0.0193353951908648,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.31464370553163823,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 4.428589663933963,
+ "final_normalized_error": 1.5086757936918425e-10,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.5,
+ "converged": true,
+ "peak_inputs": {
+  "M1": {
+   "peak_deviation": 4.322245970270509,
+   "peak_abs": 4.322245970270509,
+   "unit": "N\u00b7m"
+  },
+  "M2": {
+   "peak_deviation": 1.809200752420838,
+   "peak_abs": 1.809200752420838,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 4.068283944079276e-14,
+ "energy_change": 0.29188034612271707
+}

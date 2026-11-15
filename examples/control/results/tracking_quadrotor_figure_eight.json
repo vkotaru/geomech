@@ -1,0 +1,30 @@
+{
+ "name": "quadrotor_figure_eight",
+ "system": "quadrotor",
+ "horizon": 16.0,
+ "dt": 0.001,
+ "reference_radius": 1.5206932193820393,
+ "reference_speed_max": 1.6660810018919177,
+ "initial_position_error": 0.5196152422706632,
+ "initial_attitude_error": 0.3490658503988659,
+ "rms_position_error_second_half": 5.197738536321843e-05,
+ "final_position_error": 7.239688249585659e-08,
+ "final_attitude_error": 4.126549774757229e-09,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 0.9208102391521855,
+   "unit": "N"
+  },
+  "M": {
+   "peak_deviation": 1.1363917503002485,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 2.172000206910032e-14,
+ "flatness_checks": {
+  "kinematic_error_Rdot": 8.332778911324112e-13,
+  "integral_error_Omega": 1.3359344741559198e-09,
+  "max_Omega": 0.3146066560850285,
+  "max_Omega_dot": 0.46020137399028993
+ }
+}

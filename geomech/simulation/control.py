@@ -42,7 +42,13 @@ from geomech.simulation.model import (
     solve_accelerations,
 )
 
-__all__ = ["lqr", "LQRController", "tangent_basis"]
+__all__ = [
+    "lqr",
+    "LQRController",
+    "tangent_basis",
+    "reduced_linearization",
+    "ReducedLinearization",
+]
 
 
 def tangent_basis(q) -> np.ndarray:
@@ -207,19 +213,9 @@ def lqr(
     if module is not None:
         _check_same_layout(model, model_of(module).require("mass", "bias", "input_matrix"))
 
-    T, bases, labels = _reduction(model, lin, x_eq)
-    M = lin_module.M_lin(x_eq, a_eq, u_eq, p)
-    A = lin_module.A_lin(x_eq, a_eq, u_eq, p)
-    B = lin_module.B_lin(x_eq, a_eq, u_eq, p)
-    Mr = T.T @ M @ T
-    try:
-        Abar = np.linalg.solve(Mr, T.T @ A @ T)
-        Bbar = np.linalg.solve(Mr, T.T @ B)
-    except np.linalg.LinAlgError as exc:
-        raise np.linalg.LinAlgError(
-            f"lqr: the reduced M_lin is singular at x_eq (condition number"
-            f" {np.linalg.cond(Mr):.3g})"
-        ) from exc
+    red = _reduce(lin_module, model, lin, x_eq, a_eq, u_eq, p, "lqr")
+    T, bases, labels, A = red.T, red.bases, red.labels, red.A_full
+    Abar, Bbar = red.A, red.B
     n = T.shape[1]
     Qm = _weight(Q, n, "Q")
     Rm = _weight(R, model.n_inputs, "R")
@@ -236,6 +232,90 @@ def lqr(
     P = solve_continuous_are(Abar, Bbar, Qm, Rm)
     K = np.linalg.solve(Rm, Bbar.T @ P)
     return LQRController(K, P, Abar, Bbar, T, x_eq, u_eq, labels, model, bases)
+
+
+@dataclass
+class ReducedLinearization:
+    """The linearization ``δẋ = A δx + B δu`` in the reduced coordinates of ``lqr``.
+
+    Attributes:
+        A, B: ``Mr⁻¹ Tᵀ A_lin T`` and ``Mr⁻¹ Tᵀ B_lin`` with ``Mr = Tᵀ M_lin T``.
+        T: ``(n_perturbation, n_reduced)``, block diagonal: ``I`` for the R, R³ and SO(3)
+            perturbations, the tangent basis of each S² point for its ``ξ`` and ``δω``.
+        labels: the name of each reduced coordinate (``"xi_q[0]"``, ``"eta_R[2]"``, …),
+            configuration coordinates first, then velocities.
+        bases: ``{printed S² symbol: 3×2 tangent basis}`` at the state.
+        M_full, A_full, B_full: ``M_lin``, ``A_lin``, ``B_lin`` evaluated at the state.
+    """
+
+    A: np.ndarray
+    B: np.ndarray
+    T: np.ndarray
+    labels: list
+    bases: dict
+    M_full: np.ndarray = field(repr=False)
+    A_full: np.ndarray = field(repr=False)
+    B_full: np.ndarray = field(repr=False)
+
+
+def reduced_linearization(
+    lin_module: Any,
+    x: ArrayLike,
+    u: ArrayLike,
+    p: dict,
+    *,
+    a: ArrayLike | None = None,
+    basis=tangent_basis,
+    tol: float = STATE_TOL,
+) -> ReducedLinearization:
+    """The generated linearization at ``(x, a, u)`` in the reduced coordinates of ``lqr``.
+
+    This is the matrix pair ``lqr`` designs with: ``M_lin``, ``A_lin``, ``B_lin`` of
+    *lin_module* evaluated at the state *x* (checked like ``simulate``'s ``x0``), the
+    accelerations *a* (zeros by default) and the input *u*, reduced with ``T`` (the S²
+    perturbations ``ξ`` and ``δω`` in the 2-D basis ``basis(q)``, ``tangent_basis`` by
+    default) to ``A = Mr⁻¹ Tᵀ A_lin T`` and ``B = Mr⁻¹ Tᵀ B_lin``, ``Mr = Tᵀ M_lin T``.
+    Use it to check controllability or to design another controller with the same
+    coordinates as ``LQRController.error``.
+
+    The reduction assumes ``δω ⊥ q``, a constant basis and an S² equation residual of zero,
+    which hold at an equilibrium (``ω = 0``). Along a moving reference the reduced
+    matrices miss three terms: the time-varying basis (``−Tᵀ M Ṫ``), the normal component
+    of the velocity perturbation (``q·δω = −(q × ω)·ξ``) and the row projection of the
+    equation's normal residual ``E_r = q (q·E_r)`` (``(q·E_r) Bᵀ q̂ B`` in the ξ columns of
+    the S² rows); see ``examples/control/tracking.py`` for the corrected time-varying
+    version.
+
+    Raises ``np.linalg.LinAlgError`` when the reduced ``M_lin`` is singular and the
+    errors of ``lqr`` for a module without ``LINEARIZATION`` or with a layout mismatch.
+    """
+    model = model_of(lin_module).require("M_lin", "A_lin", "B_lin")
+    lin = getattr(lin_module, "LINEARIZATION", None)
+    if not isinstance(lin, dict):
+        raise TypeError(
+            "reduced_linearization: the module has no LINEARIZATION; generate it from linearize"
+        )
+    x = check_state(lin_module, x, tol=tol, what="x")
+    u = model.as_input(u, "u")
+    a = np.zeros(model.n_accel) if a is None else np.asarray(a, float).reshape(-1)
+    return _reduce(lin_module, model, lin, x, a, u, p, "reduced_linearization", basis)
+
+
+def _reduce(lin_module, model, lin, x, a, u, p, caller, basis=tangent_basis):
+    T, bases, labels = _reduction(model, lin, x, basis)
+    M = lin_module.M_lin(x, a, u, p)
+    A = lin_module.A_lin(x, a, u, p)
+    B = lin_module.B_lin(x, a, u, p)
+    Mr = T.T @ M @ T
+    try:
+        Abar = np.linalg.solve(Mr, T.T @ A @ T)
+        Bbar = np.linalg.solve(Mr, T.T @ B)
+    except np.linalg.LinAlgError as exc:
+        raise np.linalg.LinAlgError(
+            f"{caller}: the reduced M_lin is singular at x_eq (condition number"
+            f" {np.linalg.cond(Mr):.3g})"
+        ) from exc
+    return ReducedLinearization(Abar, Bbar, T, labels, bases, M, A, B)
 
 
 def _names(symbols) -> str:
@@ -306,7 +386,7 @@ def _check_equilibrium(lin_model, module, x_eq, u_eq, a_eq, p, tol, eq_tol, AT) 
         )
 
 
-def _reduction(model: Model, lin: dict, x_eq: np.ndarray):
+def _reduction(model: Model, lin: dict, x_eq: np.ndarray, basis=tangent_basis):
     """``T``, the S² bases and the reduced labels; checks the LINEARIZATION order.
 
     The rows, states and inputs of ``LINEARIZATION`` are matched to the layout by symbol
@@ -331,7 +411,7 @@ def _reduction(model: Model, lin: dict, x_eq: np.ndarray):
             " to linearize"
         )
     n_full = states[-1]["slice"][1]
-    bases = {v.key: tangent_basis(x_eq[v.cfg]) for v in model.s2}
+    bases = {v.key: np.asarray(basis(x_eq[v.cfg]), dtype=float) for v in model.s2}
     cols, labels = [], []
     for k, entry in enumerate(states):
         var = model.variables[k % nv]

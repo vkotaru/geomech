@@ -1,0 +1,80 @@
+{
+ "name": "multi_quadrotor_point_mass_hover",
+ "system": "multi_quadrotor_point_mass",
+ "kwargs": {
+  "n_quads": 3
+ },
+ "description": "Three quadrotors hold a point mass with cables 0.5 rad from vertical; each thrust balances its weight and the cable tension m_L g / (3 cos 0.5).",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 2.8972180866874617e-16,
+ "u_eq": [
+  16.374379817430253,
+  0.0,
+  0.0,
+  5.911748362002154e-31,
+  16.374379817430246,
+  0.0,
+  0.0,
+  0.0,
+  16.374379817430253,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 36,
+ "dropped": [],
+ "controllability_rank": 36,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.45012817514717085,
+ "closed_loop_min_damping": 0.4794111326172808,
+ "closed_loop_fastest": 50.11593301476673,
+ "library_lqr": true,
+ "horizon": 12.0,
+ "dt": 0.001,
+ "derive_seconds": 0.053405012004077435,
+ "initial_error": {
+  "position": 0.41231056256176607,
+  "attitude": 0.1391731009600654,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 12.895881786942482,
+ "final_normalized_error": 0.002350076705827836,
+ "max_normalized_error": 1.0,
+ "settling_time": 6.79,
+ "converged": true,
+ "peak_inputs": {
+  "f1": {
+   "peak_deviation": 0.22066395894110258,
+   "peak_abs": 16.415547215991463,
+   "unit": "N"
+  },
+  "M1": {
+   "peak_deviation": 0.2760074921062988,
+   "peak_abs": 0.2760074921062988,
+   "unit": "N\u00b7m"
+  },
+  "f2": {
+   "peak_deviation": 0.07188514584724004,
+   "peak_abs": 16.446264963277486,
+   "unit": "N"
+  },
+  "M2": {
+   "peak_deviation": 0.22001121251771158,
+   "peak_abs": 0.22001121251771158,
+   "unit": "N\u00b7m"
+  },
+  "f3": {
+   "peak_deviation": 0.1052533864042644,
+   "peak_abs": 16.394344253383633,
+   "unit": "N"
+  },
+  "M3": {
+   "peak_deviation": 0.2070765805622688,
+   "peak_abs": 0.2070765805622688,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.4893832747552172e-13,
+ "energy_change": -8.758105425354316
+}

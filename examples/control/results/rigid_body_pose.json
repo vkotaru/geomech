@@ -1,0 +1,52 @@
+{
+ "name": "rigid_body_pose",
+ "system": "rigid_body",
+ "kwargs": {},
+ "description": "6-DOF position and attitude regulation, force F and moment M; 1.2 m and 90\u00b0.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  19.62,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 12,
+ "dropped": [],
+ "controllability_rank": 12,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.9236175696911013,
+ "closed_loop_min_damping": 0.7345260177502941,
+ "closed_loop_fastest": 3.996378098501523,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.00261506624519825,
+ "initial_error": {
+  "position": 1.224744871391589,
+  "attitude": 1.5707963267948966,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 2.723347180057317,
+ "final_normalized_error": 7.285908338430971e-05,
+ "max_normalized_error": 1.0,
+ "settling_time": 3.93,
+ "converged": true,
+ "peak_inputs": {
+  "F": {
+   "peak_deviation": 3.1622776601683817,
+   "peak_abs": 19.93458732911174,
+   "unit": "N"
+  },
+  "M": {
+   "peak_deviation": 4.967294132898046,
+   "peak_abs": 4.967294132898046,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 5.559519616448452e-14,
+ "energy_change": -9.809794666296275
+}

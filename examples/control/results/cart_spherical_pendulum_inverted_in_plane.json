@@ -1,0 +1,51 @@
+{
+ "name": "cart_spherical_pendulum_inverted_in_plane",
+ "system": "cart_spherical_pendulum",
+ "kwargs": {},
+ "description": "3-D cart-pole upright with the rail force only. NOT stabilizable: the pendulum mode out of the rail's vertical plane is uncontrollable and unstable. LQR on the controllable (in-plane) subspace; the perturbation is in-plane.",
+ "notes": "Converges only because the out-of-plane perturbation is exactly zero; a horizon of a few seconds keeps round-off from growing visibly (rate \u221a(g/l)).",
+ "stabilizable": false,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0
+ ],
+ "n_reduced": 6,
+ "dropped": [],
+ "controllability_rank": 4,
+ "uncontrollable_eigenvalues": [
+  [
+   -3.5017852589786247,
+   0.0
+  ],
+  [
+   3.5017852589786256,
+   0.0
+  ]
+ ],
+ "closed_loop_max_real": -1.511868185886606,
+ "closed_loop_min_damping": 0.7913095024504042,
+ "closed_loop_fastest": 4.785563628371016,
+ "library_lqr": false,
+ "horizon": 6.0,
+ "dt": 0.001,
+ "derive_seconds": 0.008767093997448683,
+ "initial_error": {
+  "position": 0.3,
+  "attitude": 0.17364817766693033,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 2.36393263284117,
+ "final_normalized_error": 0.00021582590199401634,
+ "max_normalized_error": 1.0,
+ "settling_time": 3.0100000000000002,
+ "converged": true,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 21.297724413124243,
+   "peak_abs": 21.297724413124243,
+   "unit": "N"
+  }
+ },
+ "constraint_drift": 2.220446049250313e-15,
+ "energy_change": 0.059614376929796986
+}

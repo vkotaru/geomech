@@ -7,6 +7,23 @@ All notable changes to `geomech` are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- `geomech.simulation.reduced_linearization(lin_module, x, u, p, *, a=None, basis=...)`
+  and `ReducedLinearization`: the reduced linearization that `lqr` designs with (`A`, `B`,
+  `T`, labels, S² bases and the full matrices), without solving a Riccati equation; `lqr`
+  now calls it (no change of behaviour). `model_of` is exported from
+  `geomech.simulation`. Documented in `docs/simulation.md`.
+- `examples/control/`: 21 closed-loop LQR examples on the systems of `geomech.systems`
+  (inverted pendulums and chains, attitude control, a rest-to-rest spacecraft slew with
+  reaction wheels, biped balance, quadrotors with and without loads, teams of
+  quadrotors), each designed from the variation-based linearization, checked for
+  controllability (the 3-D cart-pole is reported as not stabilizable; the spacecraft's
+  conserved momentum as uncontrollable) and simulated with the nonlinear model
+  (`run.py`; `README.md` with the results, per-group initial errors, settling times on the
+  normalized LQR cost-to-go, peak inputs per unit); time-varying LQR tracking of a
+  quadrotor figure-eight (flatness reference with analytic derivatives) and of a
+  quadrotor with a suspended load (time-varying S² reduction checked against finite
+  differences) in `tracking.py`. Tested by `tests/test_control_examples.py`; CI lints
+  `examples/control/`.
 - Two systems in `geomech.systems`:
   - `spacecraft_reaction_wheels` (SO(3) × R³, 6 dof): a rigid spacecraft with three
     reaction wheels on the body axes, inputs the wheel motor torques; compared with

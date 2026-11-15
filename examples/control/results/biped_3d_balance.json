@@ -1,0 +1,52 @@
+{
+ "name": "biped_3d_balance",
+ "system": "biped_3d",
+ "kwargs": {},
+ "description": "Biped balance: stance leg vertical, swing leg held 20\u00b0 forward by the hip torque, the ankle torque balancing the stance leg; the stance leg starts 5\u00b0 and the swing leg 6.6\u00b0 from the equilibrium.",
+ "notes": "Contact is not modelled: the stance foot is a spherical joint that can apply any ankle torque, and the swing foot may pass through the ground.",
+ "stabilizable": true,
+ "equilibrium_residual": 4.235449495044442e-16,
+ "u_eq": [
+  0.0,
+  8.388044015062022,
+  -1.0110972804999003e-15,
+  0.0,
+  8.388044015062023,
+  -1.1855189283131284e-15
+ ],
+ "n_reduced": 12,
+ "dropped": [],
+ "controllability_rank": 12,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.8824917903138138,
+ "closed_loop_min_damping": 0.2137245352433889,
+ "closed_loop_fastest": 320.12211043001366,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.04888490494340658,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.14516313475059692,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 5.707920658867806,
+ "final_normalized_error": 1.0848481125798788e-05,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.87,
+ "converged": true,
+ "peak_inputs": {
+  "M_H": {
+   "peak_deviation": 5.039371759494948,
+   "peak_abs": 13.42741577455697,
+   "unit": "N\u00b7m"
+  },
+  "M_A": {
+   "peak_deviation": 20.405163511782415,
+   "peak_abs": 20.405163511782415,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 6.932047553177789e-14,
+ "energy_change": -0.07699689717443903
+}

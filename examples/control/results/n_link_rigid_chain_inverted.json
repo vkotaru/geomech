@@ -1,0 +1,62 @@
+{
+ "name": "n_link_rigid_chain_inverted",
+ "system": "n_link_rigid_chain",
+ "kwargs": {
+  "n_links": 3
+ },
+ "description": "Three rigid links upright, joint torques \u03c4\u2081 (ground\u2013link 1), \u03c4\u2082, \u03c4\u2083; 8\u00b0, 10\u00b0, 12\u00b0 rotations.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 18,
+ "dropped": [],
+ "controllability_rank": 18,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -2.420622528363742,
+ "closed_loop_min_damping": 0.9999773884970438,
+ "closed_loop_fastest": 600.9600033244074,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.06066711898893118,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.3063040406104794,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 9.884018235374242,
+ "final_normalized_error": 2.8027404210766706e-11,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.57,
+ "converged": true,
+ "peak_inputs": {
+  "\\tau_1": {
+   "peak_deviation": 5.871187066541214,
+   "peak_abs": 5.871187066541214,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_2": {
+   "peak_deviation": 3.4132800152199847,
+   "peak_abs": 3.4132800152199847,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_3": {
+   "peak_deviation": 0.7850096840296903,
+   "peak_abs": 0.7850096840296903,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 5.0943708716231734e-14,
+ "energy_change": 0.34823541943007896
+}

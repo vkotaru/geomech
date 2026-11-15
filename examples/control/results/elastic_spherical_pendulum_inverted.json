@@ -1,0 +1,50 @@
+{
+ "name": "elastic_spherical_pendulum_inverted",
+ "system": "elastic_spherical_pendulum",
+ "kwargs": {},
+ "description": "Upright elastic pendulum at the compressed spring length l = l\u2080 \u2212 m g / k; inputs f_l (along the rod) and f_q (moment); 20\u00b0 tilt, +0.1 m.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 6,
+ "dropped": [],
+ "controllability_rank": 6,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.5589299130829204,
+ "closed_loop_min_damping": 0.08823703048756545,
+ "closed_loop_fastest": 6.334414360892233,
+ "library_lqr": true,
+ "horizon": 8.0,
+ "dt": 0.001,
+ "derive_seconds": 0.0038063270039856434,
+ "initial_error": {
+  "position": 0.09999999999999998,
+  "attitude": 0.3420201433256687,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 2.8144965916872025,
+ "final_normalized_error": 0.002766297963155179,
+ "max_normalized_error": 1.0,
+ "settling_time": 4.38,
+ "converged": true,
+ "peak_inputs": {
+  "f_l": {
+   "peak_deviation": 0.5266713969051909,
+   "peak_abs": 0.5266713969051909,
+   "unit": "N"
+  },
+  "f_q": {
+   "peak_deviation": 5.285998392151036,
+   "peak_abs": 5.285998392151036,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 7.105427357601002e-15,
+ "energy_change": 0.3056987440876142
+}

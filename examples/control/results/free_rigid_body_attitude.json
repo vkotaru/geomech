@@ -1,0 +1,44 @@
+{
+ "name": "free_rigid_body_attitude",
+ "system": "free_rigid_body",
+ "kwargs": {},
+ "description": "Attitude stabilisation to R = I from a 110\u00b0 rotation at rest; body moment M.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 6,
+ "dropped": [],
+ "controllability_rank": 6,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -1.664023388926907,
+ "closed_loop_min_damping": 0.7829038816247856,
+ "closed_loop_fastest": 2.8874514581492727,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.0013763541355729103,
+ "initial_error": {
+  "position": null,
+  "attitude": 1.9198621771937632,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 2.4601074839010835,
+ "final_normalized_error": 5.77958202410809e-08,
+ "max_normalized_error": 1.0,
+ "settling_time": 2.27,
+ "converged": true,
+ "peak_inputs": {
+  "M": {
+   "peak_deviation": 4.957062826189981,
+   "peak_abs": 4.957062826189981,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.0702629065403814e-13,
+ "energy_change": 1.1049310221653994e-14
+}
