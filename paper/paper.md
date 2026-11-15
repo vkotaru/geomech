@@ -1,5 +1,5 @@
 ---
-title: 'geomech: symbolic, numerically verified equations of motion on smooth manifolds in Python'
+title: 'geomech: Coordinate-free equations of motion on manifolds for robotics'
 tags:
   - Python
   - geometric mechanics
