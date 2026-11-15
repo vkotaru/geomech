@@ -31,6 +31,14 @@ Lagrangian: `sys.L`, `sys.dW`, `sys.variables`, `sys.inputs` go into the steps b
 `sys.scene(layout)` the `Scene`. Still run step 4 (`check_eom`) and report it, and cite
 `sys.reference`. Write the model by hand only for a system that is not in the list.
 
+## Models of n bodies
+
+When the user asks for a chain, cable or team of *n* bodies with n left general, use
+`geomech.indexed` (`Family`, `Sum`, `IndexedVariables`, `compute_indexed_eom`; the five
+models in `geomech.indexed.systems`) instead of fixing n. Verify the generic equation
+with `eom.instantiate(k)` and `check_eom` on `model.unroll(k)` for several k, and say
+which k were checked. See `docs/indexed.md`.
+
 ## Procedure
 
 Follow the steps in order. Each call is exact; `reference.md` lists the API and the

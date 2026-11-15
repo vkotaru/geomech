@@ -916,7 +916,8 @@ def check_eom(
         The largest error over trials and variables, each measured as
         ``max |P (E_lib − E_true)| / max(1, |P E_true|)`` with ``P`` the tangent projector
         on S² and the identity elsewhere. A correct equation of order one gives ~1e-7;
-        a wrong sign or a dropped term of order one gives 0.1 or more.
+        a wrong sign or a dropped term of order one gives 0.02 or more (the worst measured
+        over the pinned systems; see docs/numeric-verification.md).
 
     Resolution. The error is relative to the size of the whole equation, so a term that
     is small next to a large one (a stiff spring ``k = 1e7`` next to gravity, physical

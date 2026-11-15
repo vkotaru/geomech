@@ -6,6 +6,30 @@ All notable changes to `geomech` are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Sums over a symbolic number of bodies** (`geomech.indexed`). A `Family` holds the
+  symbols `q_1, …, q_n` of one kind (`Family(S2, "q")`, `q[i]`), and
+  `Sum(j, lower, upper, body)` is a finite sum whose bounds may be `n`, another index or
+  a strict `i ± 1` (`x_i = Σ_{j≤i} l_j q_j` is `Sum(j, 1, i, l[j] * q[j])`). Sums
+  multiply (a product of two sums is a double sum over distinct indices), and support
+  `dot`, `cross`, `t_diff` and `T`. `compute_indexed_eom(L, dW, IndexedVariables(...))`
+  derives the equation of the i-th member of each family with `i` and `n` symbolic, and
+  the equation of each ordinary variable with its sums over the families; mass sums such
+  as `Σ_{k ≥ max(i, j)} m_k` (the inertia `M_ij` of Lee et al. §5.3) come out of the
+  derivation. A sum is kept outside the expression tree as a list of terms (summand,
+  bound indices, order constraints), so every summand goes through the stages of
+  `compute_eom` unchanged; the coefficient of `ξ_j` under a bound `j` becomes a term of
+  the i-th equation by `j := i` (`docs/indexed.md`). `eq.to_latex()` prints nested
+  `\sum`; `eom.instantiate(n)` gives the `compute_eom` dictionary for one `n`, which
+  `check_eom`, `to_standard_form`, `linearize` and `generate_module` take unchanged.
+- Five generic-n models in `geomech.indexed.systems`: `spherical_chain`, `rigid_chain`
+  (body moments), `quadrotor_flexible_cable`, `multi_quadrotor_point_mass` and
+  `multi_quadrotor_rigid_load`. Each is verified with `check_eom` for n = 1, …, 6, and
+  removing any derived term fails the check; the spherical chain also matches Lee et al.
+  eq. 5.17 at every n tested.
+- `geomech.core.base.expressions.DeferredOperand`: `Expr` arithmetic returns
+  `NotImplemented` for such an operand, so `m * Sum(...)` is built by the sum.
+
 ## [1.0.0] — 2026-11-14
 
 First stable release; the version described in the JOSS paper (`paper/`).

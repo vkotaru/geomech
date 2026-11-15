@@ -56,6 +56,7 @@ examples
 :hidden:
 
 pipeline
+indexed
 vbl
 codegen
 simulation
@@ -88,5 +89,6 @@ api/codegen
 api/simulation
 api/viz
 api/systems
+api/indexed
 api/utils
 ```
