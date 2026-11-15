@@ -6,13 +6,15 @@ from the system's physical description, without the library's expressions:
 
 - the positions of the point masses and centres of mass as functions of the
   configuration; the kinetic energy is ``Σ ½ m |ẋ|²`` with ``ẋ`` by central differences
-  along the trajectory through the state (``q(t) = exp(t ω̂) q``, ``R(t) = R exp(t Ω̂)``,
-  ``x(t) = x + t ẋ``), plus ``½ Ωᵀ J_c Ω`` per rigid body with ``J_c`` about its centre of
-  mass (a pivot inertia is shifted to the centre of mass with the parallel-axis theorem);
+  along the trajectory through the state (``q(t) = exp(t ω̂) q`` on S²,
+  ``q(t) = exp(t ω ê) q`` on S¹, ``R(t) = R exp(t Ω̂)``, ``x(t) = x + t ẋ``), plus
+  ``½ Ωᵀ J_c Ω`` per rigid body with ``J_c`` about its centre of mass (a pivot inertia is
+  shifted to the centre of mass with the parallel-axis theorem);
 - the potential: ``Σ m g (height)`` with gravity along −e₃, plus the springs;
 - the virtual work: each force times the central difference of its application point
-  along a random admissible variation (``δq = ξ × q``, ``δR = R η̂``), each body moment
-  ``M·η`` and each moment about a pivot ``f·ξ`` (the work of a moment on the rotation ξ).
+  along a random admissible variation (``δq = ξ × q``, ``δq = γ e × q``, ``δR = R η̂``),
+  each body moment ``M·η`` and each moment about a pivot ``f·ξ`` (the work of a moment on
+  the rotation ξ).
 
 At random admissible states and the default parameters, ``L`` and ``δW`` evaluated with
 ``geomech.numeric.Evaluator`` agree with the model to 1e-8 relative to ``max(1, |model|)``.
@@ -23,7 +25,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from geomech.core.base import S2, SO3, Scalar
+from geomech.core.base import S1, S2, SO3, Scalar
 from geomech.numeric import Evaluator, expm_so3, sample_state
 from geomech.systems import get, names
 
@@ -50,7 +52,7 @@ def kinematic_keys(variables):
     for v in variables.scalars:
         out.append((v, str(v), str(v.t_diff())))
     for v in variables.vectors:
-        vel = v.get_tangent_vector() if isinstance(v, S2) else v.t_diff()
+        vel = v.get_tangent_vector() if isinstance(v, (S1, S2)) else v.t_diff()
         out.append((v, str(v), str(vel)))
     for v in variables.matrices:
         out.append((v, str(v), str(v.get_tangent_vector())))
@@ -64,6 +66,8 @@ def flow(keys, env, t, direction=None):
         d = env[kv] if direction is None else direction[kq]
         if isinstance(var, Scalar):
             cfg[kq] = float(env[kq]) + t * float(d)
+        elif isinstance(var, S1):  # the rotation about the axis by the angle t·ω (or t·γ)
+            cfg[kq] = expm_so3(t * float(d) * col(env[str(var.axis)])) @ col(env[kq])
         elif isinstance(var, S2):
             cfg[kq] = expm_so3(t * col(d)) @ col(env[kq])
         elif isinstance(var, SO3):
@@ -103,7 +107,7 @@ class Model:
     def body_moment(self, *pairs):
         self.moments = lambda u: [(u[m], k) for m, k in pairs]
 
-    # ---- R, R³, S²
+    # ---- R, R³, S¹, S²
     def point_mass(self, n):
         self.points = lambda c, t: [(self.v("m"), c["x"])]
         self.forces = lambda c, u: [(u["F"], lambda c: c["x"])]
@@ -112,6 +116,15 @@ class Model:
         self.points = lambda c, t: [(self.v("m"), c["x"] * np.array([1.0, 0, 0]))]
         self.springs = lambda c: 0.5 * self.v("k") * c["x"] ** 2
         self.scalar_forces = lambda u: [(u["f"], "x")]
+
+    def planar_pendulum(self, n):
+        # τ is the moment about the pivot axis: its work on the rotation γ e₂ is τ γ
+        self.points = lambda c, t: [(self.v("m"), self.v("l") * c["q"])]
+        self.scalar_forces = lambda u: [(u["\\tau"], "q")]
+
+    def double_planar_pendulum(self, n):
+        self.points = self._chain(2)
+        self.scalar_forces = lambda u: [(u["\\tau_1"], "q1"), (u["\\tau_2"], "q2")]
 
     def spherical_pendulum(self, n):
         self.points = lambda c, t: [(self.v("m"), self.v("l") * c["q"])]
@@ -158,6 +171,10 @@ class Model:
             (self.v("m"), c["s"] * e1 + self.v("l") * c["q"]),
         ]
         self.forces = lambda c, u: [(u["f"] * e1, lambda c: c["s"] * e1)]
+
+    def cart_planar_pendulum(self, n):
+        # the same bodies; q stays in the plane normal to e₂ along the S¹ flow
+        self.cart_spherical_pendulum(n)
 
     # ---- rigid bodies
     def free_rigid_body(self, n):
@@ -251,7 +268,7 @@ class Model:
         )
 
         def wheel(c, i):
-            return c["R"] @ expm_so3(c[f"\\theta_{i}"] * bs[i - 1])
+            return c["R"] @ expm_so3(self.wheel_angle(c, i) * bs[i - 1])
 
         def body_rate(Rp, Rm):  # body-frame angular velocity (or variation) by differences
             Rd = (Rp - Rm) / (2 * H)
@@ -275,6 +292,79 @@ class Model:
                 tau = u[f"\\tau_{i}"]
                 W += tau * b @ body_rate(wheel(vp, i), wheel(vm, i))  # +τ b on the wheel
                 W -= tau * b @ eta  # −τ b on the bus
+            return W
+
+        self.extra_T, self.extra_W = extra_T, extra_W
+
+    def wheel_angle(self, c, i):
+        """θᵢ of the R³ model, or the angle about bᵢ of the S¹ point qᵢ from a fixed
+        reference direction rᵢ ⊥ bᵢ (any rᵢ: the wheel is axisymmetric about bᵢ)."""
+        if f"\\theta_{i}" in c:
+            return c[f"\\theta_{i}"]
+        b, q = self.v(f"b{i}"), col(c[f"q_{i}"])
+        r = np.cross(b, [0.3, -0.5, 0.8])
+        r /= np.linalg.norm(r)
+        return np.arctan2(b @ np.cross(r, q), r @ q)
+
+    def spacecraft_reaction_wheels_s1(self, n):
+        """The bodies of ``spacecraft_reaction_wheels``; wheel i turned by the angle of
+        its S¹ point ``q_i`` about bᵢ (``wheel_angle``)."""
+        self.spacecraft_reaction_wheels(n)
+
+    def spacecraft_solar_arrays(self, n):
+        """The bodies of ``spacecraft_reaction_wheels_s1`` plus two panels. Panel k: attitude
+        ``R expm(φₖ âₖ)`` with φₖ the angle about aₖ of its S¹ point ``n_k`` from a fixed
+        reference normal ``n⁰ₖ ⊥ aₖ``; inertia ``Ia aₖaₖᵀ + In n⁰ₖn⁰ₖᵀ + Iw wₖwₖᵀ``
+        (``wₖ = aₖ × n⁰ₖ``) in its own frame; mass ``m_pk`` at ``R dₖ aₖ`` (measured, like
+        ``J_b``, from the composite centre of mass, which is at rest). The drive applies
+        +μₖ aₖ to the panel and −μₖ aₖ to the bus."""
+        self.spacecraft_reaction_wheels(n)
+        wheels_T, wheels_W = self.extra_T, self.extra_W
+        axes = [self.v(f"a{k}") for k in (1, 2)]
+
+        def frame(k):
+            a = axes[k - 1]
+            n0 = np.cross(a, [0.3, -0.5, 0.8])
+            n0 /= np.linalg.norm(n0)
+            return a, n0
+
+        def panel(c, k):
+            a, n0 = frame(k)
+            n = col(c[f"n_{k}"])
+            phi = np.arctan2(a @ np.cross(n0, n), n0 @ n)
+            return c["R"] @ expm_so3(phi * a)
+
+        def J0(k):
+            a, n0 = frame(k)
+            w = np.cross(a, n0)
+            return (
+                self.v(f"Ia_{k}") * np.outer(a, a)
+                + self.v(f"In_{k}") * np.outer(n0, n0)
+                + self.v(f"Iw_{k}") * np.outer(w, w)
+            )
+
+        def body_rate(Rp, Rm):
+            Om = (0.5 * (Rp + Rm)).T @ ((Rp - Rm) / (2 * H))
+            return np.array([Om[2, 1], Om[0, 2], Om[1, 0]])
+
+        self.points = lambda c, t: [
+            (self.v(f"m_p{k}"), c["R"] @ (self.v(f"d_{k}") * axes[k - 1])) for k in (1, 2)
+        ]
+
+        def extra_T(cp, cm):
+            T = wheels_T(cp, cm)
+            for k in (1, 2):
+                w = body_rate(panel(cp, k), panel(cm, k))
+                T += 0.5 * w @ J0(k) @ w
+            return T
+
+        def extra_W(c0, vp, vm, u):
+            W = wheels_W(c0, vp, vm, u)
+            eta = body_rate(vp["R"], vm["R"])
+            for k in (1, 2):
+                a, mu = axes[k - 1], u[f"\\mu_{k}"]
+                W += mu * a @ body_rate(panel(vp, k), panel(vm, k))  # +μ a on the panel
+                W -= mu * a @ eta  # −μ a on the bus
             return W
 
         self.extra_T, self.extra_W = extra_T, extra_W
@@ -375,7 +465,9 @@ def errors(s, name, seed):
     """Relative errors of L and δW against the model at one random admissible state."""
     rng = np.random.default_rng(seed)
     keys = kinematic_keys(s.variables)
-    env = sample_state(s.variables, list(s.inputs), rng)
+    # an S¹ point is drawn in the plane of its default axis; for the other systems the base
+    # env changes no random draw
+    env = sample_state(s.variables, list(s.inputs), rng, env=dict(s.params))
     for k, val in s.params.items():
         env[k] = float(val) if np.isscalar(val) else np.asarray(val, float).reshape(np.shape(val))
         if np.ndim(val) == 1:
@@ -398,6 +490,9 @@ def errors(s, name, seed):
         if isinstance(var, Scalar):
             d = float(rng.normal())
             venv[str(var.delta())] = d
+        elif isinstance(var, S1):  # δq = γ e × q
+            d = float(rng.normal())
+            venv[str(var.get_variation_vector())] = d
         else:
             d = rng.normal(size=3)
             if isinstance(var, S2):
@@ -524,3 +619,37 @@ def test_the_check_detects_a_missing_joint_reaction():
     no_spin = s.L - Dot(Om2, J2 * Om2) * HALF
     assert errors(_replaced(s, L=no_spin), "n_link_rigid_chain", 0)[0] > 1e-3
     assert max(errors(s, "n_link_rigid_chain", 0)) < TOL
+
+
+def test_the_check_detects_a_missing_panel_term():
+    """The solar-array spacecraft without the translational energy of panel 1, or without
+    the bus reaction of drive 1, fails the model check."""
+    from geomech import Cross, Dot
+    from geomech.core.base import HALF
+
+    s = get("spacecraft_solar_arrays")
+    assert max(errors(s, "spacecraft_solar_arrays", 0)) < TOL
+    Om = s.symbols["R"].get_tangent_vector()
+    a1, m1, d1 = s.symbols["a"][0], s.symbols["m_p"][0], s.symbols["d"][0]
+    v = Cross(Om, a1)
+    no_translation = s.L - HALF * m1 * d1 * d1 * Dot(v, v)
+    assert errors(_replaced(s, L=no_translation), "spacecraft_solar_arrays", 0)[0] > 1e-3
+    mu1, eta = s.symbols["mu"][0], s.symbols["R"].get_variation_vector()
+    no_reaction = s.dW + mu1 * Dot(a1, eta)
+    assert errors(_replaced(s, dW=no_reaction), "spacecraft_solar_arrays", 0)[1] > 1e-3
+
+
+def test_the_check_detects_a_wrong_planar_cart_pole():
+    """The planar cart-pole's Lagrangian without the cart–pendulum coupling ``m ṡ e₁·(l q̇)``
+    fails the model check, and so does the rail force applied to the bob instead of the
+    cart."""
+    from geomech import Dot
+
+    s = get("cart_planar_pendulum")
+    assert max(errors(s, "cart_planar_pendulum", 0)) < TOL
+    sym = s.symbols
+    m, l, e1, q, f = sym["m"], sym["l"], sym["e1"], sym["q"], sym["f"]
+    no_coupling = s.L - m * l * sym["s"].t_diff() * Dot(e1, q.t_diff())
+    assert errors(_replaced(s, L=no_coupling), "cart_planar_pendulum", 0)[0] > 1e-3
+    on_bob = s.dW + f * l * Dot(e1, q.delta())
+    assert errors(_replaced(s, dW=on_bob), "cart_planar_pendulum", 0)[1] > 1e-3

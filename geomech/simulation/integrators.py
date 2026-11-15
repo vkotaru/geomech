@@ -2,9 +2,10 @@
 
 Two methods:
 
-- ``"rkmk4"`` (default): fixed-step Runge–Kutta–Munthe-Kaas of order 4. S² and SO(3)
-  points are moved by rotations, so ``|q| = 1`` and ``RᵀR = I`` hold to round-off with no
-  projection; every other slot (R, R³ and all velocities) gets classical RK4.
+- ``"rkmk4"`` (default): fixed-step Runge–Kutta–Munthe-Kaas of order 4. S¹, S² and SO(3)
+  points are moved by rotations (an S¹ point about its axis ``e``), so ``|q| = 1`` and
+  ``RᵀR = I`` hold to round-off with no projection; every other slot (R, R³ and all
+  velocities) gets classical RK4.
 - ``"solve_ivp"``: ``scipy.integrate.solve_ivp`` (DOP853 by default) on the embedded
   state; the outputs are projected onto the manifold and the drift before projection is
   reported.
@@ -48,8 +49,8 @@ class Trajectory:
             ``method="solve_ivp"`` they are projected onto the manifold.
         constraint_drift: ``{name: (N,) array}`` of the constraint violations of the
             integrated (unprojected) states: ``"|q|-1"`` and ``"q.omega_q"`` (``|q·ω|``)
-            per S² point, ``"R^T R-I"`` (Frobenius norm) per SO(3) point; empty for a
-            system on R and R³ only.
+            per S² point, ``"|q|-1"`` and ``"q.e"`` (``|q·e|``) per S¹ point, ``"R^T R-I"``
+            (Frobenius norm) per SO(3) point; empty for a system on R and R³ only.
         method: ``"rkmk4"`` or ``"solve_ivp"``.
         p: the parameters used.
         module: the generated module.
@@ -106,10 +107,17 @@ class Trajectory:
         raise KeyError(f"Trajectory: no state slot {key!r} (slots: {names})")
 
 
-def constraint_drift(model: Model, states: np.ndarray) -> dict:
-    """``{name: (N,) array}`` of the manifold constraint violations of *states*."""
+def constraint_drift(model: Model, states: np.ndarray, p: dict | None = None) -> dict:
+    """``{name: (N,) array}`` of the manifold constraint violations of *states* (the
+    ``q·e`` of an S¹ point needs its axis in *p*)."""
     states = np.atleast_2d(states)
     out = {}
+    for var in model.s1:
+        q = states[:, var.cfg]
+        name = _name(model, var.key)
+        out[f"|{name}|-1"] = np.abs(np.linalg.norm(q, axis=1) - 1.0)
+        if p is not None and var.axis in p:
+            out[f"{name}.{_name(model, var.axis)}"] = np.abs(q @ model.axis(var, p))
     for var in model.s2:
         q, w = states[:, var.cfg], states[:, var.vel]
         name = _name(model, var.key)
@@ -130,12 +138,19 @@ def _name(model: Model, key: str) -> str:
     return key
 
 
-def project_state(model: Model, state: np.ndarray) -> np.ndarray:
+def project_state(model: Model, state: np.ndarray, p: dict | None = None) -> np.ndarray:
     """*state* projected onto the state manifold: each S² point normalised and its
-    velocity made tangent (``ω ← ω − (q·ω) q``), each SO(3) point replaced by its polar
-    factor (the nearest rotation, ``U Vᵀ`` of the SVD). A projected state passes
-    ``check_state``, so it can start another ``simulate``."""
+    velocity made tangent (``ω ← ω − (q·ω) q``), each S¹ point moved into the plane of its
+    axis (``q ← q − (q·e) e``, with ``e`` from *p*) and normalised, each SO(3) point
+    replaced by its polar factor (the nearest rotation, ``U Vᵀ`` of the SVD). A projected
+    state passes ``check_state``, so it can start another ``simulate``."""
     x = np.array(state, dtype=float)
+    for var in model.s1:
+        q = x[var.cfg]
+        if p is not None and var.axis in p:
+            e = model.axis(var, p)
+            q = q - (q @ e) * e
+        x[var.cfg] = q / np.linalg.norm(q)
     for var in model.s2:
         q = x[var.cfg] / np.linalg.norm(x[var.cfg])
         x[var.cfg] = q
@@ -236,7 +251,7 @@ def simulate(
     if method not in _METHODS:
         raise ValueError(f"simulate: method must be one of {_METHODS}, got {method!r}")
     model = model_of(module).require("mass", "bias", "input_matrix", "kinematics")
-    x0 = check_state(module, x0, tol=tol, what="x0")
+    x0 = check_state(module, x0, tol=tol, what="x0", p=p)
     t0, tf = _span(t_span)
     if not (dt > 0 and np.isfinite(dt)):
         raise ValueError(f"simulate: dt must be positive, got {dt}")
@@ -252,14 +267,14 @@ def simulate(
     solve_accelerations(model, x0, u0, p, check=True)  # singular system: raise now
     if method == "rkmk4":
         t, states, inputs = _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep, u0)
-        drift = constraint_drift(model, states)
+        drift = constraint_drift(model, states, p)
         info = {"n_steps": n_steps, "dt": (tf - t0) / n_steps, "nfev": 4 * n_steps}
     else:
         t, raw, info = _solve_ivp(
             model, x0, t0, tf, n_steps, p, ufun, rtol, atol, ivp_method, keep
         )
-        drift = constraint_drift(model, raw)
-        states = np.array([project_state(model, x) for x in raw])
+        drift = constraint_drift(model, raw, p)
+        states = np.array([project_state(model, x, p) for x in raw])
         # the stored states are interpolated, never evaluated during the run
         inputs = np.array([ufun(ti, x) for ti, x in zip(t, states)], dtype=float)
     info["output_every"] = int(output_every)
@@ -291,12 +306,15 @@ class _LieRK:
 
     An algebra element is ``(e, s, r)``: ``e`` the increments of the vector-space slots
     (R/R³ configuration entries, then every velocity entry), ``s`` one 3-vector per S²
-    point (the rotation acting on ``q`` from the left) and ``r`` one 3-vector per SO(3)
-    point (acting on ``R`` from the right).
+    point, then one per S¹ point (the rotation acting on ``q`` from the left; for S¹ a
+    multiple of its axis ``e``, so ``q`` turns about ``e`` by the angle ``ω h``) and ``r``
+    one 3-vector per SO(3) point (acting on ``R`` from the right).
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, p: dict):
         self.model = model
+        self.points = model.s2 + model.s1  # the points of the s component, in order
+        self.axes = np.array([model.axis(v, p) for v in model.s1]).reshape(-1, 3)
         idx = [np.arange(v.cfg.start, v.cfg.stop) for v in model.euclid]
         vel = [np.arange(v.vel.start, v.vel.stop) for v in model.euclid]
         self.eu_cfg = np.concatenate(idx) if idx else np.zeros(0, dtype=int)
@@ -306,11 +324,14 @@ class _LieRK:
 
     def generator(self, t, x, p, ufun):
         """The algebra element ``A(x)`` with ``ẋ = A(x)·x``: rates of the vector slots,
-        ``ω`` of each S² point (``q̇ = ω × q``) and ``Ω`` of each SO(3) point
-        (``Ṙ = R Ω̂``)."""
+        ``ω`` of each S² point (``q̇ = ω × q``), ``ω e`` of each S¹ point (``q̇ = ω e × q``)
+        and ``Ω`` of each SO(3) point (``Ṙ = R Ω̂``)."""
         a = solve_accelerations(self.model, x, ufun(t, x), p)
         e = np.concatenate([x[self.eu_vel], a])
         s = np.array([x[v.vel] for v in self.model.s2]).reshape(-1, 3)
+        if self.model.s1:
+            w = np.array([x[v.vel][0] for v in self.model.s1])
+            s = np.concatenate([s, w[:, None] * self.axes])
         r = np.array([x[v.vel] for v in self.model.so3]).reshape(-1, 3)
         return e, s, r
 
@@ -321,7 +342,7 @@ class _LieRK:
         y = x.copy()
         y[self.eu_cfg] += e[: self.m]
         y[self.nc :] += e[self.m :]
-        for j, v in enumerate(self.model.s2):
+        for j, v in enumerate(self.points):
             y[v.cfg] = _expm(s[j]) @ x[v.cfg]
         for j, v in enumerate(self.model.so3):
             y[v.cfg] = (x[v.cfg].reshape(3, 3) @ _expm(r[j])).reshape(9)
@@ -333,7 +354,7 @@ class _LieRK:
         1, −½, 1/12; the ``ad³`` coefficient is zero). Left action (S²):
         ``G − ½[U, G] + 1/12 [U, [U, G]]``; right action (SO(3)): ``dexp⁻¹_{−U}``, the
         sign of the odd term flipped. ``[a, b] = a × b`` on so(3) ≅ R³; the vector part
-        commutes."""
+        commutes, and so do the S¹ rotations (all about the fixed axis ``e``)."""
         e, s, r = U
         ge, gs, gr = G
         if s.size:
@@ -402,13 +423,15 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep, u0):
 
     ``ω`` is a vector slot, translated while ``q`` is rotated, so ``q·ω`` would drift at
     the truncation error. After each step ``ω ← ω − (q·ω) q``: a change of the size of
-    the local error, so the order is still 4, and ``q·ω`` stays at round-off.
+    the local error, so the order is still 4, and ``q·ω`` stays at round-off. An S¹ point
+    is rotated about its own axis only, so ``q·e`` and ``|q|`` change by round-off; it is
+    re-projected (``q ← q − (q·e) e``, normalised) after each step all the same.
 
     Only the steps in *keep* (sorted indices into ``0..n_steps``) are stored, with the
     inputs of their first stage (``u(t_n, x_n)``, *u0* at ``t0``): the controller is
     called once per stage and once more at the final state, which no stage evaluates.
     """
-    lie = _LieRK(model)
+    lie = _LieRK(model, p)
     h = (tf - t0) / n_steps
     t = t0 + h * np.arange(n_steps + 1)
     t[-1] = tf
@@ -419,7 +442,8 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep, u0):
     store[keep] = True
     k = 1
     s2 = [(v.cfg, v.vel) for v in model.s2]
-    zero = (np.zeros(lie.m + model.n_accel), np.zeros((len(model.s2), 3)))
+    s1 = [(v.cfg, e) for v, e in zip(model.s1, lie.axes)]
+    zero = (np.zeros(lie.m + model.n_accel), np.zeros((len(lie.points), 3)))
     zero += (np.zeros((len(model.so3), 3)),)
     for n in range(n_steps):
         tn = t[n]
@@ -437,6 +461,9 @@ def _rkmk4(model, x0, t0, tf, n_steps, p, ufun, keep, u0):
         for cfg, vel in s2:  # keep ω tangent (see above)
             q = x[cfg]
             x[vel] -= (q @ x[vel]) * q
+        for cfg, e in s1:  # keep q in the plane of its axis (see above)
+            q = x[cfg] - (x[cfg] @ e) * e
+            x[cfg] = q / np.linalg.norm(q)
         if store[n + 1]:
             out[k] = x
             k += 1
@@ -456,10 +483,11 @@ def _solve_ivp(model, x0, t0, tf, n_steps, p, ufun, rtol, atol, ivp_method, keep
         raise ImportError(
             "simulate(method='solve_ivp') needs scipy: pip install 'geomech[sim]'"
         ) from exc
-    kin = model.module.kinematics
 
     def rhs(t, y):
-        return np.concatenate([kin(y), solve_accelerations(model, y, ufun(t, y), p)])
+        return np.concatenate(
+            [model.kinematics(y, p), solve_accelerations(model, y, ufun(t, y), p)]
+        )
 
     t_eval = np.linspace(t0, tf, n_steps + 1)[keep]
     sol = solve_ivp(rhs, (t0, tf), x0, method=ivp_method, t_eval=t_eval, rtol=rtol, atol=atol)

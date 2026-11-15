@@ -10,7 +10,7 @@ the module that defines it.
 ==================================================  ===========================================
 Page                                                Contents
 ==================================================  ===========================================
-:doc:`core-base`                                    types, flags, leaves ``Scalar``/``Vector``/``Matrix``, ``S2``, ``SO3``
+:doc:`core-base`                                    types, flags, leaves ``Scalar``/``Vector``/``Matrix``, ``S1``, ``S2``, ``SO3``
 :doc:`core-operations`                              the node classes (sums, products, geometry, calculus)
 :doc:`core-transformations`                         ``expand``, ``pull``, ``simplify``, manifold rules
 :doc:`core-math`                                    ``extract_linear_coeff``, ``collect``, integration by parts

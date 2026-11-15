@@ -19,8 +19,10 @@ del _version, _PackageNotFoundError
 
 # --- Layer 1: types & leaf nodes ---
 from geomech.core.base import (
+    S1,
     S2,
     SO3,
+    TS1,
     TS2,
     TSO3,
     Expr,

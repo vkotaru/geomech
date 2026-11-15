@@ -12,9 +12,10 @@ The full documentation is in `docs/` of the repository (`conventions.md`, `codeg
 | number | `Scalar("0.5", value=0.5, attr=["Constant"])`, or `2 * x` | a named scalar with a value stays a symbol |
 | constant vector | `Vector("e3", attr=["Constant"])` | `e3 = (0, 0, 1)` in `p`; gravity potential `m g e3·x` |
 | inertia | `Matrix("J", attr=["Constant", "SymmetricMatrix"])` | |
-| configuration | `Scalar("s")`, `Vector("x")`, `S2("q")`, `SO3("R")` | list in `SystemVariables` |
-| velocity | `x.t_diff()`, `q.get_tangent_vector()` (ω), `R.get_tangent_vector()` (Ω) | `q̇ = ω × q`, `Ṙ = R Ω̂` |
-| variation | `x.delta()`, `q.get_variation_vector()` (ξ), `R.get_variation_vector()` (η) | `δq = ξ × q`, `δR = R η̂` |
+| configuration | `Scalar("s")`, `Vector("x")`, `S1("q", axis=e)`, `S2("q")`, `SO3("R")` | list in `SystemVariables`; S¹ and S² in `vectors` |
+| S¹ axis | `e = Vector("e", attr=["Constant", "UnitNorm"])` | required; a parameter `p["e"]`; `q` must start with `q·e = 0` |
+| velocity | `x.t_diff()`, `q.get_tangent_vector()` (ω), `R.get_tangent_vector()` (Ω) | `q̇ = ω × q` (S²), `q̇ = ω e × q` with scalar ω (S¹), `Ṙ = R Ω̂` |
+| variation | `x.delta()`, `q.get_variation_vector()` (ξ, or scalar γ on S¹), `R.get_variation_vector()` (η) | `δq = ξ × q` (S²), `δq = γ e × q` (S¹), `δR = R η̂` |
 | input | `Scalar("f")`, `Vector("M")` (not constant) | passed as `inputs=[f, M]`, order matters |
 
 Operators: `Dot(a, b)`, `Cross(a, b)`, `Hat(v)`, `Vee(M)`, `A * v`, `s * v`, `v.T()`.
@@ -129,6 +130,8 @@ parameters and the source.
 - `E = −(Euler–Lagrange) + forcing`; the equation is `E = 0`.
 - `M = −(physical inertia)` in the standard form; the linearization's M is positive.
 - S² equations hold on the tangent plane only; the S² mass block may be singular.
+- An S¹ point gives one scalar equation, keyed by `\gamma_{q}`; its velocity `omega_q`
+  and acceleration are scalars in `state` and `a`.
 - `str(expr)` writes products with `*` and is the identity of a symbol; `print_eom` and
   `to_latex` print LaTeX.
 - A forced run's energy change is the work of its inputs, not an integrator error; its

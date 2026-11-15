@@ -4,11 +4,14 @@
 | `double_spherical_pendulum_inverted` | 8 | 8 | -2.55 | 1.00 | — | 0.312 | 1.60 s | 6.33 N·m | 9.9e-15 | yes |
 | `n_link_spherical_chain_inverted` | 12 | 12 | -2.17 | 1.00 | — | 0.305 | 1.88 s | 7.72 N·m | 1.5e-14 | yes |
 | `elastic_spherical_pendulum_inverted` | 6 | 6 | -0.559 | 0.09 | 0.1 | 0.342 | 4.38 s | 0.527 N, 5.29 N·m | 7.1e-15 | yes |
+| `cart_planar_pendulum_inverted` | 4 | 4 | -1.51 | 0.79 | 0.3 | 0.175 | 3.01 s | 21.4 N | 1.1e-16 | yes |
 | `rigid_pendulum_inverted` | 6 | 6 | -3.16 | 1.00 | — | 0.436 | 1.22 s | 3.8 N·m | 4.1e-14 | yes |
 | `double_rigid_pendulum_inverted` | 12 | 12 | -2.97 | 1.00 | — | 0.315 | 1.50 s | 4.32 N·m | 4.1e-14 | yes |
 | `n_link_rigid_chain_inverted` | 18 | 18 | -2.42 | 1.00 | — | 0.306 | 1.57 s | 5.87 N·m | 5.1e-14 | yes |
 | `free_rigid_body_attitude` | 6 | 6 | -1.66 | 0.78 | — | 1.92 | 2.27 s | 4.96 N·m | 1.1e-13 | yes |
 | `spacecraft_reaction_wheels_slew` † | 9 | 6 | -0.371 | 0.72 | — | 1.05 | 10.15 s | 0.191 N·m | 7.0e-14 | yes |
+| `spacecraft_reaction_wheels_s1_slew` † | 9 | 6 | -0.371 | 0.72 | — | 1.05 | 10.15 s | 0.191 N·m | 7.0e-14 | yes |
+| `spacecraft_solar_arrays_slew` † | 13 | 10 | -0.281 | 0.73 | — | 1.44 | 13.52 s | 0.191 N·m | 1.3e-13 | yes |
 | `biped_3d_balance` | 12 | 12 | -0.882 | 0.21 | — | 0.145 | 1.87 s | 20.4 N·m | 6.9e-14 | yes |
 | `rigid_body_pose` | 12 | 12 | -0.924 | 0.73 | 1.22 | 1.57 | 3.93 s | 3.16 N, 4.97 N·m | 5.6e-14 | yes |
 | `quadrotor_hover` | 12 | 12 | -0.924 | 0.71 | 1.87 | 1.05 | 3.78 s | 1.58 N, 4.76 N·m | 9.5e-14 | yes |

@@ -1,5 +1,9 @@
 """Manifold kinematic substitutions applied during EOM derivation.
 
+For S1 (unit circle normal to a constant unit axis e) with manifold point q, scalar angular
+velocity ω, scalar variation γ:
+  - Variation(ω) → γ̇                   (Lee et al. eq. 4.11)
+
 For S2 (unit sphere) with manifold point q, tangent vector ω, variation vector ξ:
   - Variation(ω) → ξ̇ - 2 ω × ξ        (Lee et al. eq. 5.13 on the constraint set ξ ⊥ q)
 
@@ -27,11 +31,31 @@ projection (I - q qᵀ) δω; it is correct whenever ∂L/∂ω ⊥ q (every Lag
 on ω only through q̇ = ω × q) and wrong otherwise: with ∂L/∂ω = m l² ω + c the gyroscopic
 term 2 ω × c came out as ω × c, i.e. at half strength.
 
+Derivation for S1.  The point q lies on the unit circle in the plane normal to the
+constant unit axis e (q · e = 0, |q| = 1); in that plane e × (·) is the rotation by π/2,
+the matrix S of Lee et al. ch. 4, so |e × q| = 1 and e × (e × q) = -q.  The kinematics are
+q̇ = ω e × q (eq. 4.1), hence ω = (e × q) · q̇, and the variation is δq = γ e × q
+(eq. 4.10).  Since e is constant, the variation of the velocity is
+
+    δq̇ = d/dt(δq) = γ̇ e × q + γ e × q̇ = γ̇ e × q - γ ω q,
+
+and therefore
+
+    δω = (e × δq) · q̇ + (e × q) · δq̇
+       = γ (e × (e × q)) · q̇ + γ̇ |e × q|² - γ ω (e × q) · q
+       = -γ q · q̇ + γ̇ = γ̇,
+
+because q · q̇ = 0 and (e × q) · q = 0.  This is eq. (4.11): the circle is abelian, so δω
+has no ω-dependent term (unlike S2 and SO3) and, ω being a scalar, no normal component.
+
 For SO3, with Ṙ = R·Hat(Ω) and δR = R·Hat(η), equating the mixed derivatives
 d/dt(δR) = δ(Ṙ) gives δΩ = η̇ + Ω × η exactly (Lee et al. eq. 6.9).
 
 Rules (name, identity, hypothesis):
 
+  manifold.s1_variation_omega    δ(ω) → γ̇                ω is the tangent coordinate of an
+                                                         S1 point listed in SystemVariables
+                                                         (matched by printed name)
   manifold.s2_variation_omega    δ(ω) → ξ̇ - 2 ω × ξ     ω is the tangent vector of an S2
                                                          point listed in SystemVariables
                                                          (matched by printed name)
@@ -44,7 +68,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from geomech.core.base.constants import NEG_TWO
-from geomech.core.base.expressions import S2, SO3, TS2, TSO3, Expr
+from geomech.core.base.expressions import S1, S2, SO3, TS1, TS2, TSO3, Expr
 from geomech.core.operations.addition import VAdd
 from geomech.core.operations.calculus import TimeDerivative, Variation
 from geomech.core.operations.geometry import Cross
@@ -59,14 +83,18 @@ if TYPE_CHECKING:  # the dynamics layer imports this module; avoid the cycle
 def apply_manifold_rules(expr, variables: SystemVariables):
     """Apply manifold kinematic substitutions to an expression.
 
-    Walks the expression tree and replaces Variation(TS2) and
+    Walks the expression tree and replaces Variation(TS1), Variation(TS2) and
     Variation(TSO3) nodes with their kinematic expansions.
     """
     tangent_map: dict[str, tuple[str, Expr, Expr, Expr]] = {}
 
-    # S2 manifolds (vectors)
+    # S1 and S2 manifolds (vectors)
     for vec in variables.vectors:
-        if isinstance(vec, S2):
+        if isinstance(vec, S1):
+            omega = vec.get_tangent_vector()
+            gamma = vec.get_variation_vector()
+            tangent_map[str(omega)] = ("S1", vec, omega, gamma)
+        elif isinstance(vec, S2):
             omega = vec.get_tangent_vector()
             xi = vec.get_variation_vector()
             tangent_map[str(omega)] = ("S2", vec, omega, xi)
@@ -87,12 +115,15 @@ def apply_manifold_rules(expr, variables: SystemVariables):
 def _substitute(expr, tangent_map):
     """Recursively substitute manifold variations."""
 
-    # Variation(TS2) or Variation(TSO3) → kinematic expansion
+    # Variation(TS1), Variation(TS2) or Variation(TSO3) → kinematic expansion
     if isinstance(expr, Variation):
         inner = expr.expr
-        if isinstance(inner, (TS2, TSO3)) and str(inner) in tangent_map:
+        if isinstance(inner, (TS1, TS2, TSO3)) and str(inner) in tangent_map:
             kind, parent, omega, var_vec = tangent_map[str(inner)]
-            if kind == "S2":
+            if kind == "S1":
+                # δ(ω) = γ̇   (see the module docstring)
+                return rule("manifold.s1_variation_omega", expr, TimeDerivative(var_vec))
+            elif kind == "S2":
                 # δ(ω) = ξ̇ - 2 ω × ξ   (see the module docstring)
                 return rule(
                     "manifold.s2_variation_omega",

@@ -79,6 +79,142 @@ def w_s2(q):
 
 
 # ---------------------------------------------------------------------------
+# S¹
+# ---------------------------------------------------------------------------
+
+
+def s1_states(name, seed=0):
+    """``states`` for a system with S¹ points: the S¹ points are drawn in the plane of
+    their default axis (``sample_state(..., env=params)``), since ``states`` sets the
+    params after sampling."""
+    s, eom = derived(name)
+    rng = np.random.default_rng(seed)
+    for _ in range(N_STATES):
+        env = {
+            k: float(v) if np.isscalar(v) else np.asarray(v, float).reshape(3, 1)
+            for k, v in s.params.items()
+            if np.ndim(v) < 2
+        }
+        env.update({k: np.asarray(v, float) for k, v in s.params.items() if np.ndim(v) == 2})
+        env = sample_state(s.variables, list(s.inputs), rng, env=env)
+        ev = Evaluator(env=env, rng=rng)
+
+        def value(x, ev=ev):
+            key = x if isinstance(x, str) else str(x)
+            val = ev.env[key] if key in ev.env else ev(x)
+            arr = np.asarray(val, dtype=float)
+            return arr.reshape(3) if arr.shape == (3, 1) else arr
+
+        yield eom, value
+
+
+def _planar(val, axis="e2"):
+    """``(S, e₁, e₂)`` of the book's planar frame: ``S x = n × x`` with the plane normal n,
+    the book's vertical ``e₂`` is the library's ``e₃`` and the book's ``e₁ = −S e₂``
+    (``S e₁ = e₂``)."""
+    n = val(axis)
+    S = hat(n)
+    e2_book = val("e3")
+    return S, -S @ e2_book, e2_book
+
+
+def w_s1(q):
+    """``(q, ω, ω̇)`` symbols of an S¹ point (ω scalar)."""
+    w = q.get_tangent_vector()
+    return q, w, w.t_diff()
+
+
+def test_planar_pendulum_eq_4_33():
+    """Lee et al. eq. 4.33 (from eq. 4.12): ``m L² ω̇ + m g L e₁ᵀq = 0``, with the book's
+    planar frame embedded as in ``_planar`` (the plane normal to the axis e₂ is the plane
+    of motion, ``q̇ = ω e₂ × q``). With ``δW = γ τ`` the library's equation is
+    ``E = −(m l² ω̇ + m g l e₁ᵀq) + τ``, a scalar."""
+    name = "planar_pendulum"
+    for eom, val in s1_states(name):
+        s = derived(name)[0]
+        q, w, wd = w_s1(s.symbols["q"])
+        S, e1, _ = _planar(val)
+        m, g, l = val("m"), val("g"), val("l")
+        book = m * l * l * float(val(wd)) + m * g * l * e1 @ val(q)
+        ref = -book + float(val(s.symbols["tau"]))
+        assert_same(name, np.atleast_1d(val(lib_equation(eom, q))), np.atleast_1d(ref))
+
+
+def _eq_4_62(val, s, printed=False):
+    """Rows of Lee et al. eq. 4.62 (double planar pendulum, (q, ω) form):
+
+    ``(m₁+m₂)L₁² ω̇₁ + m₂L₁L₂ q₁ᵀq₂ ω̇₂ + m₂L₁L₂ ω₂² q₁ᵀSq₂ + (m₁+m₂) g L₁ e₁ᵀq₁``,
+    ``m₂L₁L₂ q₁ᵀq₂ ω̇₁ + m₂L₂² ω̇₂ + m₂L₁L₂ ω₁² q₂ᵀSq₁ + m₂ g L₂ e₁ᵀq₂``.
+
+    The book prints the velocity terms as ``ω₂(ω₂ − ω₁) q₁ᵀSq₂`` and ``ω₁(ω₁ − ω₂) q₂ᵀSq₁``
+    (*printed*): that is ``d/dt ∂L̃/∂ωᵢ`` alone. Eq. 4.12 also has ``qᵢᵀS ∂L̃/∂qᵢ``, whose
+    kinetic part ``m₂L₁L₂ ω₁ω₂ qᵢᵀSqⱼ`` cancels the ``ω₁ω₂`` term, leaving ``ω₂²`` and
+    ``ω₁²`` (the textbook double pendulum, ``test_double_planar_pendulum_in_angles``).
+    """
+    q1, w1, wd1 = (val(x) for x in w_s1(s.symbols["q1"]))
+    q2, w2, wd2 = (val(x) for x in w_s1(s.symbols["q2"]))
+    w1, wd1, w2, wd2 = (float(x) for x in (w1, wd1, w2, wd2))
+    m1, m2, L1, L2, g = (val(k) for k in ("m1", "m2", "l1", "l2", "g"))
+    S, e1, _ = _planar(val)
+    v1, v2 = (w2 * (w2 - w1), w1 * (w1 - w2)) if printed else (w2 * w2, w1 * w1)
+    row1 = (
+        (m1 + m2) * L1**2 * wd1
+        + m2 * L1 * L2 * (q1 @ q2) * wd2
+        + m2 * L1 * L2 * v1 * q1 @ S @ q2
+        + (m1 + m2) * g * L1 * e1 @ q1
+    )
+    row2 = (
+        m2 * L1 * L2 * (q1 @ q2) * wd1
+        + m2 * L2**2 * wd2
+        + m2 * L1 * L2 * v2 * q2 @ S @ q1
+        + m2 * g * L2 * e1 @ q2
+    )
+    return row1, row2
+
+
+def test_double_planar_pendulum_eq_4_62():
+    """Lee et al. eq. 4.62 with the velocity terms of eq. 4.12 (see ``_eq_4_62``), rows
+    ``Rᵢ = 0``; the library's ``Eᵢ = −Rᵢ + τᵢ`` (``δW = γ₁τ₁ + γ₂τ₂``). The equation as
+    printed differs from the library's (and from eq. 4.12) by ``m₂L₁L₂ ω₁ω₂ qᵢᵀSqⱼ``."""
+    name = "double_planar_pendulum"
+    s = derived(name)[0]
+    printed_differs = False
+    for eom, val in s1_states(name):
+        rows = _eq_4_62(val, s)
+        for row, q, tau in zip(rows, (s.symbols["q1"], s.symbols["q2"]), s.inputs):
+            ref = -row + float(val(tau))
+            assert_same(name, np.atleast_1d(val(lib_equation(eom, q))), np.atleast_1d(ref))
+        printed = _eq_4_62(val, s, printed=True)
+        printed_differs |= any(abs(a - b) > 1e-6 for a, b in zip(rows, printed))
+    assert printed_differs
+
+
+def test_double_planar_pendulum_in_angles():
+    """The double planar pendulum in the angles θᵢ from hanging, ``qᵢ = (sin θᵢ, 0,
+    −cos θᵢ)`` (so ``ωᵢ = −θ̇ᵢ`` about e₂ and ``γᵢ = −δθᵢ``): the textbook equations
+
+    ``(m₁+m₂)l₁ θ̈₁ + m₂l₂ θ̈₂ cos(θ₁−θ₂) + m₂l₂ θ̇₂² sin(θ₁−θ₂) + (m₁+m₂) g sin θ₁ = 0``,
+    ``m₂l₂ θ̈₂ + m₂l₁ θ̈₁ cos(θ₁−θ₂) − m₂l₁ θ̇₁² sin(θ₁−θ₂) + m₂ g sin θ₂ = 0``
+
+    times lᵢ are ``EL_θᵢ``, and the library's unforced ``E_γᵢ = −E_θᵢ = EL_θᵢ``."""
+    name = "double_planar_pendulum"
+    s = derived(name)[0]
+    for eom, val in s1_states(name):
+        q1, w1, wd1 = (val(x) for x in w_s1(s.symbols["q1"]))
+        q2, w2, wd2 = (val(x) for x in w_s1(s.symbols["q2"]))
+        th1, th2 = np.arctan2(q1[0], -q1[2]), np.arctan2(q2[0], -q2[2])
+        d1, d2, a1, a2 = -float(w1), -float(w2), -float(wd1), -float(wd2)
+        m1, m2, l1, l2, g = (val(k) for k in ("m1", "m2", "l1", "l2", "g"))
+        c, sn = np.cos(th1 - th2), np.sin(th1 - th2)
+        el1 = l1 * ((m1 + m2) * l1 * a1 + m2 * l2 * a2 * c + m2 * l2 * d2**2 * sn)
+        el1 += l1 * (m1 + m2) * g * np.sin(th1)
+        el2 = l2 * (m2 * l2 * a2 + m2 * l1 * a1 * c - m2 * l1 * d1**2 * sn + m2 * g * np.sin(th2))
+        for el, q, tau in zip((el1, el2), (s.symbols["q1"], s.symbols["q2"]), s.inputs):
+            ref = el + float(val(tau))
+            assert_same(name, np.atleast_1d(val(lib_equation(eom, q))), np.atleast_1d(ref))
+
+
+# ---------------------------------------------------------------------------
 # S²
 # ---------------------------------------------------------------------------
 
@@ -259,9 +395,67 @@ def test_spacecraft_reaction_wheels_eqs_9_61_9_62():
             assert_same(name, np.atleast_1d(val(lib_equation(eom, th))), np.atleast_1d(ref))
 
 
+def test_spacecraft_reaction_wheels_s1_eqs_9_61_9_62():
+    """Lee et al. eqs. 9.61–9.62 as in the test above, with the wheel angles on S¹
+    (``qᵢ`` with axis ``bᵢ``, the book's configuration (S¹)ⁿ): ``ωᵢ`` is the scalar tangent
+    coordinate of ``qᵢ`` and ``γᵢ`` its variation, so
+    ``E_R = −(J' Ω̇ + Σ Iᵢ bᵢ ω̇ᵢ + Ω × (J'Ω + Σ Iᵢ bᵢ ωᵢ))`` and
+    ``E_γᵢ = −(Iᵢ bᵢ·Ω̇ + Iᵢ ω̇ᵢ) + τᵢ``."""
+    name = "spacecraft_reaction_wheels_s1"
+    s = derived(name)[0]
+    for eom, val in s1_states(name):
+        R = s.symbols["R"]
+        Om = R.get_tangent_vector()
+        Omv, Omd = val(Om), val(Om.t_diff())
+        bs = [val(b) for b in s.symbols["b"]]
+        Is = [val(f"I_{i}") for i in (1, 2, 3)]
+        qs = s.symbols["q"]
+        w = [float(val(w_s1(q)[1])) for q in qs]
+        wd = [float(val(w_s1(q)[2])) for q in qs]
+        Jp = val("J_b") + sum(I * np.outer(b, b) for I, b in zip(Is, bs))
+        h = Jp @ Omv + sum(I * x * b for I, x, b in zip(Is, w, bs))
+        ref_R = -(Jp @ Omd + sum(I * a * b for I, a, b in zip(Is, wd, bs)) + np.cross(Omv, h))
+        assert_same(name, val(lib_equation(eom, R)), ref_R)
+        for q, tau, I, b, a in zip(qs, s.symbols["tau"], Is, bs, wd):
+            ref = -(I * b @ Omd + I * a) + float(val(tau))
+            assert_same(name, np.atleast_1d(val(lib_equation(eom, q))), np.atleast_1d(ref))
+
+
+def test_cart_planar_pendulum_in_the_angle_from_upright():
+    """The planar cart-pole against the textbook cart-pole (not from Lee et al.; it is not
+    a ``Reference.equation``). With ``q = (sin φ, 0, cos φ)`` from upright, ``e₂ × q =
+    ∂q/∂φ``, so ``ω = φ̇`` and ``γ = δφ``. From ``L = ½ (M + m) ṡ² + m l ṡ φ̇ cos φ
+    + ½ m l² φ̇² − m g l cos φ`` (horizontal rail),
+
+    ``EL_s = (M + m) s̈ + m l (φ̈ cos φ − φ̇² sin φ)``,
+    ``EL_φ = m l s̈ cos φ + m l² φ̈ − m g l sin φ``,
+
+    and the library's equations are ``E_s = −EL_s + f`` and ``E_γ = −EL_φ``."""
+    name = "cart_planar_pendulum"
+    s = derived(name)[0]
+    sym = s.symbols
+    for eom, val in s1_states(name):
+        q, w, wd = w_s1(sym["q"])
+        qv = val(q)
+        assert abs(qv[1]) < 1e-12
+        phi, dphi, ddphi = np.arctan2(qv[0], qv[2]), float(val(w)), float(val(wd))
+        sdd = float(val(sym["s"].t_diff().t_diff()))
+        M, m, g, l = (val(k) for k in ("M", "m", "g", "l"))
+        c, sn = np.cos(phi), np.sin(phi)
+        el_s = (M + m) * sdd + m * l * (ddphi * c - dphi**2 * sn)
+        el_phi = m * l * sdd * c + m * l * l * ddphi - m * g * l * sn
+        ref_s = -el_s + float(val(sym["f"]))
+        got_s = val(lib_equation(eom, sym["s"]))
+        assert_same(name, np.atleast_1d(got_s), np.atleast_1d(ref_s))
+        got_q = val(lib_equation(eom, sym["q"]))
+        assert_same(name, np.atleast_1d(got_q), np.atleast_1d(-el_phi))
+
+
 #: (system, builder kwargs) → the equation its test above compares with; every system
 #: whose ``reference.equation`` is not empty must be listed here with that equation.
 COVERED = {
+    ("planar_pendulum", ()): "eq. 4.33",
+    ("double_planar_pendulum", ()): "eq. 4.62",
     ("spherical_pendulum", ()): "eq. 5.38",
     ("particle_on_rotating_sphere", ()): "eq. 5.43",
     ("double_spherical_pendulum", ()): "eq. 5.71",
@@ -271,6 +465,7 @@ COVERED = {
     ("heavy_top", ()): "eq. 6.20",
     ("rigid_body", ()): "eqs. 7.39–7.40",
     ("spacecraft_reaction_wheels", ()): "eqs. 9.61–9.62",
+    ("spacecraft_reaction_wheels_s1", ()): "eqs. 9.61–9.62",
 }
 
 

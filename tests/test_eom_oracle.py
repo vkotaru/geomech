@@ -23,7 +23,7 @@ from geomech import (
     compute_eom,
     getScalars,
 )
-from tests import phase1_systems, vbl_systems
+from tests import phase1_systems, s1_systems, vbl_systems
 from tests.vbl_systems import System
 
 HALF = Scalar("0.5", value=0.5, attr=["Constant"])
@@ -272,6 +272,18 @@ SYSTEMS = [
 
 @pytest.mark.parametrize("build", SYSTEMS, ids=lambda f: f.__name__)
 def test_eom_matches_euler_lagrange_residual(build):
+    s = build()
+    eom = compute_eom(s.L, s.dW, s.variables)
+    err = check_eom(s.L, s.dW, s.variables, eom, inputs=s.inputs)
+    assert err < TOL, f"{build.__name__}: worst relative error {err:.2e}"
+
+
+@pytest.mark.parametrize("build", s1_systems.SYSTEMS, ids=lambda f: f.__name__)
+def test_s1_eom_matches_euler_lagrange_residual(build):
+    """The systems on S¹ and its products (``tests/s1_systems.py``) against the same
+    oracle. They are kept out of ``SYSTEMS``, which the code generation tests also run with
+    the S¹-free ``kinematics(state)``; ``tests/test_s1_manifold.py`` checks their generated
+    code with ``kinematics(state, p)``."""
     s = build()
     eom = compute_eom(s.L, s.dW, s.variables)
     err = check_eom(s.L, s.dW, s.variables, eom, inputs=s.inputs)

@@ -49,12 +49,15 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 |---|---|---|---|---|
 | `point_mass` | R³ | 3 | Lee et al. §3.2 | — |
 | `spring_mass` | R | 1 | elementary | — |
+| `planar_pendulum` | S¹ | 1 | Lee et al. §4.6.1; general form eq. 4.12 | Lee et al. eq. 4.33 |
+| `double_planar_pendulum` | S¹ × S¹ | 2 | Lee et al. §4.6.4 | Lee et al. eq. 4.62 |
 | `spherical_pendulum` | S² | 2 | Lee et al. §5.6.1; general form eq. 5.14 | Lee et al. eq. 5.38 |
 | `particle_on_rotating_sphere` | S² | 2 | Lee et al. §5.6.2 | Lee et al. eq. 5.43 |
 | `double_spherical_pendulum` | S² × S² | 4 | Lee et al. §5.6.5 | Lee et al. eq. 5.71 |
 | `n_link_spherical_chain(n_links=…)` | (S²)ⁿ | 6 | Lee et al. §5.3, eq. 5.14; §5.6.5 for n = 2 | — |
 | `elastic_spherical_pendulum` | R × S² | 3 | — | — |
 | `cart_spherical_pendulum` | R × S² | 3 | — | — |
+| `cart_planar_pendulum` | R × S¹ | 2 | elementary | — |
 | `free_rigid_body` | SO(3) | 3 | Lee et al. §6.6.1 | Lee et al. eq. 6.16 |
 | `heavy_top` | SO(3) | 3 | Lee et al. §6.6.2 | Lee et al. eq. 6.20 |
 | `rigid_pendulum` | SO(3) | 3 | Lee et al. §6.6.2; general form eq. 6.8 | Lee et al. eq. 6.20 |
@@ -63,6 +66,8 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 | `two_rigid_bodies_spherical_joint` | R³ × SO(3) × SO(3) | 9 | — | — |
 | `rigid_body` | R³ × SO(3) | 6 | Lee et al. §7.6.1 | Lee et al. eqs. 7.39–7.40 |
 | `spacecraft_reaction_wheels` | SO(3) × R³ | 6 | Lee et al. §9.10 | Lee et al. eqs. 9.61–9.62 |
+| `spacecraft_reaction_wheels_s1` | SO(3) × (S¹)³ | 6 | Lee et al. §9.10 | Lee et al. eqs. 9.61–9.62 |
+| `spacecraft_solar_arrays` | SO(3) × (S¹)³ × (S¹)² | 8 | — | — |
 | `biped_3d` | SO(3) × SO(3) | 6 | — | — |
 | `quadrotor` | R³ × SO(3) | 6 | Lee, Leok, McClamroch (2010) | — |
 | `quadrotor_offset_com` | R³ × SO(3) | 6 | — | — |
@@ -77,7 +82,26 @@ Each builder's docstring, in the [API reference](api/systems.rst), states the La
 the virtual work and the inputs. The conventions are those of the rest of the package
 ([Conventions](conventions.md)): gravity acts along −e₃ (`V = m g e₃·x`), a pendulum or
 cable direction `q` points from the pivot (or quadrotor) to the mass, so `q = −e₃`
-hangs down, and Ω is the body-frame angular velocity.
+hangs down, and Ω is the body-frame angular velocity. The planar pendulums
+(`planar_pendulum`, `double_planar_pendulum`) swing in the vertical plane normal to the
+S¹ axis `e2 = (0, 1, 0)`, a parameter like `e3`.
+
+`cart_planar_pendulum` is `cart_spherical_pendulum` with the pendulum held in the rail's
+vertical plane: the same parameters (M, m, l, the rail direction `e1`), and `q` on the
+circle normal to `e2` (the horizontal normal to that plane, `e1·e2 = 0`). Near upright,
+`q = (sin φ, 0, cos φ)` and `ω = φ̇`. `tests/test_systems_book.py` compares its equations
+with the textbook cart-pole in the angle φ, and `tests/test_s1_manifold.py` checks that
+they agree with those of `cart_spherical_pendulum` at in-plane states (`q·e₂ = 0`,
+`ω ∥ e₂`) and that the two models simulate alike from an in-plane start.
+
+`double_planar_pendulum` is compared with Lee et al. eq. 4.62 with its velocity terms
+corrected: the book prints `m₂L₁L₂ ω₂(ω₂ − ω₁) q₁ᵀSq₂` and `m₂L₁L₂ ω₁(ω₁ − ω₂) q₂ᵀSq₁`,
+which is `d/dt ∂L̃/∂ωᵢ` alone; the term `qᵢᵀS ∂L̃/∂qᵢ` of eq. 4.12 adds
+`m₂L₁L₂ ω₁ω₂ qᵢᵀSqⱼ` and leaves `ω₂²` and `ω₁²`, the textbook double pendulum
+(`tests/test_systems_book.py` checks the corrected form against both eq. 4.62 and the
+equations in the angles θᵢ). `spacecraft_reaction_wheels_s1` is
+`spacecraft_reaction_wheels` with the wheel angles on S¹; its equations print the same
+after renaming `θ̇ᵢ → ωᵢ` and its trajectories agree (`tests/test_s1_manifold.py`).
 
 **Sources.** "Lee et al." is the book *Global Formulations of Lagrangian and Hamiltonian
 Dynamics on Manifolds* (`lee2018global` in
@@ -92,10 +116,18 @@ A "—" in the last column means no closed form is compared: the equations are v
 the numeric oracle ([Numeric verification](numeric-verification.md)) and the Lagrangian by
 the independent model below.
 
-**Two multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles θᵢ as
-scalars in R (the book uses S¹, which the engine does not support; the angle is cyclic, so
-the equations are the same); a test also checks that the inertial angular momentum is
-conserved without input. `biped_3d` is only the continuous single-support (swing) phase
+**Multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles θᵢ as
+scalars in R; `spacecraft_reaction_wheels_s1` puts them on S¹ as the book does (the angle
+is cyclic, so the equations are the same); a test also checks that the inertial angular momentum is
+conserved without input. `spacecraft_solar_arrays` adds two solar-array panels to the S¹
+spacecraft, each a rigid plate with its own mass and inertia turned by a drive about the
+bus-fixed axis ±b₁, its normal an S¹ point. It is a free-floating model: with no
+external force and zero linear momentum, the composite centre of mass is at rest and is a
+fixed point of the bus frame (each panel's centre of mass lies on its drive axis), so a
+panel's translation is the one the bus rotation induces. Tests check the Lagrangian
+against a model of the separate bodies, the conservation of the inertial angular
+momentum under wheel and drive torques, and that with massless panels and zero drive
+torques its bus and wheel equations are those of `spacecraft_reaction_wheels_s1`. `biped_3d` is only the continuous single-support (swing) phase
 of a compass-gait walker: impacts, the switch of the stance foot and the ground contact
 are not modelled, so it is not a walking model.
 
@@ -104,6 +136,9 @@ variables and parameters, and a shape's size and a cylinder's axis are numbers. 
 wheels sit at `0.3 bᵢ` (they follow the parameters) with their discs along the body axes
 e₁, e₂, e₃, the default `bᵢ`; they do not turn with θᵢ, since there is no sine or cosine
 to build `R expm(θᵢ b̂ᵢ)`, and an axisymmetric wheel looks the same when it spins anyway.
+The solar-array panels do turn: the panel attitude `R Pₖ` is built from the panel normal
+`nₖ` and the drive axis `aₖ`, `Pₖ = aₖb₁ᵀ + (nₖ × aₖ)b₂ᵀ + nₖb₃ᵀ`, a rotation when b₁, b₂,
+b₃ are the body axes (the default).
 The biped's legs and the rigid chain's links are placed from the parameters but drawn with
 their default lengths. The biped's ground plane is drawn only.
 
@@ -124,8 +159,8 @@ parametric system also at sizes 1 and 2:
   `generate_module` write an importable module;
 - `simulate` runs 1 s from `x0` without input and conserves the energy to 1e-8;
 - the scene renders through `Report`;
-- the equations of the systems with a closed form in Lee et al. (eqs. 5.38, 5.43, 5.71,
-  6.16, 6.20, 7.39–7.40, 9.61–9.62) agree with it at random admissible states;
+- the equations of the systems with a closed form in Lee et al. (eqs. 4.33, 4.62, 5.38,
+  5.43, 5.71, 6.16, 6.20, 7.39–7.40, 9.61–9.62) agree with it at random admissible states;
 - the Lagrangian and the virtual work agree (to 1e-8) with an independent model of the
   system's bodies, written in NumPy from its physical description (positions of the point
   masses and centres of mass, inertias about the centres of mass, heights, springs and
