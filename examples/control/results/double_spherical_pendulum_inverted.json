@@ -1,0 +1,52 @@
+{
+ "name": "double_spherical_pendulum_inverted",
+ "system": "double_spherical_pendulum",
+ "kwargs": {},
+ "description": "Both links upright; moments f\u2081, f\u2082 on the links; 10\u00b0 and 15\u00b0 tilts.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 8,
+ "dropped": [],
+ "controllability_rank": 8,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -2.5503148244353335,
+ "closed_loop_min_damping": 0.996824192572828,
+ "closed_loop_fastest": 7.61105045811432,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.01662503881379962,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.311674489996898,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 5.705929213669151,
+ "final_normalized_error": 1.5815865677828734e-11,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.6,
+ "converged": true,
+ "peak_inputs": {
+  "f1": {
+   "peak_deviation": 6.334115281779664,
+   "peak_abs": 6.334115281779664,
+   "unit": "N\u00b7m"
+  },
+  "f2": {
+   "peak_deviation": 3.9310598829196852,
+   "peak_abs": 3.9310598829196852,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 9.880984919163893e-15,
+ "energy_change": 0.5388830393451158
+}

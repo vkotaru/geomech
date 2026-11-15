@@ -8,9 +8,15 @@ equilibrium from a generated linearization. Simulation consumes only the modules
 ``method="solve_ivp"`` and ``lqr``. See ``docs/simulation.md``.
 """
 
-from geomech.simulation.control import LQRController, lqr, tangent_basis
+from geomech.simulation.control import (
+    LQRController,
+    ReducedLinearization,
+    lqr,
+    reduced_linearization,
+    tangent_basis,
+)
 from geomech.simulation.integrators import Trajectory, constraint_drift, simulate
-from geomech.simulation.model import accelerations, check_state
+from geomech.simulation.model import accelerations, check_state, model_of
 
 __all__ = [
     "accelerations",
@@ -21,4 +27,7 @@ __all__ = [
     "lqr",
     "LQRController",
     "tangent_basis",
+    "reduced_linearization",
+    "ReducedLinearization",
+    "model_of",
 ]

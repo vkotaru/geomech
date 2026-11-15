@@ -1,0 +1,44 @@
+{
+ "name": "spherical_pendulum_inverted",
+ "system": "spherical_pendulum",
+ "kwargs": {},
+ "description": "Inverted spherical pendulum (q = e\u2083), moment f about the pivot; 30\u00b0 tilt.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 4,
+ "dropped": [],
+ "controllability_rank": 4,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -3.1725464576143776,
+ "closed_loop_min_damping": 1.0,
+ "closed_loop_fastest": 3.24883809603963,
+ "library_lqr": true,
+ "horizon": 8.0,
+ "dt": 0.001,
+ "derive_seconds": 0.0014687753282487392,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.4999999999999999,
+  "velocity": 0.447213595499958
+ },
+ "simulate_seconds": 2.5685103060677648,
+ "final_normalized_error": 4.902047380386527e-11,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.3900000000000001,
+ "converged": true,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 9.681019126629533,
+   "peak_abs": 9.681019126629533,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 6.994405055138486e-15,
+ "energy_change": 1.1842907888746144
+}

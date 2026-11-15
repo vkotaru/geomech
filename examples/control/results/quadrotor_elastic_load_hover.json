@@ -1,0 +1,50 @@
+{
+ "name": "quadrotor_elastic_load_hover",
+ "system": "quadrotor_elastic_load",
+ "kwargs": {},
+ "description": "Hover with an elastic cable stretched by the load weight (l = l\u2080 + m_L g / k); 0.47 m offset, 12\u00b0 swing, +3 cm stretch, 20\u00b0 yaw. The cable-spring mode near 28 rad/s is lightly damped: damping ratio 0.015 with uniform weights, 0.039 with the stretch rate weighted 10 (used here). Heavier stretch weights damp it more but need thrust deviations of 12\u201328 N (hover 17.7 N); these weights keep the peak deviation at 2.5 N (14 % of hover).",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 1.0059785023220347e-15,
+ "u_eq": [
+  17.657999999999998,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 18,
+ "dropped": [],
+ "controllability_rank": 18,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.5957884523432739,
+ "closed_loop_min_damping": 0.03852855609207938,
+ "closed_loop_fastest": 50.11586014110718,
+ "library_lqr": true,
+ "horizon": 15.0,
+ "dt": 0.001,
+ "derive_seconds": 0.023977406788617373,
+ "initial_error": {
+  "position": 0.472652091923859,
+  "attitude": 0.40629329196207875,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 8.459104438778013,
+ "final_normalized_error": 2.1197074800263104e-05,
+ "max_normalized_error": 1.0157655904992213,
+ "settling_time": 4.23,
+ "converged": true,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 2.5053497272936305,
+   "peak_abs": 20.104097558596614,
+   "unit": "N"
+  },
+  "M": {
+   "peak_deviation": 0.7523110661653816,
+   "peak_abs": 0.7523110661653816,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 9.684528343892453e-14,
+ "energy_change": -2.931783149129899
+}

@@ -1,0 +1,71 @@
+{
+ "name": "spacecraft_reaction_wheels_slew",
+ "system": "spacecraft_reaction_wheels",
+ "kwargs": {},
+ "description": "Rest-to-rest 60\u00b0 slew with the three wheel torques only (R = 1e4: peak wheel torque about 0.19 N\u00b7m).",
+ "notes": "Wheel angles are cyclic (zero columns of A and B) and dropped from the design; the three components of the conserved angular momentum are uncontrollable (eigenvalue 0) and LQR is designed on the controllable subspace. The rest-to-rest (zero total momentum) start is essential: internal torques cannot change the total angular momentum, so a start with momentum cannot come to rest at R = I.",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 9,
+ "dropped": [
+  "delta_theta_1",
+  "delta_theta_2",
+  "delta_theta_3"
+ ],
+ "controllability_rank": 6,
+ "uncontrollable_eigenvalues": [
+  [
+   3.528618421453392e-18,
+   2.715896815971669e-18
+  ],
+  [
+   3.528618421453392e-18,
+   -2.715896815971669e-18
+  ],
+  [
+   -1.908602647865497e-18,
+   0.0
+  ]
+ ],
+ "closed_loop_max_real": -0.3714301108299717,
+ "closed_loop_min_damping": 0.7200767194521492,
+ "closed_loop_fastest": 0.5955355954440078,
+ "library_lqr": false,
+ "horizon": 25.0,
+ "dt": 0.001,
+ "derive_seconds": 0.012838786002248526,
+ "initial_error": {
+  "position": null,
+  "attitude": 1.0471975511965979,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 8.80629465635866,
+ "final_normalized_error": 6.746243125444945e-05,
+ "max_normalized_error": 1.0,
+ "settling_time": 10.15,
+ "converged": true,
+ "peak_inputs": {
+  "\\tau_1": {
+   "peak_deviation": 0.19119124031819895,
+   "peak_abs": 0.19119124031819895,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_2": {
+   "peak_deviation": 0.19119124031807969,
+   "peak_abs": 0.19119124031807969,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_3": {
+   "peak_deviation": 0.19119124031818494,
+   "peak_abs": 0.19119124031818494,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 6.960729500119622e-14,
+ "energy_change": 2.3545572126348438e-08
+}

@@ -1,0 +1,44 @@
+{
+ "name": "rigid_pendulum_inverted",
+ "system": "rigid_pendulum",
+ "kwargs": {},
+ "description": "3-D rigid pendulum inverted (R = half turn about e\u2081); body moment M; 25\u00b0 rotation and a spin about the link.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 6,
+ "dropped": [],
+ "controllability_rank": 6,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -3.1623086515523937,
+ "closed_loop_min_damping": 1.0,
+ "closed_loop_fastest": 714.2787141142073,
+ "library_lqr": true,
+ "horizon": 8.0,
+ "dt": 0.001,
+ "derive_seconds": 0.0018962137401103973,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.4363323129985825,
+  "velocity": 1.02469507659596
+ },
+ "simulate_seconds": 2.1454250421375036,
+ "final_normalized_error": 2.778247099771994e-12,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.22,
+ "converged": true,
+ "peak_inputs": {
+  "M": {
+   "peak_deviation": 3.804548764960558,
+   "peak_abs": 3.804548764960558,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 4.085632129272773e-14,
+ "energy_change": 0.42862148055732874
+}

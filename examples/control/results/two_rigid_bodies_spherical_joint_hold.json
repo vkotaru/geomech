@@ -1,0 +1,60 @@
+{
+ "name": "two_rigid_bodies_spherical_joint_hold",
+ "system": "two_rigid_bodies_spherical_joint",
+ "kwargs": {},
+ "description": "Body 1 held level in mid-air with body 2 hanging below the joint; force F on body 1 and moments M\u2081, M\u2082 (fully actuated); u_eq holds both weights.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  15.696000000000002,
+  0.0,
+  -1.7658,
+  0.0,
+  0.0,
+  -1.633693180735918e-16,
+  0.0
+ ],
+ "n_reduced": 18,
+ "dropped": [],
+ "controllability_rank": 18,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -1.029485522289142,
+ "closed_loop_min_damping": 0.7392181578642167,
+ "closed_loop_fastest": 499.98999949995977,
+ "library_lqr": true,
+ "horizon": 8.0,
+ "dt": 0.001,
+ "derive_seconds": 0.028093427419662476,
+ "initial_error": {
+  "position": 0.41231056256176607,
+  "attitude": 0.5541728568050349,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 5.035452924668789,
+ "final_normalized_error": 0.00023755155895900293,
+ "max_normalized_error": 1.0,
+ "settling_time": 3.64,
+ "converged": true,
+ "peak_inputs": {
+  "F": {
+   "peak_deviation": 0.9674561602083911,
+   "peak_abs": 16.32845553203368,
+   "unit": "N"
+  },
+  "M1": {
+   "peak_deviation": 1.1069981270287326,
+   "peak_abs": 1.8407400390139883,
+   "unit": "N\u00b7m"
+  },
+  "M2": {
+   "peak_deviation": 0.7235525246477094,
+   "peak_abs": 0.7235525246477092,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 9.49913692027264e-14,
+ "energy_change": 3.0224923339782785
+}

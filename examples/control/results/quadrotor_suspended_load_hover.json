@@ -1,0 +1,50 @@
+{
+ "name": "quadrotor_suspended_load_hover",
+ "system": "quadrotor_suspended_load",
+ "kwargs": {},
+ "description": "The documented example: load at the origin, cable hanging; the load starts 0.8 m away, swung 0.5 rad, the quadrotor yawed 45\u00b0 and spinning.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  17.658,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 16,
+ "dropped": [],
+ "controllability_rank": 16,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.5957669608202015,
+ "closed_loop_min_damping": 0.3561785326194619,
+ "closed_loop_fastest": 50.11587577701482,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.012872098945081234,
+ "initial_error": {
+  "position": 0.7810249675906654,
+  "attitude": 0.9197805009493921,
+  "velocity": 1.5
+ },
+ "simulate_seconds": 5.47577714221552,
+ "final_normalized_error": 0.0004727385582611011,
+ "max_normalized_error": 1.0,
+ "settling_time": 4.49,
+ "converged": true,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 0.7613709645639553,
+   "peak_abs": 18.169944778460493,
+   "unit": "N"
+  },
+  "M": {
+   "peak_deviation": 2.3276674846190892,
+   "peak_abs": 2.3276674846190892,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 7.326428148407704e-14,
+ "energy_change": -3.549323093731484
+}
