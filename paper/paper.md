@@ -154,8 +154,10 @@ documented state layout and writes modules that need only NumPy (or CasADi), and
 tests compare the generated functions with direct evaluation of the tree on every
 pinned system.
 `simulation` integrates generated modules on the manifold and designs LQR gains from
-the generated linearization, which the repository's control examples apply to 24
-equilibria of the library systems (22 stabilizable) and two tracking problems; `viz` evaluates scene geometry through the same generated
+the generated linearization about an equilibrium, which the repository's control
+examples apply to 24 equilibria of the library systems (19 stabilizable; three
+spacecraft slews conserve angular momentum and converge only from zero-momentum starts)
+and, with the moving-reference terms added in the examples, to two tracking problems; `viz` evaluates scene geometry through the same generated
 code, so the animation has no kinematics of its own.
 
 # Research impact statement

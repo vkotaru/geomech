@@ -280,7 +280,7 @@ def _common(ex, d, residual, u_eq, T, dt, t_derive):
         "kwargs": ex.kwargs,
         "description": ex.description,
         "notes": ex.notes,
-        "stabilizable": all(z.real <= 1e-9 for z in d.uncontrollable),
+        "stabilizable": all(z.real < -1e-9 for z in d.uncontrollable),
         "equilibrium_residual": residual,
         "u_eq": u_eq.tolist(),
         "n_reduced": d.n_reduced,

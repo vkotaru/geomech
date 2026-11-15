@@ -78,7 +78,7 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
 | `multi_quadrotor_rigid_load_hover` | 42 | 42 | -0.438 | 0.17 | 0.412 | 0.281 | 6.81 s | 0.143 N, 0.321 N·m | 1.3e-13 | yes |
 | `two_rigid_bodies_spherical_joint_hold` | 18 | 18 | -1.03 | 0.74 | 0.412 | 0.554 | 3.64 s | 0.967 N, 1.11 N·m | 9.5e-14 | yes |
 
-† Uncontrollable modes with eigenvalue 0 (conserved quantities); LQR on the controllable subspace.
+† Not stabilizable in the strict sense: uncontrollable modes with eigenvalue 0 (conserved quantities). LQR on the controllable subspace converges from initial states on the invariant subspace (for the spacecraft, zero total angular momentum).
 
 **Not stabilizable** (uncontrollable modes listed; LQR on the controllable subspace):
 

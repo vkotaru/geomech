@@ -4,7 +4,7 @@
  "kwargs": {},
  "description": "Rest-to-rest 60\u00b0 slew of the spacecraft with two solar-array panels, wheel torques \u03c4\u2081\u2013\u03c4\u2083 and array-drive torques \u03bc\u2081, \u03bc\u2082, ending with both panel normals at 40\u00b0 about b\u2081 from b\u2083 (the commanded sun-pointing angle); the panels start at 0\u00b0. The drive torques are weighted 10\u00d7 the wheel torques (R = 1e5 against 1e4) and the panel rates 100, which keeps the drive torque near 0.01 N\u00b7m.",
  "notes": "Wheel angles are cyclic and dropped; the panel angles are not (they are controlled through \u03bc). The total angular momentum is conserved under the internal wheel and drive torques: three uncontrollable modes at eigenvalue 0, LQR on the 10-D controllable subspace, rest-to-rest start.",
- "stabilizable": true,
+ "stabilizable": false,
  "equilibrium_residual": 0.0,
  "u_eq": [
   0.0,

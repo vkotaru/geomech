@@ -4,7 +4,7 @@
  "kwargs": {},
  "description": "Rest-to-rest 60\u00b0 slew with the three wheel torques only (R = 1e4: peak wheel torque about 0.19 N\u00b7m).",
  "notes": "Wheel angles are cyclic (zero columns of A and B) and dropped from the design; the three components of the conserved angular momentum are uncontrollable (eigenvalue 0) and LQR is designed on the controllable subspace. The rest-to-rest (zero total momentum) start is essential: internal torques cannot change the total angular momentum, so a start with momentum cannot come to rest at R = I.",
- "stabilizable": true,
+ "stabilizable": false,
  "equilibrium_residual": 0.0,
  "u_eq": [
   0.0,
