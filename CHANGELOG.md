@@ -27,6 +27,12 @@ All notable changes to `geomech` are recorded here. The format follows
   `multi_quadrotor_rigid_load`. Each is verified with `check_eom` for n = 1, …, 6, and
   removing any derived term fails the check; the spherical chain also matches Lee et al.
   eq. 5.17 at every n tested.
+- `multi_quadrotor_hose(n_links=…)` in `geomech.systems`: two quadrotors carrying a
+  flexible hose of n links, one at each end, on R³ × (S²)ⁿ × SO(3)² (the model of Kotaru
+  and Sreenath, 2020). The hose is n massless links with point masses at the joints;
+  `geomech.systems.aerial.hose_system(n_links, attach)` attaches quadrotors at any set of
+  joints. Checked with `check_eom`, against an independent model of its bodies, and with
+  stored reference outputs; the library now has 30 systems.
 - `geomech.core.base.expressions.DeferredOperand`: `Expr` arithmetic returns
   `NotImplemented` for such an operand, so `m * Sum(...)` is built by the sum.
 

@@ -40,7 +40,7 @@ def test_golden_file_set_is_complete():
     )
     # every parametric system is stored at two sizes
     n_parametric = sum(1 for info in SCRIPT.list_systems() if info.parameters)
-    assert n_parametric == 5
+    assert n_parametric == 6
     assert len(ENTRIES) == len({name for _, name, _ in ENTRIES}) + n_parametric
 
 

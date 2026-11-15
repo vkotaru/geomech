@@ -220,6 +220,7 @@ ORDER = (
     "quadrotor_flexible_cable",
     "multi_quadrotor_point_mass",
     "multi_quadrotor_rigid_load",
+    "multi_quadrotor_hose",
 )
 
 _REGISTRY: dict[str, Callable[..., System]] = {}
