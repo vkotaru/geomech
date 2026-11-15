@@ -13,21 +13,6 @@ Do not derive by hand and do not use Euler angles: geomech derives coordinate-fr
 equations (Lee et al., *Global Formulations of Lagrangian and Hamiltonian Dynamics on
 Manifolds*).
 
-## Setup
-
-The skill needs the `geomech` package (Python 3.10 or later; NumPy is its only required
-dependency). Check with `python -c "import geomech"`; if it fails, install it into the
-project's environment:
-
-```bash
-pip install geomech              # derivation, checks, linearization, code generation
-pip install "geomech[sim]"       # adds SciPy, needed by lqr and method="solve_ivp"
-pip install "geomech[casadi]"    # adds CasADi for the CasADi code target
-```
-
-Run every snippet below with that environment's Python, and state the installed version
-(`geomech.__version__`) with the result.
-
 ## Known systems: start from the library
 
 If the system is one of `geomech.systems.list_systems()` (point mass, spring, planar and
