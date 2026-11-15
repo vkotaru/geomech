@@ -57,6 +57,7 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 | `n_link_spherical_chain(n_links=…)` | (S²)ⁿ | 6 | Lee et al. §5.3, eq. 5.14; §5.6.5 for n = 2 | — |
 | `elastic_spherical_pendulum` | R × S² | 3 | — | — |
 | `cart_spherical_pendulum` | R × S² | 3 | — | — |
+| `cart_planar_pendulum` | R × S¹ | 2 | elementary | — |
 | `free_rigid_body` | SO(3) | 3 | Lee et al. §6.6.1 | Lee et al. eq. 6.16 |
 | `heavy_top` | SO(3) | 3 | Lee et al. §6.6.2 | Lee et al. eq. 6.20 |
 | `rigid_pendulum` | SO(3) | 3 | Lee et al. §6.6.2; general form eq. 6.8 | Lee et al. eq. 6.20 |
@@ -84,6 +85,14 @@ cable direction `q` points from the pivot (or quadrotor) to the mass, so `q = �
 hangs down, and Ω is the body-frame angular velocity. The planar pendulums
 (`planar_pendulum`, `double_planar_pendulum`) swing in the vertical plane normal to the
 S¹ axis `e2 = (0, 1, 0)`, a parameter like `e3`.
+
+`cart_planar_pendulum` is `cart_spherical_pendulum` with the pendulum held in the rail's
+vertical plane: the same parameters (M, m, l, the rail direction `e1`), and `q` on the
+circle normal to `e2` (the horizontal normal to that plane, `e1·e2 = 0`). Near upright,
+`q = (sin φ, 0, cos φ)` and `ω = φ̇`. `tests/test_systems_book.py` compares its equations
+with the textbook cart-pole in the angle φ, and `tests/test_s1_manifold.py` checks that
+they agree with those of `cart_spherical_pendulum` at in-plane states (`q·e₂ = 0`,
+`ω ∥ e₂`) and that the two models simulate alike from an in-plane start.
 
 `double_planar_pendulum` is compared with Lee et al. eq. 4.62 with its velocity terms
 corrected: the book prints `m₂L₁L₂ ω₂(ω₂ − ω₁) q₁ᵀSq₂` and `m₂L₁L₂ ω₁(ω₁ − ω₂) q₂ᵀSq₁`,

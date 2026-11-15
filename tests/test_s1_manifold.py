@@ -563,11 +563,88 @@ def test_spacecraft_s1_simulates_like_the_r3_model():
         assert np.max(np.abs(t2[f"q_{i}"] @ b)) < 1e-12
 
 
+def _in_plane_envs(rng):
+    """The same in-plane state of the planar and the 3-D cart-pole: ``q·e₂ = 0`` and, for
+    the 3-D model, ``ω = ω e₂`` and ``ω̇ = ω̇ e₂`` (random cart and pendulum values, random
+    force)."""
+    planar, spherical = get("cart_planar_pendulum"), get("cart_spherical_pendulum")
+    p = dict(planar.params)
+    e2 = np.asarray(p["e2"], float)
+    phi = rng.uniform(-np.pi, np.pi)
+    q = np.array([np.sin(phi), 0.0, np.cos(phi)])
+    w, wd = rng.normal(size=2)
+    common = {
+        k: float(v) if np.isscalar(v) else np.asarray(v, float).reshape(3, 1) for k, v in p.items()
+    }
+    common.update(
+        {
+            "s": rng.normal(),
+            "\\frac{d}{dt}(s)": rng.normal(),
+            "\\frac{d}{dt}(\\frac{d}{dt}(s))": rng.normal(),
+            "f": rng.normal(),
+            "q": q.reshape(3, 1),
+        }
+    )
+    env_p = {**common, "\\omega_{q}": w, "\\frac{d}{dt}(\\omega_{q})": wd}
+    env_s = {
+        **common,
+        "\\omega_{q}": (w * e2).reshape(3, 1),
+        "\\frac{d}{dt}(\\omega_{q})": (wd * e2).reshape(3, 1),
+    }
+    return planar, spherical, env_p, env_s, q, e2
+
+
+def test_cart_planar_pendulum_is_the_3d_cart_pole_in_the_plane():
+    """At in-plane states (``q·e₂ = 0``, ``ω ∥ e₂``, ``ω̇ ∥ e₂``) the equations of
+    ``cart_planar_pendulum`` are those of ``cart_spherical_pendulum``: the cart rows agree,
+    the e₂ component of the 3-D pendulum row (``ξ = γ e₂``) is the S¹ row, and the
+    out-of-plane component (``ξ ∥ e₂ × q``) vanishes, so the plane is invariant."""
+    planar, spherical = get("cart_planar_pendulum"), get("cart_spherical_pendulum")
+    eom_p, eom_s = planar.derive(), spherical.derive()
+    rng = np.random.default_rng(3)
+    for _ in range(5):
+        _, _, env_p, env_s, q, e2 = _in_plane_envs(rng)
+        ev_p, ev_s = Evaluator(env=env_p, rng=rng), Evaluator(env=env_s, rng=rng)
+        Es_p = float(ev_p(eom_p["\\delta{s}"][1]))
+        Es_s = float(ev_s(eom_s["\\delta{s}"][1]))
+        Eg = float(ev_p(eom_p["\\gamma_{q}"][1]))
+        Ex = np.asarray(ev_s(eom_s["\\xi_{q}"][1]), float).reshape(3)
+        scale = max(1.0, abs(Es_p), abs(Eg))
+        assert abs(Es_p - Es_s) < 1e-12 * scale
+        assert abs(Ex @ e2 - Eg) < 1e-12 * scale
+        assert abs(Ex @ np.cross(e2, q)) < 1e-12 * scale
+
+
+def test_cart_planar_pendulum_simulates_like_the_3d_cart_pole_in_the_plane():
+    """From the same in-plane state, with the same constant rail force, the planar and the
+    3-D cart-poles give the same cart motion and pendulum direction, the 3-D pendulum
+    stays in the plane and its ω stays along e₂ with the S¹ ω as its component."""
+    planar, spherical = get("cart_planar_pendulum"), get("cart_spherical_pendulum")
+    mods = {}
+    for s in (planar, spherical):
+        mods[s.name] = _load(to_standard_form(s.derive(), s.variables, s.inputs), s.layout())
+    p_planar, p_sph = dict(planar.params), dict(spherical.params)
+    e2 = np.asarray(p_planar["e2"])
+    q0 = np.array([np.sin(0.4), 0.0, np.cos(0.4)])
+    x_planar = planar.layout().pack(s=0.1, q=q0, s_dot=-0.2, omega_q=0.7)
+    x_sph = spherical.layout().pack(s=0.1, q=q0, s_dot=-0.2, omega_q=0.7 * e2)
+    u = [1.5]
+    t1 = simulate(mods[planar.name], x_planar, 2.0, p_planar, u=u, dt=1e-3)
+    t2 = simulate(mods[spherical.name], x_sph, 2.0, p_sph, u=u, dt=1e-3)
+    assert np.allclose(t1["s"], t2["s"], atol=1e-9)
+    assert np.allclose(t1["s_dot"], t2["s_dot"], atol=1e-9)
+    assert np.allclose(t1["q"], t2["q"], atol=1e-9)
+    assert np.max(np.abs(t2["q"] @ e2)) < 1e-12
+    assert np.allclose(t2["omega_q"], np.outer(t1["omega_q"], e2), atol=1e-9)
+    assert np.ptp(t1["s"]) > 0.1 and np.ptp(t1["q"][:, 0]) > 0.1  # it moved
+
+
 @pytest.mark.parametrize(
     "name",
     [
         "planar_pendulum",
         "double_planar_pendulum",
+        "cart_planar_pendulum",
         "spacecraft_reaction_wheels_s1",
         "spacecraft_solar_arrays",
     ],

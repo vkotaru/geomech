@@ -44,7 +44,11 @@ from geomech.systems.aerial import (
     quadrotor_offset_com,
     quadrotor_suspended_load,
 )
-from geomech.systems.circles import double_planar_pendulum, planar_pendulum
+from geomech.systems.circles import (
+    cart_planar_pendulum,
+    double_planar_pendulum,
+    planar_pendulum,
+)
 from geomech.systems.multibody import (
     biped_3d,
     spacecraft_reaction_wheels,
@@ -92,6 +96,7 @@ __all__ = [
     "n_link_spherical_chain",
     "elastic_spherical_pendulum",
     "cart_spherical_pendulum",
+    "cart_planar_pendulum",
     "free_rigid_body",
     "heavy_top",
     "rigid_pendulum",

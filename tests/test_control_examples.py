@@ -139,6 +139,33 @@ def test_readme_table_is_the_stored_results():
         assert f"`{ex.name}`" in readme
 
 
+def test_planar_cart_pole_is_controllable_and_matches_the_3d_in_plane_design():
+    """The planar cart-pole (R × S¹) is fully controllable, rank 4 of 4, and designed with
+    the library's ``lqr``; its closed-loop eigenvalues are the controlled ones of the 3-D
+    cart-pole's design on its controllable (in-plane) subspace, with the same weights.
+    The stored runs settle at the same time."""
+    import json
+
+    _, _, _, dp = designed("cart_planar_pendulum_inverted")
+    assert dp.n_reduced == 4 and dp.rank == 4 and not dp.uncontrollable
+    assert dp.used_library_lqr
+    _, _, _, ds = designed("cart_spherical_pendulum_inverted_in_plane")
+    assert ds.n_reduced == 6 and ds.rank == 4
+    cp, cs = dp.ctrl, ds.ctrl
+    eig_p = np.linalg.eigvals(cp.A - cp.B @ cp.K)
+    eig_s = np.linalg.eigvals(ds.V.T @ (cs.A - cs.B @ cs.K) @ ds.V)
+    key = lambda z: (round(z.real, 8), round(z.imag, 8))
+    assert np.allclose(sorted(eig_p, key=key), sorted(eig_s, key=key), atol=1e-8)
+    assert np.max(eig_p.real) < 0
+    a, b = (
+        json.loads((HERE / "results" / f"{n}.json").read_text())
+        for n in ("cart_planar_pendulum_inverted", "cart_spherical_pendulum_inverted_in_plane")
+    )
+    assert a["controllability_rank"] == a["n_reduced"] == 4 and a["converged"]
+    assert a["settling_time"] == pytest.approx(b["settling_time"], abs=1e-9)
+    assert a["closed_loop_max_real"] == pytest.approx(b["closed_loop_max_real"], rel=1e-9)
+
+
 tracking = _load("tracking", "control_examples_tracking")
 
 

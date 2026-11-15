@@ -82,6 +82,12 @@ def cart_planar_pendulum():
     return System(L, dW, variables, [f, tau], dict(s=s, q=q, n=n))
 
 
+def cart_planar_pendulum_library():
+    """``geomech.systems.cart_planar_pendulum``: the planar cart-pole on R × S¹ with the
+    rail force only (the builder above also actuates the pendulum)."""
+    return _from_library(systems.cart_planar_pendulum(), "M m g l e1 e2 e3 s q f")
+
+
 def gyroscopic_s1():
     """An S¹ point whose momentum depends on the configuration: ``L = ½ J ω² + c ω a·q −
     k e₃·q``, ``δW = γ τ``. ``∂L/∂ω = J ω + c a·q``, so integration by parts differentiates
@@ -131,6 +137,7 @@ SYSTEMS = [
     rotating_hoop,
     elastic_planar_pendulums,
     cart_planar_pendulum,
+    cart_planar_pendulum_library,
     gyroscopic_s1,
     s1_hanging_from_s2,
     spacecraft_reaction_wheels_s1,

@@ -34,7 +34,7 @@ Planar pendulums: ``geomech.systems.circles``
 ---------------------------------------------
 
 .. automodule:: geomech.systems.circles
-   :members: planar_pendulum, double_planar_pendulum
+   :members: planar_pendulum, double_planar_pendulum, cart_planar_pendulum
 
 Rigid bodies: ``geomech.systems.rigid``
 ---------------------------------------

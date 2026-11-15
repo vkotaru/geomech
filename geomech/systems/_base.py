@@ -201,6 +201,7 @@ ORDER = (
     "n_link_spherical_chain",
     "elastic_spherical_pendulum",
     "cart_spherical_pendulum",
+    "cart_planar_pendulum",
     "free_rigid_body",
     "heavy_top",
     "rigid_pendulum",

@@ -172,6 +172,10 @@ class Model:
         ]
         self.forces = lambda c, u: [(u["f"] * e1, lambda c: c["s"] * e1)]
 
+    def cart_planar_pendulum(self, n):
+        # the same bodies; q stays in the plane normal to e₂ along the S¹ flow
+        self.cart_spherical_pendulum(n)
+
     # ---- rigid bodies
     def free_rigid_body(self, n):
         self.bodies = [(self.v("J"), "\\Omega_{R}")]
@@ -633,3 +637,19 @@ def test_the_check_detects_a_missing_panel_term():
     mu1, eta = s.symbols["mu"][0], s.symbols["R"].get_variation_vector()
     no_reaction = s.dW + mu1 * Dot(a1, eta)
     assert errors(_replaced(s, dW=no_reaction), "spacecraft_solar_arrays", 0)[1] > 1e-3
+
+
+def test_the_check_detects_a_wrong_planar_cart_pole():
+    """The planar cart-pole's Lagrangian without the cart–pendulum coupling ``m ṡ e₁·(l q̇)``
+    fails the model check, and so does the rail force applied to the bob instead of the
+    cart."""
+    from geomech import Dot
+
+    s = get("cart_planar_pendulum")
+    assert max(errors(s, "cart_planar_pendulum", 0)) < TOL
+    sym = s.symbols
+    m, l, e1, q, f = sym["m"], sym["l"], sym["e1"], sym["q"], sym["f"]
+    no_coupling = s.L - m * l * sym["s"].t_diff() * Dot(e1, q.t_diff())
+    assert errors(_replaced(s, L=no_coupling), "cart_planar_pendulum", 0)[0] > 1e-3
+    on_bob = s.dW + f * l * Dot(e1, q.delta())
+    assert errors(_replaced(s, dW=on_bob), "cart_planar_pendulum", 0)[1] > 1e-3

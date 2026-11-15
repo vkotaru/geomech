@@ -59,6 +59,7 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
 | `double_spherical_pendulum_inverted` | 8 | 8 | -2.55 | 1.00 | — | 0.312 | 1.60 s | 6.33 N·m | 9.9e-15 | yes |
 | `n_link_spherical_chain_inverted` | 12 | 12 | -2.17 | 1.00 | — | 0.305 | 1.88 s | 7.72 N·m | 1.5e-14 | yes |
 | `elastic_spherical_pendulum_inverted` | 6 | 6 | -0.559 | 0.09 | 0.1 | 0.342 | 4.38 s | 0.527 N, 5.29 N·m | 7.1e-15 | yes |
+| `cart_planar_pendulum_inverted` | 4 | 4 | -1.51 | 0.79 | 0.3 | 0.175 | 3.01 s | 21.4 N | 1.1e-16 | yes |
 | `rigid_pendulum_inverted` | 6 | 6 | -3.16 | 1.00 | — | 0.436 | 1.22 s | 3.8 N·m | 4.1e-14 | yes |
 | `double_rigid_pendulum_inverted` | 12 | 12 | -2.97 | 1.00 | — | 0.315 | 1.50 s | 4.32 N·m | 4.1e-14 | yes |
 | `n_link_rigid_chain_inverted` | 18 | 18 | -2.42 | 1.00 | — | 0.306 | 1.57 s | 5.87 N·m | 5.1e-14 | yes |
@@ -88,6 +89,15 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
 
 ### Notes per example
 
+- **Planar cart-pole.** `cart_planar_pendulum_inverted` is the in-plane run of the 3-D
+  cart-pole on `cart_planar_pendulum` (R × S¹), with the same start (0.3 m, 10° tilt),
+  weights, `R = 0.1` and horizon. Unlike the 3-D cart-pole, whose *linearization* is not
+  stabilizable (the sideways swing is uncontrollable to first order, with eigenvalues
+  ±√(g/l)), the planar cart-pole is fully controllable (rank 4 of 4) and the library's
+  `lqr` applies directly. Its closed-loop eigenvalues are those of the controllable part
+  of the 3-D design (max Re λ = −1.51, min ζ = 0.79) and it settles in the same
+  t_s = 3.01 s, final ν = 2.2e-4; the peak rail force is 21.4 N (21.3 N in 3-D, where the
+  S² tangent coordinate of the 10° tilt is sin 10° rather than 10°).
 - **Cart-pole (3-D) is not stabilizable.** The single cart force on a rail along e₁
   cannot act on the pendulum's swing out of the rail's vertical plane: that mode is
   uncontrollable with eigenvalues ±√(g/l) = ±3.5 s⁻¹ (PBH and the controllable-subspace

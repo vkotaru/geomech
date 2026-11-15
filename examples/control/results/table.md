@@ -4,6 +4,7 @@
 | `double_spherical_pendulum_inverted` | 8 | 8 | -2.55 | 1.00 | — | 0.312 | 1.60 s | 6.33 N·m | 9.9e-15 | yes |
 | `n_link_spherical_chain_inverted` | 12 | 12 | -2.17 | 1.00 | — | 0.305 | 1.88 s | 7.72 N·m | 1.5e-14 | yes |
 | `elastic_spherical_pendulum_inverted` | 6 | 6 | -0.559 | 0.09 | 0.1 | 0.342 | 4.38 s | 0.527 N, 5.29 N·m | 7.1e-15 | yes |
+| `cart_planar_pendulum_inverted` | 4 | 4 | -1.51 | 0.79 | 0.3 | 0.175 | 3.01 s | 21.4 N | 1.1e-16 | yes |
 | `rigid_pendulum_inverted` | 6 | 6 | -3.16 | 1.00 | — | 0.436 | 1.22 s | 3.8 N·m | 4.1e-14 | yes |
 | `double_rigid_pendulum_inverted` | 12 | 12 | -2.97 | 1.00 | — | 0.315 | 1.50 s | 4.32 N·m | 4.1e-14 | yes |
 | `n_link_rigid_chain_inverted` | 18 | 18 | -2.42 | 1.00 | — | 0.306 | 1.57 s | 5.87 N·m | 5.1e-14 | yes |
