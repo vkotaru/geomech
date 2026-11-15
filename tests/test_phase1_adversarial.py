@@ -1,10 +1,10 @@
 """Adversarial review of phase 1: S² rule, collect, Hat(Vee), extract,
-oracle.
+numerical check.
 
 The confirmed findings (``F<n>``) were first written as strict ``xfail`` tests and are
 now all passing: F1 (``collect`` loop) and F3 (default step) were fixed in the engine and
-the oracle. F2 (a gravity term next to a stiff ``k = 1e7`` term) is a resolution limit of
-the oracle's normalisation, not a bug: the flipped term moves the relative error by about
+the numerical check. F2 (a gravity term next to a stiff ``k = 1e7`` term) is a resolution limit of
+the normalisation of ``check_eom``, not a bug: the flipped term moves the relative error by about
 5e-7 at any step size, far below the 1e-5 gate, so no single call can both accept the
 correct equation and reject the flipped one. The resolution is that ``assert_eom`` names
 the unresolved terms instead of passing silently; the F2 tests assert that behaviour.
@@ -75,7 +75,7 @@ from tests.phase1_systems import (
 
 # h=1e-4 keeps the finite-difference noise two orders below the gate; it was pinned here
 # while the default was 1e-5 (F3) and is kept explicit because the engine, not the
-# oracle's default step, is what is under test.
+# default step of ``check_eom``, is what is under test.
 H = 1e-4
 
 
@@ -547,7 +547,7 @@ class TestExtractOnPipelineOutput:
 
 
 # ---------------------------------------------------------------------------
-# 7. The oracle itself
+# 7. The numerical check itself
 # ---------------------------------------------------------------------------
 
 

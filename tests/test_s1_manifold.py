@@ -6,7 +6,7 @@ plane ``e × ·`` is the book's rotation ``S`` by π/2, so the derived equations
 eq. 4.12. The tests below cover, in order: the leaf and its validation, the manifold rule,
 the S¹ vector identities (each against a numeric evaluation on the circle), the derived
 equations of §4.6 (pinned strings, compared with the book's), the validation of
-``compute_eom``, the standard form and VBL, the numeric oracle, code generation,
+``compute_eom``, the standard form and VBL, the numerical check, code generation,
 simulation, LQR, and the spacecraft with wheels on SO(3) × (S¹)³ against its R³ twin.
 """
 
@@ -355,7 +355,7 @@ def test_trace_names_the_s1_stages():
 
 
 # ---------------------------------------------------------------------------
-# Numeric oracle
+# Numerical check
 # ---------------------------------------------------------------------------
 
 

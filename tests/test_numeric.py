@@ -1,6 +1,6 @@
-"""Self-tests of ``geomech.numeric``: ``evaluate`` on known trees and the ``check_eom`` oracle.
+"""Self-tests of ``geomech.numeric``: ``evaluate`` on known trees and ``check_eom``.
 
-The oracle tests assert two things: a correct equation scores at finite-difference noise
+The ``check_eom`` tests assert two things: a correct equation scores at finite-difference noise
 (~1e-6) and a wrong one scores far above it. The second half is what makes the first half
 evidence rather than a tautology.
 """
@@ -240,7 +240,7 @@ def _normal_to_sphere(term, q, variables, inputs):
     """True if *term* has no tangent component at random points of the manifold.
 
     The coefficient of ξ ⊥ q is only defined on the tangent plane, so the sign of a term
-    like ω × (q × ẋ) = q (ω·ẋ) carries no information and the oracle must not see it.
+    like ω × (q × ẋ) = q (ω·ẋ) carries no information and ``check_eom`` must not see it.
     """
     rng = np.random.default_rng(11)
     for _ in range(3):

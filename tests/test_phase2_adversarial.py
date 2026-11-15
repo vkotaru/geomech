@@ -4,7 +4,7 @@ Every new guard is attacked two ways: a legitimate system that must still derive
 positive) and a misuse that must raise (false negative). Confirmed findings are strict
 ``xfail`` tests whose reason starts with ``F<n>``. Everything else here pins what held.
 
-The numeric oracle (``check_eom``) is used wherever a derived equation is claimed correct,
+The numerical check (``check_eom``) is used wherever a derived equation is claimed correct,
 so the tests do not depend on the printed form alone.
 """
 
@@ -151,7 +151,7 @@ class TestF2TangentVectorNameClash:
     variable, but neither looks at the *tangent* vector names (``ω_q``, ``Ω_R``). A plain
     ``Vector("\\omega_{q}")`` next to ``S2("q")`` is then two different leaves with one
     printed name; every str-keyed consumer (printing, ``check_eom``, ``linearize``) merges
-    them and the equation is wrong (oracle error ≈ 2 for the params case)."""
+    them and the equation is wrong (``check_eom`` error ≈ 2 for the params case)."""
 
     def test_param_named_like_the_tangent_vector_raises(self):
         L, q, om, xi, f = spherical_pendulum()
@@ -180,7 +180,7 @@ class TestF2TangentVectorNameClash:
             )
 
     def test_renamed_param_passes_the_oracle(self):
-        """Before the fix the clashing name derived an equation with oracle error ≈ 2; the
+        """Before the fix the clashing name derived an equation with ``check_eom`` error ≈ 2; the
         same Lagrangian with ``w`` renamed passes, so the rename the message asks for works."""
         L, q, om, xi, f = spherical_pendulum()
         variables = SystemVariables(vectors=[q])
@@ -291,7 +291,7 @@ class TestF5AttrAsString:
 
 
 # ---------------------------------------------------------------------------
-# 2.2 held: legitimate systems with prescribed parameters derive and pass the oracle
+# 2.2 held: legitimate systems with prescribed parameters derive and pass the numerical check
 # ---------------------------------------------------------------------------
 
 

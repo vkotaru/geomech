@@ -93,7 +93,7 @@ from geomech.dynamics import (
     to_standard_form,
 )
 
-# --- Numeric oracle (imports only layers 1-2 itself, so it may sit anywhere after them) ---
+# --- Numerical check (imports only layers 1-2 itself, so it may sit anywhere after them) ---
 from geomech.numeric import (
     Evaluator,
     assert_eom,

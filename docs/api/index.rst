@@ -15,7 +15,7 @@ Page                                                Contents
 :doc:`core-transformations`                         ``expand``, ``pull``, ``simplify``, manifold rules
 :doc:`core-math`                                    ``extract_linear_coeff``, ``collect``, integration by parts
 :doc:`dynamics`                                     ``compute_eom``, ``to_standard_form``, ``linearize``
-:doc:`numeric`                                      the numeric oracle (``evaluate``, ``check_eom``)
+:doc:`numeric`                                      the numerical check (``evaluate``, ``check_eom``)
 :doc:`codegen`                                      ``StateLayout``, ``lambdify``, ``generate_module``
 :doc:`simulation`                                   ``simulate``, ``accelerations``, ``lqr``
 :doc:`viz`                                          ``Scene``, ``Report``
