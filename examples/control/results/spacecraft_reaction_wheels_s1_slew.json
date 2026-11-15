@@ -1,0 +1,71 @@
+{
+ "name": "spacecraft_reaction_wheels_s1_slew",
+ "system": "spacecraft_reaction_wheels_s1",
+ "kwargs": {},
+ "description": "The rest-to-rest 60\u00b0 slew of spacecraft_reaction_wheels_slew on the S\u00b9 model (wheel directions q\u1d62 on circles): same weights, same input weight, same horizon.",
+ "notes": "The S\u00b9 wheel angles are cyclic like \u03b8\u1d62 and dropped; the design and the closed loop are those of the R\u00b3 model up to the order of the coordinates, so t_s and \u03bd match it.",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 9,
+ "dropped": [
+  "gamma_q_1",
+  "gamma_q_2",
+  "gamma_q_3"
+ ],
+ "controllability_rank": 6,
+ "uncontrollable_eigenvalues": [
+  [
+   3.528618421453392e-18,
+   2.715896815971669e-18
+  ],
+  [
+   3.528618421453392e-18,
+   -2.715896815971669e-18
+  ],
+  [
+   -1.908602647865497e-18,
+   0.0
+  ]
+ ],
+ "closed_loop_max_real": -0.3714301108299717,
+ "closed_loop_min_damping": 0.7200767194521492,
+ "closed_loop_fastest": 0.5955355954440078,
+ "library_lqr": false,
+ "horizon": 25.0,
+ "dt": 0.001,
+ "derive_seconds": 0.012581089977174997,
+ "initial_error": {
+  "position": null,
+  "attitude": 1.0471975511965979,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 15.93671286618337,
+ "final_normalized_error": 6.746243125444945e-05,
+ "max_normalized_error": 1.0,
+ "settling_time": 10.15,
+ "converged": true,
+ "peak_inputs": {
+  "\\tau_1": {
+   "peak_deviation": 0.19119124031819895,
+   "peak_abs": 0.19119124031819895,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_2": {
+   "peak_deviation": 0.19119124031807969,
+   "peak_abs": 0.19119124031807969,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_3": {
+   "peak_deviation": 0.19119124031818494,
+   "peak_abs": 0.19119124031818494,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 6.960729500119622e-14,
+ "energy_change": 2.3545572126348438e-08
+}

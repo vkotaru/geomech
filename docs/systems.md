@@ -66,6 +66,7 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 | `rigid_body` | R³ × SO(3) | 6 | Lee et al. §7.6.1 | Lee et al. eqs. 7.39–7.40 |
 | `spacecraft_reaction_wheels` | SO(3) × R³ | 6 | Lee et al. §9.10 | Lee et al. eqs. 9.61–9.62 |
 | `spacecraft_reaction_wheels_s1` | SO(3) × (S¹)³ | 6 | Lee et al. §9.10 | Lee et al. eqs. 9.61–9.62 |
+| `spacecraft_solar_arrays` | SO(3) × (S¹)³ × (S¹)² | 8 | — | — |
 | `biped_3d` | SO(3) × SO(3) | 6 | — | — |
 | `quadrotor` | R³ × SO(3) | 6 | Lee, Leok, McClamroch (2010) | — |
 | `quadrotor_offset_com` | R³ × SO(3) | 6 | — | — |
@@ -106,10 +107,18 @@ A "—" in the last column means no closed form is compared: the equations are v
 the numeric oracle ([Numeric verification](numeric-verification.md)) and the Lagrangian by
 the independent model below.
 
-**Two multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles θᵢ as
+**Multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles θᵢ as
 scalars in R; `spacecraft_reaction_wheels_s1` puts them on S¹ as the book does (the angle
 is cyclic, so the equations are the same); a test also checks that the inertial angular momentum is
-conserved without input. `biped_3d` is only the continuous single-support (swing) phase
+conserved without input. `spacecraft_solar_arrays` adds two solar-array panels to the S¹
+spacecraft, each a rigid plate with its own mass and inertia turned by a drive about the
+bus-fixed axis ±b₁, its normal an S¹ point. It is a free-floating model: with no
+external force and zero linear momentum, the composite centre of mass is at rest and is a
+fixed point of the bus frame (each panel's centre of mass lies on its drive axis), so a
+panel's translation is the one the bus rotation induces. Tests check the Lagrangian
+against a model of the separate bodies, the conservation of the inertial angular
+momentum under wheel and drive torques, and that with massless panels and zero drive
+torques its bus and wheel equations are those of `spacecraft_reaction_wheels_s1`. `biped_3d` is only the continuous single-support (swing) phase
 of a compass-gait walker: impacts, the switch of the stance foot and the ground contact
 are not modelled, so it is not a walking model.
 
@@ -118,6 +127,9 @@ variables and parameters, and a shape's size and a cylinder's axis are numbers. 
 wheels sit at `0.3 bᵢ` (they follow the parameters) with their discs along the body axes
 e₁, e₂, e₃, the default `bᵢ`; they do not turn with θᵢ, since there is no sine or cosine
 to build `R expm(θᵢ b̂ᵢ)`, and an axisymmetric wheel looks the same when it spins anyway.
+The solar-array panels do turn: the panel attitude `R Pₖ` is built from the panel normal
+`nₖ` and the drive axis `aₖ`, `Pₖ = aₖb₁ᵀ + (nₖ × aₖ)b₂ᵀ + nₖb₃ᵀ`, a rotation when b₁, b₂,
+b₃ are the body axes (the default).
 The biped's legs and the rigid chain's links are placed from the parameters but drawn with
 their default lengths. The biped's ground plane is drawn only.
 

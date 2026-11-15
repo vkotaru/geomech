@@ -39,6 +39,7 @@ EXPECTED = {
     "rigid_body": 6,
     "spacecraft_reaction_wheels": 6,
     "spacecraft_reaction_wheels_s1": 6,
+    "spacecraft_solar_arrays": 8,
     "biped_3d": 6,
     "quadrotor": 6,
     "quadrotor_offset_com": 6,

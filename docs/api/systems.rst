@@ -56,4 +56,5 @@ Multibody systems: ``geomech.systems.multibody``
 ------------------------------------------------
 
 .. automodule:: geomech.systems.multibody
-   :members: spacecraft_reaction_wheels, spacecraft_reaction_wheels_s1, biped_3d
+   :members: spacecraft_reaction_wheels, spacecraft_reaction_wheels_s1,
+             spacecraft_solar_arrays, biped_3d

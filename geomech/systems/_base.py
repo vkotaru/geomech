@@ -210,6 +210,7 @@ ORDER = (
     "rigid_body",
     "spacecraft_reaction_wheels",
     "spacecraft_reaction_wheels_s1",
+    "spacecraft_solar_arrays",
     "biped_3d",
     "quadrotor",
     "quadrotor_offset_com",
