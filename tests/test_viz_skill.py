@@ -1,5 +1,5 @@
-"""The agent skill (``skills/geomech``): front matter, the copy for Claude Code, and every
-fenced Python block run in a subprocess."""
+"""The agent skill (``skills/geomech``): front matter and every fenced Python block run in a
+subprocess."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "skills" / "geomech"
-COPY = ROOT / ".claude" / "skills" / "geomech"
 FILES = ["SKILL.md", "reference.md"]
 
 _BLOCK = re.compile(r"^```python\n(.*?)^```", re.S | re.M)
@@ -43,14 +42,6 @@ def test_front_matter():
     desc = fields["description"]
     assert 50 < len(desc) <= 1024 and "Use when" in desc
     assert "<" not in desc and ">" not in desc
-
-
-def test_claude_code_copy_is_identical():
-    for name in FILES:
-        assert (COPY / name).read_bytes() == (SKILL / name).read_bytes(), (
-            f".claude/skills/geomech/{name} differs from skills/geomech/{name}; copy it"
-        )
-    assert sorted(p.name for p in COPY.iterdir()) == sorted(p.name for p in SKILL.iterdir())
 
 
 def test_no_scala_reference_and_book_name():

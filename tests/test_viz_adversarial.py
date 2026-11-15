@@ -805,10 +805,6 @@ def test_skill_front_matter_agent_skills_format():
     assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", name) and len(name) <= 64
     assert name == SKILL.name
     assert 0 < len(desc) <= 1024 and "<" not in desc and ">" not in desc
-    for f in ("SKILL.md", "reference.md"):
-        assert (SKILL / f).read_bytes() == (
-            ROOT / ".claude" / "skills" / "geomech" / f
-        ).read_bytes()
 
 
 def test_skill_procedure_on_new_system(body_pendulum):
