@@ -13,7 +13,7 @@ every other test pins a property that held:
 - decision D1: a named scalar with a value is a symbol in every pass, in LaTeX and in
   standard form; ``evaluate`` uses the value; equal values do not merge;
 - reviewer Lagrangians (non-symmetric and skew matrices, row forms, named values, S²,
-  SO(3), products, scalar configurations) agree with the Euler-Lagrange oracle and their
+  SO(3), products, scalar configurations) agree with the numerical Euler-Lagrange check and their
   linearizations with finite differences.
 """
 
@@ -403,7 +403,7 @@ def test_minus_one_forms():
 
 
 # ---------------------------------------------------------------------------
-# 6. Reviewer Lagrangians: oracle and linearization
+# 6. Reviewer Lagrangians: numerical check and linearization
 # ---------------------------------------------------------------------------
 
 

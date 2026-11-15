@@ -1,6 +1,6 @@
 """``geomech.simulation``: accelerations, state checks, the ``simulate`` API, ``log_so3``.
 
-- ``accelerations`` on every S² system of the oracle gate: ``ω̇`` is tangent
+- ``accelerations`` on every S² system of the numerical check gate: ``ω̇`` is tangent
   (``|q·ω̇| < 1e-12``) and the tangent-plane equation ``P_q (M a + f + G u) = 0`` holds to
   1e-10, whether the derived S² mass block is singular (quadrotor with load) or full rank
   (spherical pendulum). A singular system raises ``LinAlgError`` with the condition

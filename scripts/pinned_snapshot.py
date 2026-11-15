@@ -16,8 +16,8 @@ later replays the same calls with the working tree and compares.
      of ``tests/vbl_systems.py``, ``tests/phase1_systems.py`` and ``tests/test_eom_oracle.py``.
   3. Replays every call outside pytest and stores, per call: ``str`` of every output
      (equation, standard-form block, linearization block), its value at five fixed states
-     (seeds 1001..1005), and for ``compute_eom`` the oracle ``check_eom`` (seed 0, 5 trials),
-     or the exception class and message.
+     (seeds 1001..1005), and for ``compute_eom`` the numerical check ``check_eom`` (seed 0,
+     5 trials), or the exception class and message.
 
 ``compare``
   Replays the stored calls with the current code and reports, per output, whether the

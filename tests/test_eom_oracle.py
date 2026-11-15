@@ -1,4 +1,4 @@
-"""Every pinned system passes the finite-difference Euler-Lagrange oracle.
+"""Every pinned system passes the finite-difference Euler-Lagrange check.
 
 The systems are the nine of ``tests/vbl_systems.py`` plus the ones pinned in
 ``tests/test_manifold_pipelines.py``, ``tests/test_standard_form.py`` and
@@ -281,7 +281,7 @@ def test_eom_matches_euler_lagrange_residual(build):
 @pytest.mark.parametrize("build", s1_systems.SYSTEMS, ids=lambda f: f.__name__)
 def test_s1_eom_matches_euler_lagrange_residual(build):
     """The systems on S¹ and its products (``tests/s1_systems.py``) against the same
-    oracle. They are kept out of ``SYSTEMS``, which the code generation tests also run with
+    check. They are kept out of ``SYSTEMS``, which the code generation tests also run with
     the S¹-free ``kinematics(state)``; ``tests/test_s1_manifold.py`` checks their generated
     code with ``kinematics(state, p)``."""
     s = build()

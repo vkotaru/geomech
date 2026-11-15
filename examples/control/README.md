@@ -78,7 +78,7 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
 | `multi_quadrotor_rigid_load_hover` | 42 | 42 | -0.438 | 0.17 | 0.412 | 0.281 | 6.81 s | 0.143 N, 0.321 N·m | 1.3e-13 | yes |
 | `two_rigid_bodies_spherical_joint_hold` | 18 | 18 | -1.03 | 0.74 | 0.412 | 0.554 | 3.64 s | 0.967 N, 1.11 N·m | 9.5e-14 | yes |
 
-† Uncontrollable modes with eigenvalue 0 (conserved quantities); LQR on the controllable subspace.
+† Not stabilizable in the strict sense: uncontrollable modes with eigenvalue 0 (conserved quantities). LQR on the controllable subspace converges from initial states on the invariant subspace (for the spacecraft, zero total angular momentum).
 
 **Not stabilizable** (uncontrollable modes listed; LQR on the controllable subspace):
 
@@ -98,13 +98,20 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
   of the 3-D design (max Re λ = −1.51, min ζ = 0.79) and it settles in the same
   t_s = 3.01 s, final ν = 2.2e-4; the peak rail force is 21.4 N (21.3 N in 3-D, where the
   S² tangent coordinate of the 10° tilt is sin 10° rather than 10°).
-- **Cart-pole (3-D) is not stabilizable.** The single cart force on a rail along e₁
-  cannot act on the pendulum's swing out of the rail's vertical plane: that mode is
-  uncontrollable with eigenvalues ±√(g/l) = ±3.5 s⁻¹ (PBH and the controllable-subspace
-  rank 4 of 6 agree). `cart_spherical_pendulum_inverted_in_plane` designs LQR on the
-  controllable (in-plane) subspace and starts in the plane. It converges because the
-  out-of-plane component starts at exactly zero and stays zero by symmetry (the run also
-  converges over 12 s): no input can correct it, so any out-of-plane perturbation grows.
+- **Cart-pole (3-D): the linearization is not stabilizable.** The cart force on a rail
+  along e₁ exerts no torque about the rail axis, so at the upright equilibrium the
+  pendulum's swing out of the rail's vertical plane is uncontrollable to first order, with
+  eigenvalues ±√(g/l) = ±3.5 s⁻¹ (PBH and the controllable-subspace rank 4 of 6 agree).
+  Every smooth (C¹) state feedback therefore leaves the eigenvalue +3.5 in the closed-loop
+  linearization and the upright equilibrium unstable (Lyapunov's indirect method); LQR, or
+  any controller designed on the linearization, cannot stabilize it. The force does reach
+  the sideways swing through nonlinear coupling (once the pendulum is tilted both in and
+  out of the plane, the rail force changes the rate about the vertical and so the
+  sideways angle), so this does not rule out nonsmooth or time-varying nonlinear
+  controllers; none is tried here. `cart_spherical_pendulum_inverted_in_plane` designs LQR
+  on the controllable (in-plane) subspace and starts in the plane. It converges because
+  the out-of-plane component starts at exactly zero and stays zero by symmetry (the run
+  also converges over 12 s); any out-of-plane perturbation grows under this controller.
   `cart_spherical_pendulum_out_of_plane` adds a 1°
   out-of-plane tilt to the same run: it diverges (the simulation stops at t ≈ 3.9 s).
 - **Spacecraft with reaction wheels (†).** The wheel angles are cyclic (their columns of

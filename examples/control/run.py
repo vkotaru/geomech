@@ -539,8 +539,10 @@ def table(results: list[dict]) -> str:
     out = head + "".join(row(m) for m in good)
     if any(m["uncontrollable_eigenvalues"] for m in good):
         out += (
-            "\n† Uncontrollable modes with eigenvalue 0 (conserved quantities); LQR on the"
-            " controllable subspace.\n"
+            "\n† Not stabilizable in the strict sense: uncontrollable modes with eigenvalue 0"
+            " (conserved quantities). LQR on the controllable subspace converges from initial"
+            " states on the invariant subspace (for the spacecraft, zero total angular"
+            " momentum).\n"
         )
     if bad:
         out += "\n**Not stabilizable** (uncontrollable modes listed; LQR on the controllable"

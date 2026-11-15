@@ -1,6 +1,6 @@
 """Systems and helpers shared by the code generation tests (``tests/test_codegen*.py``).
 
-``ALL_SYSTEMS`` is every builder of the numeric oracle gate (``tests/test_eom_oracle.py``,
+``ALL_SYSTEMS`` is every builder of the numerical check gate (``tests/test_eom_oracle.py``,
 which includes the nine of ``tests/vbl_systems.py`` and the pinned phase-1 systems) plus the
 adversarial systems of ``tests/phase1_systems.py``. ``derived(build)`` runs the pipeline
 once per builder and caches the result.

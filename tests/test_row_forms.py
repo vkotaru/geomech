@@ -2,7 +2,7 @@
 
 ``x.T() * K`` builds the row ``MVMul(xᵀ, K)``. These tests check that such rows go through
 ``compute_eom`` (the derived equation is compared with the Euler-Lagrange equation derived
-by hand, and with the finite-difference oracle), that ``expand`` distributes them in row
+by hand, and with the finite-difference check), that ``expand`` distributes them in row
 form, and that ``extract_linear_coeff`` takes their column structurally.
 """
 

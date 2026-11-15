@@ -11,7 +11,7 @@ p·δω + (∂L/∂q)·(ξ × q) + δW after integration by parts, i.e. on the t
     E ≡ −ṗ + 2 ω × p + q × ∂L/∂q + f        (mod q).
 
 Each test below pins the printed equation, derives it by hand from this formula in its
-docstring and checks it against the finite-difference Euler-Lagrange oracle
+docstring and checks it with the finite-difference Euler-Lagrange check
 (``geomech.numeric.assert_eom``), which uses none of the library's variational rules.
 """
 
