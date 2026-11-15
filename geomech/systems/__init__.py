@@ -49,6 +49,7 @@ from geomech.systems.multibody import (
     biped_3d,
     spacecraft_reaction_wheels,
     spacecraft_reaction_wheels_s1,
+    spacecraft_solar_arrays,
 )
 from geomech.systems.rigid import (
     double_rigid_pendulum,
@@ -100,6 +101,7 @@ __all__ = [
     "rigid_body",
     "spacecraft_reaction_wheels",
     "spacecraft_reaction_wheels_s1",
+    "spacecraft_solar_arrays",
     "biped_3d",
     "quadrotor",
     "quadrotor_offset_com",

@@ -95,6 +95,33 @@ def team_equilibrium(n, tilt_rad, rigid):
     return f
 
 
+#: The commanded sun-pointing angle of the solar-array panels (deg): both panel normals
+#: turned from b₃ about b₁ by this angle, towards −b₂.
+SUN_ANGLE = 40.0
+
+
+def wheels_at_x0(**slots):
+    """Equilibrium function: the S¹ wheel directions of the system's ``x0`` (any direction
+    on each wheel's circle is an equilibrium) and the given slots."""
+
+    def f(sys_, layout):
+        vals = layout.unpack(sys_.x0)
+        return {**{k: vals[k] for k in ("q_1", "q_2", "q_3")}, **slots}
+
+    return f
+
+
+def sun_pointing(angle_deg):
+    """Equilibrium of ``spacecraft_solar_arrays``: ``R = I``, the wheels at ``x0`` and both
+    panel normals at *angle_deg* about b₁ from b₃."""
+
+    def f(sys_, layout):
+        n = tilt(UP, angle_deg, sys_.params["b1"])
+        return wheels_at_x0(R=I3, n_1=n, n_2=n)(sys_, layout)
+
+    return f
+
+
 def _axis(*v):
     v = np.asarray(v, float)
     return v / np.linalg.norm(v)
@@ -258,6 +285,42 @@ EXAMPLES = [
         " (eigenvalue 0) and LQR is designed on the controllable subspace. The rest-to-rest"
         " (zero total momentum) start is essential: internal torques cannot change the"
         " total angular momentum, so a start with momentum cannot come to rest at R = I.",
+    ),
+    Example(
+        "spacecraft_reaction_wheels_s1_slew",
+        "spacecraft_reaction_wheels_s1",
+        wheels_at_x0(R=I3),
+        perturbed(R=rotate(I3, 60, (1, 1, 1))),
+        weights(1000, 1, delta_omega_q=0.1),
+        1e4,
+        25.0,
+        drop=("gamma_q_1", "gamma_q_2", "gamma_q_3"),
+        description="The rest-to-rest 60° slew of spacecraft_reaction_wheels_slew on the S¹"
+        " model (wheel directions qᵢ on circles): same weights, same input weight, same"
+        " horizon.",
+        notes="The S¹ wheel angles are cyclic like θᵢ and dropped; the design and the closed"
+        " loop are those of the R³ model up to the order of the coordinates, so t_s and ν"
+        " match it.",
+    ),
+    Example(
+        "spacecraft_solar_arrays_slew",
+        "spacecraft_solar_arrays",
+        sun_pointing(SUN_ANGLE),
+        perturbed(R=rotate(I3, 60, (1, 1, 1)), n_1=UP, n_2=UP),
+        weights(1000, 1, delta_omega_q=0.1, gamma_n=10, delta_omega_n=100),
+        [1e4, 1e4, 1e4, 1e5, 1e5],
+        30.0,
+        drop=("gamma_q_1", "gamma_q_2", "gamma_q_3"),
+        description="Rest-to-rest 60° slew of the spacecraft with two solar-array panels,"
+        f" wheel torques τ₁–τ₃ and array-drive torques μ₁, μ₂, ending with both panel"
+        f" normals at {SUN_ANGLE:g}° about b₁ from b₃ (the commanded sun-pointing angle);"
+        " the panels start at 0°. The drive torques are weighted 10× the wheel torques"
+        " (R = 1e5 against 1e4) and the panel rates 100, which keeps the drive torque"
+        " near 0.01 N·m.",
+        notes="Wheel angles are cyclic and dropped; the panel angles are not (they are"
+        " controlled through μ). The total angular momentum is conserved under the internal"
+        " wheel and drive torques: three uncontrollable modes at eigenvalue 0, LQR on the"
+        " 10-D controllable subspace, rest-to-rest start.",
     ),
     Example(
         "biped_3d_balance",

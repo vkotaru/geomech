@@ -307,6 +307,64 @@ class Model:
         its S¹ point ``q_i`` about bᵢ (``wheel_angle``)."""
         self.spacecraft_reaction_wheels(n)
 
+    def spacecraft_solar_arrays(self, n):
+        """The bodies of ``spacecraft_reaction_wheels_s1`` plus two panels. Panel k: attitude
+        ``R expm(φₖ âₖ)`` with φₖ the angle about aₖ of its S¹ point ``n_k`` from a fixed
+        reference normal ``n⁰ₖ ⊥ aₖ``; inertia ``Ia aₖaₖᵀ + In n⁰ₖn⁰ₖᵀ + Iw wₖwₖᵀ``
+        (``wₖ = aₖ × n⁰ₖ``) in its own frame; mass ``m_pk`` at ``R dₖ aₖ`` (measured, like
+        ``J_b``, from the composite centre of mass, which is at rest). The drive applies
+        +μₖ aₖ to the panel and −μₖ aₖ to the bus."""
+        self.spacecraft_reaction_wheels(n)
+        wheels_T, wheels_W = self.extra_T, self.extra_W
+        axes = [self.v(f"a{k}") for k in (1, 2)]
+
+        def frame(k):
+            a = axes[k - 1]
+            n0 = np.cross(a, [0.3, -0.5, 0.8])
+            n0 /= np.linalg.norm(n0)
+            return a, n0
+
+        def panel(c, k):
+            a, n0 = frame(k)
+            n = col(c[f"n_{k}"])
+            phi = np.arctan2(a @ np.cross(n0, n), n0 @ n)
+            return c["R"] @ expm_so3(phi * a)
+
+        def J0(k):
+            a, n0 = frame(k)
+            w = np.cross(a, n0)
+            return (
+                self.v(f"Ia_{k}") * np.outer(a, a)
+                + self.v(f"In_{k}") * np.outer(n0, n0)
+                + self.v(f"Iw_{k}") * np.outer(w, w)
+            )
+
+        def body_rate(Rp, Rm):
+            Om = (0.5 * (Rp + Rm)).T @ ((Rp - Rm) / (2 * H))
+            return np.array([Om[2, 1], Om[0, 2], Om[1, 0]])
+
+        self.points = lambda c, t: [
+            (self.v(f"m_p{k}"), c["R"] @ (self.v(f"d_{k}") * axes[k - 1])) for k in (1, 2)
+        ]
+
+        def extra_T(cp, cm):
+            T = wheels_T(cp, cm)
+            for k in (1, 2):
+                w = body_rate(panel(cp, k), panel(cm, k))
+                T += 0.5 * w @ J0(k) @ w
+            return T
+
+        def extra_W(c0, vp, vm, u):
+            W = wheels_W(c0, vp, vm, u)
+            eta = body_rate(vp["R"], vm["R"])
+            for k in (1, 2):
+                a, mu = axes[k - 1], u[f"\\mu_{k}"]
+                W += mu * a @ body_rate(panel(vp, k), panel(vm, k))  # +μ a on the panel
+                W -= mu * a @ eta  # −μ a on the bus
+            return W
+
+        self.extra_T, self.extra_W = extra_T, extra_W
+
     def biped_3d(self, n):
         """Hip point mass at the top of the stance leg, legs of length l along their body
         axis e₃ (foot to hip), centres of mass a from the foot, J about the centre of mass;
@@ -557,3 +615,21 @@ def test_the_check_detects_a_missing_joint_reaction():
     no_spin = s.L - Dot(Om2, J2 * Om2) * HALF
     assert errors(_replaced(s, L=no_spin), "n_link_rigid_chain", 0)[0] > 1e-3
     assert max(errors(s, "n_link_rigid_chain", 0)) < TOL
+
+
+def test_the_check_detects_a_missing_panel_term():
+    """The solar-array spacecraft without the translational energy of panel 1, or without
+    the bus reaction of drive 1, fails the model check."""
+    from geomech import Cross, Dot
+    from geomech.core.base import HALF
+
+    s = get("spacecraft_solar_arrays")
+    assert max(errors(s, "spacecraft_solar_arrays", 0)) < TOL
+    Om = s.symbols["R"].get_tangent_vector()
+    a1, m1, d1 = s.symbols["a"][0], s.symbols["m_p"][0], s.symbols["d"][0]
+    v = Cross(Om, a1)
+    no_translation = s.L - HALF * m1 * d1 * d1 * Dot(v, v)
+    assert errors(_replaced(s, L=no_translation), "spacecraft_solar_arrays", 0)[0] > 1e-3
+    mu1, eta = s.symbols["mu"][0], s.symbols["R"].get_variation_vector()
+    no_reaction = s.dW + mu1 * Dot(a1, eta)
+    assert errors(_replaced(s, dW=no_reaction), "spacecraft_solar_arrays", 0)[1] > 1e-3

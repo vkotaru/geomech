@@ -1,0 +1,83 @@
+{
+ "name": "spacecraft_solar_arrays_slew",
+ "system": "spacecraft_solar_arrays",
+ "kwargs": {},
+ "description": "Rest-to-rest 60\u00b0 slew of the spacecraft with two solar-array panels, wheel torques \u03c4\u2081\u2013\u03c4\u2083 and array-drive torques \u03bc\u2081, \u03bc\u2082, ending with both panel normals at 40\u00b0 about b\u2081 from b\u2083 (the commanded sun-pointing angle); the panels start at 0\u00b0. The drive torques are weighted 10\u00d7 the wheel torques (R = 1e5 against 1e4) and the panel rates 100, which keeps the drive torque near 0.01 N\u00b7m.",
+ "notes": "Wheel angles are cyclic and dropped; the panel angles are not (they are controlled through \u03bc). The total angular momentum is conserved under the internal wheel and drive torques: three uncontrollable modes at eigenvalue 0, LQR on the 10-D controllable subspace, rest-to-rest start.",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 13,
+ "dropped": [
+  "gamma_q_1",
+  "gamma_q_2",
+  "gamma_q_3"
+ ],
+ "controllability_rank": 10,
+ "uncontrollable_eigenvalues": [
+  [
+   1.9322160422167244e-18,
+   0.0
+  ],
+  [
+   -4.496730799423606e-18,
+   0.0
+  ],
+  [
+   3.5512850419e-18,
+   0.0
+  ]
+ ],
+ "closed_loop_max_real": -0.2806138417600913,
+ "closed_loop_min_damping": 0.7255449442898111,
+ "closed_loop_fastest": 3.1363414645880154,
+ "library_lqr": false,
+ "horizon": 30.0,
+ "dt": 0.001,
+ "derive_seconds": 0.04692135704681277,
+ "initial_error": {
+  "position": null,
+  "attitude": 1.4392353714905768,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 30.38831861084327,
+ "final_normalized_error": 0.00019552273555754782,
+ "max_normalized_error": 1.0,
+ "settling_time": 13.52,
+ "converged": true,
+ "peak_inputs": {
+  "\\tau_1": {
+   "peak_deviation": 0.19020872650926887,
+   "peak_abs": 0.19020872650926887,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_2": {
+   "peak_deviation": 0.1911966086873572,
+   "peak_abs": 0.1911966086873572,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_3": {
+   "peak_deviation": 0.19119397286472356,
+   "peak_abs": 0.19119397286472356,
+   "unit": "N\u00b7m"
+  },
+  "\\mu_1": {
+   "peak_deviation": 0.008204903390230557,
+   "peak_abs": 0.008204903390230557,
+   "unit": "N\u00b7m"
+  },
+  "\\mu_2": {
+   "peak_deviation": 0.008204903390205557,
+   "peak_abs": 0.008204903390205557,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.3304570424174713e-13,
+ "energy_change": 1.2085371268813223e-06
+}

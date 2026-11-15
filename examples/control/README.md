@@ -22,7 +22,8 @@ Needs scipy (`pip install "geomech[sim]"`).
    tangent planes). The residual is at round-off (≤ 1e-15) for every example.
 3. The reduced linearization `δẋ = A δx + B δu` from
    `geomech.simulation.reduced_linearization`, in the coordinates of `lqr`: S²
-   perturbations in a 2-D tangent basis, SO(3) errors as `vee(log(R_eqᵀR))`.
+   perturbations in a 2-D tangent basis, S¹ errors as the angle about the axis, SO(3)
+   errors as `vee(log(R_eqᵀR))`.
 4. Controllability: an orthonormal basis of the controllable subspace (block Krylov
    iteration) and the eigenvalues of `A` on its complement (the uncontrollable modes),
    cross-checked with the PBH test. A fully controllable system is designed with the
@@ -41,7 +42,7 @@ Needs scipy (`pip install "geomech[sim]"`).
 subspace; `max Re λ`: the slowest controlled closed-loop eigenvalue; `min ζ`: the smallest
 damping ratio `−Re λ/|λ|` of the controlled modes; `e₀ pos.`: the norm of the initial
 position error (R³ and length coordinates, m); `e₀ att.`: the norm of the initial
-attitude error (S² and SO(3) coordinates, rad). Convergence uses the normalized error
+attitude error (S¹, S² and SO(3) coordinates, rad). Convergence uses the normalized error
 `ν(t) = √(V(z(t)) / V(z(0)))`, with `V = zᵀPz` the LQR cost-to-go (`P` the Riccati
 solution on the controllable subspace): a weighted norm of the whole reduced error that
 the linear closed loop decreases monotonically. `t_s` is the last exit time of ν from the
@@ -63,6 +64,8 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
 | `n_link_rigid_chain_inverted` | 18 | 18 | -2.42 | 1.00 | — | 0.306 | 1.57 s | 5.87 N·m | 5.1e-14 | yes |
 | `free_rigid_body_attitude` | 6 | 6 | -1.66 | 0.78 | — | 1.92 | 2.27 s | 4.96 N·m | 1.1e-13 | yes |
 | `spacecraft_reaction_wheels_slew` † | 9 | 6 | -0.371 | 0.72 | — | 1.05 | 10.15 s | 0.191 N·m | 7.0e-14 | yes |
+| `spacecraft_reaction_wheels_s1_slew` † | 9 | 6 | -0.371 | 0.72 | — | 1.05 | 10.15 s | 0.191 N·m | 7.0e-14 | yes |
+| `spacecraft_solar_arrays_slew` † | 13 | 10 | -0.281 | 0.73 | — | 1.44 | 13.52 s | 0.191 N·m | 1.3e-13 | yes |
 | `biped_3d_balance` | 12 | 12 | -0.882 | 0.21 | — | 0.145 | 1.87 s | 20.4 N·m | 6.9e-14 | yes |
 | `rigid_body_pose` | 12 | 12 | -0.924 | 0.73 | 1.22 | 1.57 | 3.93 s | 3.16 N, 4.97 N·m | 5.6e-14 | yes |
 | `quadrotor_hover` | 12 | 12 | -0.924 | 0.71 | 1.87 | 1.05 | 3.78 s | 1.58 N, 4.76 N·m | 9.5e-14 | yes |
@@ -103,6 +106,24 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
   momentum cannot come to rest at `R = I` with wheel torques alone. With `R = 1e4` the
   60° slew settles in 10.2 s with a peak wheel torque of 0.19 N·m (no saturation is
   modelled).
+- **Spacecraft with S¹ wheels (†).** `spacecraft_reaction_wheels_s1_slew` is the slew
+  above on `spacecraft_reaction_wheels_s1`, with the same weights, `R = 1e4` and horizon.
+  The wheel directions qᵢ are cyclic like θᵢ (their angle errors γᵢ are dropped), and the
+  reduced linearization is the R³ one with its coordinates reordered, so the result is
+  the same: t_s = 10.15 s, final ν = 6.7e-5, peak wheel torque 0.191 N·m, identical in
+  every reported digit to `spacecraft_reaction_wheels_slew`.
+- **Spacecraft with solar arrays (†).** `spacecraft_solar_arrays_slew`: the same 60° slew
+  on `spacecraft_solar_arrays`, with the three wheel torques and the two array-drive
+  torques, ending with both panel normals turned 40° about b₁ from b₃ (the commanded
+  sun-pointing angle; the panels start at 0°). The wheel angles are dropped as above; the
+  panel angles are kept and controlled through the drive torques. The internal torques
+  conserve the total angular momentum: rank 10 of 13, three uncontrollable modes at
+  eigenvalue 0, so the system is stabilizable only on the zero-momentum subspace, which
+  the rest-to-rest start lies on. It converges: t_s = 13.5 s, final ν = 2.0e-4, the
+  panels at 40.0° (error below 1e-4 rad). The drive torques are weighted 10× the wheel
+  torques and the panel rates 100: peak wheel torque 0.191 N·m, peak drive torque
+  0.008 N·m (the table shows the larger, per unit). The panels' rate relative to the bus
+  peaks at 0.23 rad/s, mostly the bus turning under them while the weak drives hold them.
 - **Lightly damped modes.** The elastic cable of `quadrotor_elastic_load_hover` has a
   closed-loop cable-spring mode near 28 rad/s with damping ratio 0.015 under uniform
   weights; weighting the stretch rate 10 gives 0.039, which is used. Heavier weights damp

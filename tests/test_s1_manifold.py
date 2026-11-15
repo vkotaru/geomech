@@ -564,7 +564,13 @@ def test_spacecraft_s1_simulates_like_the_r3_model():
 
 
 @pytest.mark.parametrize(
-    "name", ["planar_pendulum", "double_planar_pendulum", "spacecraft_reaction_wheels_s1"]
+    "name",
+    [
+        "planar_pendulum",
+        "double_planar_pendulum",
+        "spacecraft_reaction_wheels_s1",
+        "spacecraft_solar_arrays",
+    ],
 )
 def test_x0_lies_on_the_circles(name):
     s = get(name)

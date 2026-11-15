@@ -119,6 +119,11 @@ def spacecraft_reaction_wheels_s1():
     return _from_library(systems.spacecraft_reaction_wheels_s1(), "R J_b b q tau")
 
 
+def spacecraft_solar_arrays():
+    """``geomech.systems.spacecraft_solar_arrays``: SO(3) × (S¹)³ × (S¹)²."""
+    return _from_library(systems.spacecraft_solar_arrays(), "R J_b b q tau a n mu")
+
+
 SYSTEMS = [
     planar_pendulum,
     planar_pendulum_qdot,
@@ -129,4 +134,5 @@ SYSTEMS = [
     gyroscopic_s1,
     s1_hanging_from_s2,
     spacecraft_reaction_wheels_s1,
+    spacecraft_solar_arrays,
 ]

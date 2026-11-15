@@ -42,6 +42,21 @@ All notable changes to `geomech` are recorded here. The format follows
     angles on S¹, as in Lee et al. §9.10; its equations print as those of
     `spacecraft_reaction_wheels` after renaming `θ̇ᵢ → ωᵢ`, and the two simulate to the
     same trajectory.
+- `spacecraft_solar_arrays` in `geomech.systems` (SO(3) × (S¹)³ × (S¹)², 8 dof): the S¹
+  reaction-wheel spacecraft with two solar-array panels, each a rigid plate with its own
+  mass and inertia, turned by a drive about the bus-fixed axis ±b₁ (its normal an `S1`
+  point) whose torque acts equal and opposite on the bus; inputs the three wheel torques
+  and the two drive torques. Free-floating model (zero linear momentum, the composite
+  centre of mass at rest and fixed in the bus frame). Verified by `check_eom`, by an
+  independent model of the separate bodies, by conservation of the inertial angular
+  momentum under wheel and drive torques, and by its reduction to
+  `spacecraft_reaction_wheels_s1` with massless panels; its scene turns the panels.
+- Two control examples in `examples/control/`: `spacecraft_reaction_wheels_s1_slew` (the
+  60° rest-to-rest slew on the S¹ wheel model; same settling time and normalized error as
+  the R³ model) and `spacecraft_solar_arrays_slew` (the slew with wheel and array-drive
+  torques, ending with the panels at a commanded sun-pointing angle). The examples' LQR
+  on the controllable subspace now passes the S¹ axes to `LQRController`, and the S¹
+  angle errors count as attitude errors in the reports.
 - `geomech.simulation.reduced_linearization(lin_module, x, u, p, *, a=None, basis=...)`
   and `ReducedLinearization`: the reduced linearization that `lqr` designs with (`A`, `B`,
   `T`, labels, S² bases and the full matrices), without solving a Riccati equation; `lqr`

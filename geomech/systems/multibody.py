@@ -1,5 +1,6 @@
 """Multibody systems on SO(3) and its products: a spacecraft with reaction wheels (wheel
-angles on R³ or on (S¹)³) and the swing phase of a three-dimensional compass-gait biped.
+angles on R³ or on (S¹)³), the same spacecraft with two solar-array drives, and the swing
+phase of a three-dimensional compass-gait biped.
 
 Ω is the body-frame angular velocity (``Ṙ = R Ω̂``), η the variation (``δR = R η̂``); a
 body-frame moment ``M`` on ``R`` enters as ``η·M`` and an inertial-frame moment ``M`` as
@@ -12,7 +13,7 @@ from __future__ import annotations
 import numpy as np
 
 from geomech.core.base import SO3, I, Matrix, Scalar, Vector, ZeroVector, getScalars
-from geomech.core.operations import Dot, MVMul, Transpose
+from geomech.core.operations import Cross, Dot, MVMul, Transpose
 from geomech.dynamics.variables import SystemVariables
 from geomech.systems._base import E3, HALF, Reference, frozen_array, make_system, register, rot
 
@@ -29,26 +30,42 @@ def _inertia(name):
     return Matrix(name, attr=["Constant", "SymmetricMatrix"])
 
 
-def _spacecraft_scene(R, bs, markers=()):
+#: Solar-array panel: a thin plate of 0.9 m along its drive axis and 0.35 m across, its
+#: centre 0.72 m from the bus centre (the scene's panel geometry).
+PANEL_SIZE = (0.9, 0.35, 0.015)
+PANEL_OFFSET = 0.72
+
+
+def _spacecraft_scene(R, bs, markers=(), panels=None):
     """The bus (a box with two solar panels) and a cylinder per wheel centred at ``0.3 bᵢ``
     with its disc normal along the body axis e₁, e₂ or e₃; *markers* are body-frame points
-    drawn as small spheres (the rim mark of an S¹ wheel)."""
+    drawn as small spheres (the rim mark of an S¹ wheel).
+
+    *panels* (``None``: two panels fixed to the bus at ``±0.72 e₁``) is a list of
+    ``(P, offset)``: the panel's attitude ``P`` relative to the bus (a matrix expression)
+    and the centre of its plate in the panel frame (a constant vector expression); the
+    panel is drawn with attitude ``R P``."""
 
     def scene(layout, s):
         from geomech.viz import Box, Cylinder, PointMass, RigidBody, Scene
 
         sc = Scene(layout)
         sc.add(RigidBody(R, ZeroVector, Box(0.5, 0.4, 0.35), color="link1", name="bus"))
-        for side in (1, -1):
+        if panels is None:
+            fixed = [(R, [side * PANEL_OFFSET, 0, 0], side) for side in (1, -1)]
+        else:
+            fixed = [(R * P, off, k) for k, (P, off) in enumerate(panels, 1)]
+        for att, off, tag in fixed:
+            name = f"panel {'+' if tag == 1 else '-'}" if panels is None else f"panel {tag}"
             sc.add(
                 RigidBody(
-                    R,
+                    att,
                     ZeroVector,
-                    Box(0.9, 0.35, 0.015),
-                    offset=[side * 0.72, 0, 0],
+                    Box(*PANEL_SIZE),
+                    offset=off,
                     axes=False,
                     color="link2",
-                    name=f"panel {'+' if side > 0 else '-'}",
+                    name=name,
                 )
             )
         for i, (axis, b) in enumerate(zip("xyz", bs), 1):
@@ -233,6 +250,174 @@ def spacecraft_reaction_wheels_s1():
     )
 
 
+@register("SO(3) × (S¹)³ × (S¹)²")
+def spacecraft_solar_arrays():
+    """The spacecraft of ``spacecraft_reaction_wheels_s1`` with two solar-array panels, each
+    a rigid plate turned relative to the bus by a solar-array drive, on
+    SO(3) × (S¹)³ × (S¹)²: attitude R, body angular velocity Ω, wheel directions qᵢ and
+    panel normals nₖ.
+
+    Panel k turns about the bus-fixed unit axis ``aₖ`` (its drive axis, along the panel's
+    length; ``a₁ = b₁``, ``a₂ = −b₁``, the panel geometry of the scene). ``nₖ`` is the
+    panel's normal written in the body frame: an ``S1`` point with axis ``aₖ``, so
+    ``ṅₖ = ϖₖ aₖ × nₖ`` with ``ϖₖ`` (printed ``ω_{n_k}``) the drive rate relative to the
+    bus, and ``δnₖ = γₖ aₖ × nₖ``. The panel's centre of mass lies on its drive axis at
+    ``ρₖ = dₖ aₖ``, so it does not move in the bus frame when the panel turns; its mass is
+    ``m_pk`` and its principal moments of inertia about its centre of mass are ``Ia_k``
+    about ``aₖ``, ``In_k`` about ``nₖ`` and ``Iw_k`` about the in-plane width direction
+    ``aₖ × nₖ``.
+
+    Kinetic energy of each body, from first principles. Model assumption: free floating,
+    no external force, total linear momentum zero. The composite centre of mass then stays
+    at the inertial origin, and because every body's centre of mass is fixed in the bus
+    frame (the wheels' on their axes, the panels' on their drive axes) it is a fixed point
+    of the bus frame, taken as the body-frame origin. ``ρₖ`` is measured from it and
+    ``J_b`` (the bus with the wheels locked, minus the wheels' axial inertias, as in
+    ``spacecraft_reaction_wheels``) is about it; for the default symmetric panels it is
+    the bus centre. Then the velocity of panel k's centre of mass is ``R (Ω × ρₖ)``
+    (translation induced by the bus rotation), its angular velocity in the body frame is
+    ``Ω + ϖₖ aₖ``, and its inertia in the body frame is
+    ``Ia_k aₖaₖᵀ + In_k nₖnₖᵀ + Iw_k (aₖ × nₖ)(aₖ × nₖ)ᵀ``; since ``nₖ·aₖ = 0``,
+
+    ``L = ½ Ω·J_bΩ + Σᵢ ½ Iᵢ (ωᵢ + bᵢ·Ω)²
+    + Σₖ [½ m_pk dₖ² |Ω × aₖ|² + ½ Ia_k (ϖₖ + aₖ·Ω)² + ½ In_k (nₖ·Ω)²
+    + ½ Iw_k ((aₖ × nₖ)·Ω)²]`` (no potential).
+
+    Each motor (wheel torque τᵢ, drive torque μₖ) acts equal and opposite on the bus:
+    ``δW = Σᵢ τᵢ (γᵢ + bᵢ·η) − Σᵢ τᵢ bᵢ·η + Σₖ μₖ (γₖ + aₖ·η) − Σₖ μₖ aₖ·η``, inputs
+    ``[τ₁, τ₂, τ₃, μ₁, μ₂]``. Without input (or with internal torques only) the inertial
+    angular momentum
+    ``R (J_bΩ + Σᵢ Iᵢ(ωᵢ + bᵢ·Ω) bᵢ + Σₖ [m_pk dₖ² (Ω − (aₖ·Ω) aₖ) + Jₖ(Ω + ϖₖ aₖ)])``
+    is conserved, with ``Jₖ`` the panel inertia above. With ``m_pk = Ia_k = In_k = Iw_k =
+    0`` and ``μₖ = 0`` the bus and wheel equations are those of
+    ``spacecraft_reaction_wheels_s1``. Verified by ``check_eom`` and by an independent
+    model of the bodies (``tests/test_systems_physics.py``); no closed form is compared.
+
+    Defaults: the bus and wheels of ``spacecraft_reaction_wheels``; each panel a uniform
+    thin plate of 1 kg, 0.9 m along ``aₖ`` and 0.35 m across, centred at ``dₖ = 0.72`` m,
+    so ``Ia = m w²/12 = 0.0102``, ``Iw = m ℓ²/12 = 0.0675`` and ``In = Ia + Iw = 0.0777``
+    (kg m²).
+
+    Scene: the bus and wheels of ``spacecraft_reaction_wheels_s1`` (with their rim marks);
+    panel k is drawn as the plate with attitude ``R Pₖ``,
+    ``Pₖ = aₖb₁ᵀ + (nₖ × aₖ)b₂ᵀ + nₖb₃ᵀ`` (a rotation when b₁, b₂, b₃ are an orthonormal
+    right-handed frame, as by default), centred at ``R dₖ aₖ``; it turns with ``nₖ``.
+    """
+    from geomech.core.base import S1  # not at import time: see geomech.systems.circles
+
+    R = SO3("R")
+    Om, eta = R.get_tangent_vector(), R.get_variation_vector()
+    Jb = _inertia("J_b")
+    Is = getScalars("I_1 I_2 I_3", attr=["Constant"])
+    bs = [Vector(f"b{i}", attr=["Constant", "UnitNorm"]) for i in (1, 2, 3)]
+    qs = [S1(f"q_{i}", axis=b) for i, b in zip((1, 2, 3), bs)]
+    taus = [Scalar(f"\\tau_{i}") for i in (1, 2, 3)]
+    L = HALF * Dot(Om, Jb * Om)
+    dW = None
+    for I_i, b, q, tau in zip(Is, bs, qs, taus):
+        spin = q.get_tangent_vector() + Dot(b, Om)  # absolute spin rate of the wheel about b
+        L = L + HALF * I_i * spin * spin
+        term = tau * (q.get_variation_vector() + Dot(b, eta)) - tau * Dot(b, eta)
+        dW = term if dW is None else dW + term
+    axes = [Vector(f"a{k}", attr=["Constant", "UnitNorm"]) for k in (1, 2)]
+    ns = [S1(f"n_{k}", axis=a) for k, a in zip((1, 2), axes)]
+    mus = [Scalar(f"\\mu_{k}") for k in (1, 2)]
+    masses, dists, Ias, Ins, Iws = [], [], [], [], []
+    for k, a, n, mu in zip((1, 2), axes, ns, mus):
+        m, d, Ia, In, Iw = getScalars(f"m_p{k} d_{k} Ia_{k} In_{k} Iw_{k}", attr=["Constant"])
+        v = Cross(Om, a)  # the velocity of the centre of mass in the body frame, over d
+        spin = n.get_tangent_vector() + Dot(a, Om)  # the panel's absolute rate about a
+        w = Cross(a, n)  # the in-plane width direction
+        L = (
+            L
+            + HALF * m * d * d * Dot(v, v)
+            + HALF * Ia * spin * spin
+            + HALF * In * Dot(n, Om) * Dot(n, Om)
+            + HALF * Iw * Dot(w, Om) * Dot(w, Om)
+        )
+        dW = dW + mu * (n.get_variation_vector() + Dot(a, eta)) - mu * Dot(a, eta)
+        for lst, x in zip((masses, dists, Ias, Ins, Iws), (m, d, Ia, In, Iw)):
+            lst.append(x)
+    marks = [b * 0.3 + q * 0.09 for b, q in zip(bs, qs)]
+    b1, b2, b3 = bs
+    panels = [
+        (a * Transpose(b1) + Cross(n, a) * Transpose(b2) + n * Transpose(b3), b1 * d)
+        for a, n, d in zip(axes, ns, dists)
+    ]
+    m_p = 1.0
+    length, width, _ = PANEL_SIZE
+    J_a, J_w = m_p * width**2 / 12, m_p * length**2 / 12
+    params = {
+        "J_b": J_BUS,
+        "I_1": 0.02,
+        "I_2": 0.02,
+        "I_3": 0.02,
+        "b1": np.array([1.0, 0.0, 0.0]),
+        "b2": np.array([0.0, 1.0, 0.0]),
+        "b3": np.array([0.0, 0.0, 1.0]),
+        "a1": np.array([1.0, 0.0, 0.0]),
+        "a2": np.array([-1.0, 0.0, 0.0]),
+    }
+    for k in (1, 2):
+        params.update(
+            {
+                f"m_p{k}": m_p,
+                f"d_{k}": PANEL_OFFSET,
+                f"Ia_{k}": J_a,
+                f"In_{k}": J_a + J_w,
+                f"Iw_{k}": J_w,
+            }
+        )
+
+    return make_system(
+        "spacecraft_solar_arrays",
+        "SO(3) × (S¹)³ × (S¹)²",
+        L,
+        dW,
+        SystemVariables(vectors=qs + ns, matrices=[R]),
+        taus + mus,
+        params,
+        Reference(
+            "check_eom",
+            note="spacecraft_reaction_wheels_s1 with two rigid solar-array panels on drives"
+            " about ±b₁; free floating with zero linear momentum, so the composite centre of"
+            " mass is a fixed point of the bus frame and the panel translation is induced by"
+            " the bus rotation.",
+        ),
+        x0={
+            "R": rot([0.1, 0.2, 0.3]),
+            "Omega_R": [0.05, -0.1, 0.08],
+            "q_1": [0.0, 1.0, 0.0],
+            "q_2": [0.0, 0.0, 1.0],
+            "q_3": [1.0, 0.0, 0.0],
+            "n_1": [0.0, 0.0, 1.0],
+            "n_2": [0.0, 0.0, 1.0],
+            "omega_q_1": 30.0,
+            "omega_q_2": -20.0,
+            "omega_q_3": 10.0,
+            "omega_n_1": 0.5,
+            "omega_n_2": -0.4,
+        },
+        symbols=dict(
+            R=R,
+            J_b=Jb,
+            I=tuple(Is),
+            b=tuple(bs),
+            q=tuple(qs),
+            tau=tuple(taus),
+            a=tuple(axes),
+            n=tuple(ns),
+            mu=tuple(mus),
+            m_p=tuple(masses),
+            d=tuple(dists),
+            Ia=tuple(Ias),
+            In=tuple(Ins),
+            Iw=tuple(Iws),
+        ),
+        scene=_spacecraft_scene(R, bs, marks, panels),
+    )
+
+
 @register("SO(3) × SO(3)")
 def biped_3d():
     """Swing phase of a three-dimensional compass-gait biped on SO(3) × SO(3).
@@ -371,4 +556,9 @@ def biped_3d():
     )
 
 
-__all__ = ["spacecraft_reaction_wheels", "biped_3d"]
+__all__ = [
+    "spacecraft_reaction_wheels",
+    "spacecraft_reaction_wheels_s1",
+    "spacecraft_solar_arrays",
+    "biped_3d",
+]
