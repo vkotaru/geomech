@@ -77,7 +77,7 @@ class TestRotatingSphere:
         "+Cross(q,Cross(\\omega_{q},Cross(e3,q)))*m*L*L*\\Omega*(-1)"
         "+Cross(Cross(Cross(\\omega_{q},q),e3),q)*m*L*L*\\Omega*(-1)"
         "+Cross(Cross(q,e3),Cross(\\omega_{q},q))*m*L*L*\\Omega*(-1)"
-        "+Cross(\\omega_{q},Cross(q,Cross(e3,q)))*m*L*L*\\Omega*(2)+Cross(q,C*q)*m*L*L*\\Omega*\\Omega+f)"
+        "+Cross(\\omega_{q},Cross(q,Cross(e3,q)))*m*L*L*\\Omega*(2)+Cross(q,C*q)*m*L*L*\\Omega*\\Omega+M)"
     )
     QDOT_FORM = (
         "(Cross(q,Cross(\\frac{d}{dt}(\\omega_{q}),q))*m*L*L*(-1)"
@@ -86,7 +86,7 @@ class TestRotatingSphere:
         "+Cross(q,Cross(Cross(\\omega_{q},q),e3))*m*L*L*\\Omega"
         "+Cross(\\omega_{q},Cross(q,Cross(e3,q)))*m*L*L*\\Omega*(2)"
         "+Cross(q,Cross(\\omega_{q},Cross(e3,q)))*m*L*L*\\Omega*(-1)+Cross(q,C*q)*m*L*L*\\Omega*\\Omega"
-        "+f)"
+        "+M)"
     )
 
     @staticmethod
@@ -103,12 +103,12 @@ class TestRotatingSphere:
             "\\Omega": float(rng.normal()),
             "m": float(rng.uniform(0.5, 2.0)),
             "L": float(rng.uniform(0.5, 2.0)),
-            "f": rng.normal(size=(3, 1)),
+            "M": rng.normal(size=(3, 1)),
         }
 
     @staticmethod
     def _book_543(env):
-        """−q × (left-hand side of Lee et al. 5.43) + f, with q̈ from ω̇ and ω."""
+        """−q × (left-hand side of Lee et al. 5.43) + M, with q̈ from ω̇ and ω."""
         q, w, wd = env["q"], env["\\omega_{q}"], env["\\frac{d}{dt}(\\omega_{q})"]
         m, L, Om, C = env["m"], env["L"], env["\\Omega"], env["C"]
         a = Om * env["e3"]
@@ -121,18 +121,18 @@ class TestRotatingSphere:
             + 2 * m * L**2 * P @ hat(a) @ qd
             - m * L**2 * Om**2 * P @ C @ q
         )
-        return -hat(q) @ g + env["f"]
+        return -hat(q) @ g + env["M"]
 
     @staticmethod
     def _hand_form(env):
-        """−m L² ω̇ + 2 m L² Ω ω × e₃ + m L² Ω² q × Cq + f (tangent part)."""
+        """−m L² ω̇ + 2 m L² Ω ω × e₃ + m L² Ω² q × Cq + M (tangent part)."""
         q, w, wd = env["q"], env["\\omega_{q}"], env["\\frac{d}{dt}(\\omega_{q})"]
         m, L, Om, C = env["m"], env["L"], env["\\Omega"], env["C"]
         return (
             -m * L**2 * wd
             + 2 * m * L**2 * Om * hat(w) @ env["e3"]
             + m * L**2 * Om**2 * hat(q) @ (C @ q)
-            + env["f"]
+            + env["M"]
         )
 
     def _check_against_book(self, eq):

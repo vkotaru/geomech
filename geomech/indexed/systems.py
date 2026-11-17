@@ -75,14 +75,14 @@ def spherical_chain() -> IndexedModel:
     """Chain of n spherical pendulums on (S²)ⁿ (Lee et al. §5.3, eq. 5.14).
 
     ``x_i = Σ_{j≤i} l_j q_j``; ``L = Σ_i ½ m_i ẋ_i·ẋ_i − Σ_i m_i g e₃·x_i``;
-    ``δW = Σ_i ξ_i·f_i``.
+    ``δW = Σ_i ξ_i·M_i``.
     """
     i, j = indices("i j")
     (g,) = _const("g")
     e3 = Vector("e3", attr=["Constant"])
     q = Family(S2, "q")
     m, l = Family(Scalar, "m", ["Constant"]), Family(Scalar, "l", ["Constant"])
-    f = Family(Vector, "f")
+    M = Family(Vector, "M")
 
     def x(k):
         return Sum(j, 1, k, q[j] * l[j])
@@ -91,8 +91,8 @@ def spherical_chain() -> IndexedModel:
         return x(k).t_diff()
 
     L = Sum(i, 1, n, HALF * m[i] * v(i).dot(v(i))) - Sum(i, 1, n, m[i] * g * x(i).dot(e3))
-    dW = Sum(i, 1, n, Dot(q[i].get_variation_vector(), f[i]))
-    return IndexedModel("spherical_chain", "(S²)ⁿ", L, dW, IndexedVariables(families=[q]), [f])
+    dW = Sum(i, 1, n, Dot(q[i].get_variation_vector(), M[i]))
+    return IndexedModel("spherical_chain", "(S²)ⁿ", L, dW, IndexedVariables(families=[q]), [M])
 
 
 def rigid_chain() -> IndexedModel:

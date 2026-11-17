@@ -167,11 +167,11 @@ from geomech.viz import PointMass, Report, Rod, Scene, Trace
 half = Scalar("0.5", value=0.5, attr=["Constant"])
 m, g, l = getScalars("m g l", attr=["Constant"])
 e3 = Vector("e3", attr=["Constant"])
-q, f = S2("q"), Vector("f")
+q, M = S2("q"), Vector("M")                 # M: a moment about the pivot
 omega, xi = q.get_tangent_vector(), q.get_variation_vector()
 L = half * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
-dW = Dot(xi, f)
-variables, inputs = SystemVariables(vectors=[q]), [f]
+dW = Dot(xi, M)
+variables, inputs = SystemVariables(vectors=[q]), [M]
 
 eom = compute_eom(L, dW, variables)
 err = check_eom(L, dW, variables, eom, inputs=inputs)

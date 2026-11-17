@@ -48,8 +48,8 @@ LAYOUT = {
     ],
     "inputs": [
         {
-            "symbol": "f",
-            "name": "f",
+            "symbol": "M",
+            "name": "M",
             "kind": "input",
             "shape": [3],
             "slice": [0, 3],

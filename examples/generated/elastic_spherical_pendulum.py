@@ -79,8 +79,8 @@ LAYOUT = {
             "slice": [0, 1],
         },
         {
-            "symbol": "f_q",
-            "name": "f_q",
+            "symbol": "M_q",
+            "name": "M_q",
             "kind": "input",
             "shape": [3],
             "slice": [1, 4],

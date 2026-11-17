@@ -261,7 +261,7 @@ def test_spherical_chain_matches_lee_5_17(size):
         q, rows = _eq_5_17(env, size)
         for k in range(1, size + 1):
             got = np.asarray(ev(eq.instantiate(size, k)), float).reshape(3)
-            ref = -rows[k - 1] + np.asarray(env[f"f_{{{k}}}"], float).reshape(3)
+            ref = -rows[k - 1] + np.asarray(env[f"M_{{{k}}}"], float).reshape(3)
             P = np.eye(3) - np.outer(q[k - 1], q[k - 1])
             err = np.max(np.abs(P @ (got - ref))) / max(1.0, np.max(np.abs(P @ ref)))
             assert err < 1e-9, f"n = {size}, member {k}: {got} vs {ref}"
@@ -307,7 +307,7 @@ def test_spherical_chain_structure():
     }
     text = str(eq)
     assert "Σ_{k=max(i, j)}^{n}" in text and "Σ_{j=i}^{n}" in text
-    assert text.startswith("f_{i} + ")
+    assert text.startswith("M_{i} + ")
 
 
 def test_rigid_chain_structure():

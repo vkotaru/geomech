@@ -31,15 +31,15 @@ from geomech.viz import PointMass, Report, Rod, Scene, Trace
 
 
 def model():
-    """L = ½ m l² ω·ω − m g l q·e₃, δW = ξ·f."""
+    """L = ½ m l² ω·ω − m g l q·e₃, δW = ξ·M (M a moment about the pivot)."""
     half = Scalar("0.5", value=0.5, attr=["Constant"])
     m, g, l = getScalars("m g l", attr=["Constant"])
     e3 = Vector("e3", attr=["Constant"])
-    q, f = S2("q"), Vector("f")
+    q, M = S2("q"), Vector("M")
     omega, xi = q.get_tangent_vector(), q.get_variation_vector()
     L = half * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
-    dW = Dot(xi, f)
-    return L, dW, SystemVariables(vectors=[q]), [f], dict(q=q, l=l)
+    dW = Dot(xi, M)
+    return L, dW, SystemVariables(vectors=[q]), [M], dict(q=q, l=l)
 
 
 def main(out="spherical_pendulum.html"):

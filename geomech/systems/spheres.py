@@ -130,23 +130,23 @@ def spring_mass():
 def spherical_pendulum():
     """Spherical pendulum on S² in (q, ω) form.
 
-    ``L = ½ m l² ω·ω − m g l q·e₃``, ``δW = ξ·f``, inputs ``[f]`` (a moment about the
+    ``L = ½ m l² ω·ω − m g l q·e₃``, ``δW = ξ·M``, inputs ``[M]`` (a moment about the
     pivot). Lee et al. §5.6.1, eq. 5.38 (``m l² ω̇ + m g l q × e₃ = 0``), from the general
     form eq. 5.14.
     """
     m, g, l = getScalars("m g l", attr=["Constant"])
     e3 = Vector("e3", attr=["Constant"])
-    q, f = S2("q"), Vector("f")
+    q, M = S2("q"), Vector("M")
     omega, xi = q.get_tangent_vector(), q.get_variation_vector()
     L = HALF * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
-    dW = Dot(xi, f)
+    dW = Dot(xi, M)
     return make_system(
         "spherical_pendulum",
         "S²",
         L,
         dW,
         SystemVariables(vectors=[q]),
-        [f],
+        [M],
         {"e3": E3, "g": 9.81, "l": 1.0, "m": 1.0},
         Reference(
             LEE,
@@ -155,7 +155,7 @@ def spherical_pendulum():
             note="Point mass on a massless rod of length l.",
         ),
         x0=dict(q=Q0, omega_q=W0),
-        symbols=dict(m=m, g=g, l=l, e3=e3, q=q, f=f, bob=q * l),
+        symbols=dict(m=m, g=g, l=l, e3=e3, q=q, M=M, bob=q * l),
         scene=_chain_scene(None, ["bob"]),
     )
 
@@ -166,14 +166,15 @@ def particle_on_rotating_sphere():
     sphere-fixed frame, (q, ω) form.
 
     ``L̃ = ½ m L² ( ω·ω + 2 qᵀ S(Ωe₃) S(q) ω + Ω² qᵀ C q )`` with ``C = diag(1, 1, 0)`` (a
-    constant symmetric matrix parameter), no gravity, ``δW = ξ·f``, inputs ``[f]``.
+    constant symmetric matrix parameter), no gravity, ``δW = ξ·M``, inputs ``[M]`` (a moment
+    about the centre).
     Lee et al. §5.6.2, eq. 5.43 (the same dynamics in (q, q̇) form). The conserved energy is
     the Jacobi integral ``½ m L² (|ω|² − Ω² qᵀCq)``.
     """
     m, L_, Om = getScalars("m L \\Omega", attr=["Constant"])
     e3 = Vector("e3", attr=["Constant"])
     C = Matrix("C", attr=["Constant", "SymmetricMatrix"])
-    q, f = S2("q"), Vector("f")
+    q, M = S2("q"), Vector("M")
     om, xi = q.get_tangent_vector(), q.get_variation_vector()
     S_a = Hat(e3 * Om)  # S(Ω e₃)
     coupling = Dot(q, MVMul(S_a, MVMul(Hat(q), om))) * 2
@@ -183,9 +184,9 @@ def particle_on_rotating_sphere():
         "particle_on_rotating_sphere",
         "S²",
         L,
-        Dot(xi, f),
+        Dot(xi, M),
         SystemVariables(vectors=[q]),
-        [f],
+        [M],
         {"m": 1.0, "L": 1.0, "\\Omega": 2.0, "e3": E3, "C": np.diag([1.0, 1.0, 0.0])},
         Reference(
             LEE,
@@ -194,7 +195,7 @@ def particle_on_rotating_sphere():
             note="Modified Lagrangian of §5.6.2.2; compared with eq. 5.43 through q̇ = ω × q.",
         ),
         x0=dict(q=q0, omega_q=tangent(q0, [0.5, -0.4, 0.3])),
-        symbols=dict(q=q, C=C, Om=Om, e3=e3, f=f, m=m, L=L_, particle=q * L_),
+        symbols=dict(q=q, C=C, Om=Om, e3=e3, M=M, m=m, L=L_, particle=q * L_),
         scene=_particle_scene("particle"),
     )
 
@@ -205,14 +206,14 @@ def _chain(n, name, configuration, reference):
     (g,) = getScalars("g", attr=["Constant"])
     e3 = Vector("e3", attr=["Constant"])
     qs = [S2(f"q{i}") for i in range(1, n + 1)]
-    fs = [Vector(f"f{i}") for i in range(1, n + 1)]
+    Ms = [Vector(f"M{i}") for i in range(1, n + 1)]
     points, x = [], None
     for q, l in zip(qs, lengths):
         x = q * l if x is None else x + q * l
         points.append(x)
     KE = sum(HALF * m * Dot(p.t_diff(), p.t_diff()) for m, p in zip(masses, points))
     PE = sum(m * g * Dot(p, e3) for m, p in zip(masses, points))
-    dW = sum(Dot(q.get_variation_vector(), f) for q, f in zip(qs, fs))
+    dW = sum(Dot(q.get_variation_vector(), M) for q, M in zip(qs, Ms))
     params = {"g": 9.81, "e3": E3}
     x0 = {}
     for i in range(1, n + 1):
@@ -222,14 +223,14 @@ def _chain(n, name, configuration, reference):
         x0[f"q{i}"] = qi
         x0[f"omega_q{i}"] = tangent(qi, [0.2 * i, 1.0 - 0.3 * i, 0.1])
     symbols = {f"x{i}": p for i, p in enumerate(points, 1)}
-    symbols.update(g=g, e3=e3, qs=qs, inputs=fs)
+    symbols.update(g=g, e3=e3, qs=qs, inputs=Ms)
     return make_system(
         name,
         configuration,
         KE - PE,
         dW,
         SystemVariables(vectors=qs),
-        fs,
+        Ms,
         params,
         reference,
         x0=x0,
@@ -244,7 +245,7 @@ def double_spherical_pendulum():
     """Double spherical pendulum on S² × S²: two point masses on massless links.
 
     ``x₁ = l₁ q₁``, ``x₂ = l₁ q₁ + l₂ q₂``; ``L = ½ m₁ ẋ₁·ẋ₁ + ½ m₂ ẋ₂·ẋ₂ − m₁ g e₃·x₁
-    − m₂ g e₃·x₂`` (``ẋ`` through ``q̇ᵢ = ωᵢ × qᵢ``), ``δW = ξ₁·f₁ + ξ₂·f₂``, inputs
+    − m₂ g e₃·x₂`` (``ẋ`` through ``q̇ᵢ = ωᵢ × qᵢ``), ``δW = ξ₁·M₁ + ξ₂·M₂``, inputs
     ``[f1, f2]``. Lee et al. §5.6.5, eq. 5.71. Same model as
     ``n_link_spherical_chain(n_links=2)``.
     """
@@ -266,8 +267,8 @@ def n_link_spherical_chain(*, n_links: int = 3):
     """Chain of n spherical pendulums on (S²)ⁿ: point masses mᵢ at the ends of massless
     links of length lᵢ, the first link hinged at the origin.
 
-    ``xᵢ = Σ_{j≤i} lⱼ qⱼ``; ``L = Σ ½ mᵢ ẋᵢ·ẋᵢ − Σ mᵢ g e₃·xᵢ``, ``δW = Σ ξᵢ·fᵢ``, inputs
-    ``[f1, …, fn]``. Lee et al. ch. 5 (eq. 5.14 with the Lagrangian of eq. 5.22 for
+    ``xᵢ = Σ_{j≤i} lⱼ qⱼ``; ``L = Σ ½ mᵢ ẋᵢ·ẋᵢ − Σ mᵢ g e₃·xᵢ``, ``δW = Σ ξᵢ·Mᵢ``, inputs
+    ``[M1, …, Mn]``. Lee et al. ch. 5 (eq. 5.14 with the Lagrangian of eq. 5.22 for
     n links); verified by ``check_eom``, and for n = 2 against eq. 5.71.
     ``n_links`` is an int from 1 to 20 (``MAX_SIZE``); any other value raises
     ``ValueError``.
@@ -291,32 +292,32 @@ def n_link_spherical_chain(*, n_links: int = 3):
 def elastic_spherical_pendulum():
     """Spherical pendulum on an elastic rod, on R × S²: length l and direction q.
 
-    ``L = ½ m (l̇² + l² ω·ω) − m g l q·e₃ − ½ k (l − l₀)²``, ``δW = δl f_l + ξ·f_q``,
-    inputs ``[f_l, f_q]``.
+    ``L = ½ m (l̇² + l² ω·ω) − m g l q·e₃ − ½ k (l − l₀)²``, ``δW = δl f_l + ξ·M_q``,
+    inputs ``[f_l, M_q]`` (a force along the rod and a moment about the pivot).
     """
     m, g, k, l0 = getScalars("m g k l0", attr=["Constant"])
     e3 = Vector("e3", attr=["Constant"])
     l, q = Scalar("l"), S2("q")
     omega, xi = q.get_tangent_vector(), q.get_variation_vector()
-    f_l, f_q = Scalar("f_l"), Vector("f_q")
+    f_l, M_q = Scalar("f_l"), Vector("M_q")
     ld = l.t_diff()
     KE = HALF * m * (ld * ld + l * l * Dot(omega, omega))
     PE = m * g * l * Dot(q, e3) + HALF * k * (l - l0) * (l - l0)
-    dW = l.delta() * f_l + Dot(xi, f_q)
+    dW = l.delta() * f_l + Dot(xi, M_q)
     return make_system(
         "elastic_spherical_pendulum",
         "R × S²",
         KE - PE,
         dW,
         SystemVariables(scalars=[l], vectors=[q]),
-        [f_l, f_q],
+        [f_l, M_q],
         {"e3": E3, "g": 9.81, "k": 40.0, "l0": 1.0, "m": 1.0},
         Reference(
             "check_eom",
             note="Point mass on a linear spring of rest length l0 hinged at the origin.",
         ),
         x0=dict(l=1.1, q=Q0, l_dot=0.2, omega_q=W0),
-        symbols=dict(m=m, g=g, k=k, l0=l0, e3=e3, l=l, q=q, f_l=f_l, f_q=f_q, bob=q * l),
+        symbols=dict(m=m, g=g, k=k, l0=l0, e3=e3, l=l, q=q, f_l=f_l, M_q=M_q, bob=q * l),
         scene=_chain_scene(None, ["bob"]),
     )
 
