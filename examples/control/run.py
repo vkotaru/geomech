@@ -195,7 +195,7 @@ EXAMPLES = [
         1.0,
         8.0,
         description="Upright elastic pendulum at the compressed spring length"
-        " l = l₀ − m g / k; inputs f_l (along the rod) and f_q (moment); 20° tilt, +0.1 m.",
+        " l = l₀ − m g / k; inputs f_l (along the rod) and M_q (moment); 20° tilt, +0.1 m.",
     ),
     Example(
         "cart_planar_pendulum_inverted",

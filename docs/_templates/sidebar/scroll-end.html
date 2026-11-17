@@ -1,0 +1,32 @@
+</div>
+<script>
+  // Keep the sidebar where the reader left it when a link in it opens another page. Furo
+  // rebuilds the sidebar on every page at the top, and its `scroll-behavior: smooth` turned
+  // a restore after load into a visible slide down. This runs as soon as the sidebar is
+  // parsed, before the first paint, and scrolls without animation. If the current page's
+  // link is still out of view (a page opened from elsewhere), it is centred instead.
+  (function () {
+    var KEY = "geomech-sidebar-scroll";
+    var el = document.currentScript.previousElementSibling;
+    while (el && !el.classList.contains("sidebar-scroll")) el = el.previousElementSibling;
+    el = el || document.querySelector(".sidebar-scroll");
+    if (!el) return;
+    var smooth = el.style.scrollBehavior;
+    el.style.scrollBehavior = "auto";
+    try {
+      var y = sessionStorage.getItem(KEY);
+      if (y !== null) el.scrollTop = parseInt(y, 10) || 0;
+    } catch (e) { /* storage blocked: start at the top */ }
+    var cur = el.querySelector("li.current-page > a, a.current.reference");
+    if (cur) {
+      var top = cur.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
+      if (top < el.scrollTop || top > el.scrollTop + el.clientHeight - 40) {
+        el.scrollTop = Math.max(0, top - el.clientHeight / 2);
+      }
+    }
+    el.style.scrollBehavior = smooth;
+    window.addEventListener("pagehide", function () {
+      try { sessionStorage.setItem(KEY, String(el.scrollTop)); } catch (e) {}
+    });
+  })();
+</script>

@@ -46,7 +46,7 @@ This produces the equation $m \ddot{x} = f - mge_3$, output as a LaTeX integral 
 Every symbol in `L` and `dW` is one of three things: a configuration variable (listed in
 `SystemVariables`), a constant (`attr=["Constant"]`), or a prescribed time-varying
 parameter declared with `compute_eom(L, dW, variables, params=[l])` — a cable length
-`l(t)`, say, whose rate `l̇` appears in the equations but whose variation is not free. A
+$l(t)$, say, whose rate $\dot l$ appears in the equations but whose variation is not free. A
 symbol that is none of these and whose variation survives (a forgotten `y`, an `e3`
 missing `Constant`) raises `ValueError` naming it; the terms are never dropped silently.
 
@@ -54,12 +54,12 @@ missing `Constant`) raises `ValueError` naming it; the terms are never dropped s
 
 The `compute_eom` pipeline, in the order the code runs it:
 
-δS = δL + δW → manifold rules (δω, δΩ) → `full_simplify` → integration by parts
+$\delta S = \delta L + \delta W$ → manifold rules ($\delta\omega$, $\delta\Omega$) → `full_simplify` → integration by parts
 (`expand`, `full_simplify`, then per variation vector: `collect` → IBP → `full_simplify`) →
 `expand` → extract the coefficient of each variation vector → `full_simplify`.
 
 1. **Variation** -- $\delta L$ by the product rule; manifold points are eager
-   ($\delta R = R\hat{\eta}$ for $SO(3)$, $\delta q = \xi \times q$ for $S^2$),
+   ($\delta R = R\widehat{\eta}$ for $SO(3)$, $\delta q = \xi \times q$ for $S^2$),
    and $\delta S = \delta L + \delta W$
 2. **Manifold rules** -- $\delta\omega = \dot\xi - 2\,\omega \times \xi$ on $S^2$,
    $\delta\Omega = \dot\eta + \Omega \times \eta$ on $SO(3)$
@@ -82,7 +82,7 @@ printing conventions.
 | `Scalar` | Symbolic scalar | `Scalar('m', attr=['Constant'])` |
 | `Vector` | Column vector (default 3x1) | `Vector('x')` |
 | `Matrix` | Square matrix (default 3x3) | `Matrix('J', attr=['Constant'])` |
-| `S1` | Unit vector on the circle normal to the constant unit axis `e` (`attr=['Constant', 'UnitNorm']`); scalar ω, γ | `S1('q', axis=e)` |
+| `S1` | Unit vector on the circle normal to the constant unit axis `e` (`attr=['Constant', 'UnitNorm']`); scalar $\omega$, $\gamma$ | `S1('q', axis=e)` |
 | `S2` | Unit vector on the 2-sphere | `S2('q')` |
 | `SO3` | Rotation matrix on $SO(3)$ | `SO3('R')` |
 

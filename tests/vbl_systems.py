@@ -56,7 +56,7 @@ def rigid_pendulum_pivot():
 def spherical_pendulum_s2():
     """Spherical pendulum on S², ω-form, Lee et al. Eq. 5.14
     (``TestSphericalPendulumPipeline``)."""
-    return _from_library(systems.spherical_pendulum(), "m g l e3 q f")
+    return _from_library(systems.spherical_pendulum(), "m g l e3 q M")
 
 
 def quadrotor():
@@ -75,9 +75,9 @@ def double_rigid_pendulum():
 def elastic_spherical_pendulum():
     """Elastic spherical pendulum on R × S² (``tests/test_scalar_adversarial.py``).
 
-    KE = ½ m (l̇² + l² ω·ω), PE = m g l (q·e₃) + ½ k (l − l₀)², δW = f_l δl + ξ·f_q.
+    KE = ½ m (l̇² + l² ω·ω), PE = m g l (q·e₃) + ½ k (l − l₀)², δW = f_l δl + ξ·M_q.
     """
-    return _from_library(systems.elastic_spherical_pendulum(), "m g k l0 e3 l q f_l f_q")
+    return _from_library(systems.elastic_spherical_pendulum(), "m g k l0 e3 l q f_l M_q")
 
 
 def quadrotor_with_load():

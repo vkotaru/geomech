@@ -129,7 +129,7 @@ class Model:
 
     def spherical_pendulum(self, n):
         self.points = lambda c, t: [(self.v("m"), self.v("l") * c["q"])]
-        self.body_moment(("f", "q"))
+        self.body_moment(("M", "q"))
 
     def particle_on_rotating_sphere(self, n):
         # sphere-fixed coordinates q; inertial position Rz(Ω t) L q; no gravity
@@ -139,7 +139,7 @@ class Model:
 
         self.points = pts
         self.g = 0.0
-        self.body_moment(("f", "q"))
+        self.body_moment(("M", "q"))
 
     def _chain(self, n, origin=None):
         def pts(c, t):
@@ -156,14 +156,14 @@ class Model:
 
     def n_link_spherical_chain(self, n):
         self.points = self._chain(n)
-        self.body_moment(*[(f"f{i}", f"q{i}") for i in range(1, n + 1)])
+        self.body_moment(*[(f"M{i}", f"q{i}") for i in range(1, n + 1)])
 
     def elastic_spherical_pendulum(self, n):
         self.points = lambda c, t: [(self.v("m"), c["l"] * c["q"])]
         self.springs = lambda c: 0.5 * self.v("k") * (c["l"] - self.v("l0")) ** 2
-        # f_l pushes the bob along the rod; f_q is a moment about the pivot
+        # f_l pushes the bob along the rod; M_q is a moment about the pivot
         self.forces = lambda c, u: [(u["f_l"] * c["q"], lambda c: c["l"] * c["q"])]
-        self.body_moment(("f_q", "q"))
+        self.body_moment(("M_q", "q"))
 
     def cart_spherical_pendulum(self, n):
         e1 = self.v("e1")

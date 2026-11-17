@@ -6,7 +6,16 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import geomech
+
+_DOCS = Path(__file__).resolve().parent
+sys.path.insert(0, str(_DOCS.parent / "scripts"))
+import model_pages  # noqa: E402
+
+model_pages.write_reports(_DOCS / "_generated" / "model-reports")
 
 # ── Project ───────────────────────────────────────────────────────────
 project = "geomech"
@@ -41,7 +50,7 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "_generated", "Thumbs.db", ".DS_Store"]
 
 # ── autodoc ───────────────────────────────────────────────────────────
 autodoc_default_options = {
@@ -67,7 +76,14 @@ html_theme = "furo"
 html_title = "geomech"  # the version is shown at the bottom of the sidebar instead
 templates_path = ["_templates"]
 html_static_path = ["_static"]
-html_css_files = ["sidebar-version.css"]
+# The interactive reports of the model pages are built from the library on every docs
+# build (scripts/model_pages.py) and copied to the site root; they are not committed.
+html_extra_path = ["_generated"]
+html_css_files = [
+    "https://fonts.googleapis.com/css2?family=Fustat:wght@400;500;600;700&display=swap",
+    "fonts.css",
+    "sidebar-version.css",
+]
 html_sidebars = {
     "**": [
         "sidebar/brand.html",

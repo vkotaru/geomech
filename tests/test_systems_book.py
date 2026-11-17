@@ -222,7 +222,7 @@ def test_double_planar_pendulum_in_angles():
 def test_spherical_pendulum_eq_5_38():
     """Lee et al. eq. 5.38 (from eq. 5.14): ``m l² ω̇ + m g l S(q) e₃ = 0``.
 
-    With ``δW = ξ·f`` the library's equation is ``E = −(m l² ω̇ + m g l q × e₃) + f``
+    With ``δW = ξ·M`` the library's equation is ``E = −(m l² ω̇ + m g l q × e₃) + M``
     on the tangent plane of q.
     """
     for eom, val in states("spherical_pendulum"):
@@ -231,7 +231,7 @@ def test_spherical_pendulum_eq_5_38():
         qv, wdv = val(q), val(wd)
         m, g, l = val("m"), val("g"), val("l")
         book = m * l * l * wdv + m * g * l * np.cross(qv, val("e3"))
-        ref = -book + val(s.symbols["f"])
+        ref = -book + val(s.symbols["M"])
         assert_same("spherical_pendulum", val(lib_equation(eom, q)), ref, projector(qv))
 
 
@@ -241,8 +241,8 @@ def test_particle_on_rotating_sphere_eq_5_43():
 
     The library varies ``q`` by ``δq = ξ × q`` and returns the coefficient of ξ. The
     (q, q̇) principle gives ``δS = ∫ δq·(−EL + F) dt`` for the force ``F`` with
-    ``ξ·f = δq·F``, and ``δq·v = (ξ × q)·v = ξ·(q × v)``, so
-    ``E = −q × EL + f`` on the tangent plane, with ``q̇ = ω × q`` and
+    ``ξ·M = δq·F``, and ``δq·v = (ξ × q)·v = ξ·(q × v)``, so
+    ``E = −q × EL + M`` on the tangent plane, with ``q̇ = ω × q`` and
     ``q̈ = ω̇ × q + ω × (ω × q)``. ``C = diag(1, 1, 0)`` and ``e₃ = (0, 0, 1)`` as in the book.
     """
     for eom, val in states("particle_on_rotating_sphere"):
@@ -260,7 +260,7 @@ def test_particle_on_rotating_sphere_eq_5_43():
             + 2 * m * L**2 * P @ hat(Om * e3) @ qd
             - m * L**2 * Om**2 * P @ C @ qv
         )
-        ref = -np.cross(qv, EL) + val(s.symbols["f"])
+        ref = -np.cross(qv, EL) + val(s.symbols["M"])
         assert_same("particle_on_rotating_sphere", val(lib_equation(eom, q)), ref, P)
 
 

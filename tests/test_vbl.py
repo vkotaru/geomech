@@ -304,13 +304,13 @@ class TestRigidPendulumPivot:
 
 
 class TestSphericalPendulumS2:
-    """Lee et al. Eq. 5.14. E = −m l² ω̇ − m g l q × e₃ + f (``TestSphericalPendulumPipeline``).
+    """Lee et al. Eq. 5.14. E = −m l² ω̇ − m g l q × e₃ + M (``TestSphericalPendulumPipeline``).
 
     δq = ξ × q, so δ(q × e₃) = (ξ × q) × e₃ = −Hat(e₃) Hat(ξ) q = Hat(e₃) Hat(q) ξ and
-    δE = −m l² δω̇ − m g l Hat(e₃) Hat(q) ξ + δf.
+    δE = −m l² δω̇ − m g l Hat(e₃) Hat(q) ξ + δM.
 
     States [ξ, δω]. Kinematic row ξ̇ = q qᵀ Hat(ω) ξ + (I − q qᵀ) δω.
-    Dynamic row: M[δω̇] = m l² I, A[ξ] = −m g l Hat(e₃) Hat(q), A[δω] = 0, B[δf] = I.
+    Dynamic row: M[δω̇] = m l² I, A[ξ] = −m g l Hat(e₃) Hat(q), A[δω] = 0, B[δM] = I.
 
     Sanity check at q = −e₃, ω = 0: Hat(e₃) Hat(−e₃) ξ = −e₃ × (e₃ × ξ) = ξ for ξ ⊥ e₃,
     and ξ̇ = δω on the tangent plane, so m l² ξ̈ = −m g l ξ: the pendulum frequency √(g/l).
@@ -323,10 +323,10 @@ class TestSphericalPendulumS2:
         self.om, self.xi = q.get_tangent_vector(), q.get_variation_vector()
         self.dom = Variation(self.om)
         self.ddom = self.dom.t_diff()
-        self.df = self.s.symbols["f"].delta()
+        self.dM = self.s.symbols["M"].delta()
 
     def test_pinned_eom(self):
-        expected = "(\\frac{d}{dt}(\\omega_{q})*m*l*l*(-1)+Cross(q,e3)*m*g*l*(-1)+f)"
+        expected = "(\\frac{d}{dt}(\\omega_{q})*m*l*l*(-1)+Cross(q,e3)*m*g*l*(-1)+M)"
         assert str(self.eom[str(self.xi)][1]) == expected
 
     def test_kinematic_row_exact(self):
@@ -341,7 +341,7 @@ class TestSphericalPendulumS2:
         row = str(self.xi)
         assert str(self.lin.M[row][str(self.ddom)]) == "I*m*l*l"
         assert str(self.lin.A[row][str(self.xi)]) == "Hat(e3)*Hat(q)*m*g*l*(-1)"
-        assert str(self.lin.B[row][str(self.df)]) == "I"
+        assert str(self.lin.B[row][str(self.dM)]) == "I"
         _zero_blocks_except(self.lin.M[row], {str(self.ddom)})
         _zero_blocks_except(self.lin.A[row], {str(self.xi)})
 
@@ -522,7 +522,7 @@ class TestDoubleRigidPendulum:
 class TestElasticSphericalPendulum:
     """System of ``tests/test_scalar_adversarial.py``; finite differences plus block shapes.
 
-    The scalar row δl has 1×3 blocks against the vector perturbations (ξ, δω, δf_q) and the
+    The scalar row δl has 1×3 blocks against the vector perturbations (ξ, δω, δM_q) and the
     vector row ξ has 3×1 blocks against the scalar perturbations (δl, δl̇, δf_l).
     Hand check of one 1×3 block: E_l contains m l ω·ω, whose variation in δω is
     2 m l ωᵀ δω, so A[δl][δω] = (2 m l ω)ᵀ.

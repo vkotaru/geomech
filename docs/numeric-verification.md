@@ -23,13 +23,13 @@ dictionary from those names to numpy values and returns a float (scalar expressi
 | velocity `x.t_diff()` | `str(TimeDerivative(x))` | `(3, 1)` array |
 | acceleration `x.t_diff().t_diff()` | `str(TimeDerivative(TimeDerivative(x)))` | `(3, 1)` array |
 | `q = S2("q")` | `"q"` | unit `(3, 1)` array |
-| `ω = q.get_tangent_vector()` | `str(ω)` | `(3, 1)` array ⊥ q |
+| `omega = q.get_tangent_vector()` | `str(omega)` | `(3, 1)` array $\perp q$ |
 | `R = SO3("R")` | `"R"` | rotation matrix |
-| `Ω = R.get_tangent_vector()` | `str(Ω)` | `(3, 1)` array |
+| `Omega = R.get_tangent_vector()` | `str(Omega)` | `(3, 1)` array |
 
 Velocities and tangent vectors are leaves of their own: the tree never holds
-`TimeDerivative(q)` for a manifold point (`q.t_diff()` *is* `Cross(ω, q)`), and `ẋ` is a
-value you supply, not something computed from `x`. The zero and identity constants are
+`TimeDerivative(q)` for a manifold point (`q.t_diff()` *is* `Cross(omega, q)`), and $\dot x$ is a
+value you supply, not something computed from $x$. The zero and identity constants are
 resolved by type and need no key.
 
 Any leaf missing from the dictionary is drawn once from `numpy.random.default_rng(seed)`,
@@ -61,17 +61,17 @@ from geomech import (S2, Vector, Dot, Scalar, SystemVariables, getScalars,
 
 m, g, l = getScalars("m g l", attr=["Constant"])
 e3 = Vector("e3", attr=["Constant"])
-q, f = S2("q"), Vector("f")
+q, M = S2("q"), Vector("M")      # M: a moment about the pivot
 omega, xi = q.get_tangent_vector(), q.get_variation_vector()
 half = Scalar("0.5", value=0.5, attr=["Constant"])
 
 L = half * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
-dW = Dot(xi, f)
+dW = Dot(xi, M)
 variables = SystemVariables(vectors=[q])
 
 eom = compute_eom(L, dW, variables)
-err = check_eom(L, dW, variables, eom, inputs=[f])
-print(err)          # ~1e-7: the equation −m l² ω̇ − m g l (q × e₃) + f = 0 is right
+err = check_eom(L, dW, variables, eom, inputs=[M])
+print(err)          # ~1e-7: the equation −m l² ω̇ − m g l (q × e₃) + M = 0 is right
 assert err < 1e-5
 ```
 
@@ -94,11 +94,11 @@ with `Evaluator` and forms the Euler–Lagrange residual $g$ by central differen
 - $\mathbb{R}$, $\mathbb{R}^3$: $g = \frac{d}{dt}\frac{\partial L}{\partial v} -
   \frac{\partial L}{\partial q}$, $E_{\text{true}} = -g + f$;
 - $S^2$: the constrained Lagrangian $\tilde L(q, \dot q) = L(q, q \times \dot q)$ on
-  $|q| = 1$ with $\dot q = \omega \times q$, $E_{\text{true}} = -q \times g + f$,
+  $\lvert q \rvert = 1$ with $\dot q = \omega \times q$, $E_{\text{true}} = -q \times g + f$,
   compared **on the tangent plane only** (Lee et al., Chapter 5);
 - $SO(3)$: the body-frame form $g = \frac{d}{dt}\frac{\partial L}{\partial \Omega} -
-  \frac{\partial L}{\partial \Omega} \times \Omega - (A - A^\top)^\vee$ with
-  $A = R^\top \frac{\partial L}{\partial R}$, $E_{\text{true}} = -g + f$
+  \frac{\partial L}{\partial \Omega} \times \Omega - (A - A^T)^\vee$ with
+  $A = R^T \frac{\partial L}{\partial R}$, $E_{\text{true}} = -g + f$
   (Lee et al., Chapter 6).
 
 The forcing $f$ is `inf_work` evaluated with the variable's variation set to each basis
@@ -110,21 +110,21 @@ velocity terms and the forces at once.
 ### Resolution: what a term must be for the check to see it
 
 The error is measured relative to the size of the whole equation,
-$\max(1, |P\,E_{\text{true}}|)$. A term $t$ that is wrong (sign, missing factor) moves
-the error by $2|P\,t| / \max(1, |P\,E_{\text{true}}|)$, so it is **resolved** at `rtol`
+$\max(1, \lvert P\,E_{\text{true}} \rvert)$. A term $t$ that is wrong (sign, missing factor) moves
+the error by $2\lvert P\,t \rvert / \max(1, \lvert P\,E_{\text{true}} \rvert)$, so it is **resolved** at `rtol`
 only if that quantity exceeds `rtol`. With parameters of order one every term is resolved
 by a wide margin. With a large parameter in the equation it is not: a point mass on a
-spring with `Scalar("k", value=1e7)` has $|E_{\text{true}}| \approx 10^7$, the gravity
+spring with `Scalar("k", value=1e7)` has $\lvert E_{\text{true}} \rvert \approx 10^7$, the gravity
 term $m g\, e_3$ is of order one, a flipped gravity term moves the error by
 $\approx 4 \cdot 10^{-7}$, and `check_eom` returns `~1e-9` for the correct and
 `~1e-7` for the wrong equation: both pass at `1e-5`. The finite-difference noise scales
-with $|L|$ as well (it is `6e-3` to `2e-2` in absolute terms for that system at the
+with $\lvert L \rvert$ as well (it is `6e-3` to `2e-2` in absolute terms for that system at the
 default step), so this is a limit of the finite-difference check, not of the
 normalisation alone.
 
 `assert_eom` therefore checks the resolution of every additive term of each equation
 (its tangent part on $S^2$) and raises, naming the term, its size and the resolution
-`rtol · max(1, |E_true|)`, when a term is unresolved at every trial. Terms parallel to
+$\mathrm{rtol} \cdot \max(1, \lvert E_{\text{true}} \rvert)$, when a term is unresolved at every trial. Terms parallel to
 $q$ or zero on the constraint set have nothing to resolve and are ignored. If you need
 to accept such an equation on the relative error alone, pass `require_resolved=False`;
 the better fix is to keep the parameters symbolic (random, order one) or to scale them so
@@ -136,24 +136,24 @@ the terms are of comparable size. `check_eom` reports the relative error only.
   the tangent plane, so a term such as $\omega \times (q \times \dot x) = q\,(\omega\cdot\dot x)$
   is invisible to the check. This is correct behaviour, not a gap: such a term has no
   physical content. The same applies to the equation itself: on $S^2$ the equation
-  `E = 0` returned by `compute_eom` is only meaningful on the tangent plane,
-  $(I - qq^\top)E = 0$. `E` generally has a component along $q$ (from the forcing,
-  from $\omega \times c$, from $A\dot\omega$, …), so anyone solving `E = 0` for
+  $E = 0$ returned by `compute_eom` is only meaningful on the tangent plane,
+  $(I - q q^T)E = 0$. $E$ generally has a component along $q$ (from the forcing,
+  from $\omega \times c$, from $A\dot\omega$, …), so anyone solving $E = 0$ for
   $\dot\omega$, including from the blocks of `to_standard_form` or `linearize`, must
-  project: solve $(I - qq^\top)(M\dot\omega + f + G u) = 0$ with $\dot\omega \perp q$.
+  project: solve $(I - q q^T)(M\dot\omega + f + G u) = 0$ with $\dot\omega \perp q$.
   The unprojected $3 \times 3$ solve gives $q \cdot \dot\omega \neq 0$ and a trajectory
   that leaves the sphere.
-- **Anything below finite-difference noise.** `d/dt ∂L/∂v` nests two central differences
-  with the same step, so the noise is about `h² + 1e-16 |L| / h²`: `~1e-8` for a
+- **Anything below finite-difference noise.** $\frac{d}{dt}\frac{\partial L}{\partial v}$ nests two central differences
+  with the same step, so the noise is about $h^2 + 10^{-16} \lvert L \rvert / h^2$: `~1e-8` for a
   Lagrangian of order one at the default `h=1e-4` (the minimum of the two terms; at
   `h=1e-5` the roundoff term is `~1e-6`, within a factor 10 of the gate, and a correct
   equation can fail it). A term whose tangent part is below the noise cannot be verified
-  by any normalisation; this grey zone always exists, and it widens with `|L|` (see
+  by any normalisation; this grey zone always exists, and it widens with $\lvert L \rvert$ (see
   "Resolution").
 - **Unlisted time-varying parameters.** A non-constant leaf that is neither a configuration
   variable nor listed in `params` is frozen during the check, so a correct equation that
   contains its rate looks wrong. List it: `check_eom(..., params=[l])`. `compute_eom`
-  takes the same `params=[l]`; without it, the surviving `δl` is reported as an error
+  takes the same `params=[l]`; without it, the surviving $\delta l$ is reported as an error
   rather than dropped, so the two calls declare the prescribed symbols identically.
 - **The symbolic form.** Two equations that agree numerically are accepted even if one is
   not simplified; `check_eom` checks values, the pinned string tests check form.

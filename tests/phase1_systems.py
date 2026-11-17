@@ -81,8 +81,8 @@ def _rotating_sphere_symbols():
     m, L_, Om = getScalars("m L \\Omega", attr=["Constant"])
     e3 = Vector("e3", attr=["Constant"])
     C = Matrix("C", attr=["Constant", "SymmetricMatrix"])
-    q, f = S2("q"), Vector("f")
-    return m, L_, Om, e3, C, q, f
+    q, M = S2("q"), Vector("M")
+    return m, L_, Om, e3, C, q, M
 
 
 def s2_rotating_sphere_omega():
@@ -92,7 +92,7 @@ def s2_rotating_sphere_omega():
     symmetric matrix here).
     """
     s = systems.particle_on_rotating_sphere()  # the same Lagrangian and symbols
-    symbols = {k: s.symbols[k] for k in ("q", "C", "Om", "e3", "f")}
+    symbols = {k: s.symbols[k] for k in ("q", "C", "Om", "e3", "M")}
     return System(s.L, s.dW, s.variables, list(s.inputs), symbols)
 
 
@@ -101,14 +101,14 @@ def s2_rotating_sphere_qdot():
 
     L = ½ m L² { |q̇|² + 2 qᵀ Sᵀ(Ωe₃) q̇ + Ω² qᵀ C q }.
     """
-    m, L_, Om, e3, C, q, f = _rotating_sphere_symbols()
+    m, L_, Om, e3, C, q, M = _rotating_sphere_symbols()
     xi = q.get_variation_vector()
     qd = q.t_diff()
     S_a = Hat(e3 * Om)
     coupling = Dot(q, MVMul(Transpose(S_a), qd)) * 2
     L = HALF * m * L_ * L_ * (Dot(qd, qd) + coupling + Om * Om * Dot(q, C * q))
     return System(
-        L, Dot(xi, f), SystemVariables(vectors=[q]), [f], dict(q=q, C=C, Om=Om, e3=e3, f=f)
+        L, Dot(xi, M), SystemVariables(vectors=[q]), [M], dict(q=q, C=C, Om=Om, e3=e3, M=M)
     )
 
 

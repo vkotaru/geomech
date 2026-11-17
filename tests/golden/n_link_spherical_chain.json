@@ -41,6 +41,39 @@
    "(-1)": -1.0,
    "(2)": 2.0,
    "0.5": 0.5,
+   "M1": [
+    [
+     -1.1932024774322612
+    ],
+    [
+     -1.4924638840630338
+    ],
+    [
+     0.03663782694480509
+    ]
+   ],
+   "M2": [
+    [
+     0.8972492567277476
+    ],
+    [
+     -0.23313207796045685
+    ],
+    [
+     -0.7435960295088448
+    ]
+   ],
+   "M3": [
+    [
+     0.3849938087479083
+    ],
+    [
+     0.7172358071943838
+    ],
+    [
+     -0.3000105984884774
+    ]
+   ],
    "\\frac{d}{dt}(\\omega_{q1})": [
     [
      0.560969259307647
@@ -118,39 +151,6 @@
      -0.8381669607156745
     ]
    ],
-   "f1": [
-    [
-     -1.1932024774322612
-    ],
-    [
-     -1.4924638840630338
-    ],
-    [
-     0.03663782694480509
-    ]
-   ],
-   "f2": [
-    [
-     0.8972492567277476
-    ],
-    [
-     -0.23313207796045685
-    ],
-    [
-     -0.7435960295088448
-    ]
-   ],
-   "f3": [
-    [
-     0.3849938087479083
-    ],
-    [
-     0.7172358071943838
-    ],
-    [
-     -0.3000105984884774
-    ]
-   ],
    "g": 1.0988127684144084,
    "l1": 1.0428754765829538,
    "l2": -0.8135155419815723,
@@ -196,6 +196,39 @@
    "(-1)": -1.0,
    "(2)": 2.0,
    "0.5": 0.5,
+   "M1": [
+    [
+     -0.7284177271834528
+    ],
+    [
+     0.7663277859454005
+    ],
+    [
+     -1.5960863337954336
+    ]
+   ],
+   "M2": [
+    [
+     0.8235621286156919
+    ],
+    [
+     -0.6255664702584507
+    ],
+    [
+     -0.5459399556941108
+    ]
+   ],
+   "M3": [
+    [
+     -1.35084714186579
+    ],
+    [
+     -0.14424211884897012
+    ],
+    [
+     -0.24766150926736738
+    ]
+   ],
    "\\frac{d}{dt}(\\omega_{q1})": [
     [
      -0.6330051542478654
@@ -273,39 +306,6 @@
      0.6127474289476967
     ]
    ],
-   "f1": [
-    [
-     -0.7284177271834528
-    ],
-    [
-     0.7663277859454005
-    ],
-    [
-     -1.5960863337954336
-    ]
-   ],
-   "f2": [
-    [
-     0.8235621286156919
-    ],
-    [
-     -0.6255664702584507
-    ],
-    [
-     -0.5459399556941108
-    ]
-   ],
-   "f3": [
-    [
-     -1.35084714186579
-    ],
-    [
-     -0.14424211884897012
-    ],
-    [
-     -0.24766150926736738
-    ]
-   ],
    "g": 0.9531095952386714,
    "l1": -0.5337742959249345,
    "l2": 1.8196918381290936,
@@ -351,6 +351,39 @@
    "(-1)": -1.0,
    "(2)": 2.0,
    "0.5": 0.5,
+   "M1": [
+    [
+     1.2586181429890126
+    ],
+    [
+     -1.4804236275921896
+    ],
+    [
+     0.3432363675742628
+    ]
+   ],
+   "M2": [
+    [
+     1.064876469210243
+    ],
+    [
+     0.22363214164877185
+    ],
+    [
+     -0.3671374972389881
+    ]
+   ],
+   "M3": [
+    [
+     -0.8055600446794365
+    ],
+    [
+     -0.3428000151424468
+    ],
+    [
+     1.051125142503177
+    ]
+   ],
    "\\frac{d}{dt}(\\omega_{q1})": [
     [
      1.461980841591012
@@ -428,39 +461,6 @@
      0.46185473227162593
     ]
    ],
-   "f1": [
-    [
-     1.2586181429890126
-    ],
-    [
-     -1.4804236275921896
-    ],
-    [
-     0.3432363675742628
-    ]
-   ],
-   "f2": [
-    [
-     1.064876469210243
-    ],
-    [
-     0.22363214164877185
-    ],
-    [
-     -0.3671374972389881
-    ]
-   ],
-   "f3": [
-    [
-     -0.8055600446794365
-    ],
-    [
-     -0.3428000151424468
-    ],
-    [
-     1.051125142503177
-    ]
-   ],
    "g": -0.7348283771922636,
    "l1": -0.2621314629648405,
    "l2": 0.6739972418852872,
@@ -505,7 +505,7 @@
  ],
  "blocks": {
   "eom[\\xi_{q1}]": {
-   "string": "(Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m1*l1*l1*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m2*l1*l1*(-1)+Cross(Cross(\\omega_{q1},q1),Cross(\\omega_{q2},q2))*m2*l1*l2*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m2*l1*l2*(-1)+Cross(q1,q2)*Dot(\\omega_{q2},\\omega_{q2})*m2*l1*l2+Cross(\\omega_{q1},Cross(q1,Cross(\\omega_{q2},q2)))*m2*l1*l2*(2)+Cross(q1,Cross(\\omega_{q1},Cross(\\omega_{q2},q2)))*m2*l1*l2*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m3*l1*l1*(-1)+Cross(Cross(\\omega_{q1},q1),Cross(\\omega_{q2},q2))*m3*l1*l2*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m3*l1*l2*(-1)+Cross(q1,q2)*Dot(\\omega_{q2},\\omega_{q2})*m3*l1*l2+Cross(Cross(\\omega_{q1},q1),Cross(\\omega_{q3},q3))*m3*l1*l3*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q3}),q3))*m3*l1*l3*(-1)+Cross(q1,q3)*Dot(\\omega_{q3},\\omega_{q3})*m3*l1*l3+Cross(\\omega_{q1},Cross(q1,Cross(\\omega_{q2},q2)))*m3*l1*l2*(2)+Cross(\\omega_{q1},Cross(q1,Cross(\\omega_{q3},q3)))*m3*l1*l3*(2)+Cross(q1,Cross(\\omega_{q1},Cross(\\omega_{q2},q2)))*m3*l1*l2*(-1)+Cross(q1,Cross(\\omega_{q1},Cross(\\omega_{q3},q3)))*m3*l1*l3*(-1)+Cross(q1,e3)*l1*m1*g*(-1)+Cross(q1,e3)*l1*m2*g*(-1)+Cross(q1,e3)*l1*m3*g*(-1)+f1)",
+   "string": "(Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m1*l1*l1*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m2*l1*l1*(-1)+Cross(Cross(\\omega_{q1},q1),Cross(\\omega_{q2},q2))*m2*l1*l2*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m2*l1*l2*(-1)+Cross(q1,q2)*Dot(\\omega_{q2},\\omega_{q2})*m2*l1*l2+Cross(\\omega_{q1},Cross(q1,Cross(\\omega_{q2},q2)))*m2*l1*l2*(2)+Cross(q1,Cross(\\omega_{q1},Cross(\\omega_{q2},q2)))*m2*l1*l2*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m3*l1*l1*(-1)+Cross(Cross(\\omega_{q1},q1),Cross(\\omega_{q2},q2))*m3*l1*l2*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m3*l1*l2*(-1)+Cross(q1,q2)*Dot(\\omega_{q2},\\omega_{q2})*m3*l1*l2+Cross(Cross(\\omega_{q1},q1),Cross(\\omega_{q3},q3))*m3*l1*l3*(-1)+Cross(q1,Cross(\\frac{d}{dt}(\\omega_{q3}),q3))*m3*l1*l3*(-1)+Cross(q1,q3)*Dot(\\omega_{q3},\\omega_{q3})*m3*l1*l3+Cross(\\omega_{q1},Cross(q1,Cross(\\omega_{q2},q2)))*m3*l1*l2*(2)+Cross(\\omega_{q1},Cross(q1,Cross(\\omega_{q3},q3)))*m3*l1*l3*(2)+Cross(q1,Cross(\\omega_{q1},Cross(\\omega_{q2},q2)))*m3*l1*l2*(-1)+Cross(q1,Cross(\\omega_{q1},Cross(\\omega_{q3},q3)))*m3*l1*l3*(-1)+Cross(q1,e3)*l1*m1*g*(-1)+Cross(q1,e3)*l1*m2*g*(-1)+Cross(q1,e3)*l1*m3*g*(-1)+M1)",
    "values": [
     [
      -1.559750621907829,
@@ -525,7 +525,7 @@
    ]
   },
   "eom[\\xi_{q2}]": {
-   "string": "(Cross(Cross(\\omega_{q2},q2),Cross(\\omega_{q1},q1))*m2*l2*l1*(-1)+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m2*l2*l1*(-1)+Cross(q2,q1)*Dot(\\omega_{q1},\\omega_{q1})*m2*l2*l1+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m2*l2*l2*(-1)+Cross(\\omega_{q2},Cross(q2,Cross(\\omega_{q1},q1)))*m2*l2*l1*(2)+Cross(q2,Cross(\\omega_{q2},Cross(\\omega_{q1},q1)))*m2*l2*l1*(-1)+Cross(Cross(\\omega_{q2},q2),Cross(\\omega_{q1},q1))*m3*l2*l1*(-1)+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m3*l2*l1*(-1)+Cross(q2,q1)*Dot(\\omega_{q1},\\omega_{q1})*m3*l2*l1+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m3*l2*l2*(-1)+Cross(Cross(\\omega_{q2},q2),Cross(\\omega_{q3},q3))*m3*l2*l3*(-1)+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q3}),q3))*m3*l2*l3*(-1)+Cross(q2,q3)*Dot(\\omega_{q3},\\omega_{q3})*m3*l2*l3+Cross(\\omega_{q2},Cross(q2,Cross(\\omega_{q1},q1)))*m3*l2*l1*(2)+Cross(\\omega_{q2},Cross(q2,Cross(\\omega_{q3},q3)))*m3*l2*l3*(2)+Cross(q2,Cross(\\omega_{q2},Cross(\\omega_{q1},q1)))*m3*l2*l1*(-1)+Cross(q2,Cross(\\omega_{q2},Cross(\\omega_{q3},q3)))*m3*l2*l3*(-1)+Cross(q2,e3)*l2*m2*g*(-1)+Cross(q2,e3)*l2*m3*g*(-1)+f2)",
+   "string": "(Cross(Cross(\\omega_{q2},q2),Cross(\\omega_{q1},q1))*m2*l2*l1*(-1)+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m2*l2*l1*(-1)+Cross(q2,q1)*Dot(\\omega_{q1},\\omega_{q1})*m2*l2*l1+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m2*l2*l2*(-1)+Cross(\\omega_{q2},Cross(q2,Cross(\\omega_{q1},q1)))*m2*l2*l1*(2)+Cross(q2,Cross(\\omega_{q2},Cross(\\omega_{q1},q1)))*m2*l2*l1*(-1)+Cross(Cross(\\omega_{q2},q2),Cross(\\omega_{q1},q1))*m3*l2*l1*(-1)+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m3*l2*l1*(-1)+Cross(q2,q1)*Dot(\\omega_{q1},\\omega_{q1})*m3*l2*l1+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m3*l2*l2*(-1)+Cross(Cross(\\omega_{q2},q2),Cross(\\omega_{q3},q3))*m3*l2*l3*(-1)+Cross(q2,Cross(\\frac{d}{dt}(\\omega_{q3}),q3))*m3*l2*l3*(-1)+Cross(q2,q3)*Dot(\\omega_{q3},\\omega_{q3})*m3*l2*l3+Cross(\\omega_{q2},Cross(q2,Cross(\\omega_{q1},q1)))*m3*l2*l1*(2)+Cross(\\omega_{q2},Cross(q2,Cross(\\omega_{q3},q3)))*m3*l2*l3*(2)+Cross(q2,Cross(\\omega_{q2},Cross(\\omega_{q1},q1)))*m3*l2*l1*(-1)+Cross(q2,Cross(\\omega_{q2},Cross(\\omega_{q3},q3)))*m3*l2*l3*(-1)+Cross(q2,e3)*l2*m2*g*(-1)+Cross(q2,e3)*l2*m3*g*(-1)+M2)",
    "values": [
     [
      0.8187187993116858,
@@ -545,7 +545,7 @@
    ]
   },
   "eom[\\xi_{q3}]": {
-   "string": "(Cross(Cross(\\omega_{q3},q3),Cross(\\omega_{q1},q1))*m3*l3*l1*(-1)+Cross(q3,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m3*l3*l1*(-1)+Cross(q3,q1)*Dot(\\omega_{q1},\\omega_{q1})*m3*l3*l1+Cross(Cross(\\omega_{q3},q3),Cross(\\omega_{q2},q2))*m3*l3*l2*(-1)+Cross(q3,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m3*l3*l2*(-1)+Cross(q3,q2)*Dot(\\omega_{q2},\\omega_{q2})*m3*l3*l2+Cross(q3,Cross(\\frac{d}{dt}(\\omega_{q3}),q3))*m3*l3*l3*(-1)+Cross(\\omega_{q3},Cross(q3,Cross(\\omega_{q1},q1)))*m3*l3*l1*(2)+Cross(\\omega_{q3},Cross(q3,Cross(\\omega_{q2},q2)))*m3*l3*l2*(2)+Cross(q3,Cross(\\omega_{q3},Cross(\\omega_{q1},q1)))*m3*l3*l1*(-1)+Cross(q3,Cross(\\omega_{q3},Cross(\\omega_{q2},q2)))*m3*l3*l2*(-1)+Cross(q3,e3)*l3*m3*g*(-1)+f3)",
+   "string": "(Cross(Cross(\\omega_{q3},q3),Cross(\\omega_{q1},q1))*m3*l3*l1*(-1)+Cross(q3,Cross(\\frac{d}{dt}(\\omega_{q1}),q1))*m3*l3*l1*(-1)+Cross(q3,q1)*Dot(\\omega_{q1},\\omega_{q1})*m3*l3*l1+Cross(Cross(\\omega_{q3},q3),Cross(\\omega_{q2},q2))*m3*l3*l2*(-1)+Cross(q3,Cross(\\frac{d}{dt}(\\omega_{q2}),q2))*m3*l3*l2*(-1)+Cross(q3,q2)*Dot(\\omega_{q2},\\omega_{q2})*m3*l3*l2+Cross(q3,Cross(\\frac{d}{dt}(\\omega_{q3}),q3))*m3*l3*l3*(-1)+Cross(\\omega_{q3},Cross(q3,Cross(\\omega_{q1},q1)))*m3*l3*l1*(2)+Cross(\\omega_{q3},Cross(q3,Cross(\\omega_{q2},q2)))*m3*l3*l2*(2)+Cross(q3,Cross(\\omega_{q3},Cross(\\omega_{q1},q1)))*m3*l3*l1*(-1)+Cross(q3,Cross(\\omega_{q3},Cross(\\omega_{q2},q2)))*m3*l3*l2*(-1)+Cross(q3,e3)*l3*m3*g*(-1)+M3)",
    "values": [
     [
      0.5913549327743206,
@@ -698,7 +698,7 @@
     ]
    ]
   },
-  "G[\\xi_{q1}][f1]": {
+  "G[\\xi_{q1}][M1]": {
    "string": "I",
    "values": [
     [
@@ -870,7 +870,7 @@
     ]
    ]
   },
-  "G[\\xi_{q2}][f2]": {
+  "G[\\xi_{q2}][M2]": {
    "string": "I",
    "values": [
     [
@@ -1042,7 +1042,7 @@
     ]
    ]
   },
-  "G[\\xi_{q3}][f3]": {
+  "G[\\xi_{q3}][M3]": {
    "string": "I",
    "values": [
     [

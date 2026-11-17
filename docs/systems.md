@@ -79,30 +79,58 @@ below. A test checks that this table is `geomech.systems.systems_table()`.
 | `multi_quadrotor_hose(n_links=…)` | R³ × (S²)ⁿ × SO(3)² | 15 | — | — |
 <!-- /systems-table -->
 
+Each system has a model page, listed under [Models](models/index.md), that animates it,
+draws it and shows its derived equations: [`point_mass`](models/point_mass.md),
+[`spring_mass`](models/spring_mass.md), [`planar_pendulum`](models/planar_pendulum.md),
+[`double_planar_pendulum`](models/double_planar_pendulum.md),
+[`spherical_pendulum`](models/spherical_pendulum.md),
+[`particle_on_rotating_sphere`](models/particle_on_rotating_sphere.md),
+[`double_spherical_pendulum`](models/double_spherical_pendulum.md),
+[`n_link_spherical_chain`](models/n_link_spherical_chain.md),
+[`elastic_spherical_pendulum`](models/elastic_spherical_pendulum.md),
+[`cart_spherical_pendulum`](models/cart_spherical_pendulum.md),
+[`cart_planar_pendulum`](models/cart_planar_pendulum.md),
+[`free_rigid_body`](models/free_rigid_body.md), [`heavy_top`](models/heavy_top.md),
+[`rigid_pendulum`](models/rigid_pendulum.md),
+[`double_rigid_pendulum`](models/double_rigid_pendulum.md),
+[`n_link_rigid_chain`](models/n_link_rigid_chain.md),
+[`two_rigid_bodies_spherical_joint`](models/two_rigid_bodies_spherical_joint.md),
+[`rigid_body`](models/rigid_body.md),
+[`spacecraft_reaction_wheels`](models/spacecraft_reaction_wheels.md),
+[`spacecraft_reaction_wheels_s1`](models/spacecraft_reaction_wheels_s1.md),
+[`spacecraft_solar_arrays`](models/spacecraft_solar_arrays.md), [`biped_3d`](models/biped_3d.md),
+[`quadrotor`](models/quadrotor.md), [`quadrotor_offset_com`](models/quadrotor_offset_com.md),
+[`quadrotor_suspended_load`](models/quadrotor_suspended_load.md),
+[`quadrotor_elastic_load`](models/quadrotor_elastic_load.md),
+[`quadrotor_flexible_cable`](models/quadrotor_flexible_cable.md),
+[`multi_quadrotor_point_mass`](models/multi_quadrotor_point_mass.md),
+[`multi_quadrotor_rigid_load`](models/multi_quadrotor_rigid_load.md),
+[`multi_quadrotor_hose`](models/multi_quadrotor_hose.md).
+
 Each builder's docstring, in the [API reference](api/systems.rst), states the Lagrangian,
 the virtual work and the inputs. The conventions are those of the rest of the package
-([Conventions](conventions.md)): gravity acts along −e₃ (`V = m g e₃·x`), a pendulum or
-cable direction `q` points from the pivot (or quadrotor) to the mass, so `q = −e₃`
-hangs down, and Ω is the body-frame angular velocity. The planar pendulums
+([Conventions](conventions.md)): gravity acts along $-e_3$ ($V = m g\, e_3 \cdot x$), a pendulum or
+cable direction $q$ points from the pivot (or quadrotor) to the mass, so $q = -e_3$
+hangs down, and $\Omega$ is the body-frame angular velocity. The planar pendulums
 (`planar_pendulum`, `double_planar_pendulum`) swing in the vertical plane normal to the
-S¹ axis `e2 = (0, 1, 0)`, a parameter like `e3`.
+$S^1$ axis $e_2 = (0, 1, 0)$, a parameter (`e2`) like `e3`.
 
 `cart_planar_pendulum` is `cart_spherical_pendulum` with the pendulum held in the rail's
-vertical plane: the same parameters (M, m, l, the rail direction `e1`), and `q` on the
-circle normal to `e2` (the horizontal normal to that plane, `e1·e2 = 0`). Near upright,
-`q = (sin φ, 0, cos φ)` and `ω = φ̇`. `tests/test_systems_book.py` compares its equations
-with the textbook cart-pole in the angle φ, and `tests/test_s1_manifold.py` checks that
-they agree with those of `cart_spherical_pendulum` at in-plane states (`q·e₂ = 0`,
-`ω ∥ e₂`) and that the two models simulate alike from an in-plane start.
+vertical plane: the same parameters ($M$, $m$, $l$, the rail direction `e1`), and $q$ on the
+circle normal to $e_2$ (the horizontal normal to that plane, $e_1 \cdot e_2 = 0$). Near upright,
+$q = (\sin\varphi, 0, \cos\varphi)$ and $\omega_q = \dot\varphi$. `tests/test_systems_book.py` compares its equations
+with the textbook cart-pole in the angle $\varphi$, and `tests/test_s1_manifold.py` checks that
+they agree with those of `cart_spherical_pendulum` at in-plane states ($q \cdot e_2 = 0$,
+$\omega_q \parallel e_2$) and that the two models simulate alike from an in-plane start.
 
 `double_planar_pendulum` is compared with Lee et al. eq. 4.62 with its velocity terms
-corrected: the book prints `m₂L₁L₂ ω₂(ω₂ − ω₁) q₁ᵀSq₂` and `m₂L₁L₂ ω₁(ω₁ − ω₂) q₂ᵀSq₁`,
-which is `d/dt ∂L̃/∂ωᵢ` alone; the term `qᵢᵀS ∂L̃/∂qᵢ` of eq. 4.12 adds
-`m₂L₁L₂ ω₁ω₂ qᵢᵀSqⱼ` and leaves `ω₂²` and `ω₁²`, the textbook double pendulum
+corrected: the book prints $m_2 L_1 L_2\, \omega_2(\omega_2 - \omega_1)\, q_1^T S q_2$ and $m_2 L_1 L_2\, \omega_1(\omega_1 - \omega_2)\, q_2^T S q_1$,
+which is $\tfrac{d}{dt} \partial \tilde L/\partial \omega_i$ alone; the term $q_i^T S\, \partial \tilde L/\partial q_i$ of eq. 4.12 adds
+$m_2 L_1 L_2\, \omega_1 \omega_2\, q_i^T S q_j$ and leaves $\omega_2^2$ and $\omega_1^2$, the textbook double pendulum
 (`tests/test_systems_book.py` checks the corrected form against both eq. 4.62 and the
-equations in the angles θᵢ). `spacecraft_reaction_wheels_s1` is
-`spacecraft_reaction_wheels` with the wheel angles on S¹; its equations print the same
-after renaming `θ̇ᵢ → ωᵢ` and its trajectories agree (`tests/test_s1_manifold.py`).
+equations in the angles $\theta_i$). `spacecraft_reaction_wheels_s1` is
+`spacecraft_reaction_wheels` with the wheel angles on $S^1$; its equations print the same
+after renaming $\dot\theta_i \to \omega_i$ and its trajectories agree (`tests/test_s1_manifold.py`).
 
 **Sources.** "Lee et al." is the book *Global Formulations of Lagrangian and Hamiltonian
 Dynamics on Manifolds* (`lee2018global` in
@@ -112,17 +140,17 @@ comparison. "Closed form compared" (`Reference.equation`) names exactly the equa
 test compares the derived equations with; `n_link_spherical_chain` is compared with
 eq. 5.71 at `n_links=2` only. For the quadrotor and the quadrotor with a suspended load the
 source is the paper the model is taken from (`lee2010geometric`, `sreenath2013geometric`;
-e₃ points up here, down in the first); their equations are not compared with the papers.
+$e_3$ points up here, down in the first); their equations are not compared with the papers.
 A "—" in the last column means no closed form is compared: the equations are verified by
 the numerical check ([Numeric verification](numeric-verification.md)) and the Lagrangian by
 the independent model below.
 
-**Multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles θᵢ as
-scalars in R; `spacecraft_reaction_wheels_s1` puts them on S¹ as the book does (the angle
+**Multibody systems.** `spacecraft_reaction_wheels` writes the wheel angles $\theta_i$ as
+scalars in $\mathbb{R}$; `spacecraft_reaction_wheels_s1` puts them on $S^1$ as the book does (the angle
 is cyclic, so the equations are the same); a test also checks that the inertial angular momentum is
-conserved without input. `spacecraft_solar_arrays` adds two solar-array panels to the S¹
+conserved without input. `spacecraft_solar_arrays` adds two solar-array panels to the $S^1$
 spacecraft, each a rigid plate with its own mass and inertia turned by a drive about the
-bus-fixed axis ±b₁, its normal an S¹ point. It is a free-floating model: with no
+bus-fixed axis $\pm b_1$, its normal an $S^1$ point. It is a free-floating model: with no
 external force and zero linear momentum, the composite centre of mass is at rest and is a
 fixed point of the bus frame (each panel's centre of mass lies on its drive axis), so a
 panel's translation is the one the bus rotation induces. Tests check the Lagrangian
@@ -134,12 +162,12 @@ are not modelled, so it is not a walking model.
 
 What the scenes can and cannot show: a scene draws expressions of the configuration
 variables and parameters, and a shape's size and a cylinder's axis are numbers. The
-wheels sit at `0.3 bᵢ` (they follow the parameters) with their discs along the body axes
-e₁, e₂, e₃, the default `bᵢ`; they do not turn with θᵢ, since there is no sine or cosine
-to build `R expm(θᵢ b̂ᵢ)`, and an axisymmetric wheel looks the same when it spins anyway.
-The solar-array panels do turn: the panel attitude `R Pₖ` is built from the panel normal
-`nₖ` and the drive axis `aₖ`, `Pₖ = aₖb₁ᵀ + (nₖ × aₖ)b₂ᵀ + nₖb₃ᵀ`, a rotation when b₁, b₂,
-b₃ are the body axes (the default).
+wheels sit at $0.3\, b_i$ (they follow the parameters) with their discs along the body axes
+$e_1$, $e_2$, $e_3$, the default $b_i$; they do not turn with $\theta_i$, since there is no sine or cosine
+to build $R \exp(\theta_i \widehat{b_i})$, and an axisymmetric wheel looks the same when it spins anyway.
+The solar-array panels do turn: the panel attitude $R P_k$ is built from the panel normal
+$n_k$ and the drive axis $a_k$, $P_k = a_k b_1^T + (n_k \times a_k)\, b_2^T + n_k b_3^T$, a rotation when $b_1$, $b_2$,
+$b_3$ are the body axes (the default).
 The biped's legs and the rigid chain's links are placed from the parameters but drawn with
 their default lengths. The biped's ground plane is drawn only.
 
@@ -167,7 +195,7 @@ parametric system also at sizes 1 and 2:
   masses and centres of mass, inertias about the centres of mass, heights, springs and
   the points where the forces act), at random admissible states; parametric systems at
   sizes 1, 2 and 3 (`tests/test_systems_physics.py`);
-- the default parameters are physical: `e₃ = (0, 0, 1)`, positive masses and lengths, and
+- the default parameters are physical: $e_3 = (0, 0, 1)$, positive masses and lengths, and
   every inertia, shifted to the centre of mass where it is given about a pivot,
   symmetric positive definite with principal moments satisfying the triangle inequality;
 - the derived equations and standard-form blocks, the default `params` and `x0` match
@@ -194,8 +222,8 @@ mapping: `p = dict(sys.params); p["m"] = 2.0`. The sizes `n_links` and `n_quads`
 
 ## Not supported
 
-Systems that need a configuration variable on S¹ whose sine or cosine enters the
+Systems that need a configuration variable on $S^1$ whose sine or cosine enters the
 Lagrangian (planar pendulums written with an angle, the Furuta pendulum), nonholonomic
 constraints (rolling), closed kinematic chains, contact, or flexible bodies other than
-chains of rigid links are not in the library: the engine derives systems on R, R³, S²,
-SO(3) and their products only.
+chains of rigid links are not in the library: the engine derives systems on $\mathbb{R}$, $\mathbb{R}^3$, $S^2$,
+$SO(3)$ and their products only.

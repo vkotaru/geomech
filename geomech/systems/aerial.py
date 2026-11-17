@@ -622,13 +622,14 @@ def hose_system(n_links: int = 3, attach=None):
         from geomech.viz import PointMass, Rod, Scene, Trace
 
         sc = Scene(layout)
-        for a, b in zip(joints, joints[1:]):
-            sc.add(Rod(a, b, radius=0.008, color="cable"))
+        for i, (a, b) in enumerate(zip(joints, joints[1:]), start=1):
+            # alternating colours so each link of the hose reads as its own segment
+            sc.add(Rod(a, b, radius=0.02, color="link1" if i % 2 else "link2", name=f"link {i}"))
         for k, p in enumerate(joints):
             if k in Rs:
                 add_quadrotor(sc, Rs[k], p, label=str(k), first=k == idx[0])
             else:
-                sc.add(PointMass(p, radius=0.02, color="cable"))
+                sc.add(PointMass(p, radius=0.045, color="cable", name=f"m{k}"))
         sc.add(Trace(joints[-1]))
         return sc
 

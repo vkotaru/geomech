@@ -5,6 +5,13 @@ has one equation of motion per body, and the equations of the bodies share one f
 `geomech.indexed` derives that form once: the equation of the $i$-th body, with $i$ and
 $n$ symbolic, written with sums whose bounds depend on $i$.
 
+Five model pages use it: the [n-link spherical chain](models/n_link_spherical_chain.md),
+the [n-link rigid chain](models/n_link_rigid_chain.md), the
+[quadrotor with a flexible cable](models/quadrotor_flexible_cable.md), and $n$ quadrotors
+carrying a [point mass](models/multi_quadrotor_point_mass.md) or a
+[rigid load](models/multi_quadrotor_rigid_load.md). Each of these model pages shows its
+equations for every $n$ and substitutes $n = 5$.
+
 ## Writing a model
 
 A `Family` is a set of symbols $q_1, \dots, q_n$ of one kind; `Sum(j, lower, upper, body)`
@@ -22,14 +29,14 @@ e3 = Vector("e3", attr=["Constant"])
 q = Family(S2, "q")                              # q_1, ..., q_n on S^2
 m = Family(Scalar, "m", attr=["Constant"])
 l = Family(Scalar, "l", attr=["Constant"])
-f = Family(Vector, "f")
+M = Family(Vector, "M")                          # moment on link k
 
 def x(k):                                        # position of mass k
     return Sum(j, 1, k, q[j] * l[j])
 
 v = x(i).t_diff()
 L = Sum(i, 1, n, 0.5 * m[i] * v.dot(v)) - Sum(i, 1, n, m[i] * g * x(i).dot(e3))
-dW = Sum(i, 1, n, Dot(q[i].get_variation_vector(), f[i]))
+dW = Sum(i, 1, n, Dot(q[i].get_variation_vector(), M[i]))
 
 eom = compute_indexed_eom(L, dW, IndexedVariables(families=[q]))
 print(eom["q"])
@@ -45,12 +52,12 @@ indices. `IndexedVariables` lists the families of configuration variables and, a
 `eom["q"]` is the equation of $q_i$:
 
 $$
-f_i \;-\; \sum_{j=i}^{n} m_j\, g\, l_i\, (q_i \times e_3)
+M_i \;-\; \sum_{j=i}^{n} m_j\, g\, l_i\, (q_i \times e_3)
 \;+\; \sum_{j=1}^{n}\, \sum_{k=\max(i,j)}^{n} m_k\, l_i\, l_j \big(\cdots\big) = 0 .
 $$
 
-The inner sum $\sum_{k \ge \max(i,j)} m_k\, l_i l_j$ is the inertia $M_{ij}$ of Lee et
-al. §5.3: the mass of every link below both $i$ and $j$. The equation of an ordinary
+The inner sum $\sum_{k \ge \max(i,j)} m_k\, l_i l_j$ is the $(i, j)$ inertia block of Lee
+et al. §5.3: the mass of every link below both $i$ and $j$. The equation of an ordinary
 variable keeps its sums over all bodies; for the flexible cable, the quadrotor's
 translation is driven by $m_Q$ and by $\sum_j m_j$.
 

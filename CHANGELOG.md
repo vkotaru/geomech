@@ -6,6 +6,27 @@ All notable changes to `geomech` are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-11-17
+
+### Changed
+- The input of the S² models is named `M` (a moment about the pivot), not `f`:
+  `spherical_pendulum` and `particle_on_rotating_sphere` take `M`, the double and n-link
+  spherical chains and `geomech.indexed.systems.spherical_chain` take `M1, …, Mn` (`M_i`),
+  and `elastic_spherical_pendulum` takes `f_l, M_q`. `f` now always names a force. Code
+  that looks these inputs up by name (`sys.symbols["f"]`) uses the new names; the
+  equations are unchanged.
+- Reports: `?view` in the URL shows only the animation (for embedding in a page), the
+  default camera frames the whole scene, and the hose of `multi_quadrotor_hose` is drawn
+  link by link.
+
+### Added
+- Documentation: a page per model with its derived equations and interactive report,
+  a Prototypes section (humanoids, hand, arm, off-road car), and an animated gallery on
+  the home page and in the README. `scripts/report_gif.py` makes a GIF from a report.
+
+### Fixed
+- The docs sidebar no longer slides when a link in it opens another page.
+
 ## [1.0.1] — 2026-11-15
 
 The code of the `v1.0.0` tag, published to PyPI as 1.0.1: the 1.0.0 files on PyPI were

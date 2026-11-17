@@ -150,3 +150,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 scripts/engine_fuzz_findings.json
+
+# Docs: interactive model reports, built by docs/conf.py
+docs/_generated/

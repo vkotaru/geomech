@@ -11,6 +11,17 @@ and its [Scala package](https://github.com/HybridRobotics/dynamics_on_manifolds)
 
 Documentation: https://geomech.readthedocs.io
 
+<table>
+<tr>
+<td align="center" width="50%"><a href="https://geomech.readthedocs.io/en/latest/models/multi_quadrotor_rigid_load.html"><img src="docs/_static/gifs/multi_quadrotor_rigid_load.gif" alt="Five quadrotors carrying a rigid body on cables" width="100%"></a><br><sub>Five quadrotors carrying a rigid body</sub></td>
+<td align="center" width="50%"><a href="https://geomech.readthedocs.io/en/latest/prototypes/humanoid_walk.html"><img src="docs/_static/gifs/humanoid_walk.gif" alt="A twelve-body humanoid walking" width="100%"></a><br><sub>Walking humanoid, twelve bodies on SO(3) (prototype)</sub></td>
+</tr>
+<tr>
+<td align="center" width="50%"><a href="https://geomech.readthedocs.io/en/latest/prototypes/arm.html"><img src="docs/_static/gifs/arm.gif" alt="A six-joint arm doing a pick-and-place move" width="100%"></a><br><sub>Six-joint arm with geared motors (prototype)</sub></td>
+<td align="center" width="50%"><a href="https://geomech.readthedocs.io/en/latest/prototypes/car.html"><img src="docs/_static/gifs/car_offroad.gif" alt="A car driving over hills and rocks" width="100%"></a><br><sub>Off-road car with suspension (prototype)</sub></td>
+</tr>
+</table>
+
 ## What it does
 
 Given a Lagrangian and virtual work, `geomech` automatically derives

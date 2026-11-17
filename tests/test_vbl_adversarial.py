@@ -242,13 +242,13 @@ class TestElasticSphericalPendulumAnalytic:
     """Pinned equations (``tests/test_scalar_adversarial.py``):
 
         E_l = −m l̈ + m l ω·ω − m g q·e₃ − k (l − l₀) + f_l
-        E_ξ = −m l² ω̇ − 2 m l l̇ ω − m g l q × e₃ + f_q
+        E_ξ = −m l² ω̇ − 2 m l l̇ ω − m g l q × e₃ + M_q
 
     Variation with δq = ξ × q, (ξ × q)·e₃ = ξ·(q × e₃), (ξ × q) × e₃ = Hat(e₃) Hat(q) ξ:
 
         δE_l = −m δl̈ + (m ω·ω − k) δl + 2 m l ωᵀ δω − m g (q × e₃)ᵀ ξ + δf_l
         δE_ξ = −m l² δω̇ + (−2 m l ω̇ − 2 m l̇ ω − m g q × e₃) δl − 2 m l ω δl̇
-               − 2 m l l̇ δω − m g l Hat(e₃) Hat(q) ξ + δf_q
+               − 2 m l l̇ δω − m g l Hat(e₃) Hat(q) ξ + δM_q
 
     so with M = −coeff(δv̇): M[l][δl̈] = m, M[ξ][δω̇] = m l² I, every other block as listed in
     ``_expected`` below (including the zero blocks, which pins the shapes 1×1, 1×3, 3×1, 3×3).
@@ -265,7 +265,7 @@ class TestElasticSphericalPendulumAnalytic:
         l_row, x_row = str(sym["dl"]), str(sym["xi"])
         dl, xi, dld, dw = (str(x) for x in (sym["dl"], sym["xi"], sym["dld"], sym["dw"]))
         dldd, dwd, dxid = (str(x) for x in (sym["dldd"], sym["dwd"], sym["xi"].t_diff()))
-        dfl, dfq = str(sym["f_l"].delta()), str(sym["f_q"].delta())
+        dfl, dMq = str(sym["f_l"].delta()), str(sym["M_q"].delta())
         return {
             ("M", l_row, dld): 0.0,
             ("M", l_row, dxid): Z13,
@@ -276,7 +276,7 @@ class TestElasticSphericalPendulumAnalytic:
             ("A", l_row, dld): 0.0,
             ("A", l_row, dw): (2 * m * l * w).T,
             ("B", l_row, dfl): 1.0,
-            ("B", l_row, dfq): Z13,
+            ("B", l_row, dMq): Z13,
             ("M", x_row, dld): Z31,
             ("M", x_row, dxid): Z33,
             ("M", x_row, dldd): Z31,
@@ -286,7 +286,7 @@ class TestElasticSphericalPendulumAnalytic:
             ("A", x_row, dld): -2 * m * l * w,
             ("A", x_row, dw): -2 * m * l * ld * I3,
             ("B", x_row, dfl): Z31,
-            ("B", x_row, dfq): I3,
+            ("B", x_row, dMq): I3,
         }
 
     @pytest.mark.parametrize("seed", range(3))
@@ -307,7 +307,7 @@ class TestElasticSphericalPendulumAnalytic:
             dw=Variation(om),
             dwd=Variation(om).t_diff(),
             f_l=s.symbols["f_l"],
-            f_q=s.symbols["f_q"],
+            M_q=s.symbols["M_q"],
         )
         qv = _unit(rng)
         env = {
@@ -323,7 +323,7 @@ class TestElasticSphericalPendulumAnalytic:
             str(om.t_diff()): _perp(qv, rng),
             "e3": rng.normal(size=(3, 1)),
             "f_l": float(rng.normal()),
-            "f_q": rng.normal(size=(3, 1)),
+            "M_q": rng.normal(size=(3, 1)),
         }
         expected = self._expected(env, sym)
         tables = {"M": lin.M, "A": lin.A, "B": lin.B}
@@ -594,7 +594,7 @@ class TestErrorPathsHeld:
         s = vbl_systems.spherical_pendulum_s2()
         eom = compute_eom(s.L, s.dW, s.variables)
         with pytest.raises(ValueError):
-            linearize(eom, s.variables, [s.symbols["f"], s.symbols["q"].get_variation_vector()])
+            linearize(eom, s.variables, [s.symbols["M"], s.symbols["q"].get_variation_vector()])
 
     def test_time_derivative_of_input_raises_algebraic_error(self):
         (m,) = getScalars("m", attr=["Constant"])
@@ -720,7 +720,7 @@ class TestTangentVectorAsInputRejected:
         eom = compute_eom(s.L, s.dW, s.variables)
         om = s.symbols["q"].get_tangent_vector()
         with pytest.raises(ValueError):
-            linearize(eom, s.variables, [s.symbols["f"], om])
+            linearize(eom, s.variables, [s.symbols["M"], om])
 
 
 class TestDuplicateInputsRejected:
