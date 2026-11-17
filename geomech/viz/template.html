@@ -197,6 +197,11 @@ th { font-size: 0.85rem; color: var(--muted); }
 pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; font-size: 0.85rem; }
 code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
 footer { margin-top: 32px; color: var(--muted); font-size: 0.8rem; }
+/* "?view" in the URL (a page embedding the report): the animation and its controls only,
+   the square viewer sized to fit the frame's height. */
+.gm-embed body { margin: 0; padding: 0; }
+.gm-embed main { max-width: calc(100vh - 130px); margin: 0 auto; padding: 4px 8px; }
+.gm-embed main > :not(#view), .gm-embed #view > h2, .gm-embed #view .legend { display: none; }
 </style>
 </head>
 <body class="gm-nomath">
@@ -212,6 +217,8 @@ __GM_BODY__
 <script src="__GM_THREE_URL__"></script>
 <script src="__GM_ORBIT_URL__"></script>
 <script>
+// "?view": the animation only (see the gm-embed rules); set before the viewer is sized.
+if (/[?&]view\b/.test(window.location.search)) document.documentElement.classList.add("gm-embed");
 (function () {
   "use strict";
   var DATA = JSON.parse(document.getElementById("gm-data").textContent);
@@ -516,7 +523,8 @@ __GM_BODY__
   controls.enableDamping = true;
   function resetCamera() {
     var c = [C[0], C[1], C[2]];
-    camera.position.copy(toThree([c[0] + 1.6 * R, c[1] - 2.2 * R, c[2] + 0.9 * R]));
+    // about 5 R away: the 40° view then spans ±1.8 R, the whole bounding box (corners at √3 R)
+    camera.position.copy(toThree([c[0] + 2.8 * R, c[1] - 3.85 * R, c[2] + 1.6 * R]));
     controls.target.copy(toThree(c));
     camera.updateProjectionMatrix();
     controls.update();
