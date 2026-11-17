@@ -32,12 +32,12 @@ the linearized system.
 |---|---|---|
 | `s: Scalar` ($\mathbb{R}$) | $\delta s$ = `Variation(s)` | $\delta\dot s$ = `TimeDerivative(Variation(s))` |
 | `x: Vector` ($\mathbb{R}^3$) | $\delta x$ = `Variation(x)` | $\delta\dot x$ = `TimeDerivative(Variation(x))` |
-| `q: S1` | $\gamma$ = `q.get_variation_vector()` (scalar) | $\delta\omega$ = `Variation(ω)`, $\omega$ = `q.get_tangent_vector()` (scalar) |
-| `q: S2` | $\xi$ = `q.get_variation_vector()`, $\xi \perp q$ | $\delta\omega$ = `Variation(ω)`, $\omega$ = `q.get_tangent_vector()` |
-| `R: SO3` | $\eta$ = `R.get_variation_vector()` | $\delta\Omega$ = `Variation(Ω)`, $\Omega$ = `R.get_tangent_vector()` |
+| `q: S1` | $\gamma$ = `q.get_variation_vector()` (scalar) | $\delta\omega$ = `Variation(omega)`, $\omega$ = `omega = q.get_tangent_vector()` (scalar) |
+| `q: S2` | $\xi$ = `q.get_variation_vector()`, $\xi \perp q$ | $\delta\omega$ = `Variation(omega)`, $\omega$ = `omega = q.get_tangent_vector()` |
+| `R: SO3` | $\eta$ = `R.get_variation_vector()` | $\delta\Omega$ = `Variation(Omega)`, $\Omega$ = `Omega = R.get_tangent_vector()` |
 
-The engine produces $\delta q = \gamma\, e \times q$ (S¹), $\delta q = \xi \times q$ (S²) and
-$\delta R = R\,\hat\eta$ eagerly,
+The engine produces $\delta q = \gamma\, e \times q$ ($S^1$), $\delta q = \xi \times q$ ($S^2$) and
+$\delta R = R\,\widehat{\eta}$ eagerly,
 $\delta(\text{constant}) = 0$, and canonicalises $\delta(\dot v)$ as
 `TimeDerivative(Variation(v))`. Each input $u$ (a `Scalar` or `Vector`) contributes
 $\delta u$ = `Variation(u)`.
@@ -65,11 +65,11 @@ kinematics:
   $\mathbf{M}[\dot\gamma] = 1$, $\mathbf{A}[\delta\omega] = 1$: one scalar tangent
   coordinate, like $\mathbb{R}$.
 - $S^2$ ($\dot q = \omega\times q$, $\omega\perp q$):
-  $\dot\xi = q q^\top \hat\omega\, \xi + (I - q q^\top)\,\delta\omega$, so
-  $\mathbf{M}[\dot\xi] = I$, $\mathbf{A}[\xi] = q q^\top \hat\omega$,
-  $\mathbf{A}[\delta\omega] = I - q q^\top$.
-- $SO(3)$ ($\dot R = R\hat\Omega$): $\dot\eta = -\hat\Omega\,\eta + \delta\Omega$, so
-  $\mathbf{M}[\dot\eta] = I$, $\mathbf{A}[\eta] = -\hat\Omega$,
+  $\dot\xi = q q^T \widehat{\omega}\, \xi + (I - q q^T)\,\delta\omega$, so
+  $\mathbf{M}[\dot\xi] = I$, $\mathbf{A}[\xi] = q q^T \widehat{\omega}$,
+  $\mathbf{A}[\delta\omega] = I - q q^T$.
+- $SO(3)$ ($\dot R = R\widehat{\Omega}$): $\dot\eta = -\widehat{\Omega}\,\eta + \delta\Omega$, so
+  $\mathbf{M}[\dot\eta] = I$, $\mathbf{A}[\eta] = -\widehat{\Omega}$,
   $\mathbf{A}[\delta\Omega] = I$.
 
 ## Sign convention
@@ -126,11 +126,11 @@ LinearizedSystem: M d/dt(dx) = A dx + B du
 ```
 
 The equation of motion is $E = -J\dot\Omega - \Omega\times J\Omega + M$
-(Lee et al. Eq. 6.16). Its variation is
+(Lee et al. eq. 6.16). Its variation is
 
 $$
 \delta E = -J\,\delta\dot\Omega - \delta\Omega\times J\Omega - \Omega\times J\,\delta\Omega + \delta M
-        = -J\,\delta\dot\Omega + \big(\widehat{J\Omega} - \hat\Omega J\big)\,\delta\Omega + \delta M,
+        = -J\,\delta\dot\Omega + \big(\widehat{J\Omega} - \widehat{\Omega} J\big)\,\delta\Omega + \delta M,
 $$
 
 so the blocks read, with $\delta x = (\eta, \delta\Omega)$,
@@ -139,7 +139,7 @@ $$
 \begin{bmatrix} I & 0 \\ 0 & J \end{bmatrix}
 \begin{bmatrix} \dot\eta \\ \delta\dot\Omega \end{bmatrix}
 =
-\begin{bmatrix} -\hat\Omega & I \\ 0 & \widehat{J\Omega} - \hat\Omega J \end{bmatrix}
+\begin{bmatrix} -\widehat{\Omega} & I \\ 0 & \widehat{J\Omega} - \widehat{\Omega} J \end{bmatrix}
 \begin{bmatrix} \eta \\ \delta\Omega \end{bmatrix}
 +
 \begin{bmatrix} 0 \\ I \end{bmatrix} \delta M ,
@@ -157,12 +157,12 @@ zero constants. The shape of a block follows from the row and column types,
 
 | row \ column | vector perturbation | scalar perturbation |
 |---|---|---|
-| vector equation | 3×3 `Matrix` expression | 3×1 `Vector` expression |
-| scalar equation | 1×3 `Transpose(Vector)` | `Scalar` expression |
+| vector equation | $3 \times 3$ `Matrix` expression | $3 \times 1$ `Vector` expression |
+| scalar equation | $1 \times 3$ `Transpose(Vector)` | `Scalar` expression |
 
 For example, in the quadrotor with thrust `f: Scalar` and moment `M: Vector`, the
-translational row has `B[δf] = R*e3` (3×1) and `A[η] = R*Hat(e3)*f*(-1)` (3×3), and the
-elastic spherical pendulum's scalar row has the 1×3 block `A[δω] = (ω*m*l*(2))'`.
+translational row has $\mathbf{B}[\delta f]$ = `R*e3` ($3 \times 1$) and $\mathbf{A}[\eta]$ = `R*Hat(e3)*f*(-1)` ($3 \times 3$), and the
+elastic spherical pendulum's scalar row has the $1 \times 3$ block $\mathbf{A}[\delta\omega]$ = `(ω*m*l*(2))'`.
 
 `str(lin)` lists the non-zero blocks row by row; `to_latex(block)` renders any block.
 
@@ -172,15 +172,15 @@ For an $S^2$ variable the perturbation $(\xi, \delta\omega)$ is constrained:
 $\xi \perp q$ and, from $\delta(q\cdot\omega) = 0$,
 $q\cdot\delta\omega = \xi\cdot(\omega\times q)$. `compute_eom` simplifies with
 $q\cdot\omega = 0$ before `linearize` takes the variation (for example
-$\omega\times(\omega\times q) \to -|\omega|^2 q$), and the variations of the two forms
+$\omega\times(\omega\times q) \to -\lvert\omega\rvert^2 q$), and the variations of the two forms
 differ by terms proportional to $q\cdot\delta\omega - \xi\cdot(\omega\times q)$, which vanish
 on the constraint set. The $\mathbf{A}$ blocks against $\xi$ and $\delta\omega$ are therefore
 unique as linear maps on the constraint set, and agree there with any hand derivation, but
 two correct derivations can print different $3\times 3$ matrices. For the quadrotor with a
-cable-suspended load, `A[δx_L][ξ]` prints as
-$-m_Q l\,\hat{\dot\omega}\hat q + m_Q l\,|\omega|^2 \hat q$ while the derivation from
+cable-suspended load, $\mathbf{A}[\delta x_L][\xi]$ prints as
+$-m_Q l\,\widehat{\dot\omega}\,\widehat{q} + m_Q l\,\lvert\omega\rvert^2 \widehat{q}$ while the derivation from
 $\ddot q = \dot\omega\times q + \omega\times(\omega\times q)$ gives
-$-m_Q l\,(\hat{\dot\omega} + \hat\omega^2)\hat q$; both act identically on tangent
+$-m_Q l\,(\widehat{\dot\omega} + \widehat{\omega}^2)\,\widehat{q}$; both act identically on tangent
 $(\xi, \delta\omega)$. A consumer that needs a minimal (two-dimensional) representation
 must project onto the tangent space (Lee et al., Appendix B).
 
@@ -204,13 +204,13 @@ must project onto the tangent space (Lee et al., Appendix B).
   but does not expand `Transpose` itself, so an equation whose variation carries a
   perturbation inside one of these nodes raises `AlgebraicError` instead of linearizing.
   Rewrite the equation without the transpose (for example `Transpose(Hat(a)) = -Hat(a)`,
-  `Transpose(a bᵀ) = b aᵀ`) before calling `linearize`.
-- A stray perturbation symbol in an equation (`η`, `Variation(Ω)`, `ξ̇`) is not an input
+  $(a b^T)^T = b a^T$) before calling `linearize`.
+- A stray perturbation symbol in an equation ($\eta$, $\delta\Omega$ as `Variation(Omega)`, $\dot\xi$) is not an input
   `linearize` can interpret; it surfaces as the engine's `ValueError` (the variation of a
   variation is not representable) or as the `AlgebraicError` described above.
 - An equation whose variation is identically zero produces an all-zero dynamic row; it is
   not reported as an error.
 - Prescribed time-varying parameters (`compute_eom(..., params=[l])`) are not supported:
-  the variation of the equation contains `δl`, which is neither a state nor an input
+  the variation of the equation contains $\delta l$, which is neither a state nor an input
   perturbation, and `linearize` raises `AlgebraicError` naming the term. Listing `l` in
-  `inputs` does not help, because `l̇` brings in `d/dt(δl)`.
+  `inputs` does not help, because $\dot l$ brings in $\tfrac{d}{dt}\delta l$.

@@ -4,7 +4,7 @@
 of the code in `geomech/dynamics/eom.py`; the README, Getting Started and the
 `compute_eom` docstring state the same order):
 
-δS = δL + δW → manifold rules → `full_simplify` → integration by parts (`expand`,
+$\delta S = \delta L + \delta W$ → manifold rules → `full_simplify` → integration by parts (`expand`,
 `full_simplify`, then per variation vector: `collect` → IBP → `full_simplify`) →
 `expand` → extract the coefficient of each variation vector → `full_simplify`.
 
@@ -25,12 +25,12 @@ messages. With `GEOMECH_DEBUG=1`, `check_tree` also runs on `L` and `dW`.
 ## 1. Variation `[dL]`, `[dW]`, `[dS]`
 
 `L.delta()` applies the product rule through the tree. Manifold leaves are eager:
-`q.delta()` for an `S1` point is `(e × q) γ`, for an `S2` point `ξ × q`, `R.delta()` for
-an `SO3` point is `R Hat(η)`,
+`q.delta()` for an `S1` point is $(e \times q)\, \gamma$, for an `S2` point $\xi \times q$,
+`R.delta()` for an `SO3` point is $R \widehat{\eta}$,
 and the variation of a velocity is built as the time derivative of the variation
-(`x.t_diff().delta()` is `d/dt(δx)`). Tangent vectors (`ω`, `Ω`; the scalar `ω` of an S¹
-point) are leaves at this point, so their variations stay as `δω`, `δΩ`. δS is `δL + δW` (`dW=None` or `0` means
-δW = 0).
+(`x.t_diff().delta()` is $\frac{d}{dt}(\delta x)$). Tangent vectors ($\omega$, $\Omega$; the scalar $\omega$ of an $S^1$
+point) are leaves at this point, so their variations stay as $\delta\omega$, $\delta\Omega$. $\delta S$ is $\delta L + \delta W$ (`dW=None` or `0` means
+$\delta W = 0$).
 
 ## 2. Manifold rules `[manifold_rules]`
 
@@ -38,12 +38,12 @@ point) are leaves at this point, so their variations stay as `δω`, `δΩ`. δS
 vector by its kinematic expansion (rules `manifold.s1_variation_omega`,
 `manifold.s2_variation_omega`, `manifold.so3_variation_Omega`):
 
-- S¹: `δω → γ̇` (Lee et al. eq. 4.11; exact, the circle is abelian; derivation in
+- $S^1$: $\delta\omega \to \dot\gamma$ (Lee et al. eq. 4.11; exact, the circle is abelian; derivation in
   [Manifold rules](manifold-implementation-notes.md));
-- S²: `δω → ξ̇ − 2 ω × ξ` (Lee et al. eq. 5.13 on the constraint set ξ ⊥ q; the
+- $S^2$: $\delta\omega \to \dot\xi - 2\, \omega \times \xi$ (Lee et al. eq. 5.13 on the constraint set $\xi \perp q$; the
   derivation, and why the factor is 2, is in
   [Manifold rules](manifold-implementation-notes.md));
-- SO(3): `δΩ → η̇ + Ω × η` (Lee et al. eq. 6.9).
+- $SO(3)$: $\delta\Omega \to \dot\eta + \Omega \times \eta$ (Lee et al. eq. 6.9).
 
 A tangent vector is matched by its printed name, so only the points listed in
 `SystemVariables` are expanded.
@@ -57,8 +57,8 @@ tree stops changing (at most `max_iter=10` passes; hitting the cap emits the
 1. `pull`: hoist scalar factors out of products (`pull.dot_scaled`,
    `pull.mvmul_scaled`, …);
 2. `vector_rules`: geometric identities, bottom up — orthogonality
-   (`vector.dot_cross_orthogonal`), unit norm (`vector.dot_unit_norm`), tangency on S²
-   (`vector.dot_tangent_orthogonal`, `vector.s2_tangent_recovery`, …), and the S¹
+   (`vector.dot_cross_orthogonal`), unit norm (`vector.dot_unit_norm`), tangency on $S^2$
+   (`vector.dot_tangent_orthogonal`, `vector.s2_tangent_recovery`, …), and the $S^1$
    identities of a point and its axis (`vector.s1_axis_orthogonal`,
    `vector.s1_axis_double_cross`, `vector.s1_rotated_dot`, …). Like `pull`, it
    recurses through every node class (one shared `rebuild` helper), so a rule fires
@@ -67,8 +67,8 @@ tree stops changing (at most `max_iter=10` passes; hitting the cap emits the
    `simplify.mvmul_hat_to_cross`, `simplify.orthogonal_transpose`,
    `simplify.transpose_symmetric`, `simplify.transpose_skew`, the `MMMul`
    associativity `simplify.mmmul_reassociate`/`simplify.mmmul_combine`, …). Like terms
-   are merged on flattened products: `x*(2)*y + x*y*(3) → x*y*(5)`, `v a − v a → 0`,
-   `aᵀb s − bᵀa s → 0`, and the numbers of a product are folded into one placed last
+   are merged on flattened products: `x*(2)*y + x*y*(3) → x*y*(5)`, $v a - v a \to 0$,
+   $a^T b\, s - b^T a\, s \to 0$, and the numbers of a product are folded into one placed last
    (`(-1)*m → m*(-1)`, `(-1.0) → (-1)`).
 
 The rules and the hypothesis each needs are listed in the docstrings of
@@ -78,8 +78,8 @@ The rules and the hypothesis each needs are listed in the docstrings of
 ## 4. Integration by parts `[ibp.prepare]`, `[ibp.collect[t]]`, `[ibp.integrate[t]]`, `[ibp.simplify[t]]`, `[ibp]`
 
 `integrate_by_parts(dS, targets)` takes the time derivative of each variation vector as
-a target (`d/dt(δx)`, `d/dt(γ_q)`, `d/dt(ξ_q)`, `d/dt(η_R)`, in the order scalars,
-vectors, matrices). The S¹ target `γ̇` is a scalar, integrated like `d/dt(δs)` of a scalar
+a target ($\frac{d}{dt}(\delta x)$, $\frac{d}{dt}(\gamma_q)$, $\frac{d}{dt}(\xi_q)$, $\frac{d}{dt}(\eta_R)$, in the order scalars,
+vectors, matrices). The $S^1$ target $\dot\gamma$ is a scalar, integrated like $\frac{d}{dt}(\delta s)$ of a scalar
 variable (`ibp.scalar_factor`). It first runs `expand` and `full_simplify` (`[ibp.prepare]`), then for each
 target in turn:
 
@@ -88,15 +88,15 @@ target in turn:
    `collect.flip_mvmul_left`, … : one name per call site), the cyclic triple
    product (`collect.triple_product_left`, `_right`, `_left_nested`, … : one name per
    rotation), peeling a matrix off the side holding the target,
-   `Dot(M f, w) = Dot(f, Mᵀ w)` (`collect.peel_matrix`), stripping a common rotation
+   $(M f) \cdot w = f \cdot (M^T w)$ (`collect.peel_matrix`), stripping a common rotation
    `Dot(R a, R b) = Dot(a, b)` (`collect.strip_rotation`), and turning an inner product
-   written with rows, `vᵀ A w`, into a `Dot` (`collect.inner_product_to_dot`). A target
-   inside the *matrix* factor of a product (`Hat(Ω)`, `Ω cᵀ`) cannot be exposed and
+   written with rows, $v^T A w$, into a `Dot` (`collect.inner_product_to_dot`). A target
+   inside the *matrix* factor of a product ($\widehat{\Omega}$, $\Omega c^T$) cannot be exposed and
    raises `AlgebraicError` naming the term;
-2. one IBP pass `[ibp.integrate[t]]`: `a Dot(ẋ, f) → a Dot(−x, ḟ)` (`ibp.dot`), with the
-   product rule when the scalar prefactor `a` is not constant (`ibp.dot_prefactor`, whose
-   rate `ȧ` is logged as `ibp.product_rule`), and
-   `ẋ g → −x ġ` for a scalar target in a product (`ibp.scalar_factor`). Boundary terms
+2. one IBP pass `[ibp.integrate[t]]`: $a\, (\dot x \cdot f) \to a\, (-x \cdot \dot f)$ (`ibp.dot`), with the
+   product rule when the scalar prefactor $a$ is not constant (`ibp.dot_prefactor`, whose
+   rate $\dot a$ is logged as `ibp.product_rule`), and
+   $\dot x\, g \to -x\, \dot g$ for a scalar target in a product (`ibp.scalar_factor`). Boundary terms
    are dropped (Hamilton's principle);
 3. `full_simplify` `[ibp.simplify[t]]`.
 
@@ -108,7 +108,7 @@ extraction in stage 6 then fails, and `compute_eom` names the term (see
 
 `expand` distributes every product over sums (`expand.dot_over_vadd`,
 `expand.mvmul_over_sum`, …) and the linear maps `Hat` and `Vee` over a sum
-(`expand.hat_over_vadd`, `expand.vee_over_madd`) so that each additive term of δS carries exactly one
+(`expand.hat_over_vadd`, `expand.vee_over_madd`) so that each additive term of $\delta S$ carries exactly one
 variation vector as a direct factor.
 
 ## 6. Extraction `[raw[ξ]]`, `[equation[ξ]]`
@@ -117,22 +117,22 @@ For each variation vector, `extract_linear_coeff(dS, vec)` returns its coefficie
 truncating the tree at the variation vector (the coefficient is always a left factor;
 `geomech/core/math/extract.py` has the dispatch grid). A term where the variation
 vector appears twice raises `NonLinearError`; one where it appears only inside a
-calculus operator (a surviving `d/dt(η)`) raises `AlgebraicError`. The coefficient is
-then simplified with `full_simplify`. The result is `{str(vec): (vec, E)}` with `E = 0`
+calculus operator (a surviving $\frac{d}{dt}(\eta)$) raises `AlgebraicError`. The coefficient is
+then simplified with `full_simplify`. The result is `{str(vec): (vec, E)}` with $E = 0$
 the equation of motion (sign convention in [Conventions](conventions.md)).
 
 Finally, `compute_eom` checks that no variation symbol of an unlisted symbol is left in
-δS (a forgotten degree of freedom, a symbol missing `Constant`) and raises `ValueError`
+$\delta S$ (a forgotten degree of freedom, a symbol missing `Constant`) and raises `ValueError`
 naming it.
 
 ## After `compute_eom`
 
 - `to_standard_form(eom, variables, inputs)` expands each equation, partitions its terms
-  into acceleration, input and remaining terms, and extracts `M`, `G` and `f`
-  (`E = M a + f + G u`).
-- `linearize(eom, variables, inputs)` takes the variation δE of each equation, expands
+  into acceleration, input and remaining terms, and extracts $M$, $G$ and $f$
+  ($E = M a + f + G u$).
+- `linearize(eom, variables, inputs)` takes the variation $\delta E$ of each equation, expands
   it, partitions its terms by the perturbation symbol each carries and extracts the
-  blocks of `M δẋ = A δx + B δu` ([Linearization](vbl.md)).
+  blocks of $M \delta\dot x = A \delta x + B \delta u$ ([Linearization](vbl.md)).
 
 ## Seeing the stages
 
@@ -151,7 +151,7 @@ tr.ibp["\\frac{d}{dt}(\\eta_{R})"]["collect"]   # per target: collect / integrat
 tr.raw_equations, tr.equations
 ```
 
-Two names look alike: the *stage* `"ibp"` (`tr["ibp"]`, `tr.show("ibp")`) is δS after
+Two names look alike: the *stage* `"ibp"` (`tr["ibp"]`, `tr.show("ibp")`) is $\delta S$ after
 integration by parts, the attribute `tr.after_ibp`; the *attribute* `tr.ibp` is the dict
 of per-target steps. To print one step, give its stage name:
 `tr.show("ibp.collect[\\frac{d}{dt}(\\eta_{R})]")`.
@@ -163,7 +163,7 @@ that raised (`raw[\eta_{R}]`, `ibp.collect[...]`, `validation`, `stray_check` �
 `tr.error` the exception class; `summary()` then starts with
 `FAILED at <stage>: <exception> (the stages below ran before it)`.
 
-For the rigid pendulum (`L = ½ Ω·JΩ − m g e₃·Rρ`, `dW = η·M`), `tr.summary(chars=70)`
+For the rigid pendulum ($L = \tfrac12 \Omega \cdot J\Omega - m g\, e_3 \cdot R\rho$, $\delta W = \eta \cdot M$), `tr.summary(chars=70)`
 prints
 
 ```
@@ -190,7 +190,7 @@ Every stage can be reproduced from the previous one with exported functions
 variation of the equation), `buckets` (its terms grouped by the perturbation symbol each
 carries), `raw_blocks` (the coefficient straight from `extract_linear_coeff`, before
 `full_simplify` and before the mass blocks are negated) and `blocks` (the final entries
-of `M`, `A`, `B`).
+of $M$, $A$, $B$).
 
 Without a trace object, the same stages are logged on the `geomech` logger at `DEBUG`
 (one line per stage with its node count and the first 200 characters of the `repr`):

@@ -13,12 +13,12 @@ old result can be recognised; they are not suspects for a wrong equation today.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| A `δm`/`ṁ` term, or a `ValueError` "δS still contains the variation symbols '\delta{m}'" | `m` is not `Constant` | `Scalar("m", attr=["Constant"])`; attribute names are case-sensitive |
-| `q × (ω̇ × q)` stays in an S² equation | `ω̇ ⊥ q` holds on the sphere but is never assumed: the tangency test sees `ω`, `ξ` and `Cross(·, q)` only, not a `d/dt` (`vector_rules` reaches every node, so `ω·q` and `q × (ω × q)` are reduced wherever they sit) | correct but unreduced; `to_standard_form` reads it as the projection `(I − qqᵀ) ω̇` |
+| A $\delta m$/$\dot m$ term, or a `ValueError` "δS still contains the variation symbols '\delta{m}'" | `m` is not `Constant` | `Scalar("m", attr=["Constant"])`; attribute names are case-sensitive |
+| $q \times (\dot\omega \times q)$ stays in an $S^2$ equation | $\dot\omega \perp q$ holds on the sphere but is never assumed: the tangency test sees $\omega$, $\xi$ and `Cross(…, q)` only, not a $d/dt$ (`vector_rules` reaches every node, so $\omega \cdot q$ and $q \times (\omega \times q)$ are reduced wherever they sit) | correct but unreduced; `to_standard_form` reads it as the projection $(I - q q^T) \dot\omega$ |
 | Partially simplified output, with a `RuntimeWarning` "no confirmed fixed point after N passes" | `full_simplify` stopped at `max_iter` | raise `max_iter`, or look at the expression in the warning |
 | Two different inertias print the same and are merged | Two leaves with the same name are the same symbol (`str` is the identity): `J2 = Matrix("J1")` | give every symbol its own name; `print_tree` shows the names |
-| On S², `to_standard_form`'s 3×3 solve leaves the sphere | `E` is meaningful on the tangent plane only | solve `(I − qqᵀ)(M ω̇ + f + G u) = 0` with `ω̇ ⊥ q` ([Conventions](conventions.md)) |
-| `M` is negative | `E = −(Euler–Lagrange)`, so `M = −(physical inertia)` | by convention ([Conventions](conventions.md)) |
+| On $S^2$, `to_standard_form`'s $3 \times 3$ solve leaves the sphere | $E$ is meaningful on the tangent plane only | solve $(I - q q^T)(M \dot\omega + f + G u) = 0$ with $\dot\omega \perp q$ ([Conventions](conventions.md)) |
+| $M$ is negative | $E = -(\text{Euler–Lagrange})$, so $M = -(\text{physical inertia})$ | by convention ([Conventions](conventions.md)) |
 | A wrong sign, a term missing, an extra term, and no row here matches | an engine rule that rewrites a term wrongly | [the recipe below](#the-equation-is-wrong-and-no-row-matches) |
 
 ## The equation is wrong and no row matches
@@ -31,7 +31,7 @@ above `1e-5` means a wrong term. Then localise it in three steps.
 1. **Bisect with `summary()`.** Keep only the terms of `L` (and `dW`) that the wrong
    term can come from, run `compute_eom(..., trace=tr)` with `tr = EOMTrace()`, and read
    `tr.summary()` against the formulas of [Pipeline](pipeline.md): the first stage that
-   disagrees (a substitution that is not `ξ̇ − 2 ω × ξ`, a symbol that disappears, a
+   disagrees (a substitution that is not $\dot\xi - 2\, \omega \times \xi$, a symbol that disappears, a
    node count that drops sharply) is the stage to suspect. `tr.ibp[t]["collect"]`,
    `["integrate"]` and `["simplify"]` split integration by parts per target.
 2. **Run the engine fuzzer.** From the repository root, `python
@@ -58,17 +58,17 @@ or an old result can be recognised; for a wrong equation with the current versio
 
 | Old symptom | Old cause | Now |
 |---|---|---|
-| A `δm` term although `attr=["constant"]` was given | a typo in `attr` was ignored | `ValueError: attr: unknown attribute` |
-| A variable had no equation, its terms were missing from the others | it was not listed in `SystemVariables` and its terms were dropped | `ValueError` naming `δy` |
-| `−ḟ` where `f` was expected | `δW` written with the variation of the velocity, `Dot(x.t_diff().delta(), f)` | `ValueError` |
-| `ω·q` or `q × (ω × q)` stayed with two `S2("q")` objects | the tangent rules compared objects | compared by name |
-| Gyroscopic terms on S² at half strength (`ω × c` instead of `2 ω × c`) | S² rule `δω = ξ̇ − ω × ξ` | `ξ̇ − 2 ω × ξ`; re-derive (pendulum-type systems are unchanged) |
-| A wrong SO(3) equation with `(M v)·(b × c)` terms; missing cross-inertia `M₁[Ω̇₂]` of a double rigid pendulum | `collect` used a false identity and could not separate `Dot(R₁a, R₂b)` | re-derive |
-| Coriolis / rate-of-inertia terms (`−2 m l l̇ ω`, `J̇ Ω`) missing | integration by parts dropped `d/dt` of a non-constant scalar prefactor | re-derive |
-| `Hat(Vee(I))` simplified to `I` | `Hat(Vee(X)) = X` was applied to any `X` | skew-symmetric `X` only |
-| A coefficient of `0` for a term that holds the variable (`M·Hat(v)`) | `extract_linear_coeff` returned a silent zero | `AlgebraicError` "no left matrix coefficient" |
+| A $\delta m$ term although `attr=["constant"]` was given | a typo in `attr` was ignored | `ValueError: attr: unknown attribute` |
+| A variable had no equation, its terms were missing from the others | it was not listed in `SystemVariables` and its terms were dropped | `ValueError` naming $\delta y$ |
+| $-\dot f$ where $f$ was expected | $\delta W$ written with the variation of the velocity, `Dot(x.t_diff().delta(), f)` | `ValueError` |
+| $\omega \cdot q$ or $q \times (\omega \times q)$ stayed with two `S2("q")` objects | the tangent rules compared objects | compared by name |
+| Gyroscopic terms on $S^2$ at half strength ($\omega \times c$ instead of $2\, \omega \times c$) | $S^2$ rule $\delta\omega = \dot\xi - \omega \times \xi$ | $\dot\xi - 2\, \omega \times \xi$; re-derive (pendulum-type systems are unchanged) |
+| A wrong $SO(3)$ equation with $(M v) \cdot (b \times c)$ terms; missing cross-inertia $M_1[\dot\Omega_2]$ of a double rigid pendulum | `collect` used a false identity and could not separate $(R_1 a) \cdot (R_2 b)$ | re-derive |
+| Coriolis / rate-of-inertia terms ($-2 m l \dot l \omega$, $\dot J \Omega$) missing | integration by parts dropped `d/dt` of a non-constant scalar prefactor | re-derive |
+| `Hat(Vee(I))` simplified to `I` | `Hat(Vee(X)) = X` was applied to any $X$ | skew-symmetric $X$ only |
+| A coefficient of `0` for a term that holds the variable ($M \widehat{v}$) | `extract_linear_coeff` returned a silent zero | `AlgebraicError` "no left matrix coefficient" |
 | One equation for two variables; duplicate rows in `linearize` | the same printed name listed twice | `ValueError` "is listed more than once" |
-| The equation `(ω m + f)` | a tangent vector listed as a configuration variable | `TypeError` |
+| The equation $(\omega m + f)$ | a tangent vector listed as a configuration variable | `TypeError` |
 | An entry like `x + y` or `q.t_diff()` in `SystemVariables` gave an unrelated stray-symbol error | composite entries were accepted | `TypeError` "is a VAdd expression, not a single symbol" |
 | `(0)x` in a result, `is_zero` false | `Number(0) * x` was not flagged zero | flagged zero |
 | Two different products printed alike and compared equal (`Mul(ab, c)` and `Mul(a, bc)` both `abc`; `Variation(Scalar("x")) == Variation(Vector("x"))`) | products printed their factors with no separator, and `==` compared the printed form only | products print `*` (`ab*c`, `a*bc`), and a calculus node also compares its operand's class (phase 5b) |
@@ -77,11 +77,11 @@ or an old result can be recognised; for a wrong equation with the current versio
 | Partially simplified output without a word | `full_simplify` stopped at `max_iter` silently | `RuntimeWarning` "no confirmed fixed point after N passes" |
 | `x * True` behaved like `x * 1` | `bool` was taken as a number | `TypeError` |
 | Two leaves built from one `attr` list shared flags | the list was aliased | copied |
-| A parameter named like `\omega_{q}` merged with ω | reserved printed names were accepted | `ValueError` "has the printed name of the tangent vector" |
-| `to_standard_form` gave `G[g] = −m e₃` and `linearize` a zero `B[δg]` column for an input `Scalar("g")` while `L` held the constant `g` | inputs were matched to leaves by printed name only, so a constant parameter counted as an input in one function and not in the other | `ValueError` "has the name of the constant 'g' in the equations" |
+| A parameter named like `\omega_{q}` merged with $\omega$ | reserved printed names were accepted | `ValueError` "has the printed name of the tangent vector" |
+| `to_standard_form` gave $G[g] = -m e_3$ and `linearize` a zero $B[\delta g]$ column for an input `Scalar("g")` while `L` held the constant `g` | inputs were matched to leaves by printed name only, so a constant parameter counted as an input in one function and not in the other | `ValueError` "has the name of the constant 'g' in the equations" |
 | `Transpose(v) * s` printed as `s v^T^T` and was treated as a row | it built the double transpose `Transpose(SVMul(Transpose(v), s))`, a column | the row `Transpose(SVMul(v, s))` |
-| `ExpressionMismatchError` from `expand`/`simplify` on a legal tree with rows (`(a + (bᵀK)ᵀ) cᵀ`), or a row turned into a column | `Transpose(Transpose(x))` was kept, and orientation was read from "is a `Transpose` node", so the row encoding was lost under `expand` | `Transpose(Transpose(x))` is `x` at construction; orientation is `is_row_vector` |
-| A correct equation printed as a wrong one: `a × b × c` (which product first?), `(b·c) a` printed as `b·c a`, a coefficient after its symbols | `to_latex` ignored precedence; `print_eom`/`render_eom` used `str` | `to_latex` parenthesises `Cross`/`VAdd`/`MVMul` operands and prints `(b·c)\,a`; the printers use `to_latex` |
+| `ExpressionMismatchError` from `expand`/`simplify` on a legal tree with rows ($(a + (b^T K)^T) c^T$), or a row turned into a column | `Transpose(Transpose(x))` was kept, and orientation was read from "is a `Transpose` node", so the row encoding was lost under `expand` | `Transpose(Transpose(x))` is `x` at construction; orientation is `is_row_vector` |
+| A correct equation printed as a wrong one: $a \times b \times c$ (which product first?), $(b \cdot c)\, a$ printed as $b \cdot c\ a$, a coefficient after its symbols | `to_latex` ignored precedence; `print_eom`/`render_eom` used `str` | `to_latex` parenthesises `Cross`/`VAdd`/`MVMul` operands and prints $(b \cdot c)\,a$; the printers use `to_latex` |
 
 ## The `AlgebraicError`s about a calculus operator
 
@@ -93,9 +93,9 @@ about `collect`.
 
 **1. A `d/dt` of a variation vector survived integration by parts** (from
 `compute_eom`). The derivative is of first order and `L` holds no acceleration, but
-`collect` could not bring its term into the shape `Dot(d/dt(η), f)` (for a scalar
-variable: a direct factor `d/dt(δs) g` of a product), so the IBP pass did not integrate
-it, and the coefficient of `η` cannot be read off:
+`collect` could not bring its term into the shape $\frac{d}{dt}(\eta) \cdot f$ (for a scalar
+variable: a direct factor $\frac{d}{dt}(\delta s)\, g$ of a product), so the IBP pass did not integrate
+it, and the coefficient of $\eta$ cannot be read off:
 
 ```
 AlgebraicError: compute_eom: while extracting the equation for '\eta_{R}': the time
@@ -109,7 +109,7 @@ only inside the calculus operator '\frac{d}{dt}(\eta_{R})' (a higher order deriv
 variation or an integral of the query); such a term has no linear coefficient)
 ```
 
-Fix: rewrite the term so the velocity sits in a vector operand (`Dot(w, Vee(Hat(Ω) A))`
+Fix: rewrite the term so the velocity sits in a vector operand (`Dot(w, Vee(Hat(Omega) * A))`
 above: express the `Vee` explicitly, or use an equivalent `Dot`/`Cross` form). A row
 form `v.T() * A * w` in a kinetic energy is handled (`collect` turns an inner product
 holding the target into a `Dot`); if one still survives, the message adds "write it as
@@ -133,9 +133,9 @@ coefficient)
 Fix: a jerk comes from a virtual work that holds a third time derivative of the
 configuration; `compute_eom` output is fine, only the standard form does not exist.
 
-**3. A Lagrangian in accelerations** (from `compute_eom`): `L` holds `ẍ` (or `ω̇`, `Ω̇`),
-so δL holds `d/dt(d/dt(δx))`. Integration by parts runs once per variation vector,
-against its first derivative, so the second derivative survives. For `L = ½ ẍ·ẍ`:
+**3. A Lagrangian in accelerations** (from `compute_eom`): $L$ holds $\ddot x$ (or $\dot\omega$, $\dot\Omega$),
+so $\delta L$ holds $\frac{d}{dt}\left(\frac{d}{dt}(\delta x)\right)$. Integration by parts runs once per variation vector,
+against its first derivative, so the second derivative survives. For $L = \tfrac12 \ddot x \cdot \ddot x$:
 
 ```
 AlgebraicError: compute_eom: while extracting the equation for '\delta{x}': the Lagrangian
@@ -151,7 +151,7 @@ order derivative, a variation or an integral of the query); such a term has no l
 coefficient)
 ```
 
-Fix: higher-order Lagrangians are not supported; write `L` in the configuration
+Fix: higher-order Lagrangians are not supported; write $L$ in the configuration
 variables and their velocities.
 
 ## Typed errors
@@ -303,7 +303,7 @@ The full list of invariants is in the docstring of `geomech/utils/invariants.py`
   `tr.failed_at` then names the stage that raised, and `tr.summary()` starts with
   `FAILED at <stage>: <exception>`); `tr.summary()`, `tr.show("simplify")`. A trace is
   cleared when a pipeline starts, so reusing one object keeps only the last run.
-  `linearize(..., trace=LinearizationTrace())` keeps δE, the term buckets, the raw and
+  `linearize(..., trace=LinearizationTrace())` keeps $\delta E$, the term buckets, the raw and
   the final blocks per row. See [Pipeline](pipeline.md#seeing-the-stages).
 - **`GEOMECH_DEBUG=1`** (environment variable, read at import): one `DEBUG` line per
   pipeline stage on the `geomech` logger (stage, node count, start of the `repr`) and

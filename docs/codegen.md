@@ -33,11 +33,11 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
 
 | Variable | Configuration slot | Velocity slot | Acceleration |
 |---|---|---|---|
-| `s: Scalar` ($\mathbb{R}$) | `s` (1) | `ṡ` (1) | `s̈` |
-| `x: Vector` ($\mathbb{R}^3$) | `x` (3) | `ẋ` (3) | `ẍ` |
-| `q: S1` | `q` (3, unit, $\perp e$) | `ω` (1) | `ω̇` (1) |
-| `q: S2` | `q` (3, unit) | `ω` (3, $\perp q$) | `ω̇` |
-| `R: SO3` | `R` (9, row-major) | `Ω` (3) | `Ω̇` |
+| `s: Scalar` ($\mathbb{R}$) | $s$ (1) | $\dot s$ (1) | $\ddot s$ |
+| `x: Vector` ($\mathbb{R}^3$) | $x$ (3) | $\dot x$ (3) | $\ddot x$ |
+| `q: S1` | $q$ (3, unit, $\perp e$) | $\omega_q$ (1) | $\dot{\omega_q}$ (1) |
+| `q: S2` | $q$ (3, unit) | $\omega_q$ (3, $\perp q$) | $\dot{\omega_q}$ |
+| `R: SO3` | $R$ (9, row-major) | $\Omega_R$ (3) | $\dot{\Omega_R}$ |
 
 - `state` holds every configuration slot in variable order (the `SystemVariables` order:
   scalars, vectors, matrices), then every velocity slot in the same order.
@@ -58,7 +58,7 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
   `bias`, `input_matrix` and `energy` take no `u` at all.
 - `p` is a `dict` keyed by `str(symbol)` of every parameter: for a scalar a Python or
   NumPy scalar, or a 0-d or single-element array or sequence (converted to a float; more
-  entries raise `ValueError` naming the parameter); any array of 3 or 3×3 entries for a
+  entries raise `ValueError` naming the parameter); any array of 3 or $3 \times 3$ entries for a
   vector or matrix. A missing key raises `KeyError`, an extra one `ValueError`, both
   naming the key. Numeric literals (`0.5`, `(-1)`) and the
   zero and identity constants are inlined, never parameters. A *named* scalar with a value
@@ -67,7 +67,7 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
   inputs do not cover (sorted by name): the `params` to pass. Pass what the system is made
   of: `[L, dW]` (the usual call), `[L]` plus the equations, the dict of `compute_eom` or
   of `to_standard_form`, a `LinearizedSystem`, one expression, or a list of these. The
-  tangent and variation vectors of the variables (`ω`, `ξ`, `Ω`, `η`, which `dW` and
+  tangent and variation vectors of the variables ($\omega_q$, $\xi_q$, $\Omega_R$, $\eta_R$, which `dW` and
   `compute_eom` hold) are left out, and `StateLayout` rejects them as parameters.
   Anything it cannot walk (a number, a string, an object without symbols) raises
   `TypeError` instead of giving `[]`.
@@ -76,7 +76,7 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
   `Trajectory.state`) into a dict. The names are the slot identifiers below (`x_L`, `q`,
   `R`, `x_L_dot`, `omega_q`, `Omega_R`); `pack` also takes a dict keyed by those names or
   by the printed symbols. Every configuration slot is required, a velocity left out is
-  zero, `R` is a 3×3 matrix or its 9 row-major entries. `pack` does not project onto the
+  zero, `R` is a $3 \times 3$ matrix or its 9 row-major entries. `pack` does not project onto the
   manifold; `simulate` and `lqr` check the state. Velocity names follow the variable's
   name, indices included: `x_dot`, `omega_q1` for `S2("q1")`, `Omega_R2` for
   `SO3("R2")`; `layout.slot_names()` lists every key in state order.
@@ -90,7 +90,7 @@ symbols map to arrays, and is embedded in every generated module as `LAYOUT` (pl
   convert an `Evaluator` env (printed-name keys, `(3, 1)` columns) to the flat arrays, and
   `env_from_arrays(state, a, u, p)` converts back.
 - Each slot also has a Python identifier for the generated code (`\omega_{q}` → `omega_q`,
-  `ω̇` → `omega_q_dot`, `ẋ` → `x_dot`, `ẍ` → `x_ddot`).
+  $\dot{\omega_q}$ → `omega_q_dot`, $\dot x$ → `x_dot`, $\ddot x$ → `x_ddot`).
 
 Generation checks every leaf: it must be a configuration, velocity, acceleration, input or
 parameter of the layout, a numeric literal, or a zero or identity constant. A stray leaf,
@@ -139,8 +139,8 @@ CI runs `--check`.
 
 ## Worked example: the spherical pendulum
 
-Lee et al. Eq. 5.14, $L = \tfrac12 m l^2\,\omega\cdot\omega - m g l\, q\cdot e_3$ and
-$\delta W = \xi\cdot f$:
+Lee et al. eq. 5.14, $L = \tfrac12 m l^2\,\omega\cdot\omega - m g l\, q\cdot e_3$ and
+$\delta W = \xi\cdot M$, with $M$ a moment about the pivot:
 
 ```python
 import numpy as np
@@ -150,19 +150,19 @@ from geomech.codegen import StateLayout, generate_module, load_module
 
 m, g, l = getScalars("m g l", attr=["Constant"])
 e3 = Vector("e3", attr=["Constant"])
-q, f = S2("q"), Vector("f")
+q, M = S2("q"), Vector("M")
 omega, xi = q.get_tangent_vector(), q.get_variation_vector()
 half = Scalar("0.5", value=0.5, attr=["Constant"])
 L = half * m * l * l * Dot(omega, omega) - m * g * l * Dot(q, e3)
 variables = SystemVariables(vectors=[q])
 
-eom = compute_eom(L, Dot(xi, f), variables)
-sf = to_standard_form(eom, variables, inputs=[f])
-layout = StateLayout(variables, inputs=[f], params=[e3, g, l, m])
+eom = compute_eom(L, Dot(xi, M), variables)
+sf = to_standard_form(eom, variables, inputs=[M])
+layout = StateLayout(variables, inputs=[M], params=[e3, g, l, m])
 src = generate_module(sf, layout, "spherical_pendulum.py", lagrangian=L)
 ```
 
-`state` is `[q (3), ω (3)]`, `a` is `[ω̇ (3)]`, `u` is `[f (3)]`. The generated functions
+`state` is $[q, \omega_q]$ (3 + 3 entries), `a` is $[\dot{\omega_q}]$ (3), `u` is $[M]$ (3). The generated functions
 (from `examples/generated/spherical_pendulum_s2.py`):
 
 ```python
@@ -204,20 +204,20 @@ mod = load_module("spherical_pendulum.py")   # or: import spherical_pendulum as 
 p = {"e3": [0, 0, 1], "g": 9.81, "l": 1.0, "m": 1.0}
 q0 = np.array([np.sin(0.3), 0.0, np.cos(0.3)])
 state = np.concatenate([q0, [0.0, 0.5, 0.0]])          # ω ⊥ q
-M, f = mod.mass(state, p), mod.bias(state, p)
+M_a, f = mod.mass(state, p), mod.bias(state, p)       # mass matrix and bias
 mod.energy(state, p)                                     # ½ m l² |ω|² + m g l q·e₃
 ```
 
 ## Translation and conventions
 
 Each node class maps to one construct; vectors are `(3,)` arrays and matrices `(3, 3)`
-(CasADi: `3×1` columns and `3×3`).
+(CasADi: $3 \times 1$ columns and $3 \times 3$).
 
 | Node | NumPy | CasADi | Note |
 |---|---|---|---|
 | `Add`/`VAdd`/`MAdd` | `a + b + …` | same | |
 | `Mul`/`SVMul`/`SMMul` | `a * s` | same | scalar times anything |
-| `MVMul` | `M @ v` | `ca.mtimes(M, v)` | a row `vᵀM` is generated as `Mᵀv` |
+| `MVMul` | `M @ v` | `ca.mtimes(M, v)` | a row $v^T M$ is generated as $M^T v$ |
 | `MMMul` | `A @ B` | `ca.mtimes(A, B)` | |
 | `VVMul` | inner `a @ b`, outer `np.outer(a, b)` | `ca.dot`, `ca.mtimes(a, b.T)` | by `is_row_vector` |
 | `Dot` | `a @ b` | `ca.dot(a, b)` | |
@@ -231,46 +231,46 @@ Each node class maps to one construct; vectors are `(3,)` arrays and matrices `(
 - **Rows.** There is one vector type; a row (`is_row_vector`) is generated as the same
   3-vector as its column, and the structure only decides between the inner and the outer
   product of a `VVMul` and the side of a row `MVMul`. A scalar equation's block for a
-  vector acceleration (or input, or linearization column) fills a 1×3 block of the matrix.
+  vector acceleration (or input, or linearization column) fills a $1 \times 3$ block of the matrix.
 - **Common subexpressions.** A subtree that occurs more than once is computed once into a
   local `_tN`; long expressions are split into locals so that every line is short.
   Nothing else is simplified. Subtrees are compared structurally (a leaf by its `str`,
   the engine's identity; an operation by its class and operands), with the identity of
   each node object computed once per function, so generation time is linear in the
   number of node objects, also for trees that reuse a subtree many times.
-- **Signs.** Those of [Conventions](conventions.md): `M` is −(physical inertia) in the
-  standard form (`mass` of a point mass is `−m I`), and the linearization blocks have the
-  positive inertia (`M δẋ = A δx + B δu`).
+- **Signs.** Those of [Conventions](conventions.md): $M$ is $-(\text{physical inertia})$ in the
+  standard form (`mass` of a point mass is $-m I$), and the linearization blocks have the
+  positive inertia ($M\, \delta\dot x = A\, \delta x + B\, \delta u$).
 - **Values.** The CasADi functions take NumPy arrays or CasADi expressions (`SX`, `MX`,
   `DM`) for `state`, `a`, `u` and the values of `p` and return CasADi objects, so
   `ca.Function` and `ca.jacobian` apply to them directly.
 
 ### The S² mass block
 
-An S² equation is meaningful only on the tangent plane, `(I − qqᵀ) E = 0`
+An $S^2$ equation is meaningful only on the tangent plane, $(I - q q^T) E = 0$
 ([Conventions](conventions.md#s2-equations-live-on-the-tangent-plane)), and the module
-returns the blocks as derived, not projected. Depending on the Lagrangian the S² mass
-block is singular (rank 2: `Hat(q) Hat(q) m_Q l²` in the quadrotor with a suspended load)
-or full rank (`−m l² I` for the spherical pendulum, where the engine already used
-`q · ω̇ = 0`). Either way the unprojected 3×3 solve is not the equation of motion: the
-generated module does **not** solve for the accelerations. Replace each S² block row by
-`P_q · row` (with `P_q = I − qqᵀ`) plus a multiple `s q qᵀ` on its own `ω̇` column (`s` =
+returns the blocks as derived, not projected. Depending on the Lagrangian the $S^2$ mass
+block is singular (rank 2: $\widehat{q}\,\widehat{q}\, m_Q l^2$ in the quadrotor with a suspended load)
+or full rank ($-m l^2 I$ for the spherical pendulum, where the engine already used
+$q \cdot \dot{\omega_q} = 0$). Either way the unprojected $3 \times 3$ solve is not the equation of motion: the
+generated module does **not** solve for the accelerations. Replace each $S^2$ block row by
+$P_q \cdot \text{row}$ (with $P_q = I - q q^T$) plus a multiple $s\, q q^T$ on its own $\dot{\omega_q}$ column ($s$ =
 the tangent inertia, see [Simulation](simulation.md#accelerations-and-the-s2-solve)) and
 its right-hand
-side by `−P_q (bias + G u)`; the system is then square and full rank and its solution
-satisfies `q · ω̇ = 0`. `geomech.simulation.accelerations` does exactly this
+side by $-P_q (\text{bias} + G u)$; the system is then square and full rank and its solution
+satisfies $q \cdot \dot{\omega_q} = 0$. `geomech.simulation.accelerations` does exactly this
 ([Simulation](simulation.md#accelerations-and-the-s2-solve)).
 
 ## Total energy
 
-`energy_function(L, layout)` returns `E(state, p) = Σ (∂L/∂v)·v − L` over the velocities
-`ṡ`, `ẋ`, `ω`, `Ω`, generated through the same code path (`energy_expr` gives the
-expression, `momenta` the `∂L/∂v`). `∂L/∂v` is derived with the engine: the first
-variation `δL` is expanded, its terms are split by perturbation symbol as `linearize`
+`energy_function(L, layout)` returns `E(state, p)` $= \sum (\partial L/\partial v) \cdot v - L$ over the velocities
+$\dot s$, $\dot x$, $\omega_q$, $\Omega_R$, generated through the same code path (`energy_expr` gives the
+expression, `momenta` the $\partial L/\partial v$). $\partial L/\partial v$ is derived with the engine: the first
+variation $\delta L$ is expanded, its terms are split by perturbation symbol as `linearize`
 does, and `extract_linear_coeff` gives the coefficient of each velocity perturbation
-(`d/dt(δs)`, `d/dt(δx)`, `δω`, `δΩ`). `Σ (∂L/∂v)·v` is the derivative of `L(q, λv)` at
-`λ = 1`, which does not depend on the velocity coordinates as long as they are linear in
-the rates (`q̇ = ω × q`, `Ṙ = R Ω̂`), so `E = L₂ − L₀` is the energy of Lee et al. The
-tests compare `∂L/∂v` with a finite difference of the generated Lagrangian, `E` with a
-finite difference in `λ`, and check `dE/dt = 0` along the unforced dynamics of the nine
+($\tfrac{d}{dt}\delta s$, $\tfrac{d}{dt}\delta x$, $\delta\omega_q$, $\delta\Omega_R$). $\sum (\partial L/\partial v) \cdot v$ is the derivative of $L(q, \lambda v)$ at
+$\lambda = 1$, which does not depend on the velocity coordinates as long as they are linear in
+the rates ($\dot q = \omega_q \times q$, $\dot R = R \widehat{\Omega_R}$), so $E = L_2 - L_0$ is the energy of Lee et al. The
+tests compare $\partial L/\partial v$ with a finite difference of the generated Lagrangian, $E$ with a
+finite difference in $\lambda$, and check $dE/dt = 0$ along the unforced dynamics of the nine
 systems of `tests/vbl_systems.py`.

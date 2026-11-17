@@ -56,9 +56,9 @@ same code path as the generated equations: the visualizer has no kinematics of i
 - Several `RigidBody` entries may share one `R`: a quadrotor is a box, two arms and four
   rotor cylinders with the same attitude and different offsets
   (`examples/report_quadrotor_load.py`); `axes=False` on all but one.
-- **S² points have no attitude.** A pendulum on S² is `Rod(origin, origin + l q)` plus a
-  `PointMass`. A rigid body hanging from an S² point cannot be drawn: the configuration
-  does not say how it is turned about the cable; model it on SO(3) instead.
+- **$S^2$ points have no attitude.** A pendulum on $S^2$ is `Rod(origin, origin + l q)` plus a
+  `PointMass`. A rigid body hanging from an $S^2$ point cannot be drawn: the configuration
+  does not say how it is turned about the cable; model it on $SO(3)$ instead.
 - Colours: `"link1"` … `"link4"`, `"load"`, `"cable"`, `"rotor"`, `"trace"` (theme
   colours, different in light and dark mode) or `"#rrggbb"`. Bodies cycle through the
   link colours by default.
@@ -92,23 +92,23 @@ Shorten `t_span` to end before it, or reduce `dt`.
 ### Seeing the orientation
 
 A link drawn as a line hides its rotation about its own axis. The report therefore
-draws each rigid body as a solid with lighting and shadows, its **+e₁ face tinted red**
-and its +e₂ face tinted green, dark edges, and its body frame as arrows (e₁ red, e₂
-green, e₃ blue) that stick out of the shape on every side. A cylinder carries a tinted
-60° sector of its side and end caps on body e₁ (on e₂ for a cylinder along e₁), and a
-sphere a cap on e₁ and a smaller one on e₂, so the spin of a wheel, rotor or ball shows
+draws each rigid body as a solid with lighting and shadows, its **$+e_1$ face tinted red**
+and its $+e_2$ face tinted green, dark edges, and its body frame as arrows ($e_1$ red, $e_2$
+green, $e_3$ blue) that stick out of the shape on every side. A cylinder carries a tinted
+60° sector of its side and end caps on body $e_1$ (on $e_2$ for a cylinder along $e_1$), and a
+sphere a cap on $e_1$ and a smaller one on $e_2$, so the spin of a wheel, rotor or ball shows
 with its axes hidden (`axes=False` or the "Body axes" toggle). Each tint is the first mix
 of the body colour towards the axis colour that differs from the body colour by at least
-ΔE 25 (CIE76); when the axis colour itself is too close (a red `load` body and the red
-e₁), its lightness is shifted away from the body's instead, so the tint shows on every
+$\Delta E = 25$ (CIE76); when the axis colour itself is too close (a red `load` body and the red
+$e_1$), its lightness is shifted away from the body's instead, so the tint shows on every
 palette and custom colour. Give a link a non-square
-cross-section (`Box(0.12, 0.05, 1.0)` for a link along e₃) and a spin about the link,
-i.e. a component of Ω along e₃, is unmistakable: the double pendulum example starts with
-`Ω₁ = (0.4, −0.6, 4.0)` and turns its links several times about their axes while they
+cross-section (`Box(0.12, 0.05, 1.0)` for a link along $e_3$) and a spin about the link,
+i.e. a component of $\Omega$ along $e_3$, is unmistakable: the double pendulum example starts with
+$\Omega_1 = (0.4, -0.6, 4.0)$ and turns its links several times about their axes while they
 swing.
 
 The body arrows start at the shape's centre. A link hinged at the origin and hanging
-along −e₃ therefore points its e₃ arrow up through the pivot, along the inertial z arrow
+along $-e_3$ therefore points its $e_3$ arrow up through the pivot, along the inertial $z$ arrow
 of the origin triad, so two blue arrows overlap there; orbit the camera, or switch off
 "Body axes", to separate them (the corner gizmo always shows the inertial frame).
 
@@ -133,11 +133,14 @@ derive_time=None, fps=60, description="")`
 - `report.write(path)` writes the page; `report.html()` returns it; in Jupyter
   `_repr_html_` shows it in an `<iframe srcdoc>` so that its MathJax does not clash with
   the notebook's.
+- A written report opened with `?view` in its URL (`report.html?view`) shows only the 3-D
+  view and its playback controls: no title, summary, equations or tables. The model pages
+  of these docs embed their reports this way, in an `<iframe>`.
 
 Sections, in order:
 
 1. **Summary**: derivation time, `check_eom` error, energy drift
-   `max |E − E₀| / |E₀|` of `trajectory.energy()`, constraint drift, integrator and
+   $\max \lvert E - E_0 \rvert / \lvert E_0 \rvert$ of `trajectory.energy()`, constraint drift, integrator and
    step, simulated time. When the run is forced (`trajectory.u`, the inputs at the stored
    states, is nonzero somewhere) the card reads **Energy change** with the note that it
    is the work of the inputs, not an integrator error (`report.forced()`). A trajectory
@@ -150,8 +153,8 @@ Sections, in order:
    one-state trajectory has Play disabled.
 3. **Lagrangian** and virtual work, one term per line.
 4. **Equations of motion**, one per configuration variable, one term per line.
-5. **Standard form**: the block overview `[M][a] + [f] + [G][u] = 0`, then each inertia
-   block `M_ij`, each bias `f_i` (one term per line) and each input block `G_ik`.
+5. **Standard form**: the block overview $[M][a] + [f] + [G][u] = 0$, then each inertia
+   block $M_{ij}$, each bias $f_i$ (one term per line) and each input block $G_{ik}$.
 6. **Parameters**: name, value, units.
 7. **System definition**: the source passed in.
 
@@ -165,10 +168,10 @@ Sections, in order:
   significant figures of the scene size, rotation entries to 5 decimals).
   Without network the equations stay readable as TeX source and the viewer says that
   three.js could not be loaded.
-- **Frames**: the inertial frame has e₃ up and gravity along −e₃. three.js is y-up, so
-  every inertial object is placed in one group rotated by −90° about x (inertial
-  `(x, y, z)` is drawn at three.js `(x, z, −y)`); nothing else is converted. A ground
-  grid lies in the inertial xy plane (at z = 0 when the scene is just above it,
+- **Frames**: the inertial frame has $e_3$ up and gravity along $-e_3$. three.js is y-up, so
+  every inertial object is placed in one group rotated by $-90^\circ$ about $x$ (inertial
+  $(x, y, z)$ is drawn at three.js $(x, z, -y)$); nothing else is converted. A ground
+  grid lies in the inertial $xy$ plane (at $z = 0$ when the scene is just above it,
   otherwise just below the lowest point), with the inertial axes at the origin, a
   perspective camera with orbit controls, and lights fixed in the world. A small
   inertial triad in the bottom-left corner, drawn in its own viewport and turned with the
@@ -188,7 +191,7 @@ Sections, in order:
   that has more to scroll to.
 - **Framing**: the view is framed on the whole trajectory (every drawn element at every
   kept frame). An open-loop run that drifts far away therefore shows small bodies at
-  t = 0; for the report, simulate a shorter horizon or close the loop with a controller.
+  $t = 0$; for the report, simulate a shorter horizon or close the loop with a controller.
 - **Ready hook**: the root element carries `data-gm-viewer` (`"ready"` once the scene
   is built, `"no-three"` or `"no-webgl"` when it cannot be drawn, `"none"` without a
   scene), next to `data-gm-errors`, `data-gm-mathjax` and `data-gm-canvas-colors`; the
