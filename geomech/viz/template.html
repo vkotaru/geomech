@@ -217,10 +217,10 @@ __GM_BODY__
 <script src="__GM_THREE_URL__"></script>
 <script src="__GM_ORBIT_URL__"></script>
 <script>
-// "?view": the animation only (see the gm-embed rules); set before the viewer is sized.
-if (/[?&]view\b/.test(window.location.search)) document.documentElement.classList.add("gm-embed");
 (function () {
   "use strict";
+  // "?view": the animation only (see the gm-embed rules); set before the viewer is sized.
+  if (/[?&]view\b/.test(window.location.search)) document.documentElement.classList.add("gm-embed");
   var DATA = JSON.parse(document.getElementById("gm-data").textContent);
   var S = DATA.scene;
   var host = document.getElementById("gm-viewer");
