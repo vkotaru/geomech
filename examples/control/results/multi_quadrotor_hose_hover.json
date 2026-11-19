@@ -1,0 +1,66 @@
+{
+ "name": "multi_quadrotor_hose_hover",
+ "system": "multi_quadrotor_hose",
+ "kwargs": {
+  "n_links": 3
+ },
+ "description": "Two quadrotors hold a three-link hose sagging in a symmetric V (outer links 30\u00b0 below the horizontal); 0.4 m offset and the middle link swung 10\u00b0.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 2.1303074166819577e-16,
+ "u_eq": [
+  16.763335348312992,
+  0.0,
+  0.0,
+  0.0,
+  16.763335348312992,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 30,
+ "dropped": [],
+ "controllability_rank": 30,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.4995391473966078,
+ "closed_loop_min_damping": 0.05990902459280549,
+ "closed_loop_fastest": 50.11673062472541,
+ "library_lqr": true,
+ "horizon": 15.0,
+ "dt": 0.001,
+ "derive_seconds": 0.22797533400080283,
+ "initial_error": {
+  "position": 0.41231056256176607,
+  "attitude": 0.17364817766693033,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 55.89864576299988,
+ "final_normalized_error": 0.0003066732148985602,
+ "max_normalized_error": 1.0,
+ "settling_time": 7.17,
+ "converged": true,
+ "peak_inputs": {
+  "f0": {
+   "peak_deviation": 0.1432676742976824,
+   "peak_abs": 16.785774327173325,
+   "unit": "N"
+  },
+  "M0": {
+   "peak_deviation": 0.8552781655123749,
+   "peak_abs": 0.8552781655123749,
+   "unit": "N\u00b7m"
+  },
+  "f3": {
+   "peak_deviation": 0.1186186301299621,
+   "peak_abs": 16.816350514152116,
+   "unit": "N"
+  },
+  "M3": {
+   "peak_deviation": 0.700012409959144,
+   "peak_abs": 0.700012409959144,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.7448078076464446e-13,
+ "energy_change": -6.6656309250683226
+}

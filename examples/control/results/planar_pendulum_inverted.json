@@ -1,0 +1,42 @@
+{
+ "name": "planar_pendulum_inverted",
+ "system": "planar_pendulum",
+ "kwargs": {},
+ "description": "Inverted planar pendulum (q = e\u2083 on the circle normal to e\u2082), torque \u03c4 about the pivot; 30\u00b0 tilt.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0
+ ],
+ "n_reduced": 2,
+ "dropped": [],
+ "controllability_rank": 2,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -3.1725464576143723,
+ "closed_loop_min_damping": 1.0,
+ "closed_loop_fastest": 3.248838096039646,
+ "library_lqr": true,
+ "horizon": 8.0,
+ "dt": 0.001,
+ "derive_seconds": 0.001296879999244993,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.5235987755982988,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 2.6345312760004163,
+ "final_normalized_error": 3.7865608580229e-11,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.31,
+ "converged": true,
+ "peak_inputs": {
+  "\\tau": {
+   "peak_deviation": 10.53328358419133,
+   "peak_abs": 10.53328358419133,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.1102230246251565e-16,
+ "energy_change": 1.314290788874656
+}
