@@ -1,0 +1,48 @@
+{
+ "name": "double_planar_pendulum_inverted",
+ "system": "double_planar_pendulum",
+ "kwargs": {},
+ "description": "Both planar links upright; joint torques \u03c4\u2081, \u03c4\u2082; 10\u00b0 and 15\u00b0 tilts.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0
+ ],
+ "n_reduced": 4,
+ "dropped": [],
+ "controllability_rank": 4,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -2.688875286282889,
+ "closed_loop_min_damping": 0.9967926531449689,
+ "closed_loop_fastest": 8.769424747334831,
+ "library_lqr": true,
+ "horizon": 10.0,
+ "dt": 0.001,
+ "derive_seconds": 0.009155914000075427,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.31464370553163823,
+  "velocity": 0.0
+ },
+ "simulate_seconds": 4.451519225000084,
+ "final_normalized_error": 4.640365299693359e-12,
+ "max_normalized_error": 1.0,
+ "settling_time": 1.6,
+ "converged": true,
+ "peak_inputs": {
+  "\\tau_1": {
+   "peak_deviation": 6.609985183540497,
+   "peak_abs": 6.609985183540497,
+   "unit": "N\u00b7m"
+  },
+  "\\tau_2": {
+   "peak_deviation": 2.1754210318633884,
+   "peak_abs": 2.1754210318633884,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 1.1102230246251565e-16,
+ "energy_change": 0.4554545780088084
+}

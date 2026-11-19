@@ -122,6 +122,31 @@ def sun_pointing(angle_deg):
     return f
 
 
+def hose_equilibrium(sag_deg):
+    """Equilibrium of ``multi_quadrotor_hose`` (three links, m₁ = m₂): the hose hangs in a
+    symmetric V between the two quadrotors, the outer links *sag_deg* below the horizontal
+    and the middle link horizontal. Each middle joint balances its weight with the link
+    tensions T = m₁ g / sin(sag); each quadrotor's thrust holds its own weight, its joint
+    mass and the pull T of its outer link."""
+
+    def f(sys_, layout):
+        p = sys_.params
+        g, a = p["g"], np.radians(sag_deg)
+        T = p["m1"] * g / np.sin(a)
+        q1 = np.array([np.cos(a), 0.0, -np.sin(a)])
+        q3 = np.array([np.cos(a), 0.0, np.sin(a)])
+        return {
+            "x_0": np.zeros(3),
+            "q1": q1,
+            "q2": np.array([1.0, 0.0, 0.0]),
+            "q3": q3,
+            "R0": rot_to((p["m_Q0"] + p["m0"]) * g * UP - T * q1),
+            "R3": rot_to((p["m_Q3"] + p["m3"]) * g * UP + T * q3),
+        }
+
+    return f
+
+
 def _axis(*v):
     v = np.asarray(v, float)
     return v / np.linalg.norm(v)
@@ -135,6 +160,8 @@ def units(system: str, layout_inputs) -> dict:
         "rigid_body": {"F"},
         "two_rigid_bodies_spherical_joint": {"F"},
         "elastic_spherical_pendulum": {"f_l"},
+        "point_mass": {"F"},
+        "spring_mass": {"f"},
     }
     out = {}
     for key in layout_inputs:
@@ -147,6 +174,72 @@ def units(system: str, layout_inputs) -> dict:
 
 EXAMPLES = [
     Example(
+        "point_mass_hold",
+        "point_mass",
+        rest(x=np.zeros(3)),
+        perturbed(x=np.array([1.0, -0.5, 0.5]), x_dot=np.array([0.0, 0.5, 0.0])),
+        weights(10, 1),
+        1.0,
+        8.0,
+        description="Position hold of a point mass at the origin with the force F; 1.2 m offset.",
+    ),
+    Example(
+        "spring_mass_rest",
+        "spring_mass",
+        rest(x=0.0),
+        perturbed(x=0.5, x_dot=-0.3),
+        weights(10, 1),
+        1.0,
+        8.0,
+        description="Spring–mass brought to rest at x = 0 with the force f; 0.5 m start.",
+    ),
+    Example(
+        "planar_pendulum_inverted",
+        "planar_pendulum",
+        rest(q=UP),
+        perturbed(q=tilt(UP, 30, (0, 1, 0))),
+        weights(10, 1),
+        1.0,
+        8.0,
+        description="Inverted planar pendulum (q = e₃ on the circle normal to e₂), torque τ"
+        " about the pivot; 30° tilt.",
+    ),
+    Example(
+        "double_planar_pendulum_inverted",
+        "double_planar_pendulum",
+        rest(q1=UP, q2=UP),
+        perturbed(q1=tilt(UP, 10, (0, 1, 0)), q2=tilt(UP, 15, (0, 1, 0))),
+        weights(10, 1),
+        1.0,
+        10.0,
+        description="Both planar links upright; joint torques τ₁, τ₂; 10° and 15° tilts.",
+    ),
+    Example(
+        "particle_on_rotating_sphere_hold",
+        "particle_on_rotating_sphere",
+        rest(q=UP),
+        perturbed(
+            q=tilt(UP, 40, (1, 0, 0)),
+            omega_q=lambda w: tangent(tilt(UP, 40, (1, 0, 0)), [0.3, 0.2, 0]),
+        ),
+        weights(10, 1),
+        1.0,
+        8.0,
+        description="Particle held at the pole of a sphere that spins at Ω₀ = 2 rad/s, moment"
+        " M; 40° from the pole. The Coriolis term couples the two tangent directions.",
+    ),
+    Example(
+        "heavy_top_inverted",
+        "heavy_top",
+        rest(R=I3),
+        perturbed(R=rotate(I3, 25, (1, 2, 0)), Omega_R=np.array([0.2, -0.1, 1.0])),
+        weights(10, 1),
+        1.0,
+        8.0,
+        description="Heavy top balanced upright (R = I, centre of mass above the pivot) with"
+        " the body moment M; 25° tilt and a spin about the symmetry axis.",
+    ),
+    Example(
         "spherical_pendulum_inverted",
         "spherical_pendulum",
         rest(q=UP),
@@ -157,7 +250,7 @@ EXAMPLES = [
         weights(10, 1),
         1.0,
         8.0,
-        description="Inverted spherical pendulum (q = e₃), moment f about the pivot; 30° tilt.",
+        description="Inverted spherical pendulum (q = e₃), moment M about the pivot; 30° tilt.",
     ),
     Example(
         "double_spherical_pendulum_inverted",
@@ -167,7 +260,7 @@ EXAMPLES = [
         weights(10, 1),
         1.0,
         10.0,
-        description="Both links upright; moments f₁, f₂ on the links; 10° and 15° tilts.",
+        description="Both links upright; moments M₁, M₂ on the links; 10° and 15° tilts.",
     ),
     Example(
         "n_link_spherical_chain_inverted",
@@ -467,6 +560,18 @@ EXAMPLES = [
         kwargs={"n_quads": 3},
         description="Three quadrotors hold a rigid plate level; 0.4 m offset, 15° yaw of"
         " the plate, one cable swung 6°.",
+    ),
+    Example(
+        "multi_quadrotor_hose_hover",
+        "multi_quadrotor_hose",
+        hose_equilibrium(30),
+        perturbed(x_0=np.array([0.3, -0.2, 0.2]), q2=tilt(np.array([1.0, 0, 0]), 10, (0, 0, 1))),
+        weights(1, 1),
+        1.0,
+        15.0,
+        kwargs={"n_links": 3},
+        description="Two quadrotors hold a three-link hose sagging in a symmetric V (outer"
+        " links 30° below the horizontal); 0.4 m offset and the middle link swung 10°.",
     ),
     Example(
         "two_rigid_bodies_spherical_joint_hold",

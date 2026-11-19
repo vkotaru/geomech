@@ -1,0 +1,44 @@
+{
+ "name": "particle_on_rotating_sphere_hold",
+ "system": "particle_on_rotating_sphere",
+ "kwargs": {},
+ "description": "Particle held at the pole of a sphere that spins at \u03a9\u2080 = 2 rad/s, moment M; 40\u00b0 from the pole. The Coriolis term couples the two tangent directions.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_reduced": 4,
+ "dropped": [],
+ "controllability_rank": 4,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -1.1767067541057115,
+ "closed_loop_min_damping": 0.4621083896992025,
+ "closed_loop_fastest": 3.708357197422157,
+ "library_lqr": true,
+ "horizon": 8.0,
+ "dt": 0.001,
+ "derive_seconds": 0.005762423999840394,
+ "initial_error": {
+  "position": null,
+  "attitude": 0.6427876096865393,
+  "velocity": 0.3221404979964628
+ },
+ "simulate_seconds": 3.856899983999938,
+ "final_normalized_error": 7.42433941903253e-05,
+ "max_normalized_error": 1.0,
+ "settling_time": 3.2600000000000002,
+ "converged": true,
+ "peak_inputs": {
+  "M": {
+   "peak_deviation": 3.6102365981398896,
+   "peak_abs": 3.6102365981398896,
+   "unit": "N\u00b7m"
+  }
+ },
+ "constraint_drift": 9.658940314238862e-15,
+ "energy_change": 0.7696153336195575
+}

@@ -55,6 +55,12 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
 
 | Example | n | rank | max Re λ | min ζ | e₀ pos. (m) | e₀ att. (rad) | t_s | peak ‖u − u_eq‖∞ | drift | converged |
 |---|---|---|---|---|---|---|---|---|---|---|
+| `point_mass_hold` | 6 | 6 | -1.08 | 0.74 | 1.22 | — | 3.68 s | 3.16 N | 0.0e+00 | yes |
+| `spring_mass_rest` | 2 | 2 | -0.691 | 0.37 | 0.5 | — | 5.70 s | 1.04 N | 0.0e+00 | yes |
+| `planar_pendulum_inverted` | 2 | 2 | -3.17 | 1.00 | — | 0.524 | 1.31 s | 10.5 N·m | 1.1e-16 | yes |
+| `double_planar_pendulum_inverted` | 4 | 4 | -2.69 | 1.00 | — | 0.315 | 1.60 s | 6.61 N·m | 1.1e-16 | yes |
+| `particle_on_rotating_sphere_hold` | 4 | 4 | -1.18 | 0.46 | — | 0.643 | 3.26 s | 3.61 N·m | 9.7e-15 | yes |
+| `heavy_top_inverted` | 6 | 6 | -3.2 | 1.00 | — | 0.436 | 1.13 s | 2.67 N·m | 2.5e-14 | yes |
 | `spherical_pendulum_inverted` | 4 | 4 | -3.17 | 1.00 | — | 0.5 | 1.39 s | 9.68 N·m | 7.0e-15 | yes |
 | `double_spherical_pendulum_inverted` | 8 | 8 | -2.55 | 1.00 | — | 0.312 | 1.60 s | 6.33 N·m | 9.9e-15 | yes |
 | `n_link_spherical_chain_inverted` | 12 | 12 | -2.17 | 1.00 | — | 0.305 | 1.88 s | 7.72 N·m | 1.5e-14 | yes |
@@ -76,6 +82,7 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
 | `quadrotor_flexible_cable_hover` | 24 | 24 | -0.166 | 0.01 | 0.374 | 0.203 | 21.70 s | 0.12 N, 0.808 N·m | 1.4e-13 | yes |
 | `multi_quadrotor_point_mass_hover` | 36 | 36 | -0.45 | 0.48 | 0.412 | 0.139 | 6.79 s | 0.221 N, 0.276 N·m | 1.5e-13 | yes |
 | `multi_quadrotor_rigid_load_hover` | 42 | 42 | -0.438 | 0.17 | 0.412 | 0.281 | 6.81 s | 0.143 N, 0.321 N·m | 1.3e-13 | yes |
+| `multi_quadrotor_hose_hover` | 30 | 30 | -0.5 | 0.06 | 0.412 | 0.174 | 7.17 s | 0.143 N, 0.855 N·m | 1.7e-13 | yes |
 | `two_rigid_bodies_spherical_joint_hold` | 18 | 18 | -1.03 | 0.74 | 0.412 | 0.554 | 3.64 s | 0.967 N, 1.11 N·m | 9.5e-14 | yes |
 
 † Not stabilizable in the strict sense: uncontrollable modes with eigenvalue 0 (conserved quantities). LQR on the controllable subspace converges from initial states on the invariant subspace (for the spacecraft, zero total angular momentum).
@@ -89,6 +96,16 @@ thrusts, N·m for moments and torques). Drift is the largest manifold constraint
 
 ### Notes per example
 
+- **Every system has an example.** Each of the 30 systems of `geomech.systems` has at least
+  one example: `point_mass_hold`, `spring_mass_rest`, `planar_pendulum_inverted`,
+  `double_planar_pendulum_inverted`, `particle_on_rotating_sphere_hold`,
+  `heavy_top_inverted` and `multi_quadrotor_hose_hover` complete the set. The particle is
+  held at the pole of a sphere spinning at Ω₀ = 2 rad/s, where the centrifugal term
+  vanishes and the Coriolis term couples the two tangent directions. The heavy top is
+  balanced upright (R = I, centre of mass above the pivot) with a spin about its axis at
+  the start. The hose hangs in a symmetric V between the two quadrotors (outer links 30°
+  below the horizontal, middle link horizontal, tensions m₁ g / sin 30°); its slowest
+  hose mode is lightly damped (ζ = 0.06) with these weights.
 - **Planar cart-pole.** `cart_planar_pendulum_inverted` is the in-plane run of the 3-D
   cart-pole on `cart_planar_pendulum` (R × S¹), with the same start (0.3 m, 10° tilt),
   weights, `R = 0.1` and horizon. Unlike the 3-D cart-pole, whose *linearization* is not

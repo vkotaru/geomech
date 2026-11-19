@@ -1,0 +1,42 @@
+{
+ "name": "spring_mass_rest",
+ "system": "spring_mass",
+ "kwargs": {},
+ "description": "Spring\u2013mass brought to rest at x = 0 with the force f; 0.5 m start.",
+ "notes": "",
+ "stabilizable": true,
+ "equilibrium_residual": 0.0,
+ "u_eq": [
+  0.0
+ ],
+ "n_reduced": 2,
+ "dropped": [],
+ "controllability_rank": 2,
+ "uncontrollable_eigenvalues": [],
+ "closed_loop_max_real": -0.6909782550669517,
+ "closed_loop_min_damping": 0.3747716001068674,
+ "closed_loop_fastest": 1.843731635134351,
+ "library_lqr": true,
+ "horizon": 8.0,
+ "dt": 0.001,
+ "derive_seconds": 0.0010432349999973667,
+ "initial_error": {
+  "position": 0.5,
+  "attitude": null,
+  "velocity": 0.3
+ },
+ "simulate_seconds": 0.9021181790003538,
+ "final_normalized_error": 0.004036277065024145,
+ "max_normalized_error": 1.0,
+ "settling_time": 5.7,
+ "converged": true,
+ "peak_inputs": {
+  "f": {
+   "peak_deviation": 1.0395809411182695,
+   "peak_abs": 1.0395809411182695,
+   "unit": "N"
+  }
+ },
+ "constraint_drift": 0.0,
+ "energy_change": -0.5674881506559245
+}
