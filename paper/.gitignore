@@ -1,0 +1,3 @@
+sim/**/*.tex
+sim/**/*.dat
+__pycache__/
